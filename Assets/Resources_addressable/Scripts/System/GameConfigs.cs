@@ -1,0 +1,137 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System.IO;
+using Newtonsoft.Json;
+
+
+public struct SaveConfig{
+    public string version;
+    public string name;
+}
+
+public struct SystemConfig{
+    public string version;
+    public string save_playing;
+}
+
+public class GameConfigs : MonoBehaviour{
+    public HierarchySearch _HierSearch;
+    // ---------- System Tools ----------
+    public ControlSystem _CtrlSys { get { return _HierSearch._CtrlSys; } }
+    public SaveLoadBase _SL { get { return _HierSearch._SL; } }
+    public InputSystem _InputSys { get { return _HierSearch._InputSys; } }
+    public TilemapSystem _TMapSys { get { return _HierSearch._TMapSys; } }
+    public ObjectSystem _ObjSys { get { return _HierSearch._ObjSys; } }
+    public UISystem _UISys { get { return _HierSearch._UISys; } }
+    public MaterialSystem _MatSys { get => _HierSearch._MatSys; }
+    // ---------- system config ----------
+    // config
+    public string __version = "0.0.1";
+    public string __save_playing = "";
+    // path
+    public string __root_dir = "Assets/Resources_addressable/Saved";
+    // public string __root_dir__ = "";
+    public string __sysConfig_path { get { return Path.Combine(__root_dir, "Configs.json"); } }
+    public string __tilesInfo_path { get { return Path.Combine(__root_dir, "TilesInfo.json"); } }
+    public string __objectsInfo_path { get { return Path.Combine(__root_dir, "ObjectsInfo.json"); } }
+    public string __UISpritesInfo_path { get { return Path.Combine(__root_dir, "UISpritesInfo.json"); } }
+    public string __UIPrefabsInfo_path { get { return Path.Combine(__root_dir, "UIPrefabsInfo.json"); } }
+
+    // ---------- tilemap config ----------
+    public Vector3Int __block_size { get {return new Vector3Int(50, 50, 1); } } // NOTE: multiple of 5
+    public int __block_loadBound { get {return 4; } }
+    public int __block_unloadBound { get {return 10; } }
+
+    // ---------- save config ----------
+    // config
+    public string __save_selected = "";
+    // path
+    public string __saves_dir { get { return Path.Combine(__root_dir, "Saves"); } }
+    public string __save_dir { get { return Path.Combine(__saves_dir, __save_selected); } }
+    public string __saveConfig_path { get { return Path.Combine(__save_dir, "Configs.json"); } }
+    public string __map_dir {get { return Path.Combine(__save_dir, "map"); } }
+    public string __UI_dir {get { return Path.Combine(__save_dir, "UI"); } }
+    public string __UI_path {get { return Path.Combine(__UI_dir, "UIInfos.json"); } }
+    // format
+    public string __mapName_format { get { return Path.Combine(__map_dir, "Map_{x}_{y}.json"); } }
+    
+
+    private SystemConfig __system_config;
+    private Dictionary<string, SaveConfig> __saves_config;
+
+    void Start(){
+        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
+        _HierSearch._GCfg = this;
+        _load_system_config();
+        _load_saves_config();
+        _init_save_config("test");
+        select_save("test");
+
+    }
+
+    void Update(){
+        
+    }
+
+    // ---------- System config ----------
+
+    public void select_save(string name){
+        __system_config.save_playing = name;
+        __save_selected = name;
+        __save_playing = name;
+    }
+
+    private void _init_system_config(){
+        __system_config = new SystemConfig();
+        __system_config.version = __version;
+        __system_config.save_playing = "";
+        string system_config_json = JsonConvert.SerializeObject(__system_config, Formatting.Indented);
+        File.WriteAllText(__sysConfig_path, system_config_json);
+    }
+
+    private void _load_system_config(){
+        if (File.Exists(__sysConfig_path)){ // load
+            string jsonText = File.ReadAllText(__sysConfig_path);
+            __system_config = JsonConvert.DeserializeObject<SystemConfig>(jsonText);
+        }
+        else{ // init
+            _init_system_config();
+        }
+    }
+
+
+    // ---------- Save config ----------
+
+    private SaveConfig _init_save_config(string name){
+        SaveConfig save_config = new SaveConfig();
+        if (name == "")
+            throw new System.Exception("Name of save is EMPTY.");
+        else if (__saves_config.ContainsKey(name))
+            return __saves_config[name];
+        save_config.version = __version;
+        save_config.name = name;
+        __save_selected = name;
+        Directory.CreateDirectory(__map_dir);
+        string save_config_json = JsonConvert.SerializeObject(save_config, Formatting.Indented);
+        File.WriteAllText(__saveConfig_path, save_config_json);
+
+        __saves_config.Add(name, save_config);
+        return save_config;
+    }
+
+    private void _load_saves_config(){
+        // Init, and get all saves ("dir name" == "save name")
+        __saves_config = new Dictionary<string, SaveConfig>();
+        string[] saves_name = Directory.GetDirectories(__saves_dir);
+
+        // Loop for load config of save
+        
+        foreach (string save_name in saves_name){
+            __save_selected = Path.GetFileName(save_name);
+            string jsonText = File.ReadAllText(__saveConfig_path);
+            SaveConfig save_configs = JsonConvert.DeserializeObject<SaveConfig>(jsonText);
+            __saves_config.Add(__save_selected, save_configs);
+        }
+    }
+}
