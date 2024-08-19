@@ -1,51 +1,45 @@
+using System.Collections.Generic;
 using UnityEngine;
 
+public delegate void UpdateAction();
+public class Updater {
+    UpdateAction action;
+    float interval, elapsed_time;
+    public Updater(UpdateAction action, float interval){
+        this.action = action;
+        this.interval = interval;
+        elapsed_time = 0;
+    }
+    public void _run(float delta_time){
+        elapsed_time += delta_time;
+        if (elapsed_time >= interval) {
+            action();
+            elapsed_time -= interval;
+        }
+    }
+}
 
 public class UpdateSystem : MonoBehaviour{
     // ---------- System Tools ----------
-    public ControlSystem _CtrlSys;
-    public GameConfigs _GCfg;
-    // public HierarchySearch _HierSearch;
-    public SaveLoadBase _SL;
-    public InputSystem _InputSys;
-    public TilemapSystem _TMapSys;
-    public ObjectSystem _ObjSys;
-    public UISystem _UISys;
-    public MaterialSystem _MatSys;
-    // ---------- Unity ----------
-    public GameObject _input;
-    public GameObject _system;
-    public GameObject _UI;
-    public GameObject _grid;
-    public GameObject _object;
-    public GameObject _camera;
+    HierarchySearch _HierSearch;
+    List<Updater> updaters = new();
+
     void Start(){
-        // _input = GameObject.Find("Input");
-        // _system = GameObject.Find("System");
-        // _canvas = GameObject.Find("Canvas");
-        // _grid = GameObject.Find("Grid");
+        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
+        _HierSearch._UpdateSys = this;
     }
 
     void Update(){
-        
+        foreach (Updater updater in updaters){
+            updater._run(Time.deltaTime);
+        }
     }
 
-    public T _searchInit<T>(string type){
-        if (type == "System") return (T)(object)_system.GetComponent<T>();
-        else if (type == "Input") return (T)(object)_input.GetComponent<T>();
-        else if (type == "Tilemap") return (T)(object)_grid.GetComponent<T>();
-        else if (type == "UI") return (T)(object)_UI.GetComponent<T>();
-        else if (type == "Object") return (T)(object)_object.GetComponent<T>();
-        else if (type == "Camera") return (T)(object)_camera.GetComponent<T>();
-        // else if (type == "Player") return GameObject.FindGameObjectWithTag("Player").GetComponent<T>();
-        return default;
+    public void _add_updater(UpdateAction action, float interval){
+        _add_updater(new(action, interval));
+    }
+    public void _add_updater(Updater updater){
+        updaters.Add(updater);
     }
 
-    public T _searchInit<T>(string type, string name){
-        if (type == "System") return (T)(object)_system.transform.Find(name).GetComponent<T>();
-        else if (type == "Input") return (T)(object)_input.transform.Find(name).GetComponent<T>();
-        else if (type == "UI") return (T)(object)_UI.transform.Find(name).GetComponent<T>();
-        else if (type == "Camera") return (T)(object)_camera.transform.Find(name).GetComponent<T>();
-        return default;
-    }
 }

@@ -25,6 +25,7 @@ public class GameConfigs : MonoBehaviour{
     public ObjectSystem _ObjSys { get { return _HierSearch._ObjSys; } }
     public UISystem _UISys { get { return _HierSearch._UISys; } }
     public MaterialSystem _MatSys { get => _HierSearch._MatSys; }
+    public UpdateSystem _UpdateSys { get => _HierSearch._UpdateSys; }
     // ---------- system config ----------
     // config
     public string __version = "0.0.1";

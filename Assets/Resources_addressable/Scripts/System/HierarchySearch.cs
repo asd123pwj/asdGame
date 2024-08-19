@@ -12,6 +12,7 @@ public class HierarchySearch : MonoBehaviour{
     public ObjectSystem _ObjSys;
     public UISystem _UISys;
     public MaterialSystem _MatSys;
+    public UpdateSystem _UpdateSys;
     // ---------- Unity ----------
     public GameObject _input;
     public GameObject _system;

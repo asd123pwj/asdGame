@@ -35,21 +35,19 @@ public class TilemapController{
     // Start is called before the first frame update
     public TilemapController(GameConfigs game_configs){
         _GCfg = game_configs;
-        Debug.Log("a");
+        // Debug.Log("a");
         // load_tiles_info();
-        query_trigger(0.5f).Forget();
+        // query_trigger(0.5f).Forget();
+        _GCfg._UpdateSys._add_updater(update, 0.5f);
     }
 
     // Update is called once per frame
-    public void _update(){
-        if (TMapSys._isInit) return;
-        // if (_isInit){
-        // StartCoroutine(query_trigger(0.1f));
-        // _generate_spawn_block(new(0, 0));
-        // query_trigger(0.1f).Forget();
-        // _isInit = false;
-        // }
-        
+    void update(){
+        if (!check_loaded()) return;
+        _generate_spawn_block(new(0, 0));
+        query_isTilemapBlockChange();
+
+        trigger_tilemapBlockChange();
     }
 
     bool check_loaded(){
