@@ -10,10 +10,10 @@ using System.Diagnostics;
 
 public class TilemapBlockGenerate{
     TilemapConfig _tilemap_base;
-    GameConfigs _game_configs;
-    _DirectionsConfig _directions_config = new();
-    TilemapAroundBlock _around_blocks;
-    TilemapBlockDirection _block_direction;
+    GameConfigs GCfg;
+    // DirectionsConfig DirCfg = new();
+    TilemapAroundBlock BAround;
+    TilemapBlockDirection BDir;
     TilemapTerrain _terrain;
     TilemapBlockMineral _block_mineral;
     // TilemapSaveLoad _saveLoad;
@@ -21,11 +21,11 @@ public class TilemapBlockGenerate{
 
     public TilemapBlockGenerate(TilemapConfig tilemap_base, GameConfigs game_configs){
         _tilemap_base = tilemap_base;
-        _game_configs = game_configs;
+        GCfg = game_configs;
         _terrain = new();
-        _around_blocks = new(_tilemap_base, _game_configs, _terrain);
-        _block_direction = new(_tilemap_base, _game_configs);
-        _block_mineral = new(_tilemap_base, _game_configs, _terrain);
+        BAround = new(_tilemap_base, GCfg, _terrain);
+        BDir = new(_tilemap_base, GCfg);
+        _block_mineral = new(_tilemap_base, GCfg, _terrain);
         // _block_transition = new(_tilemap_base, _game_configs, _terrain);
     }
 
@@ -59,22 +59,22 @@ public class TilemapBlockGenerate{
         TilemapBlock block = new() {
             offsets = block_offsets,
             isExist = true,
-            size = _game_configs.__block_size,
+            size = GCfg.__block_size,
         };
-        _around_blocks._set_block(block);
+        BAround._set_block(block);
 
-        block = _terrain._set_terrain_random(block, _around_blocks);
-        block = _terrain._set_terrainType_random(block, _around_blocks);
-        block = _block_direction._set_direction_random(block, _around_blocks, _terrain, extra_targets, direction);
+        block = _terrain._set_terrain_random(block, BAround);
+        block = _terrain._set_terrainType_random(block, BAround);
+        block = BDir._set_direction_random(block, BAround, _terrain, extra_targets, direction);
         block = fill_1DBlock(block);
-        block = generate_2Dblock_transition(block, _around_blocks);
+        block = generate_2Dblock_transition(block, BAround);
         block = _block_mineral._generate_2DBlock_mineral(block);
         return block;
     }
 
     TilemapBlock fill_1DBlock(TilemapBlock block){
         // ---------- init ----------
-        Vector3Int BSize = _game_configs.__block_size;    // for convenience
+        Vector3Int BSize = GCfg.__block_size;    // for convenience
         int perlin;
         int[,] map = new int[BSize.x, BSize.y];
         _HeightGenerator height_gen = new(block);
@@ -99,7 +99,7 @@ public class TilemapBlockGenerate{
 
     TilemapBlock generate_2Dblock_transition(TilemapBlock block, TilemapAroundBlock around_blocks){
         // ---------- init ----------
-        Vector3Int BSize = _game_configs.__block_size;    // for convenience
+        Vector3Int BSize = GCfg.__block_size;    // for convenience
         int perlin;
         _HeightGenerator height_gen = new(block, new(BSize.x, BSize.y / 5));
         height_gen._Add(new(0, BSize.y / 20));

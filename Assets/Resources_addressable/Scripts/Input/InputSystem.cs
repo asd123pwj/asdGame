@@ -66,11 +66,14 @@ public class InputSystem : MonoBehaviour{
 
     void init(){
         if (!isInit) return;
-        isInit = false;
         _InputSingle = new();
         _InputCombo = new();
         _InputStatus = new();
         // _InputUI = new();
+        isInit = false;
+    }
+    public bool _check_initDone(){
+        return !isInit;
     }
 
     void update_keyPos(){

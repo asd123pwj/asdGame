@@ -11,6 +11,12 @@ public class Updater {
         elapsed_time = 0;
     }
     public void _run(float delta_time){
+        // interval == 0, run action every frame
+        if (interval == 0) {
+            action();
+            return;
+        }
+        // interval > 0, run action every interval
         elapsed_time += delta_time;
         if (elapsed_time >= interval) {
             action();

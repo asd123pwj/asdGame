@@ -141,7 +141,7 @@ struct _DirectionsInfo{
      *  plain: 左右走向的平原
      *  
      */
-class _DirectionsConfig{
+class DirectionsConfig{
     static _DirectionsInfo[] directions_info = new _DirectionsInfo[] { 
         new _DirectionsInfo{ ID = "0", direction = new string[] {"empty", ""},
             up = new string[]{"0", "12", "17", "19"},
@@ -251,16 +251,19 @@ class _DirectionsConfig{
     };
 
     public string[] _select_direction_random(TilemapAroundBlock around_blocks, TilemapBlock block, TilemapTerrain terrain){
-        // init
+        // ----- get available directions FROM terrain type of block
         TerrainType terrain_type = terrain.tags2TerrainType[block.terrainType_tags];
         string[] dirs_avail = get_available_directions(around_blocks, terrain_type.dirs_avail);
+        // no available direction, throw the "error" direction
         if (dirs_avail.Length == 0) return new string[]{"error", ""};
+        // ----- get probability of available direction
         float[] dirs_prob = new float[dirs_avail.Length];
         int dir_index;
         for (int i = 0; i < dirs_avail.Length; i++){
             dir_index = System.Array.IndexOf(terrain_type.dirs_avail, dirs_avail[i]);
             dirs_prob[i] = terrain_type.dirs_prob[dir_index];
         }
+        // ----- random a direction
         string direction_ID = dirs_avail[random_by_prob(dirs_prob)];
         string[] direction = mapping_ID_to_directionInfo(direction_ID).direction;
         return direction;
@@ -287,11 +290,8 @@ class _DirectionsConfig{
     }
 
     string[] get_available_directions(TilemapAroundBlock around_blocks, string[] availables){
-        // string[] availables = new string[directions_info.Length];
-        // for(int i = 0; i < directions_info.Length; i++){
-        //     availables[i] = directions_info[i].ID;
-        // }
-
+        // get available directions FROM around blocks (i.e., adjecent blocks)
+        // get available directions FROM intersect between this and adjecent block
         if(around_blocks.up.isExist){
             int direction_index = mapping_direction_to_index(around_blocks.up.direction);
             string[] avail = directions_info[direction_index].down;
@@ -326,12 +326,12 @@ class _DirectionsConfig{
 
 public class TilemapBlockDirection{
     TilemapConfig _tilemap_base;
-    GameConfigs _game_configs;
-    _DirectionsConfig _directions_config = new();
+    GameConfigs GCfg;
+    DirectionsConfig DirCfg = new();
 
     public TilemapBlockDirection(TilemapConfig tilemap_base, GameConfigs game_configs){
         _tilemap_base = tilemap_base;
-        _game_configs = game_configs;
+        GCfg = game_configs;
     }
 
     public TilemapBlock _set_direction_random(
@@ -348,7 +348,7 @@ public class TilemapBlockDirection{
         // if (direction[0] == "random"){
         //     direction = _directions_config.select_direction_random(around_blocks);
         // }
-        if(direction == null) direction = _directions_config._select_direction_random(around_blocks, block, terrain);
+        direction ??= DirCfg._select_direction_random(around_blocks, block, terrain);
         block.direction = direction;
         block.up = new(-1, BSize.y);
         block.down = new(-1, 0);

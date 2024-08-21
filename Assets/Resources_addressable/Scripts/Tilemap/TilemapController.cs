@@ -27,7 +27,7 @@ public class TilemapController{
     TilemapConfig TMapCfg { get => TMapSys._TMapCfg; }
     TilemapSaveLoad TMapSL { get => TMapSys._TMapSL; }
     // ---------- status ----------
-    // bool _isInit;
+    bool isInit = true;
     private Vector3Int _tilemapBlock_offsets;
     private bool _tilemapBlockChange = true;
     private CancellationTokenSource _cancel_balanceTilemap;
@@ -39,19 +39,43 @@ public class TilemapController{
         // load_tiles_info();
         // query_trigger(0.5f).Forget();
         _GCfg._UpdateSys._add_updater(update, 0.5f);
+        
     }
 
     // Update is called once per frame
     void update(){
         if (!check_loaded()) return;
-        _generate_spawn_block(new(0, 0));
-        query_isTilemapBlockChange();
+        init();
 
-        trigger_tilemapBlockChange();
+        // _generate_spawn_block(new(0, 0));
+        // query_isTilemapBlockChange();
+
+        // trigger_tilemapBlockChange();
+    }
+
+    void init(){
+        if (!isInit) return;
+        _GCfg._InputSys._register_action("Menu 4", tmp_draw, "isFirstDown");
+
+        isInit = false;
+    }
+
+    public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+        Vector3Int block_offsets = _mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
+        _cancel_balanceTilemap?.Cancel();
+        _cancel_balanceTilemap = new CancellationTokenSource();
+        List<TilemapRegion4Draw> regions = new();
+        TilemapBlock block = TMapGen._generate_1DBlock(block_offsets);
+        TMapSL._load_block(block);
+        regions.Add(TMapDraw._get_draw_region(TMap_modify, block));
+        if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions, _cancel_balanceTilemap.Token).Forget();
+        return true;
     }
 
     bool check_loaded(){
-        return _GCfg._MatSys._check_info_initDone();
+        if (_GCfg._MatSys._check_info_initDone() == false) return false;
+        if (_GCfg._InputSys._check_initDone() == false) return false;
+        return true;
         // return _GCfg._MatSys._TMap._check_info_initDone();
     }
 
