@@ -1,12 +1,12 @@
 using UnityEngine;
 
 
-public class HierarchySearch : MonoBehaviour{
+public class SystemManager : MonoBehaviour{
     // ---------- System Tools ----------
     public ControlSystem _CtrlSys;
     public GameConfigs _GCfg;
     // public HierarchySearch _HierSearch;
-    public SaveLoadBase _SL;
+    // public SaveLoadBase _SL;
     public InputSystem _InputSys;
     public TilemapSystem _TMapSys;
     public ObjectSystem _ObjSys;
@@ -21,6 +21,11 @@ public class HierarchySearch : MonoBehaviour{
     public GameObject _object;
     public GameObject _camera;
     void Start(){
+        SystemBase._sys = this;
+        _CtrlSys = new(this);
+        _GCfg = new(this);
+        _UpdateSys = new(this);
+        _MatSys = new(this);
         // _input = GameObject.Find("Input");
         // _system = GameObject.Find("System");
         // _canvas = GameObject.Find("Canvas");
@@ -28,7 +33,7 @@ public class HierarchySearch : MonoBehaviour{
     }
 
     void Update(){
-        
+        _UpdateSys._update();
     }
 
     public T _searchInit<T>(string type){

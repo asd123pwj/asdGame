@@ -18,7 +18,7 @@ public delegate bool _input_action(KeyPos keyPos, Dictionary<string, KeyInfo> ke
 
 public class InputSystem : MonoBehaviour{
     // ---------- System Tool ----------
-    HierarchySearch _HierSearch;
+    SystemManager _HierSearch;
     ControlSystem _CtrlSys { get { return _HierSearch._CtrlSys; } }
     GameConfigs _GCfg { get { return _HierSearch._GCfg; } }
     // ---------- Sub Script ----------
@@ -32,7 +32,7 @@ public class InputSystem : MonoBehaviour{
     public Dictionary<string, KeyInfo> _keyStatus = new();
 
     void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
+        _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
         // _GCfg = _HierSearch._searchInit<GameConfigs>("System");
         _HierSearch._InputSys = this;
         // _CtrlSys = _hierarchy_search._searchInit<ControlSystem>("System");

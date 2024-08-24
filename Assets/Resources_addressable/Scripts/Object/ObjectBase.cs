@@ -10,7 +10,7 @@ public class ObjectBase : MonoBehaviour{
     public Tilemap _tilemap;
     public TilemapSystem _tilemap_system;
     bool isFirst = true;
-    private CancellationTokenSource _cancel_balanceTilemap;
+    // private CancellationTokenSource _cancel_balanceTilemap;
 
     // ---------- info ----------
     private Vector3Int _tilemapBlock_offsets;
@@ -65,9 +65,9 @@ public class ObjectBase : MonoBehaviour{
             // StartCoroutine(_tilemap_system._balance_tilemap(_tilemapBlock_offsets));
             // _tilemap_system._balance_tilemap(_tilemapBlock_offsets);
             // _tilemapBlockChange = false;
-            if (_cancel_balanceTilemap != null) _cancel_balanceTilemap.Cancel();
-            _cancel_balanceTilemap = new CancellationTokenSource();
-            _tilemap_system._TMapCtrl._balance_tilemap(_tilemapBlock_offsets, _cancel_balanceTilemap).Forget();
+            // if (_cancel_balanceTilemap != null) _cancel_balanceTilemap.Cancel();
+            // _cancel_balanceTilemap = new CancellationTokenSource();
+            _tilemap_system._TMapCtrl._balance_tilemap(_tilemapBlock_offsets).Forget();
             _tilemapBlockChange = false;
         }
     }

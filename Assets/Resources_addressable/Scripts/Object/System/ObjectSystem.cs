@@ -13,7 +13,7 @@ using System.Threading;
 
 public class ObjectSystem : MonoBehaviour{
     // ---------- system tool ----------
-    HierarchySearch _HierSearch;
+    SystemManager _HierSearch;
     // InputSystem _input_base;
     GameConfigs _GCfg { get { return _HierSearch._GCfg; } }
     // ----------
@@ -27,7 +27,7 @@ public class ObjectSystem : MonoBehaviour{
 
     // Start is called before the first frame update
     void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
+        _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
         // _GCfg = _HierSearch._searchInit<GameConfigs>("System");
         _HierSearch._ObjSys = this;
         // _input_base = _hierarchy_search._searchInit<InputSystem>("Input");

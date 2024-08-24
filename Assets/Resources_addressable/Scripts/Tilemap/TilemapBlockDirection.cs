@@ -250,9 +250,9 @@ class DirectionsConfig{
         }
     };
 
-    public string[] _select_direction_random(TilemapAroundBlock around_blocks, TilemapBlock block, TilemapTerrain terrain){
+    public string[] _random_direction(TilemapBlockAround around_blocks, TilemapBlock block, TilemapTerrain terrain){
         // ----- get available directions FROM terrain type of block
-        TerrainType terrain_type = terrain.tags2TerrainType[block.terrainType_tags];
+        TerrainHier2Info terrain_type = terrain.tags2TerrainHier2[block.terrain_tags];
         string[] dirs_avail = get_available_directions(around_blocks, terrain_type.dirs_avail);
         // no available direction, throw the "error" direction
         if (dirs_avail.Length == 0) return new string[]{"error", ""};
@@ -289,7 +289,7 @@ class DirectionsConfig{
         return new();   // error
     }
 
-    string[] get_available_directions(TilemapAroundBlock around_blocks, string[] availables){
+    string[] get_available_directions(TilemapBlockAround around_blocks, string[] availables){
         // get available directions FROM around blocks (i.e., adjecent blocks)
         // get available directions FROM intersect between this and adjecent block
         if(around_blocks.up.isExist){
@@ -334,11 +334,11 @@ public class TilemapBlockDirection{
         GCfg = game_configs;
     }
 
-    public TilemapBlock _set_direction_random(
+    public TilemapBlock _random_direction(
             TilemapBlock block, 
-            TilemapAroundBlock around_blocks, 
+            TilemapBlockAround around_blocks, 
             TilemapTerrain terrain, 
-            Vector3Int[] extra_targets, 
+            Vector3Int[] extra_groundPos, 
             string[] direction){
         Vector3Int BSize = block.size;    // for convenience
         int min_h = 1;        // min_h also means boundBottom_h or boundTop_h
@@ -348,31 +348,31 @@ public class TilemapBlockDirection{
         // if (direction[0] == "random"){
         //     direction = _directions_config.select_direction_random(around_blocks);
         // }
-        direction ??= DirCfg._select_direction_random(around_blocks, block, terrain);
+        direction ??= DirCfg._random_direction(around_blocks, block, terrain);
         block.direction = direction;
         block.up = new(-1, BSize.y);
         block.down = new(-1, 0);
         block.left = new(0, -2);
         block.right = new(BSize.x - 1, -1);
+        // ----- Reverse mode
         if (direction[0][0] == '_'){
-            // Reverse mode
             block.direction_reverse = true;
             string[] _direction = direction.ToArray();
             _direction[0] = direction[0].Substring(1);
             direction = _direction;
         }
         // ---------- target ----------
-        block.targets = new();
-        if (extra_targets != null)
-            for(int i = 0; i < extra_targets.Length; i++){
-                block.targets.Add(extra_targets[i]);
+        block.groundPos = new();
+        if (extra_groundPos != null)
+            for(int i = 0; i < extra_groundPos.Length; i++){
+                block.groundPos.Add(extra_groundPos[i]);
             }
         if (direction[0] == "error"){
             for (int i = 0; i < BSize.x; i++){
                 if (i % 2 == 0)
-                    block.targets.Add(new(i, BSize.y));
+                    block.groundPos.Add(new(i, BSize.y));
                 else
-                    block.targets.Add(new(i, 1));
+                    block.groundPos.Add(new(i, 1));
             }
             block.isExist = false;
         }
@@ -390,14 +390,14 @@ public class TilemapBlockDirection{
                 block.left.y = Random.Range(min_h, max_h);
                 block.right.y = Random.Range(min_h, max_h);
             }
-            // ---------- for spawn
-            if (extra_targets != null){
-                if (extra_targets[0].x == 0) block.left.y = extra_targets[0].y;
-                if (extra_targets[0].x == BSize.x-1) block.left.y = extra_targets[0].y;
+            // ---------- for extra groundPos
+            if (extra_groundPos != null){
+                if (extra_groundPos[0].x == 0) block.left.y = extra_groundPos[0].y;
+                if (extra_groundPos[0].x == BSize.x-1) block.left.y = extra_groundPos[0].y;
             }
             // ---------- normal
-            block.targets.Add(block.left);
-            block.targets.Add(block.right);
+            block.groundPos.Add(block.left);
+            block.groundPos.Add(block.right);
         }
         else if (direction[0] == "vertical"){
             if (direction[1] == "left"){
@@ -414,10 +414,10 @@ public class TilemapBlockDirection{
                     block.up.x = Random.Range(min_w, max_w);
                     block.down.x = Random.Range(block.up.x, max_w);
                 }
-                block.targets.Add(new(0, BSize.y));
-                block.targets.Add(block.up);
-                block.targets.Add(block.down);
-                block.targets.Add(new(BSize.x-1, 0));
+                block.groundPos.Add(new(0, BSize.y));
+                block.groundPos.Add(block.up);
+                block.groundPos.Add(block.down);
+                block.groundPos.Add(new(BSize.x-1, 0));
             }
             else if (direction[1] == "right"){
                 if (around_blocks.up.isExist && around_blocks.down.isExist) {
@@ -433,10 +433,10 @@ public class TilemapBlockDirection{
                     block.up.x = Random.Range(min_w, max_w);
                     block.down.x = Random.Range(min_w, block.up.x);
                 }
-                block.targets.Add(new(0, 0));
-                block.targets.Add(block.down);
-                block.targets.Add(block.up);
-                block.targets.Add(new(BSize.x-1, BSize.y));
+                block.groundPos.Add(new(0, 0));
+                block.groundPos.Add(block.down);
+                block.groundPos.Add(block.up);
+                block.groundPos.Add(new(BSize.x-1, BSize.y));
             }
         }
         else if (direction[0] == "left"){
@@ -454,9 +454,9 @@ public class TilemapBlockDirection{
                     block.left.y = Random.Range(min_h, max_h);
                     block.up.x = Random.Range(min_w, max_w);
                 }
-                block.targets.Add(block.left);
-                block.targets.Add(block.up);
-                block.targets.Add(new(BSize.x - 1, BSize.y));
+                block.groundPos.Add(block.left);
+                block.groundPos.Add(block.up);
+                block.groundPos.Add(new(BSize.x - 1, BSize.y));
             }
             else if (direction[1] == "down") {
                 if (around_blocks.left.isExist && around_blocks.down.isExist) {
@@ -472,9 +472,9 @@ public class TilemapBlockDirection{
                     block.left.y = Random.Range(min_h, max_h);
                     block.down.x = Random.Range(min_w, max_w);
                 }
-                block.targets.Add(block.left);
-                block.targets.Add(block.down);
-                block.targets.Add(new(BSize.x - 1, 0));
+                block.groundPos.Add(block.left);
+                block.groundPos.Add(block.down);
+                block.groundPos.Add(new(BSize.x - 1, 0));
             }
         }
         else if (direction[0] == "right"){
@@ -492,9 +492,9 @@ public class TilemapBlockDirection{
                     block.right.y = Random.Range(min_h, max_h);
                     block.up.x = Random.Range(min_w, max_w);
                 }
-                block.targets.Add(new(0, BSize.y));
-                block.targets.Add(block.up);
-                block.targets.Add(block.right);
+                block.groundPos.Add(new(0, BSize.y));
+                block.groundPos.Add(block.up);
+                block.groundPos.Add(block.right);
             }
             else if (direction[1] == "down"){
                 if (around_blocks.right.isExist && around_blocks.down.isExist) {
@@ -510,22 +510,22 @@ public class TilemapBlockDirection{
                     block.right.y = Random.Range(min_h, max_h);
                     block.down.x = Random.Range(min_w, max_w);
                 }
-                block.targets.Add(new(0, 0));
-                block.targets.Add(block.down);
-                block.targets.Add(block.right);
+                block.groundPos.Add(new(0, 0));
+                block.groundPos.Add(block.down);
+                block.groundPos.Add(block.right);
             }
         }
         else if (direction[0] == "full"){
             block.left.y = BSize.y;
             block.right.y = BSize.y;
-            block.targets.Add(block.left);
-            block.targets.Add(block.right);
+            block.groundPos.Add(block.left);
+            block.groundPos.Add(block.right);
         }
         else if (direction[0] == "empty"){
             block.left.y = 0;
             block.right.y = 0;
-            block.targets.Add(block.left);
-            block.targets.Add(block.right);
+            block.groundPos.Add(block.left);
+            block.groundPos.Add(block.right);
         }
         return block;
     }

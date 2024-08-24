@@ -25,17 +25,18 @@ public class Updater {
     }
 }
 
-public class UpdateSystem : MonoBehaviour{
+public class UpdateSystem{
     // ---------- System Tools ----------
-    HierarchySearch _HierSearch;
+    SystemManager sys;
     List<Updater> updaters = new();
 
-    void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
-        _HierSearch._UpdateSys = this;
+    public UpdateSystem(SystemManager sys){
+        this.sys = sys;
+        // _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
+        // _HierSearch._UpdateSys = this;
     }
 
-    void Update(){
+    public void _update(){
         foreach (Updater updater in updaters){
             updater._run(Time.deltaTime);
         }

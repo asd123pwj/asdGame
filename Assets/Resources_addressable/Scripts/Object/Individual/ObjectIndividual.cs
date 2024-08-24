@@ -9,7 +9,7 @@ using MathNet.Numerics;
 
 public class ObjectIndividual : MonoBehaviour{
     // ---------- System Tool ----------
-    HierarchySearch _HierarchySearch;
+    SystemManager _HierarchySearch;
     // UISystemTmp _UI;
     InputSystem _InputBase;
     // ---------- Sub Script - Config ----------
@@ -21,7 +21,7 @@ public class ObjectIndividual : MonoBehaviour{
 
 
     void Start(){
-        _HierarchySearch = GameObject.Find("System").GetComponent<HierarchySearch>();
+        _HierarchySearch = GameObject.Find("System").GetComponent<SystemManager>();
         // _UI = _HierarchySearch._searchInit<UISystemTmp>("UI");
         _InputBase = _HierarchySearch._searchInit<InputSystem>("Input");
 

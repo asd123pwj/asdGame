@@ -12,7 +12,7 @@ public class TilemapBlockGenerate{
     TilemapConfig _tilemap_base;
     GameConfigs GCfg;
     // DirectionsConfig DirCfg = new();
-    TilemapAroundBlock BAround;
+    TilemapBlockAround BAround;
     TilemapBlockDirection BDir;
     TilemapTerrain _terrain;
     TilemapBlockMineral _block_mineral;
@@ -41,7 +41,7 @@ public class TilemapBlockGenerate{
 
     public TilemapBlock _generate_1DBlock_by_tile(Vector3Int tile_pos, string type, string[] directions){
         Vector3Int block_offsets = _tilemap_base._mapping_mapXY_to_blockXY(tile_pos);
-        return _generate_1DBlock(block_offsets);
+        return _generate_block(block_offsets);
     }
     
     public TilemapBlock _generate_spawn_block(Vector3Int spawn_mapPos, Tilemap tilemap){
@@ -50,12 +50,12 @@ public class TilemapBlockGenerate{
         Vector3Int[] spawn_tiles = new Vector3Int[] {tile_offsets};
         // Vector3Int[] spawn_tiles = new Vector3Int[] { tile_offsets , new(tile_offsets.x-1, tile_offsets.y)};
         // if (tile_offsets.x == 0) spawn_tiles[1] = new(tile_offsets.x+1, tile_offsets.y);
-        TilemapBlock block = _generate_1DBlock(block_offsets, spawn_tiles, new string[]{"horizontal", ""});
+        TilemapBlock block = _generate_block(block_offsets, spawn_tiles, new string[]{"horizontal", ""});
         // TilemapBlock block = _generate_1DBlock(block_offsets);
         return block;
     }
     
-    public TilemapBlock _generate_1DBlock(Vector3Int block_offsets, Vector3Int[] extra_targets=null, string[] direction=null){
+    public TilemapBlock _generate_block(Vector3Int block_offsets, Vector3Int[] extra_targets=null, string[] direction=null){
         TilemapBlock block = new() {
             offsets = block_offsets,
             isExist = true,
@@ -63,9 +63,9 @@ public class TilemapBlockGenerate{
         };
         BAround._set_block(block);
 
-        block = _terrain._set_terrain_random(block, BAround);
-        block = _terrain._set_terrainType_random(block, BAround);
-        block = BDir._set_direction_random(block, BAround, _terrain, extra_targets, direction);
+        block = _terrain._random_terrainHier1(block, BAround);
+        block = _terrain._random_terrainHier2_random(block, BAround);
+        block = BDir._random_direction(block, BAround, _terrain, extra_targets, direction);
         block = fill_1DBlock(block);
         block = generate_2Dblock_transition(block, BAround);
         block = _block_mineral._generate_2DBlock_mineral(block);
@@ -78,10 +78,10 @@ public class TilemapBlockGenerate{
         int perlin;
         int[,] map = new int[BSize.x, BSize.y];
         _HeightGenerator height_gen = new(block);
-        foreach(Vector3Int pos in block.targets){
+        foreach(Vector3Int pos in block.groundPos){
             height_gen._Add(pos);
         }
-        int surface = _terrain.ID2TerrainInfo[block.terrain_ID].surface;
+        int surface = _terrain.ID2TerrainHier1[block.terrain_ID].surface;
         // ---------- fill map ----------
         for (int x = 0; x < BSize.x; x++){
             perlin = height_gen._get_height(x);
@@ -97,15 +97,15 @@ public class TilemapBlockGenerate{
         return block;
     }
 
-    TilemapBlock generate_2Dblock_transition(TilemapBlock block, TilemapAroundBlock around_blocks){
+    TilemapBlock generate_2Dblock_transition(TilemapBlock block, TilemapBlockAround around_blocks){
         // ---------- init ----------
         Vector3Int BSize = GCfg.__block_size;    // for convenience
         int perlin;
-        _HeightGenerator height_gen = new(block, new(BSize.x, BSize.y / 5));
+        _HeightGenerator height_gen = new(block, new(BSize.x, BSize.y / 5)); 
         height_gen._Add(new(0, BSize.y / 20));
         height_gen._Add(new(BSize.x-1, BSize.y / 20));
         // around surface
-        int self_surface = _terrain.ID2TerrainInfo[block.terrain_ID].surface;
+        int self_surface = _terrain.ID2TerrainHier1[block.terrain_ID].surface;
         int up_surface = around_blocks.up_terrainInfo.surface;
         int down_surface = around_blocks.down_terrainInfo.surface;
         int left_surface = around_blocks.left_terrainInfo.surface;

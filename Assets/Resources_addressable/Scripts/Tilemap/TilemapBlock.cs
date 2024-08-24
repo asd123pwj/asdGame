@@ -9,7 +9,7 @@ public struct LayerInfo{
 
 public class TilemapBlock{
     public string terrain_ID;
-    public string[] terrainType_tags;
+    public string[] terrain_tags;
     public Vector3Int offsets;
     public Vector3Int size;
     public int seed;
@@ -19,7 +19,7 @@ public class TilemapBlock{
     public Vector3Int down;
     public Vector3Int left;
     public Vector3Int right;
-    public List<Vector3Int> targets;
+    public List<Vector3Int> groundPos;
     public string[] direction;
     public bool direction_reverse;
     public int[,] map;

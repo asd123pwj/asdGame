@@ -8,7 +8,7 @@ using Cysharp.Threading.Tasks;
 
 public class ObjectConfig{
     // ---------- System Tool ----------
-    public HierarchySearch _HierSearch;
+    public SystemManager _sys;
     public InputSystem _InputSys;
     public ObjectIndividual _individual;
     // ---------- Unity ----------
@@ -31,9 +31,9 @@ public class ObjectConfig{
     public Vector2 _move_force;
     
 
-    public ObjectConfig(GameObject self, ObjectTags tags, HierarchySearch hierarchy_search, InputSystem input_base){
+    public ObjectConfig(GameObject self, ObjectTags tags, SystemManager hierarchy_search, InputSystem input_base){
         // ---------- action ----------
-        _HierSearch = hierarchy_search;
+        _sys = hierarchy_search;
         _InputSys = input_base;
         
         _self = self;

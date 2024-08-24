@@ -14,10 +14,10 @@ using System;
 
 public class TilemapSystem : MonoBehaviour{
     // ---------- system tool ----------
-    HierarchySearch _HierSearch;
-    ControlSystem _CtrlSys;
+    SystemManager sys;
+    ControlSystem _CtrlSys { get => sys._CtrlSys; }
     // InputSystem _input_base;
-    GameConfigs _GCfg;
+    GameConfigs _GCfg { get => sys._GCfg; }
     // ---------- unity ----------
     public Tilemap _tilemap_modify;
     // ---------- sub script ----------
@@ -34,10 +34,10 @@ public class TilemapSystem : MonoBehaviour{
 
     // Start is called before the first frame update
     void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
-        _HierSearch._TMapSys = this;        
-        _GCfg = _HierSearch._searchInit<GameConfigs>("System");
-        _CtrlSys = _HierSearch._searchInit<ControlSystem>("System");
+        sys = GameObject.Find("System").GetComponent<SystemManager>();
+        sys._TMapSys = this;        
+        // _GCfg = sys._searchInit<GameConfigs>("System");
+        // _CtrlSys = sys._searchInit<ControlSystem>("System");
         // _input_base = _hierarchy_search._searchInit<InputSystem>("Input");
 
 

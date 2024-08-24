@@ -5,7 +5,7 @@ using MathNet.Numerics.LinearAlgebra;
 
 
 /*
- * ---------- type of terrain ----------
+ * ---------- type of terrainHier1 ----------
  * ---------- direction fluctuation
  * flat: 2
  * undulating: 1 3 7 9
@@ -34,7 +34,7 @@ using MathNet.Numerics.LinearAlgebra;
  * |    sky     |   no   |      no      |    no   |     no      |   no   |   most  |
  *
  */
-public struct TerrainType{
+public struct TerrainHier2Info{
     public string[] tags;
     public string name;
     public float scale;
@@ -43,7 +43,7 @@ public struct TerrainType{
     public bool isExist;
 }
 
-public struct TerrainInfo{
+public struct TerrainHier1Info{
     public string ID;
     public string name;
     public string[] tags;
@@ -55,55 +55,55 @@ public struct TerrainInfo{
 }
 
 public class TilemapTerrain{
-    List<TerrainType> _terrains_type = new();
-    List<TerrainInfo> _terrains_info = new();
-    public Dictionary<string, TerrainInfo> ID2TerrainInfo = new();
-    public Dictionary<string[], TerrainType> tags2TerrainType = new();
+    List<TerrainHier2Info> _terrains_hier2 = new();
+    List<TerrainHier1Info> _terrains_hier1 = new();
+    public Dictionary<string, TerrainHier1Info> ID2TerrainHier1 = new();
+    public Dictionary<string[], TerrainHier2Info> tags2TerrainHier2 = new();
 
     public TilemapTerrain() {
-        init_terrainsType();
-        init_terrainsInfo();
-        init_ID2TerrainInfo();
-        init_tags2TerrainType();
+        init_terrainsHier2Info();
+        init_terrainHier1Info();
+        init_ID2TerrainHier1Info();
+        init_tags2TerrainHier2();
     }
 
-    public TilemapBlock _set_terrain_random(TilemapBlock block, TilemapAroundBlock around_blocks){
-        List<string> terrains_avail = get_available_terrains(block);
+    public TilemapBlock _random_terrainHier1(TilemapBlock block, TilemapBlockAround around_blocks){
+        List<string> terrains_avail = get_available_terrainsHier1(block);
         float[] terrains_prob = get_terrains_prob(terrains_avail, around_blocks);
         string terrain_ID = terrains_avail[random_by_prob(terrains_prob)];
         block.terrain_ID = terrain_ID;
         return block;
     }
 
-    public TilemapBlock _set_terrainType_random(TilemapBlock block, TilemapAroundBlock around_blocks){
-        List<TerrainType> terrainTypes_avail = get_available_terrainTypes(block.terrain_ID);
-        float[] terrainTypes_prob = get_terrainTypes_prob(terrainTypes_avail, around_blocks);
+    public TilemapBlock _random_terrainHier2_random(TilemapBlock block, TilemapBlockAround around_blocks){
+        List<TerrainHier2Info> terrainTypes_avail = get_available_terrainHier2(block.terrain_ID);
+        float[] terrainTypes_prob = get_terrainHier2_prob(terrainTypes_avail, around_blocks);
         string[] terrainTypes_tags = terrainTypes_avail[random_by_prob(terrainTypes_prob)].tags;
-        block.terrainType_tags = terrainTypes_tags;
-        block.scale = tags2TerrainType[terrainTypes_tags].scale;
+        block.terrain_tags = terrainTypes_tags;
+        block.scale = tags2TerrainHier2[terrainTypes_tags].scale;
         return block;
     }
 
-    List<TerrainType> get_available_terrainTypes(string terrain_ID){
-        TerrainInfo terrain = ID2TerrainInfo[terrain_ID];
-        List<TerrainType> types = new();
-        for (int i = 0; i < _terrains_type.Count; i++){
-            if (check_tagsIsSubset(terrain.tags, _terrains_type[i].tags))
-                types.Add(_terrains_type[i]);
+    List<TerrainHier2Info> get_available_terrainHier2(string terrain_ID){
+        TerrainHier1Info terrain = ID2TerrainHier1[terrain_ID];
+        List<TerrainHier2Info> types = new();
+        for (int i = 0; i < _terrains_hier2.Count; i++){
+            if (check_tagsIsSubset(terrain.tags, _terrains_hier2[i].tags))
+                types.Add(_terrains_hier2[i]);
         }
         return types;
     }
     
-    float[] get_terrainTypes_prob(List<TerrainType> types, TilemapAroundBlock around_blocks){
+    float[] get_terrainHier2_prob(List<TerrainHier2Info> types, TilemapBlockAround around_blocks){
         // init
         float[] probs = new float[types.Count];
         for(int i = 0; i < types.Count; i++){
             probs[i] = 1;
             // increase the prob of exist tags
-            if(around_blocks.up.isExist && check_tagsIsSubset(around_blocks.up.terrainType_tags, types[i].tags))           probs[i] += types.Count;
-            if(around_blocks.down.isExist && check_tagsIsSubset(around_blocks.down.terrainType_tags, types[i].tags))       probs[i] += types.Count;
-            if(around_blocks.left.isExist && check_tagsIsSubset(around_blocks.left.terrainType_tags, types[i].tags))       probs[i] += types.Count;
-            if(around_blocks.right.isExist && check_tagsIsSubset(around_blocks.right.terrainType_tags, types[i].tags))     probs[i] += types.Count;
+            if(around_blocks.up.isExist && check_tagsIsSubset(around_blocks.up.terrain_tags, types[i].tags))           probs[i] += types.Count;
+            if(around_blocks.down.isExist && check_tagsIsSubset(around_blocks.down.terrain_tags, types[i].tags))       probs[i] += types.Count;
+            if(around_blocks.left.isExist && check_tagsIsSubset(around_blocks.left.terrain_tags, types[i].tags))       probs[i] += types.Count;
+            if(around_blocks.right.isExist && check_tagsIsSubset(around_blocks.right.terrain_tags, types[i].tags))     probs[i] += types.Count;
         }
         return probs;
     }
@@ -112,7 +112,7 @@ public class TilemapTerrain{
         return tags_sub.All(item => tags_super.Contains(item));
     }
 
-    bool check_terrainAvailable(TilemapBlock block, TerrainInfo terrain){
+    bool check_terrainHier1_available(TilemapBlock block, TerrainHier1Info terrain){
         // height condition
         if (block.offsets.y < terrain.h_avail[0] && terrain.h_avail[0] != -999999999) return false;
         if (block.offsets.y >= terrain.h_avail[1] && terrain.h_avail[1] != 999999999) return false;
@@ -120,15 +120,15 @@ public class TilemapTerrain{
         return true;
     }
 
-    List<string> get_available_terrains(TilemapBlock block){
+    List<string> get_available_terrainsHier1(TilemapBlock block){
         List<string> availables = new ();
-        for(int i = 0; i < _terrains_info.Count; i++)
-            if (check_terrainAvailable(block, _terrains_info[i]))
-                availables.Add(_terrains_info[i].ID);
+        for(int i = 0; i < _terrains_hier1.Count; i++)
+            if (check_terrainHier1_available(block, _terrains_hier1[i]))
+                availables.Add(_terrains_hier1[i].ID);
         return availables;
     }
         
-    float[] get_terrains_prob(List<string> terrains, TilemapAroundBlock around_blocks){
+    float[] get_terrains_prob(List<string> terrains, TilemapBlockAround around_blocks){
         // init
         float[] probs = new float[terrains.Count];
         for(int i = 0; i < terrains.Count; i++){
@@ -156,82 +156,82 @@ public class TilemapTerrain{
     }
 
     // ---------- init ----------
-    void init_ID2TerrainInfo(){
-        for(int i = 0; i < _terrains_info.Count; i++){
-            ID2TerrainInfo.Add(_terrains_info[i].ID, _terrains_info[i]);
+    void init_ID2TerrainHier1Info(){
+        for(int i = 0; i < _terrains_hier1.Count; i++){
+            ID2TerrainHier1.Add(_terrains_hier1[i].ID, _terrains_hier1[i]);
         }
     }
 
-    void init_tags2TerrainType(){
-        for(int i = 0; i < _terrains_type.Count; i++){
-            tags2TerrainType.Add(_terrains_type[i].tags, _terrains_type[i]);
+    void init_tags2TerrainHier2(){
+        for(int i = 0; i < _terrains_hier2.Count; i++){
+            tags2TerrainHier2.Add(_terrains_hier2[i].tags, _terrains_hier2[i]);
         }
     }
 
-    void init_terrainsInfo(){
-        _terrains_info.Add(new TerrainInfo{
+    void init_terrainHier1Info(){
+        _terrains_hier1.Add(new TerrainHier1Info{
             ID = "0", name = "plain", tags = new string[]{"flat", "ground"},
             h_avail = new int[]{-999999999, 999999999},
             surface = 1, minerals = new int[] { 3, 2 }
         });
-        _terrains_info.Add(new TerrainInfo{
+        _terrains_hier1.Add(new TerrainHier1Info{
             ID = "1", name = "sky", tags = new string[]{"sky"},
             h_avail = new int[]{100, 999999999},
             surface = 0, minerals = new int[]{}
         });
-        _terrains_info.Add(new TerrainInfo{
+        _terrains_hier1.Add(new TerrainHier1Info{
             ID = "2", name = "underground gravel", tags = new string[]{"underground"},
             h_avail = new int[]{-999999999, -3},
             surface = 3, minerals = new int[] {2}
         });
     }
 
-    void init_terrainsType(){
-        _terrains_type.Add(new TerrainType {
+    void init_terrainsHier2Info(){
+        _terrains_hier2.Add(new TerrainHier2Info {
             tags = new string[] {"flat", "ground"},
             name = "flat ground", scale = 1f, isExist=true,
             dirs_avail = new string[] { "0", "1", "2",   "3", "4", "5",  "6", "7", "9",   "11", "12", "13",   "14", "16", "17",   "19" },
             dirs_prob = new float[] { 0.1f, 1, 50,   1, 0.1f, 5,   0.1f, 1, 1,   0.1f, 0.1f, 0.1f,   0.1f, 0.1f, 0.1f,   0.1f},
         });
-        _terrains_type.Add(new TerrainType {
+        _terrains_hier2.Add(new TerrainHier2Info {
             tags = new string[] {"undulating", "ground"},
             name = "undulating ground", scale = 2f, isExist=true,
             dirs_avail = new string[] {"0", "1", "2",   "3", "4", "5",   "6", "7", "9",   "11", "12", "13",   "14", "16", "17",   "19" },
             dirs_prob = new float[] {0.1f, 10, 10,   10, 1, 10,   1, 10, 10,   0.1f, 0.1f, 0.1f,   1, 1, 0.1f,   0.1f },
         });
-        _terrains_type.Add(new TerrainType {
+        _terrains_hier2.Add(new TerrainHier2Info {
             tags = new string[] {"steep", "ground"},
             name = "steep ground", scale = 4f, isExist=true,
             dirs_avail = new string[] {"0", "1", "2",   "3", "4", "5",   "6", "7", "9",   "11", "12", "13",   "14", "16", "17",   "19" },
             dirs_prob = new float[] {0.1f, 10, 10,   10, 10, 10,   10, 10, 10,   1, 1, 1,   10, 10, 1,   1 },
         });
-        _terrains_type.Add(new TerrainType {
+        _terrains_hier2.Add(new TerrainHier2Info {
             tags = new string[] {"suspended", "ground"},
             name = "suspended ground", scale = 4f, isExist=true,
             dirs_avail = new string[] {"0", "1", "2",   "3", "4", "5",   "6", "7", "9",   "11", "12", "13",   "14", "16", "17",   "19" },
             dirs_prob = new float[] {0.1f, 10, 1,   10, 10, 10,   10, 10, 10,   10, 10, 10,   10, 10, 10,   10 },
         });
         
-        _terrains_type.Add(new TerrainType {
+        _terrains_hier2.Add(new TerrainHier2Info {
             tags = new string[] {"spacious", "underground"},
             name = "spacious underground", scale = 1f,  isExist=true,
             dirs_avail = new string[] {"0", "1", "2",   "3", "4", "5",   "6", "7", "9",   "11", "12", "13",   "14", "16", "17",   "19" },
             dirs_prob = new float[]   { 10, 1, 50,   1, 10, 1,   10, 1, 1,   1, 1, 1,   10, 10, 1,   1 },
         });
-        _terrains_type.Add(new TerrainType {
+        _terrains_hier2.Add(new TerrainHier2Info {
             tags = new string[] {"roomy", "underground"},
             name = "roomy underground", scale = 2f,  isExist=true,
             dirs_avail = new string[] {"0", "1", "2",   "3", "4", "5",   "6", "7", "9",   "11", "12", "13",   "14", "16", "17",   "19" },
             dirs_prob = new float[]   { 10, 10, 10,   10, 10, 10,   10, 10, 10,   10, 10, 10,   10, 10, 10,   10 },
         });
-        _terrains_type.Add(new TerrainType {
+        _terrains_hier2.Add(new TerrainHier2Info {
             tags = new string[] {"narrow", "underground"},
             name = "narrow underground", scale = 4f,  isExist=true,
             dirs_avail = new string[] {"0", "1", "2",   "3", "4", "5",   "6", "7", "9",   "11", "12", "13",   "14", "16", "17",   "19" },
             dirs_prob = new float[]   { 1, 10, 1,   10, 1, 50,   1, 10, 10,   10, 10, 10,   1, 1, 10,   10 },
         });
 
-        _terrains_type.Add(new TerrainType {
+        _terrains_hier2.Add(new TerrainHier2Info {
             tags = new string[] {"sky"},
             name = "sky", scale = 1f, isExist=true,
             dirs_avail = new string[] {"0", "1", "2",   "3", "4", "5",   "6", "7", "9",   "11", "12", "13",   "14", "16", "17",   "19"},

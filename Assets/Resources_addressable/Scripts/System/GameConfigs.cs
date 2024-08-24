@@ -15,17 +15,17 @@ public struct SystemConfig{
     public string save_playing;
 }
 
-public class GameConfigs : MonoBehaviour{
-    public HierarchySearch _HierSearch;
+public class GameConfigs{
+    public SystemManager _sys;
     // ---------- System Tools ----------
-    public ControlSystem _CtrlSys { get { return _HierSearch._CtrlSys; } }
-    public SaveLoadBase _SL { get { return _HierSearch._SL; } }
-    public InputSystem _InputSys { get { return _HierSearch._InputSys; } }
-    public TilemapSystem _TMapSys { get { return _HierSearch._TMapSys; } }
-    public ObjectSystem _ObjSys { get { return _HierSearch._ObjSys; } }
-    public UISystem _UISys { get { return _HierSearch._UISys; } }
-    public MaterialSystem _MatSys { get => _HierSearch._MatSys; }
-    public UpdateSystem _UpdateSys { get => _HierSearch._UpdateSys; }
+    public ControlSystem _CtrlSys { get { return _sys._CtrlSys; } }
+    // public SaveLoadBase _SL { get { return _sys._SL; } }
+    public InputSystem _InputSys { get { return _sys._InputSys; } }
+    public TilemapSystem _TMapSys { get { return _sys._TMapSys; } }
+    public ObjectSystem _ObjSys { get { return _sys._ObjSys; } }
+    public UISystem _UISys { get { return _sys._UISys; } }
+    public MaterialSystem _MatSys { get => _sys._MatSys; }
+    public UpdateSystem _UpdateSys { get => _sys._UpdateSys; }
     // ---------- system config ----------
     // config
     public string __version = "0.0.1";
@@ -61,18 +61,15 @@ public class GameConfigs : MonoBehaviour{
     private SystemConfig __system_config;
     private Dictionary<string, SaveConfig> __saves_config;
 
-    void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
-        _HierSearch._GCfg = this;
+    public GameConfigs(SystemManager sys){
+        _sys = sys;
+        // _sys = GameObject.Find("System").GetComponent<SystemManager>();
+        // _sys._GCfg = this;
         _load_system_config();
         _load_saves_config();
         _init_save_config("test");
         select_save("test");
 
-    }
-
-    void Update(){
-        
     }
 
     // ---------- System config ----------

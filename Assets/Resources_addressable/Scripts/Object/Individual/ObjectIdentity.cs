@@ -32,8 +32,8 @@ public class ObjectIdentity{
     }
 
     void action_player(){
-        ControlSystem con = _config._HierSearch._searchInit<ControlSystem>("System");
-        con._set_player(_config._self);
+        // ControlSystem con = _config._sys._searchInit<ControlSystem>("System");
+        _config._sys._CtrlSys._set_player(_config._self);
     }
     
 }

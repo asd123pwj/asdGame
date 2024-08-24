@@ -10,7 +10,7 @@ public delegate void UIInit();
 
 public class UIIndividual : MonoBehaviour{
     // ---------- System Tools ----------
-    public HierarchySearch _HierSearch;
+    public SystemManager _HierSearch;
     public InputSystem _InputSys { get { return _HierSearch._InputSys; } }
     public UISystem _UISys { get { return _HierSearch._UISys; } }
     // ---------- Sub Tools ----------
@@ -20,7 +20,7 @@ public class UIIndividual : MonoBehaviour{
 
 
     void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
+        _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
     }
 
     void Update(){

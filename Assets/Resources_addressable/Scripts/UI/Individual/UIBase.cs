@@ -9,7 +9,7 @@ using System;
 public class UIBase{
     // ---------- System Tools ----------
     public UIIndividual _ui;
-    public HierarchySearch _HierSearch;
+    public SystemManager _HierSearch;
     public MaterialSystem _MatSys { get { return _HierSearch._MatSys; } }
     public InputSystem _InputSys { get { return _HierSearch._InputSys; } }
     public UISystem _UISys { get { return _HierSearch._UISys; } }
@@ -57,7 +57,7 @@ public class UIBase{
         _info = UIClass._set_default(GetType().Name, info);
         _parent = parent;
         // _info.Cfg = this;
-        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
+        _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
         create_self();
         _set_parent();
         _ui._Base = this;

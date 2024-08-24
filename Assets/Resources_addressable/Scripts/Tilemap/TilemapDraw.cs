@@ -5,6 +5,7 @@ using UnityEngine.Tilemaps;
 using Cysharp.Threading.Tasks;
 using System.Linq;
 using System.Threading;
+using Unity.Profiling;
 
 
 public struct TilemapRegion4Draw{
@@ -97,22 +98,57 @@ public class TilemapDraw{
     }
 
     // public void _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions){
-    public async UniTaskVoid _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions, CancellationToken cancel_token){
-        List<Vector3Int> position_all = new();
-        List<TileBase> tiles_all = new();
+    // public async UniTaskVoid _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions, CancellationToken cancel_token){
+    public async UniTaskVoid _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions){
+
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+        // ProfilerMarker profiler_marker = new ProfilerMarker("TilemapDrawMarker");
+        // profiler_marker.Begin();
+
+        
+        // ---------- Method 1: Draw tiles BY SetTiles ----------
+        // List<Vector3Int> position_all = new();
+        // List<TileBase> tiles_all = new();
+        // foreach(TilemapRegion4Draw region in regions){
+        //     position_all.AddRange(region.positions);
+        //     tiles_all.AddRange(region.tiles);
+        // }
+
+        // int tile_per_group = position_all.Count;
+        // int group_count = position_all.Count / tile_per_group;
+        // for(int i = 0; i < group_count; i++){
+        //     Vector3Int[] tmp_positions = position_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
+        //     TileBase[] tmp_tiles = tiles_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
+        //     tilemap.SetTiles(tmp_positions, tmp_tiles);
+        //     // await UniTask.Yield();
+        // }
+
+        // ---------- Method 2: Draw tiles BY SetTiles ----------
         foreach(TilemapRegion4Draw region in regions){
-            position_all.AddRange(region.positions);
-            tiles_all.AddRange(region.tiles);
+            tilemap.SetTiles(region.positions, region.tiles);
+            // await UniTask.Yield();
+            await UniTask.Delay(500);
         }
-        int tile_per_group = position_all.Count;
-        int group_count = position_all.Count / tile_per_group;
-        for(int i = 0; i < group_count; i++){
-            Vector3Int[] tmp_positions = position_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
-            TileBase[] tmp_tiles = tiles_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
-            tilemap.SetTiles(tmp_positions, tmp_tiles);
-            // if (cancel_token.IsCancellationRequested) return;
-            await UniTask.Yield();
-        }
+
+        // ---------- Method 3: Draw tiles by SetTilesBlock ----------
+        // foreach(TilemapRegion4Draw region in regions){
+        //     Vector3Int origin = region.positions[0];
+        //     Vector3Int size = region.positions[^1] - origin + Vector3Int.one;
+        //     // Debug.Log(size);
+        //     BoundsInt bounds = new(origin.x, origin.y, 0, size.x, size.y, 1);
+        //     TileBase[] tiles = region.tiles;
+        //     // for(int i = 0; i < region.positions.Count(); i++){
+        //     //     tiles[region.positions[i].x - origin.x, region.positions[i].y - origin.y] = region.tiles[i];
+        //     // }
+        //     tilemap.SetTilesBlock(bounds, tiles);
+        //     // await UniTask.Yield();
+        // }
+
+
+        stopwatch.Stop();
+        Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds);
+        // profiler_marker.End();
     }
 
 

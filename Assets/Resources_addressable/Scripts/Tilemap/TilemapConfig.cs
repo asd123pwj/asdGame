@@ -16,7 +16,7 @@ using Cysharp.Threading.Tasks;
 
 public class TilemapConfig{
     // ---------- object ----------
-    public SaveLoadBase __save_load_base;
+    // public SaveLoadBase __save_load_base;
     public GameConfigs __game_configs;
     // ---------- info ----------
     // ---------- state ----------

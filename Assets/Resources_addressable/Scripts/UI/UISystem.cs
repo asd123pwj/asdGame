@@ -14,7 +14,7 @@ using System.Threading;
 
 public class UISystem : MonoBehaviour{
     // ---------- System Tool ----------
-    HierarchySearch _HierSearch;
+    SystemManager _HierSearch;
     GameConfigs _GCfg { get { return _HierSearch._GCfg; } }
     // InputSystem _InputSys { get { return _HierSearch._InputSys; } }
     // ---------- UI Tool ----------
@@ -32,7 +32,7 @@ public class UISystem : MonoBehaviour{
 
 
     void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<HierarchySearch>();
+        _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
         _HierSearch._UISys = this;
         // _GCfg = _HierSearch._searchInit<GameConfigs>("System");
         // _input_base = _HierSearch._searchInit<InputSystem>("Input");

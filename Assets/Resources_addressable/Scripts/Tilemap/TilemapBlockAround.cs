@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 
-public class TilemapAroundBlock {
+public class TilemapBlockAround {
     readonly TilemapConfig _tilemap_base;
     readonly GameConfigs _game_configs;
     TilemapBlock _block;
@@ -14,16 +14,16 @@ public class TilemapAroundBlock {
     public TilemapBlock down { get { return _get_around("down"); }}
     public TilemapBlock left { get { return _get_around("left"); }}
     public TilemapBlock right { get { return _get_around("right"); }}
-    public TerrainInfo up_terrainInfo { get { return _get_terrainInfo("up"); }}
-    public TerrainInfo down_terrainInfo { get { return _get_terrainInfo("down"); }}
-    public TerrainInfo left_terrainInfo { get { return _get_terrainInfo("left"); }}
-    public TerrainInfo right_terrainInfo { get { return _get_terrainInfo("right"); }}
-    public TerrainType up_terrainType { get { return _get_terrainType("up"); }}
-    public TerrainType down_terrainType { get { return _get_terrainType("down"); }}
-    public TerrainType left_terrainType { get { return _get_terrainType("left"); }}
-    public TerrainType right_terrainType { get { return _get_terrainType("right"); }}
+    public TerrainHier1Info up_terrainInfo { get { return _get_terrainInfo("up"); }}
+    public TerrainHier1Info down_terrainInfo { get { return _get_terrainInfo("down"); }}
+    public TerrainHier1Info left_terrainInfo { get { return _get_terrainInfo("left"); }}
+    public TerrainHier1Info right_terrainInfo { get { return _get_terrainInfo("right"); }}
+    public TerrainHier2Info up_terrainType { get { return _get_terrainType("up"); }}
+    public TerrainHier2Info down_terrainType { get { return _get_terrainType("down"); }}
+    public TerrainHier2Info left_terrainType { get { return _get_terrainType("left"); }}
+    public TerrainHier2Info right_terrainType { get { return _get_terrainType("right"); }}
 
-    public TilemapAroundBlock(TilemapConfig tilemap_base, GameConfigs game_configs, TilemapTerrain terrain){
+    public TilemapBlockAround(TilemapConfig tilemap_base, GameConfigs game_configs, TilemapTerrain terrain){
         _tilemap_base = tilemap_base;
         _game_configs = game_configs;
         _terrain = terrain;
@@ -33,15 +33,15 @@ public class TilemapAroundBlock {
         _block = block;
     }
 
-    public TerrainInfo _get_terrainInfo(string direction){
+    public TerrainHier1Info _get_terrainInfo(string direction){
         TilemapBlock around_block = _get_around(direction);
-        if (around_block.isExist) return _terrain.ID2TerrainInfo[around_block.terrain_ID];
+        if (around_block.isExist) return _terrain.ID2TerrainHier1[around_block.terrain_ID];
         else return new();
     }
 
-    public TerrainType _get_terrainType(string direction){
+    public TerrainHier2Info _get_terrainType(string direction){
         TilemapBlock around_block = _get_around(direction);
-        if (around_block.isExist) return _terrain.tags2TerrainType[around_block.terrainType_tags];
+        if (around_block.isExist) return _terrain.tags2TerrainHier2[around_block.terrain_tags];
         else return new();
     }
 

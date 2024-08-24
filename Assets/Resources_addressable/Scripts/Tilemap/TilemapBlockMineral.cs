@@ -32,7 +32,7 @@ public class TilemapBlockMineral {
         int tile_index; // for generate different mineral in different place
         RaritySearcher rarity_searcher = new(_tilemap_base, _game_configs);
         // tile to rarity
-        int[] minerals = _terrain.ID2TerrainInfo[block.terrain_ID].minerals;
+        int[] minerals = _terrain.ID2TerrainHier1[block.terrain_ID].minerals;
         if (minerals.Count() == 0) return block;
         Dictionary<int, float> tileID2rarity = rarity_searcher._mapping_tilesID_to_rarity(minerals);
         // ---------- fill map ----------

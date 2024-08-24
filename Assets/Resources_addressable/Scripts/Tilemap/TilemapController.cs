@@ -30,7 +30,7 @@ public class TilemapController{
     bool isInit = true;
     private Vector3Int _tilemapBlock_offsets;
     private bool _tilemapBlockChange = true;
-    private CancellationTokenSource _cancel_balanceTilemap;
+    // private CancellationTokenSource _cancel_balanceTilemap;
 
     // Start is called before the first frame update
     public TilemapController(GameConfigs game_configs){
@@ -62,19 +62,33 @@ public class TilemapController{
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
         Vector3Int block_offsets = _mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
-        _cancel_balanceTilemap?.Cancel();
-        _cancel_balanceTilemap = new CancellationTokenSource();
+    
         List<TilemapRegion4Draw> regions = new();
-        TilemapBlock block = TMapGen._generate_1DBlock(block_offsets);
-        TMapSL._load_block(block);
-        regions.Add(TMapDraw._get_draw_region(TMap_modify, block));
-        if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions, _cancel_balanceTilemap.Token).Forget();
+        List<Vector3Int> block_offsets_list = new();
+
+        // int loadBound = _GCfg.__block_loadBound;
+        int loadBound = 10;
+        for (int r = 0; r < loadBound; r++){
+            for (int x = -r; x <= r; x++){
+                int y = r - Mathf.Abs(x);
+                block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
+                if (y != 0) block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y - y));
+            }
+        }
+
+        foreach (Vector3Int BOffsets in block_offsets_list){
+            TilemapBlock block = TMapGen._generate_block(BOffsets);
+            TMapSL._load_block(block);
+            regions.Add(TMapDraw._get_draw_region(TMap_modify, block));
+        }
+
+        if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions).Forget();
         return true;
     }
 
     bool check_loaded(){
-        if (_GCfg._MatSys._check_info_initDone() == false) return false;
-        if (_GCfg._InputSys._check_initDone() == false) return false;
+        if (!_GCfg._MatSys._check_info_initDone()) return false;
+        if (!_GCfg._InputSys._check_initDone()) return false;
         return true;
         // return _GCfg._MatSys._TMap._check_info_initDone();
     }
@@ -120,15 +134,17 @@ public class TilemapController{
             // StartCoroutine(_tilemap_system._balance_tilemap(_tilemapBlock_offsets));
             // _tilemap_system._balance_tilemap(_tilemapBlock_offsets);
             // _tilemapBlockChange = false;
-            if (_cancel_balanceTilemap != null) _cancel_balanceTilemap.Cancel();
-            _cancel_balanceTilemap = new CancellationTokenSource();
-            _balance_tilemap(_tilemapBlock_offsets, _cancel_balanceTilemap).Forget();
+            // if (_cancel_balanceTilemap != null) _cancel_balanceTilemap.Cancel();
+            // _cancel_balanceTilemap = new CancellationTokenSource();
+            // _balance_tilemap(_tilemapBlock_offsets, _cancel_balanceTilemap).Forget();
+            _balance_tilemap(_tilemapBlock_offsets).Forget();
             _tilemapBlockChange = false;
             Debug.Log("_tilemapBlockChange = false");
         }
     }
 
-    public async UniTaskVoid _balance_tilemap(Vector3Int block_offsets_new, CancellationTokenSource cancel_token) {
+    // public async UniTaskVoid _balance_tilemap(Vector3Int block_offsets_new, CancellationTokenSource cancel_token) {
+    public async UniTaskVoid _balance_tilemap(Vector3Int block_offsets_new) {
     // public IEnumerator _balance_tilemap(Vector3Int block_offsets_new) {
     // public void _balance_tilemap(Vector3Int block_offsets_new, CancellationTokenSource cancel_token) {
         // cancel_token = new CancellationTokenSource();
@@ -149,11 +165,12 @@ public class TilemapController{
         List<TilemapRegion4Draw> regions = new();
         List<Vector3Int> loads_wait = loads_new.Except(loads).ToList();
         foreach(Vector3Int block_offsets in loads_wait){
-            TilemapBlock block = TMapGen._generate_1DBlock(block_offsets);
+            TilemapBlock block = TMapGen._generate_block(block_offsets);
             TMapSL._load_block(block);
             regions.Add(TMapDraw._get_draw_region(TMap_modify, block));
         }
-        if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions, cancel_token.Token).Forget();
+        // if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions, cancel_token.Token).Forget();
+        if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions).Forget();
 
 
         for (int r = 0; r < unloadB; r++){
@@ -176,7 +193,8 @@ public class TilemapController{
         TilemapBlock block = TMapGen._generate_spawn_block(map_pos, TMap_modify);
         TMapSL._load_block(block);
         List<TilemapRegion4Draw> regions = new(){TMapDraw._get_draw_region(TMap_modify, block)};
-        TMapDraw._draw_region(TMap_modify, regions, new()).Forget();
+        // TMapDraw._draw_region(TMap_modify, regions, new()).Forget();
+        TMapDraw._draw_region(TMap_modify, regions).Forget();
         return block;
     }
     
