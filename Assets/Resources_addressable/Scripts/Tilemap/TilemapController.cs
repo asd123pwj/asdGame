@@ -12,52 +12,50 @@ using System;
 
 
 
-public class TilemapController{
+public class TilemapController: SystemBase{
     // ---------- system tool ----------
     // HierarchySearch _HierSearch;
-    ControlSystem _CtrlSys { get => _GCfg._CtrlSys; }
+    // ControlSystem _CtrlSys { get => _GCfg._CtrlSys; }
     // InputSystem _input_base;
-    GameConfigs _GCfg;
-    TilemapSystem TMapSys { get => _GCfg._TMapSys; }
+    // GameConfigs _GCfg;
+    // TilemapSystem TMapSys { get => _GCfg._TMapSys; }
     // ---------- unity ----------
-    Tilemap TMap_modify { get => TMapSys._tilemap_modify; }
+    Tilemap TMap_modify { get => _TMapSys._tilemap_modify; }
     // ---------- sub script ----------
-    TilemapBlockGenerate TMapGen { get => TMapSys._TMapGen; }
-    TilemapDraw TMapDraw { get => TMapSys._TMapDraw; }
-    TilemapConfig TMapCfg { get => TMapSys._TMapCfg; }
-    TilemapSaveLoad TMapSL { get => TMapSys._TMapSL; }
+    TilemapBlockGenerate TMapGen { get => _TMapSys._TMapGen; }
+    TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
+    TilemapConfig TMapCfg { get => _TMapSys._TMapCfg; }
+    TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
     // ---------- status ----------
-    bool isInit = true;
+    // bool isInit = true;
     private Vector3Int _tilemapBlock_offsets;
     private bool _tilemapBlockChange = true;
     // private CancellationTokenSource _cancel_balanceTilemap;
 
     // Start is called before the first frame update
     public TilemapController(GameConfigs game_configs){
-        _GCfg = game_configs;
+        // _GCfg = game_configs;
         // Debug.Log("a");
         // load_tiles_info();
         // query_trigger(0.5f).Forget();
-        _GCfg._UpdateSys._add_updater(update, 0.5f);
+        // _GCfg._UpdateSys._add_updater(update, 0.5f);
         
     }
 
-    // Update is called once per frame
-    void update(){
-        if (!check_loaded()) return;
-        init();
+    // public override void _update(){
+    //     // if (!_check_loaded()) return;
 
-        // _generate_spawn_block(new(0, 0));
-        // query_isTilemapBlockChange();
+    //     _generate_spawn_block(new(0, 0));
+    //     query_isTilemapBlockChange();
 
-        // trigger_tilemapBlockChange();
-    }
+    //     trigger_tilemapBlockChange();
+    // }
 
-    void init(){
-        if (!isInit) return;
-        _GCfg._InputSys._register_action("Menu 4", tmp_draw, "isFirstDown");
+    public override void _init(){
+        // if (!isInit) return;
+        _sys._InputSys._register_action("Menu 4", tmp_draw, "isFirstDown");
 
-        isInit = false;
+        // isInit = false;
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
@@ -86,9 +84,10 @@ public class TilemapController{
         return true;
     }
 
-    bool check_loaded(){
-        if (!_GCfg._MatSys._check_info_initDone()) return false;
-        if (!_GCfg._InputSys._check_initDone()) return false;
+    public override bool _check_loaded(){
+        if (!_sys._initDone) return false;
+        if (!_MatSys._check_info_initDone()) return false;
+        if (!_InputSys._check_initDone()) return false;
         return true;
         // return _GCfg._MatSys._TMap._check_info_initDone();
     }
@@ -96,7 +95,7 @@ public class TilemapController{
     async UniTaskVoid query_trigger(float query_time){
     // IEnumerator query_trigger(float query_time){
         while (true){
-            if (!check_loaded()){
+            if (!_check_loaded()){
                 await UniTask.Delay(TimeSpan.FromSeconds(query_time));
                 continue;
             }

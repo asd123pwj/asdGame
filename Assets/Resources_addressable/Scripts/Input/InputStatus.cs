@@ -19,6 +19,7 @@ public class InputStatus{
         "Up", "Down", "Left", "Right", "Horizontal", "Vertical",
         "Save", "Load",
         "Menu 1", "Menu 2", "Menu 3", "Menu 4", "Menu Wheel",
+        "Zoom In", "Zoom Out",
         "Number 0", "Number 1", "Number 2", "Number 3", "Number 4", "Number 5", "Number 6", "Number 7", "Number 8", "Number 9",
         "Numpad 0", "Numpad 1", "Numpad 2", "Numpad 3", "Numpad 4", "Numpad 5", "Numpad 6", "Numpad 7", "Numpad 8", "Numpad 9",
     };

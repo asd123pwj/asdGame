@@ -13,6 +13,7 @@ public class SystemManager : MonoBehaviour{
     public UISystem _UISys;
     public MaterialSystem _MatSys;
     public UpdateSystem _UpdateSys;
+    public CameraManager _CamMgr;
     // ---------- Unity ----------
     public GameObject _input;
     public GameObject _system;
@@ -20,12 +21,17 @@ public class SystemManager : MonoBehaviour{
     public GameObject _grid;
     public GameObject _object;
     public GameObject _camera;
+    // ---------- Status ----------
+    public bool _initDone = false;
+
     void Start(){
         SystemBase._sys = this;
         _CtrlSys = new(this);
         _GCfg = new(this);
         _UpdateSys = new(this);
         _MatSys = new(this);
+        _CamMgr = new();
+        _initDone = true;
         // _input = GameObject.Find("Input");
         // _system = GameObject.Find("System");
         // _canvas = GameObject.Find("Canvas");
