@@ -10,7 +10,7 @@ public class CameraManager: SystemBase{
     readonly float tile_unitSize = 1f;
     float rowTiles_in_camera_max = 128;
     float rowTiles_in_camera_min = 16;
-    float rowTiles_in_camera = 64;
+    float rowTiles_in_camera = 32;
     float camera_width { get => tile_unitSize * rowTiles_in_camera; }
     float orthographic_size { get => camera_width / (2f * Camera.main.aspect); }
     Camera cam_main;

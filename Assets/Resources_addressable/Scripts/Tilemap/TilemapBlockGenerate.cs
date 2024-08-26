@@ -101,9 +101,9 @@ public class TilemapBlockGenerate{
         // ---------- init ----------
         Vector3Int BSize = GCfg.__block_size;    // for convenience
         int perlin;
-        _HeightGenerator height_gen = new(block, new(BSize.x, BSize.y / 5)); 
-        height_gen._Add(new(0, BSize.y / 20));
-        height_gen._Add(new(BSize.x-1, BSize.y / 20));
+        _HeightGenerator height_gen = new(block, new(BSize.x, BSize.y / 4)); 
+        height_gen._Add(new(0, BSize.y / 8));
+        height_gen._Add(new(BSize.x-1, BSize.y / 8));
         // around surface
         int self_surface = _terrain.ID2TerrainHier1[block.terrain_ID].surface;
         int up_surface = around_blocks.up_terrainInfo.surface;

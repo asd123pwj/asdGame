@@ -40,8 +40,8 @@ public class GameConfigs{
     public string __UIPrefabsInfo_path { get { return Path.Combine(__root_dir, "UIPrefabsInfo.json"); } }
 
     // ---------- tilemap config ----------
-    public Vector3Int __block_size { get {return new Vector3Int(50, 50, 1); } } // NOTE: multiple of 5
-    public int __block_loadBound { get {return 4; } }
+    public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } } // NOTE: multiple of 5
+    public int __block_loadBound { get {return 3; } }
     public int __block_unloadBound { get {return 10; } }
 
     // ---------- save config ----------

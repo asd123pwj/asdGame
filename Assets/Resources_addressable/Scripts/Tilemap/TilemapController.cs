@@ -34,6 +34,7 @@ public class TilemapController: SystemBase{
 
     // Start is called before the first frame update
     public TilemapController(GameConfigs game_configs){
+        update_interval = 0.5f;
         // _GCfg = game_configs;
         // Debug.Log("a");
         // load_tiles_info();
@@ -42,14 +43,15 @@ public class TilemapController: SystemBase{
         
     }
 
-    // public override void _update(){
-    //     // if (!_check_loaded()) return;
+    public override void _update(){
+        // if (!_check_loaded()) return;
 
-    //     _generate_spawn_block(new(0, 0));
-    //     query_isTilemapBlockChange();
+        // _generate_spawn_block(new(0, 0));
+        // Debug.Log("a");
+        query_isTilemapBlockChange();
 
-    //     trigger_tilemapBlockChange();
-    // }
+        trigger_tilemapBlockChange();
+    }
 
     public override void _init(){
         // if (!isInit) return;
@@ -65,7 +67,7 @@ public class TilemapController: SystemBase{
         List<Vector3Int> block_offsets_list = new();
 
         // int loadBound = _GCfg.__block_loadBound;
-        int loadBound = 10;
+        int loadBound = 4;
         for (int r = 0; r < loadBound; r++){
             for (int x = -r; x <= r; x++){
                 int y = r - Mathf.Abs(x);
@@ -128,7 +130,7 @@ public class TilemapController: SystemBase{
 
     void trigger_tilemapBlockChange(){
         if (_tilemapBlockChange){
-            Debug.Log("Block change: " + _tilemapBlock_offsets);
+            // Debug.Log("Block change: " + _tilemapBlock_offsets);
             // _tilemap_system._balance_tilemap(_tilemapBlock_offsets).Forget();
             // StartCoroutine(_tilemap_system._balance_tilemap(_tilemapBlock_offsets));
             // _tilemap_system._balance_tilemap(_tilemapBlock_offsets);
@@ -138,7 +140,7 @@ public class TilemapController: SystemBase{
             // _balance_tilemap(_tilemapBlock_offsets, _cancel_balanceTilemap).Forget();
             _balance_tilemap(_tilemapBlock_offsets).Forget();
             _tilemapBlockChange = false;
-            Debug.Log("_tilemapBlockChange = false");
+            // Debug.Log("_tilemapBlockChange = false");
         }
     }
 
@@ -154,6 +156,15 @@ public class TilemapController: SystemBase{
         List<Vector3Int> loads_new = new List<Vector3Int>();
         List<Vector3Int> unloads_new = new List<Vector3Int>();
 
+        // for (int r = 0; r < loadB; r++){
+        //     for (int x = -r; x <= r; x++){
+        //         int y = r - Mathf.Abs(x);
+        //         loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
+        //         if (y != 0) loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
+        //     }
+        // }
+
+        // int loadBound = 4;
         for (int r = 0; r < loadB; r++){
             for (int x = -r; x <= r; x++){
                 int y = r - Mathf.Abs(x);
@@ -161,6 +172,9 @@ public class TilemapController: SystemBase{
                 if (y != 0) loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
             }
         }
+
+
+
         List<TilemapRegion4Draw> regions = new();
         List<Vector3Int> loads_wait = loads_new.Except(loads).ToList();
         foreach(Vector3Int block_offsets in loads_wait){

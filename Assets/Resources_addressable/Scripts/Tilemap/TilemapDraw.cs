@@ -128,7 +128,7 @@ public class TilemapDraw{
         foreach(TilemapRegion4Draw region in regions){
             tilemap.SetTiles(region.positions, region.tiles);
             // await UniTask.Yield();
-            await UniTask.Delay(500);
+            // await UniTask.Delay(500);
         }
 
         // ---------- Method 3: Draw tiles by SetTilesBlock ----------
@@ -147,7 +147,7 @@ public class TilemapDraw{
 
 
         stopwatch.Stop();
-        Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds);
+        Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds + ", regions: " + regions.Count);
         // profiler_marker.End();
     }
 

@@ -16,7 +16,7 @@ public class SystemBase{
     public UpdateSystem _UpdateSys { get => _sys._UpdateSys; }
     public CameraManager _CamMgr { get => _sys._CamMgr; }
     // ---------- Config ----------
-    public float update_interval = -1;
+    public float update_interval = 0;
     // ---------- Status ----------
     public bool _initDone = false;
 
