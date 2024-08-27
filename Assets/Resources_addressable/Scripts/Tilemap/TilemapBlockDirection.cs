@@ -325,14 +325,14 @@ class DirectionsConfig{
 
 
 public class TilemapBlockDirection{
-    TilemapConfig _tilemap_base;
-    GameConfigs GCfg;
+    // TilemapConfig _tilemap_base;
+    // GameConfigs GCfg;
     DirectionsConfig DirCfg = new();
 
-    public TilemapBlockDirection(TilemapConfig tilemap_base, GameConfigs game_configs){
-        _tilemap_base = tilemap_base;
-        GCfg = game_configs;
-    }
+    // public TilemapBlockDirection(TilemapConfig tilemap_base, GameConfigs game_configs){
+    //     _tilemap_base = tilemap_base;
+    //     GCfg = game_configs;
+    // }
 
     public TilemapBlock _random_direction(
             TilemapBlock block, 

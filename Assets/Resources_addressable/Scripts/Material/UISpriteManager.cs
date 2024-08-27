@@ -17,13 +17,13 @@ public struct UISpritesInfo{
     public Dictionary<string, UISpriteInfo> UISprites;
 }
 
-public class UISpriteManager{
-    GameConfigs _game_configs;
+public class UISpriteManager: BaseClass{
+    // GameConfigs _GCfg;
     public UISpritesInfo _UISprites_info;
     public Dictionary<string, Sprite> _name2UISprite = new();
 
-    public UISpriteManager(GameConfigs game_configs){
-        _game_configs = game_configs;
+    public UISpriteManager(){
+        // _GCfg = game_configs;
         load_UISprites();
     }
 
@@ -51,7 +51,7 @@ public class UISpriteManager{
     }
 
     void load_UISprites(){
-        string jsonText = File.ReadAllText(_game_configs.__UISpritesInfo_path);
+        string jsonText = File.ReadAllText(_GCfg.__UISpritesInfo_path);
         _UISprites_info = JsonConvert.DeserializeObject<UISpritesInfo>(jsonText);
         foreach (var object_kv in _UISprites_info.UISprites){
             load_UISprite(object_kv.Key).Forget();

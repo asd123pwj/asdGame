@@ -36,6 +36,6 @@ public class UIThumbnail: UIBase{
     }
 
     public void _instantiate(Vector2 pos){
-        _HierSearch._ObjSys._object_spawn._instantiate(_name, pos);
+        _sys._ObjSys._object_spawn._instantiate(_name, pos);
     }
 }

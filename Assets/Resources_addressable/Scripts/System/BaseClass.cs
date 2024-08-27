@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Reflection;
 
 
-public class SystemBase{
+public class BaseClass{
     // ---------- System Tools ----------
     public static SystemManager _sys;
     public GameConfigs _GCfg { get { return _sys._GCfg; } }
@@ -21,7 +21,7 @@ public class SystemBase{
     public bool _initDone = false;
 
 
-    public SystemBase(){
+    public BaseClass(){
         init().Forget();
     }
 
@@ -39,8 +39,8 @@ public class SystemBase{
                 await UniTask.Delay(100);
                 continue;
             }
-            register_update();
             _init();
+            register_update();
             _initDone = true;
             break;
         }
@@ -49,7 +49,9 @@ public class SystemBase{
 
     void register_update(){
         MethodInfo method = GetType().GetMethod("_update");
-        bool is_overridden = method.DeclaringType != typeof(SystemBase);
-        _UpdateSys._add_updater(_update, update_interval);
+        bool is_overridden = method.DeclaringType != typeof(BaseClass);
+        if (is_overridden){
+            _UpdateSys._add_updater(_update, update_interval);
+        }
     }
 }

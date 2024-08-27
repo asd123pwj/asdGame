@@ -14,8 +14,8 @@ public class UITrigger{
         // _init_eventTrigger();
     }
 
-    public void _update(){
-    }
+    // public void _update(){
+    // }
 
     public void _init_eventTrigger(){
         eventTrigger = Base._self.GetComponent<EventTrigger>();

@@ -16,31 +16,29 @@ public struct KeyPos{
 
 public delegate bool _input_action(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus);
 
-public class InputSystem : MonoBehaviour{
+public class InputSystem : BaseClass{
     // ---------- System Tool ----------
-    SystemManager _HierSearch;
-    ControlSystem _CtrlSys { get { return _HierSearch._CtrlSys; } }
-    GameConfigs _GCfg { get { return _HierSearch._GCfg; } }
+    // SystemManager _sys;
+    // ControlSystem _CtrlSys { get { return _sys._CtrlSys; } }
+    // GameConfigs _GCfg { get { return _sys._GCfg; } }
     // ---------- Sub Script ----------
     InputSingle _InputSingle;
     InputCombo _InputCombo;
     // InputUI _InputUI;
     InputStatus _InputStatus;
     // ---------- Status ----------
-    bool isInit = true;
     public KeyPos _keyPos = new();
     public Dictionary<string, KeyInfo> _keyStatus = new();
 
-    void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
-        // _GCfg = _HierSearch._searchInit<GameConfigs>("System");
-        _HierSearch._InputSys = this;
-        // _CtrlSys = _hierarchy_search._searchInit<ControlSystem>("System");
+    // void Start(){
+    //     _sys = GameObject.Find("System").GetComponent<SystemManager>();
+    //     // _GCfg = _HierSearch._searchInit<GameConfigs>("System");
+    //     _sys._InputSys = this;
+    //     // _CtrlSys = _hierarchy_search._searchInit<ControlSystem>("System");
 
-    }
+    // }
 
-    void Update(){
-        init();
+    public override void _update(){
         update_keyPos();
         _InputStatus._update();
         _InputSingle._update(_keyPos, _InputStatus._keyStatus);
@@ -52,28 +50,25 @@ public class InputSystem : MonoBehaviour{
         // }
         
 
-        if (_InputStatus._keyStatus["Fire2"].isFirstDown){
-            _HierSearch._searchInit<ObjectSystem>("Object")._down_fire2(_keyPos.mouse_pos_world);
-        }
+        // if (_InputStatus._keyStatus["Fire2"].isFirstDown){
+        //     _sys._ObjSys._down_fire2(_keyPos.mouse_pos_world);
+        //     // _sys._searchInit<ObjectSystem>("Object")._down_fire2(_keyPos.mouse_pos_world);
+        // }
         
         if (_InputStatus._keyStatus["Fire3"].isFirstDown){
-            _HierSearch._searchInit<ObjectSystem>("Object")._down_fire3(_keyPos.mouse_pos_world);
+            _sys._ObjSys._down_fire3(_keyPos.mouse_pos_world);
+            // _sys._searchInit<ObjectSystem>("Object")._down_fire3(_keyPos.mouse_pos_world);
         }
     }
 
-    void FixedUpdate(){
-    }
+    // void FixedUpdate(){
+    // }
 
-    void init(){
-        if (!isInit) return;
+    public override void _init(){
         _InputSingle = new();
         _InputCombo = new();
         _InputStatus = new();
         // _InputUI = new();
-        isInit = false;
-    }
-    public bool _check_initDone(){
-        return !isInit;
     }
 
     void update_keyPos(){
@@ -102,10 +97,10 @@ public class InputSystem : MonoBehaviour{
                 return Input.mousePosition;
             case 1:
                 Vector3 pos_camera = get_mouse_pos(0);
-                pos_camera.z = Camera.main.WorldToScreenPoint(transform.position).z;
+                pos_camera.z = Camera.main.WorldToScreenPoint(_sys.transform.position).z;
                 return Camera.main.ScreenToWorldPoint(pos_camera);
             default:
-                print("Error type.");
+                Debug.Log("Error type.");
                 return new Vector3();
         }
     }

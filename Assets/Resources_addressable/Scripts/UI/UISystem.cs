@@ -12,10 +12,10 @@ using System.Threading;
 
 
 
-public class UISystem : MonoBehaviour{
+public class UISystem : BaseClass{
     // ---------- System Tool ----------
-    SystemManager _HierSearch;
-    GameConfigs _GCfg { get { return _HierSearch._GCfg; } }
+    // SystemManager _HierSearch;
+    // GameConfigs _GCfg { get { return _HierSearch._GCfg; } }
     // InputSystem _InputSys { get { return _HierSearch._InputSys; } }
     // ---------- UI Tool ----------
     // public UISpriteList _UISpriteList;
@@ -25,34 +25,29 @@ public class UISystem : MonoBehaviour{
     public UIControl _UICtrl;
     public UISaveLoad _UISL;
     // ---------- Status ----------
-    bool isInit = true;
     public GameObject _foreground;
     public GameObject _background;
     // ObjectSpawn _object_spawn;
 
 
-    void Start(){
-        _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
-        _HierSearch._UISys = this;
+    public UISystem(){
+        // _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
+        // _HierSearch._UISys = this;
         // _GCfg = _HierSearch._searchInit<GameConfigs>("System");
         // _input_base = _HierSearch._searchInit<InputSystem>("Input");
-        _foreground = gameObject;
+        _foreground = _sys._UI;
         // _object_spawn = new(_game_configs, _object_list);
     }
 
-    void Update(){
-        init();
-    }
+    // void Update(){
+    //     init();
+    // }
 
-    void init(){
-        if (!isInit) return;
-        isInit = false;
-        // _UISpriteList = new(_GCfg);
-        // _UIPrefabList = new(_GCfg);
-        _UIDraw = new(_GCfg);
-        _UIMonitor = new(_GCfg);
-        _UICtrl = new(_GCfg);
-        _UISL = new(_GCfg);
+    public override void _init(){
+        _UIDraw = new();
+        _UIMonitor = new();
+        _UICtrl = new();
+        _UISL = new();
         
     }
     

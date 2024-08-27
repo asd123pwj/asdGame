@@ -14,14 +14,14 @@ public struct TilemapRegion4Draw{
 }
 
 
-public class TilemapDraw{
+public class TilemapDraw: BaseClass{
     // public TilemapConfig _tilemap_base;
-    GameConfigs GCfg;
+    // GameConfigs _GCfg;
 
-    public TilemapDraw(TilemapConfig tilemap_base, GameConfigs game_configs){
-        // _tilemap_base = tilemap_base;
-        GCfg = game_configs;
-    }
+    // public TilemapDraw(TilemapConfig tilemap_base, GameConfigs game_configs){
+    //     // _tilemap_base = tilemap_base;
+    //     _GCfg = game_configs;
+    // }
 
 
     public async UniTaskVoid _draw_block(Tilemap tilemap, TilemapBlock block){
@@ -34,7 +34,7 @@ public class TilemapDraw{
             for (int x = 0; x < block.size.x / group; x++){
                 for (int y = 0; y < block.size.y; y++){
                     int tile_ID = block.map[x + g * block.size.x / group, y];
-                    TileBase tile = GCfg._MatSys._TMap._get_tile(tile_ID);
+                    TileBase tile = _GCfg._MatSys._TMap._get_tile(tile_ID);
                     tiles[x + y * block.size.x / group] = tile;
                 }
             }
@@ -67,7 +67,7 @@ public class TilemapDraw{
             for (int x = 0; x < block.size.x / group; x++){
                 for (int y = 0; y < block.size.y; y++){
                     int tile_ID = block.map[x + g * block.size.x / group, y];
-                    TileBase tile = GCfg._MatSys._TMap._get_tile(tile_ID);
+                    TileBase tile = _GCfg._MatSys._TMap._get_tile(tile_ID);
                     // tiles[x + y * block.size.x / group] = tile;
                     region.tiles[x + y * block.size.x / group] = tile;
                     region.positions[x + y * block.size.x / group] = new Vector3Int(block_origin_pos.x + x, block_origin_pos.y + y, 0);
@@ -106,45 +106,47 @@ public class TilemapDraw{
         // ProfilerMarker profiler_marker = new ProfilerMarker("TilemapDrawMarker");
         // profiler_marker.Begin();
 
+        int draw_method = 2;
         
         // ---------- Method 1: Draw tiles BY SetTiles ----------
-        // List<Vector3Int> position_all = new();
-        // List<TileBase> tiles_all = new();
-        // foreach(TilemapRegion4Draw region in regions){
-        //     position_all.AddRange(region.positions);
-        //     tiles_all.AddRange(region.tiles);
-        // }
+        if (draw_method == 1){
+            List<Vector3Int> position_all = new();
+            List<TileBase> tiles_all = new();
+            foreach(TilemapRegion4Draw region in regions){
+                position_all.AddRange(region.positions);
+                tiles_all.AddRange(region.tiles);
+            }
 
-        // int tile_per_group = position_all.Count;
-        // int group_count = position_all.Count / tile_per_group;
-        // for(int i = 0; i < group_count; i++){
-        //     Vector3Int[] tmp_positions = position_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
-        //     TileBase[] tmp_tiles = tiles_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
-        //     tilemap.SetTiles(tmp_positions, tmp_tiles);
-        //     // await UniTask.Yield();
-        // }
+            int tile_per_group = position_all.Count;
+            int group_count = position_all.Count / tile_per_group;
+            for(int i = 0; i < group_count; i++){
+                Vector3Int[] tmp_positions = position_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
+                TileBase[] tmp_tiles = tiles_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
+                tilemap.SetTiles(tmp_positions, tmp_tiles);
+                // await UniTask.Yield();
+            }
+        }
 
         // ---------- Method 2: Draw tiles BY SetTiles ----------
-        foreach(TilemapRegion4Draw region in regions){
-            tilemap.SetTiles(region.positions, region.tiles);
-            // await UniTask.Yield();
-            // await UniTask.Delay(500);
+        else if (draw_method == 2){
+            foreach(TilemapRegion4Draw region in regions){
+                tilemap.SetTiles(region.positions, region.tiles);
+                // await UniTask.Yield();
+                await UniTask.Delay(20);
+            }
         }
 
         // ---------- Method 3: Draw tiles by SetTilesBlock ----------
-        // foreach(TilemapRegion4Draw region in regions){
-        //     Vector3Int origin = region.positions[0];
-        //     Vector3Int size = region.positions[^1] - origin + Vector3Int.one;
-        //     // Debug.Log(size);
-        //     BoundsInt bounds = new(origin.x, origin.y, 0, size.x, size.y, 1);
-        //     TileBase[] tiles = region.tiles;
-        //     // for(int i = 0; i < region.positions.Count(); i++){
-        //     //     tiles[region.positions[i].x - origin.x, region.positions[i].y - origin.y] = region.tiles[i];
-        //     // }
-        //     tilemap.SetTilesBlock(bounds, tiles);
-        //     // await UniTask.Yield();
-        // }
-
+        else if (draw_method == 3){
+            foreach(TilemapRegion4Draw region in regions){
+                Vector3Int origin = region.positions[0];
+                Vector3Int size = region.positions[^1] - origin + Vector3Int.one;
+                // Debug.Log(size);
+                BoundsInt bounds = new(origin.x, origin.y, 0, size.x, size.y, 1);
+                tilemap.SetTilesBlock(bounds, region.tiles);
+                // await UniTask.Yield();
+            }
+        }
 
         stopwatch.Stop();
         Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds + ", regions: " + regions.Count);

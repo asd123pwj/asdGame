@@ -5,9 +5,9 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 
-public class TilemapBlockAround {
-    readonly TilemapConfig _tilemap_base;
-    readonly GameConfigs _game_configs;
+public class TilemapBlockAround: BaseClass {
+    TilemapConfig _tilemap_base { get => _TMapSys._TMapCfg; }
+    // readonly GameConfigs _game_configs;
     TilemapBlock _block;
     readonly TilemapTerrain _terrain;
     public TilemapBlock up { get { return _get_around("up"); }}
@@ -23,9 +23,9 @@ public class TilemapBlockAround {
     public TerrainHier2Info left_terrainType { get { return _get_terrainType("left"); }}
     public TerrainHier2Info right_terrainType { get { return _get_terrainType("right"); }}
 
-    public TilemapBlockAround(TilemapConfig tilemap_base, GameConfigs game_configs, TilemapTerrain terrain){
-        _tilemap_base = tilemap_base;
-        _game_configs = game_configs;
+    public TilemapBlockAround(TilemapTerrain terrain){
+        // _tilemap_base = tilemap_base;
+        // _game_configs = game_configs;
         _terrain = terrain;
     }
 

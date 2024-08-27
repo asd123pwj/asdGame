@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 
 
 public class UIDeselectClose: UIInteractBase{
-    public UIDeselectClose(GameObject self): base(self){}
+    public UIDeselectClose(UIBase Base): base(Base){}
 
     // public override void _register_interaction(){
     //     _Cfg._Event._event_Deselect.Add(interaction_Deselect);

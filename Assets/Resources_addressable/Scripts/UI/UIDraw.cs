@@ -9,17 +9,17 @@ using Unity.VectorGraphics;
 using UnityEngine.UIElements;
 using System;
 
-public class UIDraw{
+public class UIDraw: BaseClass{
     // ---------- UI Tool ----------
-    GameConfigs _GCfg;
-    UISystem _UISys { get { return _GCfg._UISys; } }
+    // GameConfigs _GCfg;
+    // UISystem _UISys { get { return _GCfg._UISys; } }
     
 
-    public UIDraw(GameConfigs GCfg){
-        _GCfg = GCfg;
-        // draw_backpack();
-        // draw_container();
-    }
+    // public UIDraw(GameConfigs GCfg){
+    //     _GCfg = GCfg;
+    //     // draw_backpack();
+    //     // draw_container();
+    // }
 
     public bool _open_or_close(string type, string name=""){
         UIInfo info = UIClass._set_default(type, name);

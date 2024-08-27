@@ -14,17 +14,17 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using Cysharp.Threading.Tasks;
 
 
-public class TilemapConfig{
+public class TilemapConfig: BaseClass{
     // ---------- object ----------
     // public SaveLoadBase __save_load_base;
-    public GameConfigs __game_configs;
+    // public GameConfigs _GCfg;
     // ---------- info ----------
     // ---------- state ----------
     public List<Vector3Int> __blockLoads_list = new();
     public Dictionary<Vector3Int, TilemapBlock> __blockLoads_infos = new();
 
-    public TilemapConfig(GameConfigs game_configs){
-        __game_configs = game_configs;
+    public TilemapConfig(){
+        // _GCfg = game_configs;
         // load_tiles_info();
     }
 
@@ -61,8 +61,8 @@ public class TilemapConfig{
 
     public Vector3Int _mapping_mapXY_to_blockXY(Vector3Int map_pos){
         Vector3Int block_offsets = new Vector3Int {
-            x = Mathf.Abs(map_pos.x) / __game_configs.__block_size.x,
-            y = Mathf.Abs(map_pos.y) / __game_configs.__block_size.y};
+            x = Mathf.Abs(map_pos.x) / _GCfg.__block_size.x,
+            y = Mathf.Abs(map_pos.y) / _GCfg.__block_size.y};
         if (map_pos.x < 0) block_offsets.x = -block_offsets.x - 1;
         if (map_pos.y < 0) block_offsets.y = -block_offsets.y - 1;
         // Debug.Log("Mouse pos: [" + pos_tilemap.x + ", " + pos_tilemap.y + "].");
@@ -73,8 +73,8 @@ public class TilemapConfig{
     public Vector3Int _mapping_mapXY_to_tileXY_in_block(Vector3Int map_pos){
         Vector3Int block_offsets = _mapping_mapXY_to_blockXY(map_pos);
         Vector3Int tile_offsets = new Vector3Int {
-            x = map_pos.x - block_offsets.x * __game_configs.__block_size.x,
-            y = map_pos.y - block_offsets.y * __game_configs.__block_size.y};
+            x = map_pos.x - block_offsets.x * _GCfg.__block_size.x,
+            y = map_pos.y - block_offsets.y * _GCfg.__block_size.y};
         return tile_offsets;
     }
 

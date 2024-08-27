@@ -12,34 +12,23 @@ using System;
 
 
 
-public class TilemapMonitor{
+public class TilemapMonitor: BaseClass{
     // ---------- system tool ----------
     // HierarchySearch _HierSearch;
-    ControlSystem _CtrlSys { get => _GCfg._CtrlSys; }
+    // ControlSystem _CtrlSys { get => _GCfg._CtrlSys; }
     // InputSystem _input_base;
-    GameConfigs _GCfg;
-    TilemapSystem TMapSys { get => _GCfg._TMapSys; }
+    // GameConfigs _GCfg;
+    // TilemapSystem _TMapSys { get => _GCfg._TMapSys; }
     // ---------- unity ----------
-    Tilemap TMap { get => TMapSys._tilemap_modify; }
+    Tilemap TMap { get => _TMapSys._tilemap_modify; }
     // ---------- status ----------
     public Dictionary<int[,], TilemapBlock> _blocks;
 
     // Start is called before the first frame update
-    public TilemapMonitor(GameConfigs game_configs){
-        _GCfg = game_configs;
+    public TilemapMonitor(){
+        // _GCfg = game_configs;
     }
 
-    // Update is called once per frame
-    public void _update(){
-        if (TMapSys._isInit) return;
-        // if (_isInit){
-        // StartCoroutine(query_trigger(0.1f));
-        // _generate_spawn_block(new(0, 0));
-        // query_trigger(0.1f).Forget();
-        // _isInit = false;
-        // }
-        
-    }
 
     
 }

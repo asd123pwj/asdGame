@@ -25,11 +25,15 @@ public class SystemManager : MonoBehaviour{
     public bool _initDone = false;
 
     void Start(){
-        SystemBase._sys = this;
+        BaseClass._sys = this;
+        _UpdateSys = new();
         _CtrlSys = new(this);
         _GCfg = new(this);
-        _UpdateSys = new(this);
-        _MatSys = new(this);
+        _InputSys = new();
+        _TMapSys = new();
+        _ObjSys = new();
+        _UISys = new();
+        _MatSys = new();
         _CamMgr = new();
         _initDone = true;
         // _input = GameObject.Find("Input");
@@ -39,7 +43,7 @@ public class SystemManager : MonoBehaviour{
     }
 
     void Update(){
-        _UpdateSys._update();
+        _UpdateSys.Update();
     }
 
     public T _searchInit<T>(string type){
@@ -56,7 +60,9 @@ public class SystemManager : MonoBehaviour{
     public T _searchInit<T>(string type, string name){
         if (type == "System") return (T)(object)_system.transform.Find(name).GetComponent<T>();
         else if (type == "Input") return (T)(object)_input.transform.Find(name).GetComponent<T>();
+        else if (type == "Tilemap") return (T)(object)_grid.transform.Find(name).GetComponent<T>();
         else if (type == "UI") return (T)(object)_UI.transform.Find(name).GetComponent<T>();
+        else if (type == "Object") return (T)(object)_object.transform.Find(name).GetComponent<T>();
         else if (type == "Camera") return (T)(object)_camera.transform.Find(name).GetComponent<T>();
         return default;
     }

@@ -4,7 +4,7 @@ using Cinemachine;
 using MathNet.Numerics.LinearAlgebra;
 
 
-public class CameraManager: SystemBase{
+public class CameraManager: BaseClass{
     // ---------- System Tools ----------
     // ---------- Status ----------
     readonly float tile_unitSize = 1f;
@@ -21,7 +21,7 @@ public class CameraManager: SystemBase{
 
     public override bool _check_loaded(){
         if (!_sys._initDone) return false;
-        if (!_InputSys._check_initDone()) return false;
+        if (!_InputSys._initDone) return false;
         return true;
     }
 

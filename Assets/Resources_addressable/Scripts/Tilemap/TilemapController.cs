@@ -12,7 +12,7 @@ using System;
 
 
 
-public class TilemapController: SystemBase{
+public class TilemapController: BaseClass{
     // ---------- system tool ----------
     // HierarchySearch _HierSearch;
     // ControlSystem _CtrlSys { get => _GCfg._CtrlSys; }
@@ -27,13 +27,12 @@ public class TilemapController: SystemBase{
     TilemapConfig TMapCfg { get => _TMapSys._TMapCfg; }
     TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
     // ---------- status ----------
-    // bool isInit = true;
     private Vector3Int _tilemapBlock_offsets;
     private bool _tilemapBlockChange = true;
     // private CancellationTokenSource _cancel_balanceTilemap;
 
     // Start is called before the first frame update
-    public TilemapController(GameConfigs game_configs){
+    public TilemapController(){
         update_interval = 0.5f;
         // _GCfg = game_configs;
         // Debug.Log("a");
@@ -54,10 +53,8 @@ public class TilemapController: SystemBase{
     }
 
     public override void _init(){
-        // if (!isInit) return;
         _sys._InputSys._register_action("Menu 4", tmp_draw, "isFirstDown");
 
-        // isInit = false;
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
@@ -89,7 +86,7 @@ public class TilemapController: SystemBase{
     public override bool _check_loaded(){
         if (!_sys._initDone) return false;
         if (!_MatSys._check_info_initDone()) return false;
-        if (!_InputSys._check_initDone()) return false;
+        if (!_InputSys._initDone) return false;
         return true;
         // return _GCfg._MatSys._TMap._check_info_initDone();
     }

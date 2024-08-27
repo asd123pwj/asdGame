@@ -25,18 +25,18 @@ public class Updater {
     }
 }
 
-public class UpdateSystem{
+public class UpdateSystem: BaseClass{
     // ---------- System Tools ----------
-    SystemManager sys;
+    // SystemManager sys;
     List<Updater> updaters = new();
 
-    public UpdateSystem(SystemManager sys){
-        this.sys = sys;
-        // _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
-        // _HierSearch._UpdateSys = this;
-    }
+    // public UpdateSystem(SystemManager sys){
+    //     this.sys = sys;
+    //     // _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
+    //     // _HierSearch._UpdateSys = this;
+    // }
 
-    public void _update(){
+    public void Update(){
         foreach (Updater updater in updaters){
             updater._run(Time.deltaTime);
         }

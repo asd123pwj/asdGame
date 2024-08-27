@@ -1,9 +1,13 @@
 /*
-*.meta
+/*/*
+/*/*/*
+!/*/
+!/Assets/*/
 !/Assets/Resources_addressable/Scripts/
 !/Assets/Resources_addressable/Scripts/**/*.cs
 
 
+*.meta
 
 
 

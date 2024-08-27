@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
 
 public class UIResizeScaleConstrait : UIResizeScale {
-    public UIResizeScaleConstrait(GameObject self): base(self){ }
+    public UIResizeScaleConstrait(UIBase Base): base(Base){ }
 
     public override Vector2 _constrait_scale(PointerEventData eventData, Vector2 scale){
         float scale_max = Mathf.Max(scale.x, scale.y);

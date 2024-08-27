@@ -11,7 +11,7 @@ public class UIToggle: UIInteractBase{
     int target_type;
     string target;
 
-    public UIToggle(GameObject self): base(self){
+    public UIToggle(UIBase Base): base(Base){
         _set_trigger(0);
         find_target();
     }
@@ -24,7 +24,8 @@ public class UIToggle: UIInteractBase{
     
     void toggle_subUI() {
         if (target_type != 0) return;
-        foreach (var subUI in target_obj.GetComponent<UIIndividual>()._Base._subUIs){
+        // foreach (var subUI in target_obj.GetComponent<UIIndividual>()._Base._subUIs){
+        foreach (var subUI in _Base._UISys._UIMonitor._UIObj2base[target_obj]._subUIs){
             if (subUI._name == target){
                 subUI._toggle();
             }
@@ -33,14 +34,15 @@ public class UIToggle: UIInteractBase{
 
     void toggle_interaction() {
         if (target_type != 1) return;
-        target_obj.GetComponent<UIIndividual>()._Base._InteractMgr._toggle_interaction(target);
+        // target_obj.GetComponent<UIIndividual>()._Base._InteractMgr._toggle_interaction(target);
+        _Base._UISys._UIMonitor._UIObj2base[target_obj]._InteractMgr._toggle_interaction(target);
     }
 
     void find_target(){
         // ----- Find target object
         target_obj = _Base._self;
         // Target object is the parent of the rightMenu.
-        while (target_obj.GetComponent<UIIndividual>() == null || target_obj.GetComponent<UIIndividual>()._Base.GetType() != typeof(UIRightMenu)){
+        while (_Base._UISys._UIMonitor._UIObj2base.ContainsKey(target_obj) || _Base._UISys._UIMonitor._UIObj2base[target_obj].GetType() != typeof(UIRightMenu)){
             target_obj = target_obj.transform.parent.gameObject;
         }
         target_obj = target_obj.transform.parent.gameObject;

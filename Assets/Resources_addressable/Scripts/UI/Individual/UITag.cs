@@ -13,8 +13,8 @@ public class UITag{
         // this.Cfg._Tag = this;
     }
 
-    public void _update(){
-    }
+    // public void _update(){
+    // }
 
 
 }

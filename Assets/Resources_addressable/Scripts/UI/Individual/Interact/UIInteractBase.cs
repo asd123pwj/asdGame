@@ -11,10 +11,11 @@ public delegate void _UIInteraction(PointerEventData eventData);
 
 public class UIInteractBase{
     // ---------- Sub Tools ----------
-    public UIIndividual _ui { get { return _self.GetComponent<UIIndividual>(); } }
-    public UIBase _Base { get { return _ui._Base; } }
+    // public UIIndividual _ui { get { return _self.GetComponent<UIIndividual>(); } }
+    // public UIBase _Base { get { return _ui._Base; } }
+    public UIBase _Base;
     // ---------- Unity ----------
-    public GameObject _self;
+    public GameObject _self { get { return _Base._self; } }
     public GameObject _parent { get { return _Base._parent; } }
     public RectTransform _rt_self { get { return _Base._rt_self; } }
     public RectTransform _rt_parent { get { return _Base._rt_parent; } }
@@ -35,20 +36,11 @@ public class UIInteractBase{
                    mouseDown_scale_parent
                    ;
 
-    public UIInteractBase(GameObject self){
-        _self = self;
+    public UIInteractBase(UIBase Base){
+        _Base = Base;
         _set_mouseTrigger();
-        // init();
     }
 
-    // void init(){
-    //     if (_ui._isInit){
-    //         _ui._register_interaction(this).Forget();
-    //     }
-    //     else{
-    //         _Base._InteractMgr._register_interaction(this);
-    //     }
-    // }
 
     public void _set_mouseTrigger(){
         _mouseTrigger = new() { 0, 1, 2};

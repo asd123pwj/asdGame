@@ -3,26 +3,35 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
-public class UIControl{
+public class UIControl: BaseClass{
     // ---------- UI Tool ----------
-    GameConfigs _GCfg;
-    UISystem _UISys { get { return _GCfg._UISys; } }
+    // GameConfigs _GCfg;
+    // UISystem _UISys { get { return _GCfg._UISys; } }
     // ---------- Sub Tools ----------
     // ---------- Status ----------
 
-    public UIControl(GameConfigs GCfg){
-        _GCfg = GCfg;
+    // public UIControl(GameConfigs GCfg){
+    //     // _GCfg = GCfg;
+    // }
+
+    public override bool _check_loaded(){
+        if (!_sys._initDone) return false;
+        return true;
+    }
+
+    public override void _init(){
         _GCfg._InputSys._register_action("Menu 1", _open_menu1, "isFirstDown");
         // _GCfg._InputSys._register_action("Menu 2", _open_menu2, "isFirstDown");
         _GCfg._InputSys._register_action("Menu 3", _open_menu3, "isFirstDown");
         _GCfg._InputSys._register_action("Menu Wheel", _close_menu, "isFirstDown");
         _GCfg._InputSys._register_action("Save", _save_UI, "isFirstDown");
         _GCfg._InputSys._register_action("Load", _load_UI, "isFirstDown");
+        
     }
 
-    public void _update(){
+    // public void _update(){
 
-    }
+    // }
 
     public bool _open_menu1(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
         return _UISys._UIDraw._open_or_close("UIBackpack", "back");

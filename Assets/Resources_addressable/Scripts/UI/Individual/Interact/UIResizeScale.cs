@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 
 
 public class UIResizeScale: UIInteractBase{
-    public UIResizeScale(GameObject self): base(self){
+    public UIResizeScale(UIBase Base): base(Base){
         _set_trigger(0);
     }
     

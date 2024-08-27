@@ -10,23 +10,25 @@ public struct UIs{
     public List<string> fg_Hier;
 }
 
-public class UIMonitor{
+public class UIMonitor: BaseClass{
     // ---------- UI Tool ----------
     GameConfigs GCfg;
     // ---------- Status ----------
     UIs UIs;
     public UIBase rightMenu_currentOpen;
+    public Dictionary<GameObject, UIBase> _UIObj2base;
 
-    public UIMonitor(GameConfigs GCfg){
-        this.GCfg = GCfg;
-        init();
-    }
+    // public UIMonitor(GameConfigs GCfg){
+    //     this.GCfg = GCfg;
+    //     init();
+    // }
 
-    void init(){
+    public override void _init(){
         UIs = new(){
             fg = new(),
             fg_Hier = new(),
         };
+        _UIObj2base = new();
     }
 
     public UIs _get_UIs(){
@@ -35,7 +37,8 @@ public class UIMonitor{
 
     public void _clear_UIs(){
         foreach (var UI in UIs.fg.Values){
-            UI._ui._destroy();
+            // UI._ui._destroy();
+            UI._destroy();
         }
         UIs.fg.Clear();
     }

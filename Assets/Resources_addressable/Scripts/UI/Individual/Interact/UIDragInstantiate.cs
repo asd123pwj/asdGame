@@ -8,7 +8,7 @@ using Cysharp.Threading.Tasks;
 
 public class UIDragInstantiate: UIDrag{
     Transform parent;
-    public UIDragInstantiate(GameObject self): base(self){
+    public UIDragInstantiate(UIBase Base): base(Base){
         _set_trigger(0);
     }
     

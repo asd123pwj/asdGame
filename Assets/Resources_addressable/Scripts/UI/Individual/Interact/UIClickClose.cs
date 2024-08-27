@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 
 
 public class UIClickClose: UIInteractBase{
-    public UIClickClose(GameObject self): base(self){
+    public UIClickClose(UIBase Base): base(Base){
         _set_trigger(0);
     }
 

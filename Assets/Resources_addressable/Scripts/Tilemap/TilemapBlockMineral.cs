@@ -6,31 +6,24 @@ using Unity.VisualScripting;
 using UnityEngine;
 using System.Threading;
 
-public class TilemapBlockMineral {
-    TilemapConfig _tilemap_base;
-    GameConfigs _game_configs;
+public class TilemapBlockMineral: BaseClass {
+    TilemapConfig _tilemap_base { get => _TMapSys._TMapCfg; }
+    // GameConfigs _GCfg;
     TilemapTerrain _terrain;
 
-    public TilemapBlockMineral(TilemapConfig tilemap_base, GameConfigs game_configs, TilemapTerrain terrain){
-        _tilemap_base = tilemap_base;
-        _game_configs = game_configs;
+    public TilemapBlockMineral(TilemapTerrain terrain){
+        // _tilemap_base = tilemap_base;
+        // _GCfg = game_configs;
         _terrain = terrain;
     }
 
-    // Start is called before the first frame update
-    void Start(){
-    }
-
-    // Update is called once per frame
-    void Update(){
-    }
 
     public TilemapBlock _generate_2DBlock_mineral(TilemapBlock block){
         // ---------- init ----------
-        Vector3Int BSize = _game_configs.__block_size;    // for convenience
+        Vector3Int BSize = _GCfg.__block_size;    // for convenience
         float perlin;
         int tile_index; // for generate different mineral in different place
-        RaritySearcher rarity_searcher = new(_tilemap_base, _game_configs);
+        RaritySearcher rarity_searcher = new(_tilemap_base, _GCfg);
         // tile to rarity
         int[] minerals = _terrain.ID2TerrainHier1[block.terrain_ID].minerals;
         if (minerals.Count() == 0) return block;

@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 
 
 public class UIOpenRightMenu: UIInteractBase{
-    public UIOpenRightMenu(GameObject self): base(self){
+    public UIOpenRightMenu(UIBase Base): base(Base){
         _set_trigger(1);
     }
 

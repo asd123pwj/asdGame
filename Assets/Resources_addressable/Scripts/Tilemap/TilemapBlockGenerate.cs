@@ -8,9 +8,9 @@ using UnityEngine.Video;
 using System.Diagnostics;
 
 
-public class TilemapBlockGenerate{
-    TilemapConfig _tilemap_base;
-    GameConfigs GCfg;
+public class TilemapBlockGenerate: BaseClass{
+    TilemapConfig TMapCfg { get => _TMapSys._TMapCfg; }
+    // GameConfigs _GCfg;
     // DirectionsConfig DirCfg = new();
     TilemapBlockAround BAround;
     TilemapBlockDirection BDir;
@@ -19,34 +19,34 @@ public class TilemapBlockGenerate{
     // TilemapSaveLoad _saveLoad;
     // TilemapBlockTransition _block_transition;
 
-    public TilemapBlockGenerate(TilemapConfig tilemap_base, GameConfigs game_configs){
-        _tilemap_base = tilemap_base;
-        GCfg = game_configs;
+    public TilemapBlockGenerate(){
+        // _tilemap_base = tilemap_base;
+        // _GCfg = game_configs;
         _terrain = new();
-        BAround = new(_tilemap_base, GCfg, _terrain);
-        BDir = new(_tilemap_base, GCfg);
-        _block_mineral = new(_tilemap_base, GCfg, _terrain);
+        BAround = new(_terrain);
+        BDir = new();
+        _block_mineral = new(_terrain);
         // _block_transition = new(_tilemap_base, _game_configs, _terrain);
     }
 
     // Start is called before the first frame update
-    void Start(){
-    }
+    // void Start(){
+    // }
 
     // Update is called once per frame
-    void Update(){
-    }
+    // void Update(){
+    // }
 
     // ---------- API ----------
 
     public TilemapBlock _generate_1DBlock_by_tile(Vector3Int tile_pos, string type, string[] directions){
-        Vector3Int block_offsets = _tilemap_base._mapping_mapXY_to_blockXY(tile_pos);
+        Vector3Int block_offsets = TMapCfg._mapping_mapXY_to_blockXY(tile_pos);
         return _generate_block(block_offsets);
     }
     
     public TilemapBlock _generate_spawn_block(Vector3Int spawn_mapPos, Tilemap tilemap){
-        Vector3Int block_offsets = _tilemap_base._mapping_worldXY_to_blockXY(spawn_mapPos, tilemap);
-        Vector3Int tile_offsets = _tilemap_base._mapping_mapXY_to_tileXY_in_block(spawn_mapPos);
+        Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(spawn_mapPos, tilemap);
+        Vector3Int tile_offsets = TMapCfg._mapping_mapXY_to_tileXY_in_block(spawn_mapPos);
         Vector3Int[] spawn_tiles = new Vector3Int[] {tile_offsets};
         // Vector3Int[] spawn_tiles = new Vector3Int[] { tile_offsets , new(tile_offsets.x-1, tile_offsets.y)};
         // if (tile_offsets.x == 0) spawn_tiles[1] = new(tile_offsets.x+1, tile_offsets.y);
@@ -59,7 +59,7 @@ public class TilemapBlockGenerate{
         TilemapBlock block = new() {
             offsets = block_offsets,
             isExist = true,
-            size = GCfg.__block_size,
+            size = _GCfg.__block_size,
         };
         BAround._set_block(block);
 
@@ -74,7 +74,7 @@ public class TilemapBlockGenerate{
 
     TilemapBlock fill_1DBlock(TilemapBlock block){
         // ---------- init ----------
-        Vector3Int BSize = GCfg.__block_size;    // for convenience
+        Vector3Int BSize = _GCfg.__block_size;    // for convenience
         int perlin;
         int[,] map = new int[BSize.x, BSize.y];
         _HeightGenerator height_gen = new(block);
@@ -99,7 +99,7 @@ public class TilemapBlockGenerate{
 
     TilemapBlock generate_2Dblock_transition(TilemapBlock block, TilemapBlockAround around_blocks){
         // ---------- init ----------
-        Vector3Int BSize = GCfg.__block_size;    // for convenience
+        Vector3Int BSize = _GCfg.__block_size;    // for convenience
         int perlin;
         _HeightGenerator height_gen = new(block, new(BSize.x, BSize.y / 4)); 
         height_gen._Add(new(0, BSize.y / 8));

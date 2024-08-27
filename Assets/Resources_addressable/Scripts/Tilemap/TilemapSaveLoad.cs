@@ -11,14 +11,14 @@ using UnityEngine.Animations;
 using System.Collections.Concurrent;
 
 
-public class TilemapSaveLoad{
-    TilemapConfig _tilemap_base;
-    GameConfigs _game_configs;
+public class TilemapSaveLoad: BaseClass{
+    TilemapConfig _tilemap_base { get => _sys._TMapSys._TMapCfg; }
+    // GameConfigs _game_configs;
 
-    public TilemapSaveLoad(TilemapConfig tilemap_base, GameConfigs game_configs){
-        _tilemap_base = tilemap_base;
-        _game_configs = game_configs;
-    }
+    // public TilemapSaveLoad(TilemapConfig tilemap_base, GameConfigs game_configs){
+    //     _tilemap_base = tilemap_base;
+    //     _game_configs = game_configs;
+    // }
 
     public void _load_block(TilemapBlock block){
         if (_tilemap_base.__blockLoads_list.Contains(block.offsets)) return;

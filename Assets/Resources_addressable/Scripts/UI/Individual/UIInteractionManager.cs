@@ -255,7 +255,8 @@ public class UIInteractionManager{
         _register_interaction(type);
     }
     public void _register_interaction(Type type){
-        object[] args = new object[] { Base._self };
+        // object[] args = new object[] { Base._self };
+        object[] args = new object[] { Base };
         UIInteractBase interaction = (UIInteractBase)Activator.CreateInstance(type, args);
         _register_interaction(interaction);
     }

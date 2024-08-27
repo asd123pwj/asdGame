@@ -17,13 +17,13 @@ public struct UIPrefabsInfo{
     public Dictionary<string, UIPrefabInfo> UIPrefabs;
 }
 
-public class UIPrefabManager{
-    GameConfigs _game_configs;
+public class UIPrefabManager: BaseClass{
+    // GameConfigs _GCfg;
     public UIPrefabsInfo _UIPrefabs_info;
     public Dictionary<string, GameObject> _name2UIPrefab = new();
 
-    public UIPrefabManager(GameConfigs game_configs){
-        _game_configs = game_configs;
+    public UIPrefabManager(){
+        // _game_configs = game_configs;
         load_UIPrefabs();
     }
 
@@ -51,7 +51,7 @@ public class UIPrefabManager{
     }
 
     void load_UIPrefabs(){
-        string jsonText = File.ReadAllText(_game_configs.__UIPrefabsInfo_path);
+        string jsonText = File.ReadAllText(_GCfg.__UIPrefabsInfo_path);
         _UIPrefabs_info = JsonConvert.DeserializeObject<UIPrefabsInfo>(jsonText);
         foreach (var object_kv in _UIPrefabs_info.UIPrefabs){
             load_UIPrefab(object_kv.Key).Forget();

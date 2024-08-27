@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 
 
 public class UISetTop: UIInteractBase{
-    public UISetTop(GameObject self): base(self){}
+    public UISetTop(UIBase Base): base(Base){}
 
     public override void _PointerDown(PointerEventData eventData){
         if (!_isAvailable(eventData)) return;

@@ -15,16 +15,16 @@ public struct UIStorage{
     public List<string> fg_Hier;
 }
 
-public class UISaveLoad{
+public class UISaveLoad: BaseClass{
     // ---------- UI Tool ----------
-    GameConfigs _GCfg;
-    UISystem _UISys { get { return _GCfg._UISys; } }
+    // GameConfigs _GCfg;
+    // UISystem _UISys { get { return _GCfg._UISys; } }
     // ---------- Sub Tools ----------
     // ---------- Status ----------
 
-    public UISaveLoad(GameConfigs GCfg){
-        _GCfg = GCfg;
-    }
+    // public UISaveLoad(GameConfigs GCfg){
+    //     _GCfg = GCfg;
+    // }
 
     UIStorage init_UIStorage(){
         return new(){

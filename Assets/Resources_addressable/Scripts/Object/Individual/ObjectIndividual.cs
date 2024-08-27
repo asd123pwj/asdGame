@@ -9,9 +9,9 @@ using MathNet.Numerics;
 
 public class ObjectIndividual : MonoBehaviour{
     // ---------- System Tool ----------
-    SystemManager _HierarchySearch;
+    SystemManager _sys { get => BaseClass._sys; }
     // UISystemTmp _UI;
-    InputSystem _InputBase;
+    InputSystem InputSys { get => _sys._InputSys; }
     // ---------- Sub Script - Config ----------
     ObjectConfig _Config;
 
@@ -21,11 +21,11 @@ public class ObjectIndividual : MonoBehaviour{
 
 
     void Start(){
-        _HierarchySearch = GameObject.Find("System").GetComponent<SystemManager>();
+        // _sys = GameObject.Find("System").GetComponent<SystemManager>();
         // _UI = _HierarchySearch._searchInit<UISystemTmp>("UI");
-        _InputBase = _HierarchySearch._searchInit<InputSystem>("Input");
+        // _InputBase = _sys._searchInit<InputSystem>("Input");
 
-        _Config = new(gameObject, _info.tags, _HierarchySearch, _InputBase);
+        _Config = new(gameObject, _info.tags, _sys, InputSys);
         _Config._individual = this;
         _isInit = true;
     }

@@ -8,7 +8,7 @@ using Unity.VisualScripting;
 
 
 public class UIDrop: UIInteractBase{
-    public UIDrop(GameObject self): base(self){}
+    public UIDrop(UIBase Base): base(Base){}
     
     public override void _Drop(PointerEventData eventData){
         if (!_isAvailable(eventData)) return;
@@ -23,7 +23,8 @@ public class UIDrop: UIInteractBase{
         if (_self == item) return false;
         // ----- Item is not draggable
         bool itemAllowDrag = false;
-        UIBase item_cfg = item.GetComponent<UIIndividual>()._Base;
+        // UIBase item_cfg = item.GetComponent<UIIndividual>()._Base;
+        UIBase item_cfg = _Base._UISys._UIMonitor._UIObj2base[item];
         foreach (var interaction in item_cfg._InteractMgr._interactions){
             if (interaction.GetType().Name == "UIDrag") itemAllowDrag = true;
         }
@@ -47,7 +48,8 @@ public class UIDrop: UIInteractBase{
         if (!_allowDrop_custom(eventData)) return;
         // ----- Drop
         RectTransform item_rt = item.GetComponent<RectTransform>();
-        UIBase item_base = item_rt.GetComponent<UIIndividual>()._Base;
+        // UIBase item_base = item_rt.GetComponent<UIIndividual>()._Base;
+        UIBase item_base = _Base._UISys._UIMonitor._UIObj2base[item];
         // ----- get container index
         int container_index_start = _Base._name.LastIndexOf(' ');
         string numberPart = _Base._name.Substring(container_index_start + 1);
@@ -57,7 +59,9 @@ public class UIDrop: UIInteractBase{
         item_base._set_parent(_self);
         resize_item_to_container(_Base, item_base);
         // ----- log to ScrollView.info
-        if (get_parent_ScrollView().GetComponent<UIIndividual>()._Base is UIScrollView SV_base) {
+        // UIBase item_base = _Base._UISys._UIMonitor._UIObj2base[item];
+        // if (get_parent_ScrollView().GetComponent<UIIndividual>()._Base is UIScrollView SV_base) {
+        if (_Base._UISys._UIMonitor._UIObj2base[get_parent_ScrollView()] is UIScrollView SV_base) {
             SV_base._add_item(item_base);
         }
     }

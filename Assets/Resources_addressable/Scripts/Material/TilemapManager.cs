@@ -26,10 +26,10 @@ public struct TilesInfo{
     public Dictionary<string, TileInfo> tiles;
 }
 
-public class TilemapManager{
+public class TilemapManager: BaseClass{
     // ---------- object ----------
     // public SaveLoadBase __save_load_base;
-    GameConfigs GCfg;
+    // GameConfigs _GCfg;
     // ---------- info ----------
     public TilesInfo __tiles_info;
     public Dictionary<string, TileBase> __name2tile = new();
@@ -38,8 +38,8 @@ public class TilemapManager{
     // public List<Vector3Int> __blockLoads_list = new();
     // public Dictionary<Vector3Int, TilemapBlock> __blockLoads_infos = new();
 
-    public TilemapManager(GameConfigs GCfg){
-        this.GCfg = GCfg;
+    public TilemapManager(){
+        // this._GCfg = GCfg;
         load_tiles_info();
     }
 
@@ -109,7 +109,7 @@ public class TilemapManager{
     // ---------- config ----------
     void load_tiles_info(){
         // load config
-        string tiles_info_path = GCfg.__tilesInfo_path;
+        string tiles_info_path = _GCfg.__tilesInfo_path;
         string jsonText = File.ReadAllText(tiles_info_path);
         __tiles_info = JsonConvert.DeserializeObject<TilesInfo>(jsonText);
         // init ID2tileName

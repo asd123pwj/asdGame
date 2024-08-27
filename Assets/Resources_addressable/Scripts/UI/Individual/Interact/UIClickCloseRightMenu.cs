@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 
 
 public class UIClickCloseRightMenu: UIInteractBase{
-    public UIClickCloseRightMenu(GameObject self): base(self){
+    public UIClickCloseRightMenu(UIBase Base): base(Base){
         _set_trigger(0);
     }
 

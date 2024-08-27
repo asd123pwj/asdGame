@@ -22,15 +22,15 @@ public struct ObjectsInfo{
     public Dictionary<string, ObjectInfo> objects;
 }
 
-public class ObjectManager{
-    GameConfigs _GCfg;
+public class ObjectManager: BaseClass{
+    // GameConfigs _GCfg;
     public ObjectsInfo _objects_info;
     public Dictionary<string, GameObject> _name2object = new();
     public Dictionary<string, Sprite> _name2thumbnail = new();
 
 
-    public ObjectManager(GameConfigs GCfg){
-        _GCfg = GCfg;
+    public ObjectManager(){
+        // _GCfg = GCfg;
         load_objects();
     }
 

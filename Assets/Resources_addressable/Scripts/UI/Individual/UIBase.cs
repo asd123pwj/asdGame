@@ -6,13 +6,13 @@ using Cysharp.Threading.Tasks;
 using UnityEngine.EventSystems;
 using System;
 
-public class UIBase{
+public class UIBase: BaseClass{
     // ---------- System Tools ----------
-    public UIIndividual _ui;
-    public SystemManager _HierSearch;
-    public MaterialSystem _MatSys { get { return _HierSearch._MatSys; } }
-    public InputSystem _InputSys { get { return _HierSearch._InputSys; } }
-    public UISystem _UISys { get { return _HierSearch._UISys; } }
+    // public UIIndividual _ui;
+    // public SystemManager _sys;
+    // public MaterialSystem _MatSys { get { return _HierSearch._MatSys; } }
+    // public InputSystem _InputSys { get { return _HierSearch._InputSys; } }
+    // public UISystem _UISys { get { return _HierSearch._UISys; } }
     // ---------- Sub Tools ----------
     public UIEvent _Event;
     public UITrigger _Trigger;
@@ -45,9 +45,10 @@ public class UIBase{
     public UIBase _RMenu;
     // ---------- Config ----------
     // ---------- Status ----------
-    public bool _isInit = true;
+    // public bool _isInit = true;
     public bool _isAvailable { get{ return _self.activeSelf; }}
     public List<UIBase> _subUIs;
+    bool allow_init = false;
     // ---------- Key ----------
     // public string _subUIKey_Ctrl { get => "ControlUIs"; }
     // ---------- Extra Parameter for children class ----------
@@ -57,27 +58,30 @@ public class UIBase{
         _info = UIClass._set_default(GetType().Name, info);
         _parent = parent;
         // _info.Cfg = this;
-        _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
+        // _sys = GameObject.Find("System").GetComponent<SystemManager>();
         create_self();
         _set_parent();
-        _ui._Base = this;
+        allow_init = true;
+        // _ui._Base = this;
     }
-
-    public void _update(){
+    public override bool _check_loaded(){
+        return allow_init;
     }
+    // public void _update(){
+    // }
 
     // ---------- Initialization ----------
-    public void _init(){
+    public override void _init(){
         // ----- begin
         _init_begin();
         // ----- Background
         set_background().Forget();
         // ----- Position 
-        set_navigation();
+        // set_navigation();
         // ----- Sub
         init_sub_script();
         init_sub_UIs();
-        init_interactions();
+        init_interactions().Forget();
         // _EXTRA_init_subUIs();
         // ----- Activate
         _enable();
@@ -102,12 +106,18 @@ public class UIBase{
         }
     }
 
-    void init_interactions(){
+     async UniTaskVoid init_interactions(){
         if (_info.interactions == null) return;
+        while (!_initDone) await UniTask.Delay(100);
         foreach (var interaction in _info.interactions){
-            _ui._register_interaction(interaction).Forget();
+            _InteractMgr._register_interaction(interaction);
+            // _ui._register_interaction(interaction).Forget();
         }
     }
+
+    // public void _destroy(){
+    //     GameObject.Destroy(_self);
+    // }
 
     // ---------- Extra functions for children class ----------
     public virtual void _init_begin(){} 
@@ -144,6 +154,7 @@ public class UIBase{
 
     // ---------- Background ----------
     async UniTaskVoid set_background(){
+        while (!_initDone) await UniTask.Delay(100);
         Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
         while (!_MatSys._check_info_initDone()) {
             Debug.Log("waiting for Material System init.");
@@ -205,7 +216,9 @@ public class UIBase{
     void create_gameObject(){ 
         _self = new(_name); 
         _self.transform.SetParent(_parent.transform, false);
-        _ui = _self.AddComponent<UIIndividual>();
+        _UISys._UIMonitor._UIObj2base.Add(_self, this);
+        // _ui = new(this);
+        // _ui = _self.AddComponent<UIIndividual>();
     }
     async UniTaskVoid create_prefab(){
         while (!_MatSys._check_info_initDone()) {
@@ -221,7 +234,9 @@ public class UIBase{
             _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
             // _self = UnityEngine.Object.Instantiate(obj);
             _self.name = _name;
-            _ui = _self.AddComponent<UIIndividual>();
+            _UISys._UIMonitor._UIObj2base.Add(_self, this);
+            // _ui = new(this);
+            // _ui = _self.AddComponent<UIIndividual>();
         }
         else {
             Debug.Log("UI prefab not exist: " + _background_key);
