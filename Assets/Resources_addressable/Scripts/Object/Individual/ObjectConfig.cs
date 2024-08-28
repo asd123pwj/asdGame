@@ -6,17 +6,18 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using Cysharp.Threading.Tasks;
 
-public class ObjectConfig{
+public class ObjectConfig: BaseClass{
     // ---------- System Tool ----------
-    public SystemManager _sys;
-    public InputSystem _InputSys;
-    public ObjectIndividual _individual;
+    // public SystemManager _sys;
+    // public InputSystem _InputSys;
+    // public ObjectIndividual _individual;
     // ---------- Unity ----------
     public GameObject _self;
     public Rigidbody2D _rb;
     // ---------- Sub Script - Config ----------
     ObjectIdentity _Identity;
     ObjectControl _Control;
+    public ObjectInfo _info;
     // ---------- Sub Script - Action ----------
     public ObjectContact _Contact;
     public ObjectMove _Move;
@@ -29,24 +30,25 @@ public class ObjectConfig{
     public ObjectTags _tags;
     public Vector2 _max_move_speed;
     public Vector2 _move_force;
+    // bool isInit = true;
     
 
-    public ObjectConfig(GameObject self, ObjectTags tags, SystemManager hierarchy_search, InputSystem input_base){
+    public ObjectConfig(GameObject self, ObjectInfo info){
         // ---------- action ----------
-        _sys = hierarchy_search;
-        _InputSys = input_base;
+        // _sys = hierarchy_search;
+        // _InputSys = input_base;
         
         _self = self;
         _rb = _self.GetComponent<Rigidbody2D>();
-
-        _tags = tags;
+        _info = info;
+        _tags = info.tags;
         _max_move_speed = new Vector2(10f, 10f);
         _move_force = new Vector2(5f, 5f);
-
-        init_sub_script();
+        // isInit = false;
+        // init_sub_script();
     }
 
-    public void _onUpdate(){
+    public override void _update(){
         _Contact._onUpdate();
         // _AttrMoveFloat._onUpdate();
     }
@@ -55,7 +57,13 @@ public class ObjectConfig{
         _tags = tags;
     }
 
-    void init_sub_script(){
+    public override bool _check_loaded(){
+        if (_info.ID is null) return false;
+        if (!_MatSys._obj._check_info_initDone()) return false;
+        return true;
+    }
+
+    public override void _init(){
         // ---------- Sub Script - Config ----------
         _Identity = new(this);
         _Control = new(this);

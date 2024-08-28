@@ -22,7 +22,9 @@ public class ObjectSpawn{
         // ObjectTags tags = _object_list._objects_info.objects[name].tags;
         obj = UnityEngine.Object.Instantiate(obj, position, Quaternion.identity);
         // obj.GetComponent<ObjectIndividual>()._info = _object_list._objects_info.objects[name];
-        obj.GetComponent<ObjectIndividual>()._info = MatSys._obj._get_info(name);
+        ObjectConfig Base = new(obj, MatSys._obj._get_info(name));
+        GCfg._ObjSys._obj2base.Add(obj, Base);
+        // obj.GetComponent<ObjectIndividual>()._info = MatSys._obj._get_info(name);
     }
 
 }

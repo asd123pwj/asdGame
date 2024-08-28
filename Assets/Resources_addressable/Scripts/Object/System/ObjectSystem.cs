@@ -21,6 +21,7 @@ public class ObjectSystem: BaseClass{
     // ---------- Spawn
     public ObjectSpawn _object_spawn;
     // ---------- Status ----------
+    public Dictionary<GameObject, ObjectConfig> _obj2base = new();
 
 
     public override void _init(){
