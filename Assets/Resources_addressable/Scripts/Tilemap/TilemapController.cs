@@ -44,7 +44,7 @@ public class TilemapController: BaseClass{
 
     public override void _update(){
         // if (!_check_loaded()) return;
-
+        return;
         // _generate_spawn_block(new(0, 0));
         // Debug.Log("a");
         query_isTilemapBlockChange();

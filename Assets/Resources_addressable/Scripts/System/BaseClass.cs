@@ -46,7 +46,6 @@ public class BaseClass{
         }
     }
 
-
     void register_update(){
         MethodInfo method = GetType().GetMethod("_update");
         bool is_overridden = method.DeclaringType != typeof(BaseClass);
