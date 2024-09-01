@@ -19,7 +19,7 @@ public class CameraManager: BaseClass{
     public CameraManager(){
     }
 
-    public override bool _check_loaded(){
+    public override bool _check_allow_init(){
         if (!_sys._initDone) return false;
         if (!_InputSys._initDone) return false;
         return true;

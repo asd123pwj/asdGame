@@ -57,7 +57,7 @@ public class ObjectConfig: BaseClass{
         _tags = tags;
     }
 
-    public override bool _check_loaded(){
+    public override bool _check_allow_init(){
         if (_info.ID is null) return false;
         if (!_MatSys._obj._check_info_initDone()) return false;
         return true;

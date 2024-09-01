@@ -83,9 +83,9 @@ public class TilemapController: BaseClass{
         return true;
     }
 
-    public override bool _check_loaded(){
+    public override bool _check_allow_init(){
         if (!_sys._initDone) return false;
-        if (!_MatSys._check_info_initDone()) return false;
+        if (!_MatSys._check_all_info_initDone()) return false;
         if (!_InputSys._initDone) return false;
         return true;
         // return _GCfg._MatSys._TMap._check_info_initDone();
@@ -94,7 +94,7 @@ public class TilemapController: BaseClass{
     async UniTaskVoid query_trigger(float query_time){
     // IEnumerator query_trigger(float query_time){
         while (true){
-            if (!_check_loaded()){
+            if (!_check_allow_init()){
                 await UniTask.Delay(TimeSpan.FromSeconds(query_time));
                 continue;
             }

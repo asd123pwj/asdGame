@@ -38,6 +38,8 @@ public class GameConfigs{
     public string __objectsInfo_path { get { return Path.Combine(__root_dir, "ObjectsInfo.json"); } }
     public string __UISpritesInfo_path { get { return Path.Combine(__root_dir, "UISpritesInfo.json"); } }
     public string __UIPrefabsInfo_path { get { return Path.Combine(__root_dir, "UIPrefabsInfo.json"); } }
+    public string __MaterialsInfo_path { get { return Path.Combine(__root_dir, "MaterialsInfo.json"); } }
+    public string __MeshesInfo_path { get { return Path.Combine(__root_dir, "MeshesInfo.json"); } }
 
     // ---------- tilemap config ----------
     public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } } // NOTE: multiple of 5

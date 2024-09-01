@@ -14,7 +14,7 @@ public class UIControl: BaseClass{
     //     // _GCfg = GCfg;
     // }
 
-    public override bool _check_loaded(){
+    public override bool _check_allow_init(){
         if (!_sys._initDone) return false;
         return true;
     }

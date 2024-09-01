@@ -64,7 +64,7 @@ public class UIBase: BaseClass{
         allow_init = true;
         // _ui._Base = this;
     }
-    public override bool _check_loaded(){
+    public override bool _check_allow_init(){
         return allow_init;
     }
     // public void _update(){
@@ -156,7 +156,7 @@ public class UIBase: BaseClass{
     async UniTaskVoid set_background(){
         while (!_initDone) await UniTask.Delay(100);
         Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
-        while (!_MatSys._check_info_initDone()) {
+        while (!_MatSys._check_all_info_initDone()) {
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(100);
         }
@@ -221,7 +221,7 @@ public class UIBase: BaseClass{
         // _ui = _self.AddComponent<UIIndividual>();
     }
     async UniTaskVoid create_prefab(){
-        while (!_MatSys._check_info_initDone()) {
+        while (!_MatSys._check_all_info_initDone()) {
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(100);
         }

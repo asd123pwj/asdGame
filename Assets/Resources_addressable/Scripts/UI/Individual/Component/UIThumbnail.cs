@@ -19,7 +19,7 @@ public class UIThumbnail: UIBase{
 
     async UniTaskVoid set_background(){
         Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
-        while (!_MatSys._check_info_initDone()) {
+        while (!_MatSys._check_all_info_initDone()) {
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(100);
         }

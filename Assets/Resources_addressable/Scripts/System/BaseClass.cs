@@ -28,14 +28,14 @@ public class BaseClass{
     public virtual void _update(){
     }
 
-    public virtual bool _check_loaded(){
+    public virtual bool _check_allow_init(){
         return true;
     }
 
     public virtual void _init(){}
     async UniTaskVoid init(){
         while (true){
-            if (!_check_loaded()){
+            if (!_check_allow_init()){
                 await UniTask.Delay(100);
                 continue;
             }
