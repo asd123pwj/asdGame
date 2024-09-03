@@ -24,9 +24,9 @@ public class ObjectMove{
 
     public void init(){
         _moves.Add("walk", new ObjectAbilMoveWalk(_Config, 0, 0, uses:-1));
-        _moves.Add("jump", new ObjectAbilMoveJump(_Config, 0, 0.25f, uses:3));
+        _moves.Add("jump", new ObjectAbilMoveJump(_Config, 0, 0.1f, uses:-1));
         _moves.Add("jump wall", new ObjectAbilMoveJumpWall(_Config, 0, 0.25f, uses:-1));
-        _moves.Add("fly", new ObjectAbilMoveFly(_Config, 5, 0.25f, duration:5f));
+        // _moves.Add("fly", new ObjectAbilMoveFly(_Config, 5, 0.25f, duration:5f));
         _moves.Add("rush", new ObjectAbilMoveRush(_Config, 1, 0.25f, uses:-1));
     }
 

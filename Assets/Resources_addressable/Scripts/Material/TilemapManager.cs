@@ -15,8 +15,12 @@ using Cysharp.Threading.Tasks;
 
 public struct TileInfo{
     public int ID;
+    public string category;
     public string name;
+    public string tileType;
+    public string tilePerGrid;
     public string description;
+    public string refUrl;
     public string path;
     public string[] tags;
 };
@@ -71,41 +75,7 @@ public class TilemapManager: BaseClass{
     public bool _check_loader(int ID){
         return _check_loader(__ID2tileName[ID]);
     }
-
-    // public int _map_tile_to_ID(TileBase tile){
-    //     if (tile == null) return 0;
-    //     else return _tiles_info.tiles[tile.name].ID;
-    // }
-
-    // public Vector3Int _mapping_worldXY_to_mapXY(Vector3 world_pos, Tilemap tilemap){
-    //     Vector3Int map_pos = tilemap.WorldToCell(world_pos);
-    //     return map_pos;
-    // }
-
-    // public Vector3Int _mapping_worldXY_to_blockXY(Vector3 world_pos, Tilemap tilemap){
-    //     Vector3Int map_pos = tilemap.WorldToCell(world_pos);
-    //     return _mapping_mapXY_to_blockXY(map_pos);
-    // }
-
-    // public Vector3Int _mapping_mapXY_to_blockXY(Vector3Int map_pos){
-    //     Vector3Int block_offsets = new Vector3Int {
-    //         x = Mathf.Abs(map_pos.x) / __game_configs.__block_size.x,
-    //         y = Mathf.Abs(map_pos.y) / __game_configs.__block_size.y};
-    //     if (map_pos.x < 0) block_offsets.x = -block_offsets.x - 1;
-    //     if (map_pos.y < 0) block_offsets.y = -block_offsets.y - 1;
-    //     // Debug.Log("Mouse pos: [" + pos_tilemap.x + ", " + pos_tilemap.y + "].");
-    //     // Debug.Log("Block offset: [" + block_offset[0] + ", " + block_offset[1] + "].");
-    //     return block_offsets;
-    // }
-
-    // public Vector3Int _mapping_mapXY_to_tileXY_in_block(Vector3Int map_pos){
-    //     Vector3Int block_offsets = _mapping_mapXY_to_blockXY(map_pos);
-    //     Vector3Int tile_offsets = new Vector3Int {
-    //         x = map_pos.x - block_offsets.x * __game_configs.__block_size.x,
-    //         y = map_pos.y - block_offsets.y * __game_configs.__block_size.y};
-    //     return tile_offsets;
-    // }
-
+    
     // ---------- config ----------
     void load_tiles_info(){
         // load config

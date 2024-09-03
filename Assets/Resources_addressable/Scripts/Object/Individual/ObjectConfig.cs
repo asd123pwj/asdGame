@@ -42,8 +42,8 @@ public class ObjectConfig: BaseClass{
         _rb = _self.GetComponent<Rigidbody2D>();
         _info = info;
         _tags = info.tags;
-        _max_move_speed = new Vector2(10f, 10f);
-        _move_force = new Vector2(5f, 5f);
+        _max_move_speed = new Vector2(2f, 2f);
+        _move_force = new Vector2(1f, 1f);
         // isInit = false;
         // init_sub_script();
     }

@@ -31,14 +31,14 @@ public class ObjectControl{
 
     public bool _horizontal(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
         if (_Cfg._Move._walk(keyPos)) return true;
-        if (_Cfg._Move._fly(keyPos)) return true;
+        // if (_Cfg._Move._fly(keyPos)) return true;
         return false;
     }
 
     public bool _vertical(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
         if (_Cfg._Move._jump(keyPos)) return true;
         if (_Cfg._Move._jump_wall(keyPos)) return true;
-        if (_Cfg._Move._fly(keyPos)) return true;
+        // if (_Cfg._Move._fly(keyPos)) return true;
         return false;
     }
 
