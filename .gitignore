@@ -3,6 +3,8 @@
 /*/*/*
 !/*/
 !/Assets/*/
+!/Assets/Editor/**/*.cs
+!/Assets/Configs/**/*.json
 !/Assets/Resources_addressable/Scripts/
 !/Assets/Resources_addressable/Scripts/**/*.cs
 

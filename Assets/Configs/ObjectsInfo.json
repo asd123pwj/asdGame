@@ -1,0 +1,29 @@
+{
+    "version": "0.0.1",
+    "objects":{
+        "yang":{
+            "ID": 1,
+            "name": "yang",
+            "description": "",
+            "path": "Assets/Resources_addressable/Prefab/Objects/yang.prefab",
+            "path_thumbnail": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png",
+            "tags": {
+                "identity": ["player"],
+                "contact_self": [],
+                "contact_other": []
+            }
+        },
+        "test ammo":{
+            "ID": 2,
+            "name": "test ammo",
+            "description": "",
+            "path": "Assets/Resources_addressable/Prefab/Objects/test ammo.prefab",
+            "path_thumbnail": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png",
+            "tags": {
+                "identity": [],
+                "contact_self": ["destruction"],
+                "contact_other": ["damage"]
+            }
+        }
+    }
+}

@@ -25,7 +25,7 @@ public struct ObjectsInfo{
 public class ObjectManager: BaseClass{
     // GameConfigs _GCfg;
     public ObjectsInfo _objects_info;
-    public Dictionary<string, GameObject> _name2object = new();
+    public Dictionary<string, AsyncOperationHandle<GameObject>> _name2object = new();
     public Dictionary<string, Sprite> _name2thumbnail = new();
 
 
@@ -49,7 +49,10 @@ public class ObjectManager: BaseClass{
     }
 
     public GameObject _get_prefab(string name){
-        return _name2object[name];
+        // Debug.Log(_name2object[name]);
+        // Debug.Log(_name2object[name].name);
+        // Debug.Log(_name2object[name].layer);
+        return _name2object[name].Result;
     }
     public Sprite _get_thumbnail(string name){
         return _name2thumbnail[name];
@@ -80,10 +83,10 @@ public class ObjectManager: BaseClass{
 
     void action_prefab_loaded(AsyncOperationHandle<GameObject> handle, string name){
         if (handle.Status == AsyncOperationStatus.Succeeded)
-            _name2object.Add(name, handle.Result);
+            _name2object.Add(name, handle);
         else
             Debug.LogError("Failed to load prefab: " + handle.DebugName);
-        Addressables.Release(handle);
+        // Addressables.Release(handle);
     }
 
     

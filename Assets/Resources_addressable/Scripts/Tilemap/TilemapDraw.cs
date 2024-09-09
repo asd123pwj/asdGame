@@ -118,14 +118,15 @@ public class TilemapDraw: BaseClass{
             }
 
             // int tile_per_group = position_all.Count;
-            int tile_per_group = 32*32;
+            // int tile_per_group = 32*32;
+            int tile_per_group = _GCfg._sysCfg.TMap_tiles_per_loading;
             int group_count = position_all.Count / tile_per_group;
             for(int i = 0; i < group_count; i++){
                 Vector3Int[] tmp_positions = position_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
                 TileBase[] tmp_tiles = tiles_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
                 tilemap.SetTiles(tmp_positions, tmp_tiles);
                 // await UniTask.Yield();
-                await UniTask.Delay(100);
+                await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
             }
         }
 
@@ -134,7 +135,7 @@ public class TilemapDraw: BaseClass{
             foreach(TilemapRegion4Draw region in regions){
                 tilemap.SetTiles(region.positions, region.tiles);
                 // await UniTask.Yield();
-                await UniTask.Delay(20);
+                await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
             }
         }
 
@@ -147,6 +148,7 @@ public class TilemapDraw: BaseClass{
                 BoundsInt bounds = new(origin.x, origin.y, 0, size.x, size.y, 1);
                 tilemap.SetTilesBlock(bounds, region.tiles);
                 // await UniTask.Yield();
+                await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
             }
         }
 

@@ -11,9 +11,23 @@ public struct SaveConfig{
 }
 
 public struct SystemConfig{
+    // ---------- system config ----------
+    // ----- config
     public string version;
     public string save_playing;
+    // ---------- tilemap config ----------
+    public Vector3Int TMap_tiles_per_block;
+    // ----- loading
+    public int TMap_tiles_per_loading;
+    public int TMap_interval_per_loading;
+
+    // ---------- Camera ----------
+    // ----- player camera
+    public float CAM_rowTiles_in_playerCamera_max;
+    public float CAM_rowTiles_in_playerCamera_min;
+    public float CAM_rowTiles_in_playerCamera_default;
 }
+
 
 public class GameConfigs{
     public SystemManager _sys;
@@ -28,10 +42,12 @@ public class GameConfigs{
     public UpdateSystem _UpdateSys { get => _sys._UpdateSys; }
     // ---------- system config ----------
     // config
-    public string __version = "0.0.1";
+    public string __version = "0.17.2b";
     public string __save_playing = "";
     // path
-    public string __root_dir = "Assets/Resources_addressable/Saved";
+    string root_dir_editor = "Assets/Configs";
+    string root_dir_build = "Configs";
+    public string __root_dir => Application.isEditor ? root_dir_editor : root_dir_build;
     // public string __root_dir__ = "";
     public string __sysConfig_path { get { return Path.Combine(__root_dir, "Configs.json"); } }
     public string __tilesInfo_path { get { return Path.Combine(__root_dir, "TilesInfo.json"); } }
@@ -42,7 +58,10 @@ public class GameConfigs{
     public string __MeshesInfo_path { get { return Path.Combine(__root_dir, "MeshesInfo.json"); } }
 
     // ---------- tilemap config ----------
-    public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } } // NOTE: multiple of 5
+    // public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } }
+    // public Vector3Int _TMap_tiles_per_block { get { return _sysCfg.TMap_tiles_per_block; } }
+    // public int _TMap_tiles_per_loading { get { return _sysCfg.TMap_tiles_per_loading; } }
+    // public int _TMap_interval_per_loading { get { return _sysCfg.TMap_interval_per_loading; } }
     public int __block_loadBound { get {return 10; } }
     public int __block_unloadBound { get {return 10; } }
 
@@ -60,7 +79,7 @@ public class GameConfigs{
     public string __mapName_format { get { return Path.Combine(__map_dir, "Map_{x}_{y}.json"); } }
     
 
-    private SystemConfig __system_config;
+    public SystemConfig _sysCfg;
     private Dictionary<string, SaveConfig> __saves_config;
 
     public GameConfigs(SystemManager sys){
@@ -77,23 +96,23 @@ public class GameConfigs{
     // ---------- System config ----------
 
     public void select_save(string name){
-        __system_config.save_playing = name;
+        _sysCfg.save_playing = name;
         __save_selected = name;
         __save_playing = name;
     }
 
     private void _init_system_config(){
-        __system_config = new SystemConfig();
-        __system_config.version = __version;
-        __system_config.save_playing = "";
-        string system_config_json = JsonConvert.SerializeObject(__system_config, Formatting.Indented);
+        _sysCfg = new SystemConfig();
+        _sysCfg.version = __version;
+        _sysCfg.save_playing = "";
+        string system_config_json = JsonConvert.SerializeObject(_sysCfg, Formatting.Indented);
         File.WriteAllText(__sysConfig_path, system_config_json);
     }
 
     private void _load_system_config(){
         if (File.Exists(__sysConfig_path)){ // load
             string jsonText = File.ReadAllText(__sysConfig_path);
-            __system_config = JsonConvert.DeserializeObject<SystemConfig>(jsonText);
+            _sysCfg = JsonConvert.DeserializeObject<SystemConfig>(jsonText);
         }
         else{ // init
             _init_system_config();

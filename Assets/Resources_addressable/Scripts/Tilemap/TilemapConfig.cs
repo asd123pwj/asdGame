@@ -61,8 +61,8 @@ public class TilemapConfig: BaseClass{
 
     public Vector3Int _mapping_mapXY_to_blockXY(Vector3Int map_pos){
         Vector3Int block_offsets = new Vector3Int {
-            x = Mathf.Abs(map_pos.x) / _GCfg.__block_size.x,
-            y = Mathf.Abs(map_pos.y) / _GCfg.__block_size.y};
+            x = Mathf.Abs(map_pos.x) / _GCfg._sysCfg.TMap_tiles_per_block.x,
+            y = Mathf.Abs(map_pos.y) / _GCfg._sysCfg.TMap_tiles_per_block.y};
         if (map_pos.x < 0) block_offsets.x = -block_offsets.x - 1;
         if (map_pos.y < 0) block_offsets.y = -block_offsets.y - 1;
         // Debug.Log("Mouse pos: [" + pos_tilemap.x + ", " + pos_tilemap.y + "].");
@@ -73,8 +73,8 @@ public class TilemapConfig: BaseClass{
     public Vector3Int _mapping_mapXY_to_tileXY_in_block(Vector3Int map_pos){
         Vector3Int block_offsets = _mapping_mapXY_to_blockXY(map_pos);
         Vector3Int tile_offsets = new Vector3Int {
-            x = map_pos.x - block_offsets.x * _GCfg.__block_size.x,
-            y = map_pos.y - block_offsets.y * _GCfg.__block_size.y};
+            x = map_pos.x - block_offsets.x * _GCfg._sysCfg.TMap_tiles_per_block.x,
+            y = map_pos.y - block_offsets.y * _GCfg._sysCfg.TMap_tiles_per_block.y};
         return tile_offsets;
     }
 

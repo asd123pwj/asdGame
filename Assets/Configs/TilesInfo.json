@@ -1,0 +1,61 @@
+{
+    "version": "0.0.1",
+    "root_paths": {
+        "Block": "Assets/Resources_addressable/Tilemap/Block/",
+        "BlockDecoration": "Assets/Resources_addressable/Tilemap/BlockDecoration/",
+        "Furniture": "Assets/Resources_addressable/Tilemap/Furniture/"
+    },
+    "tiles":{
+        "BlockSoilGrassyP3D":{
+            "ID": 1,
+            "category": "Block",
+            "name": "Grassy Soil",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "Soil/BlockSoilGrassyP3D.asset",
+            "tags": ["common"]
+        },
+        "BlockMineralTest":{
+            "ID": 2,
+            "category": "Block",
+            "name": "Mineral Test",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "Mineral/BlockMineralTest.asset",
+            "tags": ["rare"]
+        },
+        "BlockStoneGravel":{
+            "ID": 3,
+            "category": "Block",
+            "name": "Gravel",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "Stone/BlockStoneGravel.asset",
+            "tags": ["uncommon"]
+        },
+        "BlockDecoration_Rand_Grid2x2_Grass_Mang":{
+            "ID": 4,
+            "category": "BlockDecoration",
+            "name": "芒草",
+            "tileType": "Rand",
+            "tilePerGrid": "2x2",
+            "description": "",
+            "refUrl": "https://www.cvh.ac.cn/spms/detail.php?id=e7f43301",
+            "root_path_key": "BlockDecoration",
+            "relative_path": "BlockDecoration_Rand_Grid2x2_Grass_Mang.asset",
+            "tags": ["uncommon"]
+        },
+        "Furniture_Rule_Grid2x2_Table_Wooden":{
+            "ID": 5,
+            "category": "Furniture",
+            "name": "芒草",
+            "tileType": "Rule",
+            "tilePerGrid": "2x2",
+            "description": "",
+            "refUrl": "https://www.cvh.ac.cn/spms/detail.php?id=e7f43301",
+            "root_path_key": "Furniture",
+            "relative_path": "Furniture_Rule_Grid2x2_Table_Wooden.asset",
+            "tags": ["uncommon"]
+        }
+    }
+}

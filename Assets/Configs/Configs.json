@@ -1,0 +1,12 @@
+{
+  "version": "0.17.2b",
+  "save_playing": "",
+
+  "TMap_tiles_per_block": {"x": 8, "y": 8, "z": 1},
+  "TMap_tiles_per_loading": 16,
+  "TMap_interval_per_loading": 20,
+
+  "CAM_rowTiles_in_playerCamera_max": 256,
+  "CAM_rowTiles_in_playerCamera_min": 16,
+  "CAM_rowTiles_in_playerCamera_default": 64
+}

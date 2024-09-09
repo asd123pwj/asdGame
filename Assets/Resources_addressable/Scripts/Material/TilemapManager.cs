@@ -38,7 +38,7 @@ public class TilemapManager: BaseClass{
     // GameConfigs _GCfg;
     // ---------- info ----------
     public TilesInfo __tiles_info;
-    public Dictionary<string, TileBase> __name2tile = new();
+    public Dictionary<string, AsyncOperationHandle<TileBase>> __name2tile = new();
     public Dictionary<int, string> __ID2tileName = new();
     // ---------- state ----------
     // public List<Vector3Int> __blockLoads_list = new();
@@ -56,8 +56,8 @@ public class TilemapManager: BaseClass{
     // ---------- mapping ----------
     public TileBase _get_tile(string name){
         if (name == "") return null; // No tile
-        if (__name2tile.ContainsKey(name)) return __name2tile[name]; // Tile have been loaded
-        return __name2tile[name];
+        if (__name2tile.ContainsKey(name)) return __name2tile[name].Result; // Tile have been loaded
+        return __name2tile[name].Result;
     }
 
     public TileBase _get_tile(int ID){
@@ -102,15 +102,15 @@ public class TilemapManager: BaseClass{
             handle.Completed += (operationalHandle) => action_tile_loaded(operationalHandle, tile_key);
         else{
             handle.WaitForCompletion();
-            __name2tile.Add(tile_key, handle.Result);
-            Addressables.Release(handle);
+            __name2tile.Add(tile_key, handle);
+            // Addressables.Release(handle);
         }
         await UniTask.Yield();
     }
 
     void action_tile_loaded(AsyncOperationHandle<TileBase> handle, string tile_key){
-        if (handle.Status == AsyncOperationStatus.Succeeded) __name2tile.Add(tile_key, handle.Result);
+        if (handle.Status == AsyncOperationStatus.Succeeded) __name2tile.Add(tile_key, handle);
         else Debug.LogError("Failed to load tile: " + handle.DebugName);
-        Addressables.Release(handle);
+        // Addressables.Release(handle);
     }
 }

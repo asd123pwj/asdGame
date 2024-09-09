@@ -20,7 +20,7 @@ public class TilemapBlockMineral: BaseClass {
 
     public TilemapBlock _generate_2DBlock_mineral(TilemapBlock block){
         // ---------- init ----------
-        Vector3Int BSize = _GCfg.__block_size;    // for convenience
+        Vector3Int BSize = _GCfg._sysCfg.TMap_tiles_per_block;    // for convenience
         float perlin;
         int tile_index; // for generate different mineral in different place
         RaritySearcher rarity_searcher = new(_tilemap_base, _GCfg);

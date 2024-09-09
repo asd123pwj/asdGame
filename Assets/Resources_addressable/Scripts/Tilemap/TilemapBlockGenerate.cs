@@ -63,7 +63,7 @@ public class TilemapBlockGenerate: BaseClass{
         TilemapBlock block = new() {
             offsets = block_offsets,
             isExist = true,
-            size = _GCfg.__block_size,
+            size = _GCfg._sysCfg.TMap_tiles_per_block,
         };
         BAround._set_block(block);
 
@@ -78,7 +78,7 @@ public class TilemapBlockGenerate: BaseClass{
 
     TilemapBlock fill_1DBlock(TilemapBlock block){
         // ---------- init ----------
-        Vector3Int BSize = _GCfg.__block_size;    // for convenience
+        Vector3Int BSize = _GCfg._sysCfg.TMap_tiles_per_block;    // for convenience
         int perlin;
         int[,] map = new int[BSize.x, BSize.y];
         _HeightGenerator height_gen = new(block);
@@ -103,7 +103,7 @@ public class TilemapBlockGenerate: BaseClass{
 
     TilemapBlock generate_2Dblock_transition(TilemapBlock block, TilemapBlockAround around_blocks){
         // ---------- init ----------
-        Vector3Int BSize = _GCfg.__block_size;    // for convenience
+        Vector3Int BSize = _GCfg._sysCfg.TMap_tiles_per_block;    // for convenience
         int perlin;
         _HeightGenerator height_gen = new(block, new(BSize.x, BSize.y / 4)); 
         height_gen._Add(new(0, BSize.y / 8));

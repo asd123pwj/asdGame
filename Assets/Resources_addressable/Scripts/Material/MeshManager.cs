@@ -19,7 +19,7 @@ public struct MeshesInfo{
 
 public class MeshManager: BaseClass{
     public MeshesInfo _meshes_info;
-    public Dictionary<string, Mesh> _name2mesh = new();
+    public Dictionary<string, AsyncOperationHandle<Mesh>> _name2mesh = new();
 
     public MeshManager(){
         load_materials();
@@ -38,7 +38,7 @@ public class MeshManager: BaseClass{
     }
 
     public Mesh _get_mesh(string name){
-        return _name2mesh[name];
+        return _name2mesh[name].Result;
     }
 
     async UniTaskVoid load_mesh(string name){
@@ -57,8 +57,8 @@ public class MeshManager: BaseClass{
     }
 
     void action_mesh_loaded(AsyncOperationHandle<Mesh> handle){
-        if (handle.Status == AsyncOperationStatus.Succeeded) _name2mesh.Add(handle.Result.name, handle.Result);
+        if (handle.Status == AsyncOperationStatus.Succeeded) _name2mesh.Add(handle.Result.name, handle);
         else Debug.LogError("Failed to load material: " + handle.DebugName);
-        Addressables.Release(handle);
+        // Addressables.Release(handle);
     }
 }

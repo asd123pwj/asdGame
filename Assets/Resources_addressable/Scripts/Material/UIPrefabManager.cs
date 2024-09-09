@@ -20,7 +20,7 @@ public struct UIPrefabsInfo{
 public class UIPrefabManager: BaseClass{
     // GameConfigs _GCfg;
     public UIPrefabsInfo _UIPrefabs_info;
-    public Dictionary<string, GameObject> _name2UIPrefab = new();
+    public Dictionary<string, AsyncOperationHandle<GameObject>> _name2UIPrefab = new();
 
     public UIPrefabManager(){
         // _game_configs = game_configs;
@@ -40,7 +40,7 @@ public class UIPrefabManager: BaseClass{
     }
 
     public GameObject _get_pfb(string name){
-        return _name2UIPrefab[name];
+        return _name2UIPrefab[name].Result;
     }
 
     async UniTaskVoid load_UIPrefab(string name){
@@ -59,8 +59,8 @@ public class UIPrefabManager: BaseClass{
     }
 
     void action_UIPrefab_loaded(AsyncOperationHandle<GameObject> handle){
-        if (handle.Status == AsyncOperationStatus.Succeeded) _name2UIPrefab.Add(handle.Result.name, handle.Result);
+        if (handle.Status == AsyncOperationStatus.Succeeded) _name2UIPrefab.Add(handle.Result.name, handle);
         else Debug.LogError("Failed to load prefab: " + handle.DebugName);
-        Addressables.Release(handle);
+        // Addressables.Release(handle);
     }
 }
