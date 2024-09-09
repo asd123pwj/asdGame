@@ -106,7 +106,7 @@ public class TilemapDraw: BaseClass{
         // ProfilerMarker profiler_marker = new ProfilerMarker("TilemapDrawMarker");
         // profiler_marker.Begin();
 
-        int draw_method = 2;
+        int draw_method = 1;
         
         // ---------- Method 1: Draw tiles BY SetTiles ----------
         if (draw_method == 1){
@@ -117,13 +117,15 @@ public class TilemapDraw: BaseClass{
                 tiles_all.AddRange(region.tiles);
             }
 
-            int tile_per_group = position_all.Count;
+            // int tile_per_group = position_all.Count;
+            int tile_per_group = 32*32;
             int group_count = position_all.Count / tile_per_group;
             for(int i = 0; i < group_count; i++){
                 Vector3Int[] tmp_positions = position_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
                 TileBase[] tmp_tiles = tiles_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
                 tilemap.SetTiles(tmp_positions, tmp_tiles);
                 // await UniTask.Yield();
+                await UniTask.Delay(100);
             }
         }
 

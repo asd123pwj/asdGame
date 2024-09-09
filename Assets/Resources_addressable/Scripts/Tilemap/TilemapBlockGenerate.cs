@@ -39,6 +39,10 @@ public class TilemapBlockGenerate: BaseClass{
 
     // ---------- API ----------
 
+    // public Vector2 _generate_block_nearest(){
+
+    // }
+
     public TilemapBlock _generate_1DBlock_by_tile(Vector3Int tile_pos, string type, string[] directions){
         Vector3Int block_offsets = TMapCfg._mapping_mapXY_to_blockXY(tile_pos);
         return _generate_block(block_offsets);

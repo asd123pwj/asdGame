@@ -48,6 +48,7 @@ public class TilemapController: BaseClass{
         // _generate_spawn_block(new(0, 0));
         // Debug.Log("a");
         query_isTilemapBlockChange();
+        // _tilemapBlockChange = true;
 
         trigger_tilemapBlockChange();
     }
@@ -63,8 +64,8 @@ public class TilemapController: BaseClass{
         List<TilemapRegion4Draw> regions = new();
         List<Vector3Int> block_offsets_list = new();
 
-        // int loadBound = _GCfg.__block_loadBound;
-        int loadBound = 4;
+        int loadBound = _GCfg.__block_loadBound;
+        // int loadBound = 4;
         for (int r = 0; r < loadBound; r++){
             for (int x = -r; x <= r; x++){
                 int y = r - Mathf.Abs(x);

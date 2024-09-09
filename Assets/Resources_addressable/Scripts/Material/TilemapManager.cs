@@ -21,13 +21,15 @@ public struct TileInfo{
     public string tilePerGrid;
     public string description;
     public string refUrl;
-    public string path;
+    public string root_path_key;
+    public string relative_path;
     public string[] tags;
 };
 
 public struct TilesInfo{
     public string version;
     public Dictionary<string, TileInfo> tiles;
+    public Dictionary<string, string> root_paths;
 }
 
 public class TilemapManager: BaseClass{
@@ -90,21 +92,24 @@ public class TilemapManager: BaseClass{
         }
     }
 
-    async UniTaskVoid load_tile(string name){
-        string object_path = __tiles_info.tiles[name].path;
-        AsyncOperationHandle<TileBase> handle = Addressables.LoadAssetAsync<TileBase>(object_path);
-        if (name == "") // that is false.
-            handle.Completed += (operationalHandle) => action_tile_loaded(operationalHandle, name);
+    async UniTaskVoid load_tile(string tile_key){
+        string tile_relative_path = __tiles_info.tiles[tile_key].relative_path;
+        string tile_root_path_key = __tiles_info.tiles[tile_key].root_path_key;
+        string tile_root_path = __tiles_info.root_paths[tile_root_path_key];
+        string tile_path = Path.Combine(tile_root_path, tile_relative_path);
+        AsyncOperationHandle<TileBase> handle = Addressables.LoadAssetAsync<TileBase>(tile_path);
+        if (tile_key == "") // that is false.
+            handle.Completed += (operationalHandle) => action_tile_loaded(operationalHandle, tile_key);
         else{
             handle.WaitForCompletion();
-            __name2tile.Add(name, handle.Result);
+            __name2tile.Add(tile_key, handle.Result);
             Addressables.Release(handle);
         }
         await UniTask.Yield();
     }
 
-    void action_tile_loaded(AsyncOperationHandle<TileBase> handle, string name){
-        if (handle.Status == AsyncOperationStatus.Succeeded) __name2tile.Add(name, handle.Result);
+    void action_tile_loaded(AsyncOperationHandle<TileBase> handle, string tile_key){
+        if (handle.Status == AsyncOperationStatus.Succeeded) __name2tile.Add(tile_key, handle.Result);
         else Debug.LogError("Failed to load tile: " + handle.DebugName);
         Addressables.Release(handle);
     }

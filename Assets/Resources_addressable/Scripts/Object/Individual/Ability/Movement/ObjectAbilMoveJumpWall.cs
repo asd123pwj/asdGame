@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
-using UnityEditor.Search;
 
 public class ObjectAbilMoveJumpWall: ObjectAbilMoveBase{
     public ObjectAbilMoveJumpWall(ObjectConfig config, float cooldown, float wait, int uses): this(config, cooldown, wait, uses, -1){}

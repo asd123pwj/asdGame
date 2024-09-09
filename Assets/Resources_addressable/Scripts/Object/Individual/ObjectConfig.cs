@@ -43,7 +43,7 @@ public class ObjectConfig: BaseClass{
         _info = info;
         _tags = info.tags;
         _max_move_speed = new Vector2(2f, 2f);
-        _move_force = new Vector2(1f, 1f);
+        _move_force = new Vector2(1f, 5f);
         // isInit = false;
         // init_sub_script();
     }

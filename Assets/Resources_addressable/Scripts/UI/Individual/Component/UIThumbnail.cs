@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.EventSystems;
-using UnityEditor.UI;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using Newtonsoft.Json;

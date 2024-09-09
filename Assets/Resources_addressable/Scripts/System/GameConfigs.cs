@@ -43,7 +43,7 @@ public class GameConfigs{
 
     // ---------- tilemap config ----------
     public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } } // NOTE: multiple of 5
-    public int __block_loadBound { get {return 3; } }
+    public int __block_loadBound { get {return 10; } }
     public int __block_unloadBound { get {return 10; } }
 
     // ---------- save config ----------

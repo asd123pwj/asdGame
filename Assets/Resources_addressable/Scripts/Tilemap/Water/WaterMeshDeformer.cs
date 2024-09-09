@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEditor;
 using Cysharp.Threading.Tasks;
 
 public class WaterMeshDeformer : MonoBehaviour{
@@ -31,7 +30,7 @@ public class WaterMeshDeformer : MonoBehaviour{
         string mat_name = "Liquid_Water";
         string mesh_name = "Size1x1_Grid4x4_AxisXY";
         while (!_check_allow_init(mat_name, mesh_name)){
-            Debug.Log("wait");
+            // Debug.Log("wait");
             await UniTask.Delay(100);
         }
 

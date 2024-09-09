@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
-using UnityEditor.Search;
 
 public class ObjectAbilMoveRush: ObjectAbilMoveBase{
     public ObjectAbilMoveRush(ObjectConfig config, float cooldown, float wait, int uses): this(config, cooldown, wait, uses, -1){}
@@ -17,6 +16,6 @@ public class ObjectAbilMoveRush: ObjectAbilMoveBase{
 
 
     protected override void _act_move(KeyPos input) { 
-        _act_force(new(input.x_dir * _Config._move_force.x * 5, input.y_dir * _Config._move_force.y * 5), true);
+        _act_force(new(input.x_dir * _Config._move_force.x * 20, input.y_dir * _Config._move_force.y * 20), true);
     }
 }

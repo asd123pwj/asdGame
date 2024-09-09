@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
-using UnityEditor.Search;
 
 public class ObjectAbilMoveJump: ObjectAbilMoveBase{
     public ObjectAbilMoveJump(ObjectConfig config, float cooldown, float wait, int uses): this(config, cooldown, wait, uses, -1){}

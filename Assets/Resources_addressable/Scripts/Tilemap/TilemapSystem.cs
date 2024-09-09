@@ -29,7 +29,7 @@ public class TilemapSystem : BaseClass{
     // ---------- status ----------
 
     public override void _init(){
-        _tilemap_modify = _sys._searchInit<Tilemap>("Tilemap", "Existence");
+        _tilemap_modify = _sys._searchInit<Tilemap>("Tilemap", "Block_1x1");
         _TMapCfg = new();
         _TMapDraw = new();
         _TMapGen = new();
