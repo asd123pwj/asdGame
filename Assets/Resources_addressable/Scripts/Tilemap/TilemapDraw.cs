@@ -151,6 +151,7 @@ public class TilemapDraw: BaseClass{
                 await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
             }
         }
+        tilemap.GetComponent<ShadowGenerator>()._generate_shadow();
 
         stopwatch.Stop();
         Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds + ", regions: " + regions.Count);

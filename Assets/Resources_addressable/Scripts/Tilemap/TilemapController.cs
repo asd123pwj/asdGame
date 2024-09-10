@@ -80,7 +80,9 @@ public class TilemapController: BaseClass{
             regions.Add(TMapDraw._get_draw_region(TMap_modify, block));
         }
 
-        if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions).Forget();
+        if (regions.Count > 0) {
+            TMapDraw._draw_region(TMap_modify, regions).Forget();
+        }
         return true;
     }
 

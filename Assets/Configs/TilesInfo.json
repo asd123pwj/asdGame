@@ -6,13 +6,13 @@
         "Furniture": "Assets/Resources_addressable/Tilemap/Furniture/"
     },
     "tiles":{
-        "BlockSoilGrassyP3D":{
+        "Block_Soil_Grassy_P3D":{
             "ID": 1,
             "category": "Block",
             "name": "Grassy Soil",
             "description": "",
             "root_path_key": "Block",
-            "relative_path": "Soil/BlockSoilGrassyP3D.asset",
+            "relative_path": "Soil/Block_Soil_Grassy_P3D.asset",
             "tags": ["common"]
         },
         "BlockMineralTest":{
@@ -24,13 +24,13 @@
             "relative_path": "Mineral/BlockMineralTest.asset",
             "tags": ["rare"]
         },
-        "BlockStoneGravel":{
+        "Block_Stone_Gravel_P3D":{
             "ID": 3,
             "category": "Block",
-            "name": "Gravel",
+            "name": "砾石",
             "description": "",
             "root_path_key": "Block",
-            "relative_path": "Stone/BlockStoneGravel.asset",
+            "relative_path": "Stone/Block_Stone_Gravel_P3D.asset",
             "tags": ["uncommon"]
         },
         "BlockDecoration_Rand_Grid2x2_Grass_Mang":{

@@ -24,7 +24,16 @@ public class ShadowGenerator : MonoBehaviour{
 
 
     void Start(){
+        _generate_shadow();
+    }
+
+    public void _generate_shadow(){
         _self = this.gameObject;
+        Transform container_old = _self.transform.Find("Container_ShadowCasters");
+        if (container_old != null){
+            Destroy(container_old.gameObject);
+        }
+        
         GameObject container = new GameObject("Container_ShadowCasters");
         container.transform.SetParent(_self.transform);
 
@@ -48,6 +57,7 @@ public class ShadowGenerator : MonoBehaviour{
             _generateShadowMeshMethod.Invoke(shadowCaster, new object[] { _meshField.GetValue(shadowCaster), _shapePathField.GetValue(shadowCaster) });
 
         }
+
     }
 }
 
