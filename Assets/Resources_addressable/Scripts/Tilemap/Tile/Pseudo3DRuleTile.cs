@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-[CreateAssetMenu(menuName = "Tiles/Pseudo3D Rule Tile")]
+[CreateAssetMenu(menuName = "2D/Tiles/Pseudo3D Rule Tile")]
 public class Pseudo3DRuleTile : RuleTile<Pseudo3DRuleTile.Neighbor> {
     public bool isTransparent; 
 

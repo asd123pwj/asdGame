@@ -48,9 +48,9 @@ public struct TerrainHier1Info{
     public string name;
     public string[] tags;
     public int[] h_avail;               // where can it generating, height means block offset, left close right open interval
-    public int surface;              // ID, surface tile
+    public string surface;              // ID, surface tile
     // public string tile_transition;      // ID, transition from terr1 to terr2, trans_tile is the surface_tile of terr2
-    public int[] minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
+    public string[] minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
     public bool isExist;
 }
 
@@ -172,17 +172,17 @@ public class TilemapTerrain{
         _terrains_hier1.Add(new TerrainHier1Info{
             ID = "0", name = "plain", tags = new string[]{"flat", "ground"},
             h_avail = new int[]{-999999999, 999999999},
-            surface = 1, minerals = new int[] { 3, 2 }
+            surface = "b1", minerals = new string[] { "b3", "b4" }
         });
         _terrains_hier1.Add(new TerrainHier1Info{
             ID = "1", name = "sky", tags = new string[]{"sky"},
             h_avail = new int[]{100, 999999999},
-            surface = 0, minerals = new int[]{}
+            surface = "0", minerals = new string[]{}
         });
         _terrains_hier1.Add(new TerrainHier1Info{
             ID = "2", name = "underground gravel", tags = new string[]{"underground"},
             h_avail = new int[]{-999999999, -3},
-            surface = 3, minerals = new int[] {2}
+            surface = "b3", minerals = new string[] {"b4"}
         });
     }
 

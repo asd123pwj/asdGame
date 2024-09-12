@@ -8,58 +8,56 @@ using Cysharp.Threading.Tasks;
 using Unity.VectorGraphics;
 
 public struct UIPrefabInfo{
-    public string name;
     public string path;
 }
 
 public struct UIPrefabsInfo{
     public string version;
-    public Dictionary<string, UIPrefabInfo> UIPrefabs;
+    public Dictionary<string, UIPrefabInfo> items;
 }
 
 public class UIPrefabManager: BaseClass{
     // GameConfigs _GCfg;
-    public UIPrefabsInfo _UIPrefabs_info;
-    public Dictionary<string, AsyncOperationHandle<GameObject>> _name2UIPrefab = new();
+    public UIPrefabsInfo _infos;
+    public Dictionary<string, AsyncOperationHandle<GameObject>> _ID2UIPrefab = new();
 
     public UIPrefabManager(){
         // _game_configs = game_configs;
-        load_UIPrefabs();
+        load_items();
     }
 
     public bool _check_info_initDone(){
-        return !(_UIPrefabs_info.version == null);
+        return !(_infos.version == null);
     }
 
-    public bool _check_exist(string name){
-        return _UIPrefabs_info.UIPrefabs.ContainsKey(name);
+    public bool _check_exist(string ID){
+        return _infos.items.ContainsKey(ID);
     }
 
-    public bool _check_loaded(string name){
-        return _name2UIPrefab.ContainsKey(name);
+    public bool _check_loaded(string ID){
+        return _ID2UIPrefab.ContainsKey(ID);
     }
 
-    public GameObject _get_pfb(string name){
-        return _name2UIPrefab[name].Result;
+    public GameObject _get_pfb(string ID){
+        return _ID2UIPrefab[ID].Result;
     }
 
-    async UniTaskVoid load_UIPrefab(string name){
-        string UIPrefab_path = _UIPrefabs_info.UIPrefabs[name].path;
+    void load_UIPrefab(string ID){
+        string UIPrefab_path = _infos.items[ID].path;
         AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(UIPrefab_path);
-        handle.Completed += action_UIPrefab_loaded;
-        await UniTask.Yield();
+        handle.Completed += (operationalHandle) => action_UIPrefab_loaded(operationalHandle, ID);
     }
 
-    void load_UIPrefabs(){
+    void load_items(){
         string jsonText = File.ReadAllText(_GCfg.__UIPrefabsInfo_path);
-        _UIPrefabs_info = JsonConvert.DeserializeObject<UIPrefabsInfo>(jsonText);
-        foreach (var object_kv in _UIPrefabs_info.UIPrefabs){
-            load_UIPrefab(object_kv.Key).Forget();
+        _infos = JsonConvert.DeserializeObject<UIPrefabsInfo>(jsonText);
+        foreach (var object_kv in _infos.items){
+            load_UIPrefab(object_kv.Key);
         }
     }
 
-    void action_UIPrefab_loaded(AsyncOperationHandle<GameObject> handle){
-        if (handle.Status == AsyncOperationStatus.Succeeded) _name2UIPrefab.Add(handle.Result.name, handle);
+    void action_UIPrefab_loaded(AsyncOperationHandle<GameObject> handle, string ID){
+        if (handle.Status == AsyncOperationStatus.Succeeded) _ID2UIPrefab.Add(ID, handle);
         else Debug.LogError("Failed to load prefab: " + handle.DebugName);
         // Addressables.Release(handle);
     }

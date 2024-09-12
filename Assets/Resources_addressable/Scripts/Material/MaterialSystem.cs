@@ -12,17 +12,19 @@ public class MaterialSystem: BaseClass{
     public ObjectManager _obj;
     public UIPrefabManager _UIPfb;
     public UISpriteManager _UISpr;
-    public TilemapManager _TMap;
+    public TileManager _tile;
     public MaterialManager _mat;
     public MeshManager _mesh;
+    public PhysicsMaterialManager _phyMat;
 
     public override void _init(){
         _obj = new();
         _UIPfb = new();
         _UISpr = new();
-        _TMap = new();
+        _tile = new();
         _mat = new();
         _mesh = new();
+        _phyMat = new();
     }
     
     public bool _check_all_info_initDone(){
@@ -30,9 +32,10 @@ public class MaterialSystem: BaseClass{
         if (!_obj._check_info_initDone()) return false;
         if (!_UIPfb._check_info_initDone()) return false;
         if (!_UISpr._check_info_initDone()) return false;
-        if (!_TMap._check_info_initDone()) return false;
+        if (!_tile._check_info_initDone()) return false;
         if (!_mat._check_info_initDone()) return false;
         if (!_mesh._check_info_initDone()) return false;
+        if (!_phyMat._check_info_initDone()) return false;
         return true;
     }
 

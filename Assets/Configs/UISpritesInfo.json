@@ -1,28 +1,22 @@
 {
     "version": "0.0.1",
-    "UISprites":{
+    "items":{
         "Settings":{
-            "name": "Settings",
             "path": "Assets/Resources_addressable/Graphics/UI/Settings.png"
         },
         "Close":{
-            "name": "Close",
             "path": "Assets/Resources_addressable/Graphics/UI/Close.png"
         },
         "Default":{
-            "name": "Default",
             "path": "Assets/Resources_addressable/Graphics/UI/Default.png"
         },
         "ResizeButtom":{
-            "name": "ResizeButtom",
             "path": "Assets/Resources_addressable/Graphics/UI/ResizeButtom.png"
         },
         "RightMenu":{
-            "name": "RightMenu",
             "path": "Assets/Resources_addressable/Graphics/UI/RightMenu.png"
         },
         "Empty":{
-            "name": "Empty",
             "path": "Assets/Resources_addressable/Graphics/UI/Empty.png"
         }
     }

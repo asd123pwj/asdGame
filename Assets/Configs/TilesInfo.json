@@ -3,11 +3,11 @@
     "root_paths": {
         "Block": "Assets/Resources_addressable/Tilemap/Block/",
         "BlockDecoration": "Assets/Resources_addressable/Tilemap/BlockDecoration/",
-        "Furniture": "Assets/Resources_addressable/Tilemap/Furniture/"
+        "Furniture": "Assets/Resources_addressable/Tilemap/Furniture/",
+        "Placeholder": "Assets/Resources_addressable/Tilemap/Placeholder/"
     },
-    "tiles":{
-        "Block_Soil_Grassy_P3D":{
-            "ID": 1,
+    "items":{
+        "b1":{
             "category": "Block",
             "name": "Grassy Soil",
             "description": "",
@@ -15,8 +15,7 @@
             "relative_path": "Soil/Block_Soil_Grassy_P3D.asset",
             "tags": ["common"]
         },
-        "BlockMineralTest":{
-            "ID": 2,
+        "b2":{
             "category": "Block",
             "name": "Mineral Test",
             "description": "",
@@ -24,8 +23,7 @@
             "relative_path": "Mineral/BlockMineralTest.asset",
             "tags": ["rare"]
         },
-        "Block_Stone_Gravel_P3D":{
-            "ID": 3,
+        "b3":{
             "category": "Block",
             "name": "砾石",
             "description": "",
@@ -33,8 +31,7 @@
             "relative_path": "Stone/Block_Stone_Gravel_P3D.asset",
             "tags": ["uncommon"]
         },
-        "BlockDecoration_Rand_Grid2x2_Grass_Mang":{
-            "ID": 4,
+        "bd1":{
             "category": "BlockDecoration",
             "name": "芒草",
             "tileType": "Rand",
@@ -45,10 +42,9 @@
             "relative_path": "BlockDecoration_Rand_Grid2x2_Grass_Mang.asset",
             "tags": ["uncommon"]
         },
-        "Furniture_Rule_Grid2x2_Table_Wooden":{
-            "ID": 5,
+        "f1":{
             "category": "Furniture",
-            "name": "芒草",
+            "name": "木桌",
             "tileType": "Rule",
             "tilePerGrid": "2x2",
             "description": "",
@@ -56,6 +52,33 @@
             "root_path_key": "Furniture",
             "relative_path": "Furniture_Rule_Grid2x2_Table_Wooden.asset",
             "tags": ["uncommon"]
+        },
+        "b4":{
+            "category": "Block",
+            "name": "玻璃",
+            "tileType": "Rule",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "Transparent/Block_Transparent_Glass_P3D.asset",
+            "tags": ["uncommon"]
+        },
+        "p1":{
+            "category": "Placeholder",
+            "name": "不透明块占位符",
+            "root_path_key": "Placeholder",
+            "relative_path": "Placeholder_Opaque_Block.asset"
+        },
+        "p2":{
+            "category": "Placeholder",
+            "name": "透明块占位符",
+            "root_path_key": "Placeholder",
+            "relative_path": "Placeholder_Transparent_Block.asset"
+        },
+        "p3":{
+            "category": "Placeholder",
+            "name": "缺失块占位符",
+            "root_path_key": "Placeholder",
+            "relative_path": "Placeholder_Missing_Block.asset"
         }
     }
 }

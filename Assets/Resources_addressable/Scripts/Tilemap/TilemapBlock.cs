@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MathNet.Numerics.LinearAlgebra;
+using UnityEngine.Tilemaps;
 
 public struct LayerInfo{
     public int tile_ID;
     public Matrix<int> layer;
 }
 
-public class TilemapBlock{
+public class TilemapBlock: BaseClass{
     public string terrain_ID;
     public string[] terrain_tags;
     public Vector3Int offsets;
@@ -22,10 +23,12 @@ public class TilemapBlock{
     public List<Vector3Int> groundPos;
     public string[] direction;
     public bool direction_reverse;
-    public int[,] map;
+    public string[,] map;
     public List<LayerInfo> layers;
     public bool isExist;
+
     Noise _noise;
+
 
     public TilemapBlock(int seed=-1){
         if (seed == -1)
@@ -33,6 +36,8 @@ public class TilemapBlock{
         this.seed = seed;
         _noise = new Noise(seed);
     }
+
+
 
     public float _perlin(int x, int y, float scale){
         x += offsets.x * size.x;

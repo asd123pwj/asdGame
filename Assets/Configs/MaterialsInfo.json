@@ -1,9 +1,11 @@
 {
     "version": "0.0.1",
-    "materials":{
+    "items":{
         "Liquid_Water":{
-            "name": "Liquid_Water",
             "path": "Assets/Resources_addressable/Material/Liquid_Water.mat"
+        },
+        "TilemapLitMaterial": {
+            "path": "Assets/Resources_addressable/Material/TilemapLitMaterial.mat"
         }
     }
 }

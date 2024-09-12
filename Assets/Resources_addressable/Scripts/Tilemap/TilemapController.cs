@@ -64,25 +64,47 @@ public class TilemapController: BaseClass{
         List<TilemapRegion4Draw> regions = new();
         List<Vector3Int> block_offsets_list = new();
 
-        int loadBound = _GCfg.__block_loadBound;
+        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocks_around_loading;
         // int loadBound = 4;
-        for (int r = 0; r < loadBound; r++){
-            for (int x = -r; x <= r; x++){
-                int y = r - Mathf.Abs(x);
+        // for (int r = 0; r < loadBound; r++){
+        //     for (int x = -r; x <= r; x++){
+        //         int y = r - Mathf.Abs(x);
+        //         block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
+        //         if (y != 0) block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y - y));
+        //     }
+        // }
+        for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
+            for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
                 block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
-                if (y != 0) block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y - y));
             }
         }
 
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
         foreach (Vector3Int BOffsets in block_offsets_list){
             TilemapBlock block = TMapGen._generate_block(BOffsets);
             TMapSL._load_block(block);
-            regions.Add(TMapDraw._get_draw_region(TMap_modify, block));
+
+            // regions.Clear();
+            // regions.Add(TMapDraw._get_draw_region(block));
+            TilemapRegion4Draw region = TMapDraw._get_draw_region(block);
+            Dictionary<Vector3Int, TilemapRegion4Draw> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
+
+            Tilemap TMap = _TMapSys._TMapMon._get_tilemap(BOffsets, "Block");
+            TMapDraw._draw_region(TMap, region);
+            // foreach (Vector3Int offsets in regions_placeholder.Keys){
+            //     Tilemap TMap_placeholder = _TMapSys._TMapMon._get_tilemap(offsets, "Block");
+            //     TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]);
+            // }
+            
         }
 
-        if (regions.Count > 0) {
-            TMapDraw._draw_region(TMap_modify, regions).Forget();
-        }
+        stopwatch.Stop();
+        Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds + ", regions: " + block_offsets_list.Count);
+        // if (regions.Count > 0) {
+        //     Tilemap TMap = _TMapSys._TMapMon._get_tilemap(block)
+        //     TMapDraw._draw_region(TMap_modify, regions).Forget();
+        // }
         return true;
     }
 
@@ -165,14 +187,28 @@ public class TilemapController: BaseClass{
         // }
 
         // int loadBound = 4;
-        for (int r = 0; r < loadB; r++){
-            for (int x = -r; x <= r; x++){
-                int y = r - Mathf.Abs(x);
+        // for (int r = 0; r < loadB; r++){
+        //     for (int x = -r; x <= r; x++){
+        //         int y = r - Mathf.Abs(x);
+        //         loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
+        //         if (y != 0) loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
+        //     }
+        // }
+
+        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocks_around_loading;
+        // int loadBound = 4;
+        // for (int r = 0; r < loadBound; r++){
+        //     for (int x = -r; x <= r; x++){
+        //         int y = r - Mathf.Abs(x);
+        //         block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
+        //         if (y != 0) block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y - y));
+        //     }
+        // }
+        for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
+            for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
                 loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
-                if (y != 0) loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
             }
         }
-
 
 
         List<TilemapRegion4Draw> regions = new();
@@ -180,10 +216,10 @@ public class TilemapController: BaseClass{
         foreach(Vector3Int block_offsets in loads_wait){
             TilemapBlock block = TMapGen._generate_block(block_offsets);
             TMapSL._load_block(block);
-            regions.Add(TMapDraw._get_draw_region(TMap_modify, block));
+            regions.Add(TMapDraw._get_draw_region(block));
         }
         // if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions, cancel_token.Token).Forget();
-        if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions).Forget();
+        if (regions.Count > 0) TMapDraw._draw_regions(TMap_modify, regions).Forget();
 
 
         for (int r = 0; r < unloadB; r++){
@@ -205,9 +241,9 @@ public class TilemapController: BaseClass{
         Vector3Int map_pos = TMap_modify.WorldToCell(spawn_worldPos);
         TilemapBlock block = TMapGen._generate_spawn_block(map_pos, TMap_modify);
         TMapSL._load_block(block);
-        List<TilemapRegion4Draw> regions = new(){TMapDraw._get_draw_region(TMap_modify, block)};
+        List<TilemapRegion4Draw> regions = new(){TMapDraw._get_draw_region(block)};
         // TMapDraw._draw_region(TMap_modify, regions, new()).Forget();
-        TMapDraw._draw_region(TMap_modify, regions).Forget();
+        TMapDraw._draw_regions(TMap_modify, regions).Forget();
         return block;
     }
     

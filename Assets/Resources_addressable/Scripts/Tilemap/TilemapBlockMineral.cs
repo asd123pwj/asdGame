@@ -25,15 +25,15 @@ public class TilemapBlockMineral: BaseClass {
         int tile_index; // for generate different mineral in different place
         RaritySearcher rarity_searcher = new(_tilemap_base, _GCfg);
         // tile to rarity
-        int[] minerals = _terrain.ID2TerrainHier1[block.terrain_ID].minerals;
+        string[] minerals = _terrain.ID2TerrainHier1[block.terrain_ID].minerals;
         if (minerals.Count() == 0) return block;
-        Dictionary<int, float> tileID2rarity = rarity_searcher._mapping_tilesID_to_rarity(minerals);
+        Dictionary<string, float> tileID2rarity = rarity_searcher._mapping_tilesID_to_rarity(minerals);
         // ---------- fill map ----------
         for (int x = 0; x < BSize.x; x++){
             for (int y = 0; y < BSize.y; y++){
-                if (block.map[x, y] == 0) continue;
+                if (block.map[x, y] == "0") continue;
                 tile_index = 0;
-                foreach (KeyValuePair<int, float> kvp in tileID2rarity){
+                foreach (KeyValuePair<string, float> kvp in tileID2rarity){
                     tile_index += 1;
                     perlin = block._perlin(x + BSize.x * tile_index, y + BSize.y * tile_index, 4f);
                     if(perlin > kvp.Value){
@@ -63,22 +63,22 @@ class RaritySearcher{
         GCfg = game_configs;
     }
 
-    float mapping_tileID_to_rarity(int tile_ID){
+    float mapping_tileID_to_rarity(string tile_ID){
         // string tile_name = GCfg._MatSys._TMap.__ID2tileName[tile_ID];
         // string[] tile_tags = GCfg._MatSys._TMap.__tiles_info.tiles[tile_name].tags;
         // while (GCfg._MatSys._TMap._check_loader(tile_ID)){
         //     Debug.Log("waitting for tile to load, tile ID: " + tile_ID);
         //     Thread.Sleep(100);
         // }
-        string[] tile_tags = GCfg._MatSys._TMap._get_info(tile_ID).tags;
+        string[] tile_tags = GCfg._MatSys._tile._get_info(tile_ID).tags;
         foreach (KeyValuePair<string, float> kvp in _rarity){
             if (tile_tags.Contains(kvp.Key)) return 1 - kvp.Value;
         }
         throw new ArgumentException("404: Rarity of tile-" + tile_ID + " Not Found.");
     }
 
-    public Dictionary<int, float> _mapping_tilesID_to_rarity(int[] tile_ID){
-        Dictionary<int, float> rarity_dict = new();
+    public Dictionary<string, float> _mapping_tilesID_to_rarity(string[] tile_ID){
+        Dictionary<string, float> rarity_dict = new();
         // The tile further back has a higher priority
         for (int i = tile_ID.Count()-1; i >= 0; i--){
             rarity_dict.Add(tile_ID[i], mapping_tileID_to_rarity(tile_ID[i]));

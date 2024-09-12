@@ -1,8 +1,7 @@
 {
     "version": "0.0.1",
-    "objects":{
+    "items":{
         "yang":{
-            "ID": 1,
             "name": "yang",
             "description": "",
             "path": "Assets/Resources_addressable/Prefab/Objects/yang.prefab",
@@ -14,7 +13,6 @@
             }
         },
         "test ammo":{
-            "ID": 2,
             "name": "test ammo",
             "description": "",
             "path": "Assets/Resources_addressable/Prefab/Objects/test ammo.prefab",

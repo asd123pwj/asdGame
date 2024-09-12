@@ -1,8 +1,7 @@
 {
     "version": "0.0.1",
-    "UIPrefabs":{
+    "items":{
         "ScrollView":{
-            "name": "ScrollView",
             "path": "Assets/Resources_addressable/Prefab/UI/ScrollView.prefab"
         }
     }

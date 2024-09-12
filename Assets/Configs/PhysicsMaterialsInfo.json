@@ -1,0 +1,9 @@
+{
+    "version": "0.0.1",
+    "items":{
+        "Default":{
+            "friction": 0.5,
+            "bounciness": 0
+        }
+    }
+}

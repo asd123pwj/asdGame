@@ -16,6 +16,7 @@ public class TilemapBlockGenerate: BaseClass{
     TilemapBlockDirection BDir;
     TilemapTerrain _terrain;
     TilemapBlockMineral _block_mineral;
+    // TilemapBlockGameObject BObj;
     // TilemapSaveLoad _saveLoad;
     // TilemapBlockTransition _block_transition;
 
@@ -67,6 +68,7 @@ public class TilemapBlockGenerate: BaseClass{
         };
         BAround._set_block(block);
 
+        // BObj._init_tilemap_gameObject(block, "Block", "Default");
         block = _terrain._random_terrainHier1(block, BAround);
         block = _terrain._random_terrainHier2_random(block, BAround);
         block = BDir._random_direction(block, BAround, _terrain, extra_targets, direction);
@@ -80,12 +82,12 @@ public class TilemapBlockGenerate: BaseClass{
         // ---------- init ----------
         Vector3Int BSize = _GCfg._sysCfg.TMap_tiles_per_block;    // for convenience
         int perlin;
-        int[,] map = new int[BSize.x, BSize.y];
+        string[,] map = new string[BSize.x, BSize.y];
         _HeightGenerator height_gen = new(block);
         foreach(Vector3Int pos in block.groundPos){
             height_gen._Add(pos);
         }
-        int surface = _terrain.ID2TerrainHier1[block.terrain_ID].surface;
+        string surface = _terrain.ID2TerrainHier1[block.terrain_ID].surface;
         // ---------- fill map ----------
         for (int x = 0; x < BSize.x; x++){
             perlin = height_gen._get_height(x);
@@ -94,7 +96,7 @@ public class TilemapBlockGenerate: BaseClass{
                 if ((y < perlin && !block.direction_reverse) || (y >= perlin && block.direction_reverse))
                     map[x, y] = surface;
                 else
-                    map[x, y] = 0;
+                    map[x, y] = "0";
             }
         }
         block.map = map;
@@ -109,23 +111,23 @@ public class TilemapBlockGenerate: BaseClass{
         height_gen._Add(new(0, BSize.y / 8));
         height_gen._Add(new(BSize.x-1, BSize.y / 8));
         // around surface
-        int self_surface = _terrain.ID2TerrainHier1[block.terrain_ID].surface;
-        int up_surface = around_blocks.up_terrainInfo.surface;
-        int down_surface = around_blocks.down_terrainInfo.surface;
-        int left_surface = around_blocks.left_terrainInfo.surface;
-        int right_surface = around_blocks.right_terrainInfo.surface;
+        string self_surface = _terrain.ID2TerrainHier1[block.terrain_ID].surface;
+        string up_surface = around_blocks.up_terrainInfo.surface;
+        string down_surface = around_blocks.down_terrainInfo.surface;
+        string left_surface = around_blocks.left_terrainInfo.surface;
+        string right_surface = around_blocks.right_terrainInfo.surface;
 
         for (int x = 0; x < BSize.x; x++){
             perlin = height_gen._get_height(x);
             for (int y = 0; y < perlin; y++){
-                if (up_surface != 0 && up_surface != self_surface) // up is different, need transition
-                    if (block.map[x, BSize.y - y - 1] != 0) block.map[x, BSize.y - y - 1] = up_surface;
-                if (down_surface != 0 && down_surface != self_surface) // down is different, need transition
-                    if (block.map[x, y] != 0) block.map[x, y] = down_surface;
-                if (left_surface != 0 && left_surface != self_surface) // left is different, need transition
-                    if (block.map[y, x] != 0) block.map[y, x] = left_surface;
-                if (right_surface != 0 && right_surface != self_surface) // right is different, need transition
-                    if (block.map[BSize.y - y - 1, x] != 0) block.map[BSize.y - y - 1, x] = right_surface;
+                if (up_surface != null && up_surface != self_surface) // up is different, need transition
+                    if (block.map[x, BSize.y - y - 1] != "0") block.map[x, BSize.y - y - 1] = up_surface;
+                if (down_surface != null && down_surface != self_surface) // down is different, need transition
+                    if (block.map[x, y] != "0") block.map[x, y] = down_surface;
+                if (left_surface != null && left_surface != self_surface) // left is different, need transition
+                    if (block.map[y, x] != "0") block.map[y, x] = left_surface;
+                if (right_surface != null && right_surface != self_surface) // right is different, need transition
+                    if (block.map[BSize.y - y - 1, x] != "0") block.map[BSize.y - y - 1, x] = right_surface;
             }
         }
         return block;

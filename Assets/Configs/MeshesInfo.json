@@ -1,8 +1,7 @@
 {
     "version": "0.0.1",
-    "meshes":{
+    "items":{
         "Size1x1_Grid4x4_AxisXY":{
-            "name": "Size1x1_Grid4x4_AxisXY",
             "path": "Assets/Resources_addressable/Mesh/Size1x1_Grid4x4_AxisXY.asset"
         }
     }

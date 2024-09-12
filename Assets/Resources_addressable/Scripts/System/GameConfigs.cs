@@ -20,6 +20,7 @@ public struct SystemConfig{
     // ----- loading
     public int TMap_tiles_per_loading;
     public int TMap_interval_per_loading;
+    public Vector3Int TMap_blocks_around_loading;
 
     // ---------- Camera ----------
     // ----- player camera
@@ -56,6 +57,7 @@ public class GameConfigs{
     public string __UIPrefabsInfo_path { get { return Path.Combine(__root_dir, "UIPrefabsInfo.json"); } }
     public string __MaterialsInfo_path { get { return Path.Combine(__root_dir, "MaterialsInfo.json"); } }
     public string __MeshesInfo_path { get { return Path.Combine(__root_dir, "MeshesInfo.json"); } }
+    public string __PhysicsMaterialsInfo_path { get { return Path.Combine(__root_dir, "PhysicsMaterialsInfo.json"); } }
 
     // ---------- tilemap config ----------
     // public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } }

@@ -8,56 +8,55 @@ using Cysharp.Threading.Tasks;
 using Unity.VectorGraphics;
 
 public struct MeshInfo{
-    public string name;
     public string path;
 }
 
 public struct MeshesInfo{
     public string version;
-    public Dictionary<string, MeshInfo> meshes;
+    public Dictionary<string, MeshInfo> items;
 }
 
 public class MeshManager: BaseClass{
-    public MeshesInfo _meshes_info;
-    public Dictionary<string, AsyncOperationHandle<Mesh>> _name2mesh = new();
+    public MeshesInfo _infos;
+    public Dictionary<string, AsyncOperationHandle<Mesh>> _ID2mesh = new();
 
     public MeshManager(){
         load_materials();
     }
 
     public bool _check_info_initDone(){
-        return !(_meshes_info.version == null);
+        return !(_infos.version == null);
     }
 
-    public bool _check_exist(string name){
-        return _meshes_info.meshes.ContainsKey(name);
+    public bool _check_exist(string ID){
+        return _infos.items.ContainsKey(ID);
     }
 
-    public bool _check_loaded(string name){
-        return _name2mesh.ContainsKey(name);
+    public bool _check_loaded(string ID){
+        return _ID2mesh.ContainsKey(ID);
     }
 
-    public Mesh _get_mesh(string name){
-        return _name2mesh[name].Result;
+    public Mesh _get_mesh(string ID){
+        return _ID2mesh[ID].Result;
     }
 
-    async UniTaskVoid load_mesh(string name){
-        string mesh_path = _meshes_info.meshes[name].path;
+    void load_item(string ID){
+        string mesh_path = _infos.items[ID].path;
         AsyncOperationHandle<Mesh> handle = Addressables.LoadAssetAsync<Mesh>(mesh_path);
-        handle.Completed += action_mesh_loaded;
-        await UniTask.Yield();
+        // handle.Completed += action_mesh_loaded;
+        handle.Completed += (operationHandle) => action_mesh_loaded(operationHandle, ID);
     }
 
     void load_materials(){
         string jsonText = File.ReadAllText(_GCfg.__MeshesInfo_path);
-        _meshes_info = JsonConvert.DeserializeObject<MeshesInfo>(jsonText);
-        foreach (var object_kv in _meshes_info.meshes){
-            load_mesh(object_kv.Key).Forget();
+        _infos = JsonConvert.DeserializeObject<MeshesInfo>(jsonText);
+        foreach (var object_kv in _infos.items){
+            load_item(object_kv.Key);
         }
     }
 
-    void action_mesh_loaded(AsyncOperationHandle<Mesh> handle){
-        if (handle.Status == AsyncOperationStatus.Succeeded) _name2mesh.Add(handle.Result.name, handle);
+    void action_mesh_loaded(AsyncOperationHandle<Mesh> handle, string ID){
+        if (handle.Status == AsyncOperationStatus.Succeeded) _ID2mesh.Add(ID, handle);
         else Debug.LogError("Failed to load material: " + handle.DebugName);
         // Addressables.Release(handle);
     }
