@@ -60,7 +60,7 @@ public class TilemapDraw: BaseClass{
                 string tile_ID = block.map[x, y];
                 TileBase tile = _MatSys._tile._get_tile(tile_ID);
                 region.tiles[x + y * block.size.x] = tile;
-                region.positions[x + y * block.size.x] = new Vector3Int(block_origin_pos.x + x, block_origin_pos.y + y, 0);
+                region.positions[x + y * block.size.x] = new Vector3Int(block_origin_pos.x + x, block_origin_pos.y + y, (x + y));
             }
         }
         return region;
@@ -247,8 +247,8 @@ public class TilemapDraw: BaseClass{
     // public void _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions){
     // public async UniTaskVoid _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions, CancellationToken cancel_token){
     public async UniTaskVoid _draw_region(Tilemap tilemap, TilemapRegion4Draw region){
-        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        stopwatch.Start();
+        // System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        // stopwatch.Start();
         // ProfilerMarker profiler_marker = new ProfilerMarker("TilemapDrawMarker");
         // profiler_marker.Begin();
 
@@ -295,7 +295,7 @@ public class TilemapDraw: BaseClass{
         }
         // tilemap.GetComponent<ShadowGenerator>()._generate_shadow();
 
-        stopwatch.Stop();
+        // stopwatch.Stop();
         // Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds);
         // profiler_marker.End();
     }

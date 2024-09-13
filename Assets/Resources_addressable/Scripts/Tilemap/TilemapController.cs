@@ -90,13 +90,19 @@ public class TilemapController: BaseClass{
             TilemapRegion4Draw region = TMapDraw._get_draw_region(block);
             Dictionary<Vector3Int, TilemapRegion4Draw> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
 
-            Tilemap TMap = _TMapSys._TMapMon._get_tilemap(BOffsets, "Block");
+            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "Block").TMap;
             TMapDraw._draw_region(TMap, region);
-            // foreach (Vector3Int offsets in regions_placeholder.Keys){
-            //     Tilemap TMap_placeholder = _TMapSys._TMapMon._get_tilemap(offsets, "Block");
-            //     TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]);
-            // }
-            
+            foreach (Vector3Int offsets in regions_placeholder.Keys){
+                Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "Block").TMap;
+                TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]);
+            }
+        }
+
+        foreach (Vector3Int BOffsets in block_offsets_list){
+            ShadowGenerator._generate_shadow(
+                _TMapSys._TMapMon._get_blkObj(BOffsets, "Block").obj,
+                _TMapSys._TMapMon._get_blkObj(BOffsets, "Block").compositeCollider
+            );
         }
 
         stopwatch.Stop();

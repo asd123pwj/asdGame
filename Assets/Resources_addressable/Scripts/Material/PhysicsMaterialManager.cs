@@ -47,7 +47,6 @@ public class PhysicsMaterialManager: BaseClass{
             bounciness = _infos.items[ID].bounciness
         };
         _ID2PhysicsMaterial2D.Add(ID, item);
-        Debug.Log(ID);
     }
 
     void load_all(){

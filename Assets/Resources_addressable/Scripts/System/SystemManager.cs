@@ -66,4 +66,5 @@ public class SystemManager : MonoBehaviour{
         else if (type == "Camera") return (T)(object)_camera.transform.Find(name).GetComponent<T>();
         return default;
     }
+
 }

@@ -3,12 +3,12 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class TilemapBlockGameObject{
-    public GameObject TMap_obj;
+    public GameObject obj;
     public Tilemap TMap;
     public TilemapRenderer TMap_renderer;
     public TilemapCollider2D TMap_collider;
-    public Rigidbody2D TMap_rb;
-    public CompositeCollider2D TMap_compositeCollider;
+    public Rigidbody2D rb;
+    public CompositeCollider2D compositeCollider;
 }
 
 public class TilemapMonitor: BaseClass{
@@ -41,45 +41,57 @@ public class TilemapMonitor: BaseClass{
         }
     }
 
-    public Tilemap _get_tilemap(Vector3Int block_offsets, string tilemap_type){
+    // public Tilemap _get_tilemap(Vector3Int block_offsets, string tilemap_type){
+    //     return _get_TilemapBlockGameObject(block_offsets, tilemap_type).TMap;
+    // }
+
+    public TilemapBlockGameObject _get_blkObj(Vector3Int block_offsets, string tilemap_type){
+        return _get_TilemapBlockGameObject(block_offsets, tilemap_type);
+    }
+    public TilemapBlockGameObject _get_TilemapBlockGameObject(Vector3Int block_offsets, string tilemap_type){
         if(!_TMap_obj[tilemap_type].ContainsKey(block_offsets)){
             TilemapBlockGameObject obj = _init_tilemap_gameObject(block_offsets, tilemap_type);
             _TMap_obj[tilemap_type].Add(block_offsets, obj);
         }
-        return _TMap_obj[tilemap_type][block_offsets].TMap;
+        return _TMap_obj[tilemap_type][block_offsets];
     }
 
     TilemapBlockGameObject _init_tilemap_gameObject(Vector3Int block_offsets, string tilemap_type="Block", string layer_name="Default"){
         TilemapBlockGameObject obj = new();
 
         // ----- GameObject
-        obj.TMap_obj = new GameObject();
-        obj.TMap_obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[tilemap_type].transform);
-        obj.TMap_obj.name = block_offsets.x + "_" + block_offsets.y;
-        obj.TMap_obj.layer = LayerMask.NameToLayer(layer_name);
-        // // position.z: right > left, up > down, finally, Pseudo3DTile will overall well.
-        // TMap_obj.transform.position = new (0, 0, (block_pos.x + block_pos.y) * z_scale);
+        obj.obj = new GameObject();
+        obj.obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[tilemap_type].transform);
+        obj.obj.name = block_offsets.x + "_" + block_offsets.y;
+        obj.obj.layer = LayerMask.NameToLayer(layer_name);
+        // position.z: right > left, up > down, finally, Pseudo3DTile will overall well.
+        // obj.TMap_obj.transform.position = new (0, 0, (block_offsets.x + block_offsets.y) * z_scale * -1);
 
         // ----- Tilemap
-        obj.TMap = obj.TMap_obj.AddComponent<Tilemap>();
+        obj.TMap = obj.obj.AddComponent<Tilemap>();
 
         // ----- TilemapRenderer
-        obj.TMap_renderer = obj.TMap_obj.AddComponent<TilemapRenderer>();
+        obj.TMap_renderer = obj.obj.AddComponent<TilemapRenderer>();
         obj.TMap_renderer.material = _MatSys._mat._get_mat("TilemapLitMaterial");
+        // !!! Necessary for Pseudo3D: 
+        // TilemapRenderer.Mode.Individual: make tile overlap tile, while Mode.Chunk make tile overlap tile only same type
+        // URP render data, "Transparency Sort Axis" with "x=-1, y=-1, z=0": make top overlap bottom, make right overlap left
+        // Now, I dont need to draw tilemap in different overlap, "7 sprite for 1 tile" is PAST, "1 sprite for 1 tile" is NOW.
+        obj.TMap_renderer.mode = TilemapRenderer.Mode.Individual;
 
         // ----- TilemapCollider2D
-        obj.TMap_collider = obj.TMap_obj.AddComponent<TilemapCollider2D>();
+        obj.TMap_collider = obj.obj.AddComponent<TilemapCollider2D>();
         obj.TMap_collider.usedByComposite = true;
 
         // ----- CompositeCollider2D
-        obj.TMap_compositeCollider = obj.TMap_obj.AddComponent<CompositeCollider2D>();
+        obj.compositeCollider = obj.obj.AddComponent<CompositeCollider2D>();
 
         // ----- Rigidbody2D
         // When CompositeCollider2D add, Rigidbody2D will be added automatically by Unity.
         // obj.TMap_rb = obj.TMap_obj.AddComponent<Rigidbody2D>();
-        obj.TMap_rb = obj.TMap_obj.GetComponent<Rigidbody2D>();
-        obj.TMap_rb.bodyType = RigidbodyType2D.Static;
-        obj.TMap_rb.sharedMaterial = _MatSys._phyMat._get_phyMat("Default");
+        obj.rb = obj.obj.GetComponent<Rigidbody2D>();
+        obj.rb.bodyType = RigidbodyType2D.Static;
+        obj.rb.sharedMaterial = _MatSys._phyMat._get_phyMat("Default");
 
         return obj;
     }

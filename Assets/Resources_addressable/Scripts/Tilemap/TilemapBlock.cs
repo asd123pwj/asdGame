@@ -13,7 +13,7 @@ public class TilemapBlock: BaseClass{
     public string[] terrain_tags;
     public Vector3Int offsets;
     public Vector3Int size;
-    public int seed;
+    // public int seed;
     // public BoundTiles bounds;
     public float scale;
     public Vector3Int up;
@@ -27,14 +27,13 @@ public class TilemapBlock: BaseClass{
     public List<LayerInfo> layers;
     public bool isExist;
 
-    Noise _noise;
 
 
     public TilemapBlock(int seed=-1){
-        if (seed == -1)
-            seed = Random.Range(0, 1000000);
-        this.seed = seed;
-        _noise = new Noise(seed);
+        // if (seed == -1)
+        //     seed = Random.Range(0, 1000000);
+        // this.seed = seed;
+        // _noise = new Noise(seed);
     }
 
 
@@ -42,13 +41,13 @@ public class TilemapBlock: BaseClass{
     public float _perlin(int x, int y, float scale){
         x += offsets.x * size.x;
         y += offsets.y * size.y;
-        float perlin = _noise._perlin(x, y, scale);
+        float perlin = _GCfg._noise._perlin(x, y, scale);
         return perlin;
     }
     
     public float _perlin(int x, float scale){
         x += offsets.x * size.x;
-        float perlin = _noise._perlin(x, scale);
+        float perlin = _GCfg._noise._perlin(x, scale);
         return perlin;
     }
 

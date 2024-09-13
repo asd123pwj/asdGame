@@ -31,6 +31,28 @@
             "relative_path": "Stone/Block_Stone_Gravel_P3D.asset",
             "tags": ["uncommon"]
         },
+        "b4":{
+            "category": "Block",
+            "name": "玻璃",
+            "tileType": "Rule",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "Transparent/Block_Transparent_Glass_P3D.asset",
+            "tags": ["uncommon"]
+        },
+        "b5":{
+            "category": "Block",
+            "name": "砖块",
+            "tileType": "Rule",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "Brick/Block_Brick_P3D.asset",
+            "tags": ["uncommon"]
+        },
+
+
+
+
         "bd1":{
             "category": "BlockDecoration",
             "name": "芒草",
@@ -42,6 +64,10 @@
             "relative_path": "BlockDecoration_Rand_Grid2x2_Grass_Mang.asset",
             "tags": ["uncommon"]
         },
+
+
+
+
         "f1":{
             "category": "Furniture",
             "name": "木桌",
@@ -53,15 +79,10 @@
             "relative_path": "Furniture_Rule_Grid2x2_Table_Wooden.asset",
             "tags": ["uncommon"]
         },
-        "b4":{
-            "category": "Block",
-            "name": "玻璃",
-            "tileType": "Rule",
-            "description": "",
-            "root_path_key": "Block",
-            "relative_path": "Transparent/Block_Transparent_Glass_P3D.asset",
-            "tags": ["uncommon"]
-        },
+
+
+
+
         "p1":{
             "category": "Placeholder",
             "name": "不透明块占位符",

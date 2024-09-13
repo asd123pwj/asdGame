@@ -43,7 +43,6 @@ public class MeshManager: BaseClass{
     void load_item(string ID){
         string mesh_path = _infos.items[ID].path;
         AsyncOperationHandle<Mesh> handle = Addressables.LoadAssetAsync<Mesh>(mesh_path);
-        // handle.Completed += action_mesh_loaded;
         handle.Completed += (operationHandle) => action_mesh_loaded(operationHandle, ID);
     }
 

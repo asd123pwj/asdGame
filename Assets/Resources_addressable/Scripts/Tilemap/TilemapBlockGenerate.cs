@@ -1,11 +1,6 @@
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using MathNet.Numerics.LinearAlgebra;
-using UnityEngine.Video;
-using System.Diagnostics;
 
 
 public class TilemapBlockGenerate: BaseClass{
@@ -65,10 +60,10 @@ public class TilemapBlockGenerate: BaseClass{
             offsets = block_offsets,
             isExist = true,
             size = _GCfg._sysCfg.TMap_tiles_per_block,
+            // seed = _GCfg._sysCfg.seed
         };
         BAround._set_block(block);
 
-        // BObj._init_tilemap_gameObject(block, "Block", "Default");
         block = _terrain._random_terrainHier1(block, BAround);
         block = _terrain._random_terrainHier2_random(block, BAround);
         block = BDir._random_direction(block, BAround, _terrain, extra_targets, direction);

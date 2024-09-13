@@ -172,7 +172,7 @@ public class TilemapTerrain{
         _terrains_hier1.Add(new TerrainHier1Info{
             ID = "0", name = "plain", tags = new string[]{"flat", "ground"},
             h_avail = new int[]{-999999999, 999999999},
-            surface = "b1", minerals = new string[] { "b3", "b4" }
+            surface = "b5", minerals = new string[] { "b3", "b4" }
         });
         _terrains_hier1.Add(new TerrainHier1Info{
             ID = "1", name = "sky", tags = new string[]{"sky"},

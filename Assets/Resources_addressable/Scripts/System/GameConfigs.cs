@@ -27,6 +27,8 @@ public struct SystemConfig{
     public float CAM_rowTiles_in_playerCamera_max;
     public float CAM_rowTiles_in_playerCamera_min;
     public float CAM_rowTiles_in_playerCamera_default;
+
+    public int seed;
 }
 
 
@@ -34,13 +36,16 @@ public class GameConfigs{
     public SystemManager _sys;
     // ---------- System Tools ----------
     public ControlSystem _CtrlSys { get { return _sys._CtrlSys; } }
-    // public SaveLoadBase _SL { get { return _sys._SL; } }
     public InputSystem _InputSys { get { return _sys._InputSys; } }
     public TilemapSystem _TMapSys { get { return _sys._TMapSys; } }
     public ObjectSystem _ObjSys { get { return _sys._ObjSys; } }
     public UISystem _UISys { get { return _sys._UISys; } }
     public MaterialSystem _MatSys { get => _sys._MatSys; }
     public UpdateSystem _UpdateSys { get => _sys._UpdateSys; }
+
+    // ---------- Tools ----------
+    public Noise _noise;
+
     // ---------- system config ----------
     // config
     public string __version = "0.17.2b";
@@ -89,6 +94,7 @@ public class GameConfigs{
         // _sys = GameObject.Find("System").GetComponent<SystemManager>();
         // _sys._GCfg = this;
         _load_system_config();
+        set_random(_sysCfg.seed);
         _load_saves_config();
         _init_save_config("test");
         select_save("test");
@@ -96,6 +102,11 @@ public class GameConfigs{
     }
 
     // ---------- System config ----------
+
+    void set_random(int seed){
+        UnityEngine.Random.InitState(seed);
+        _noise = new(seed);
+    }
 
     public void select_save(string name){
         _sysCfg.save_playing = name;

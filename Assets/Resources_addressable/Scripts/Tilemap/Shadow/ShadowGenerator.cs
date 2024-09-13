@@ -5,9 +5,9 @@ using UnityEngine.Tilemaps;
 using UnityEngine.Rendering.Universal;
 using System.Reflection;
 
-public class ShadowGenerator : MonoBehaviour{
-    public Tilemap tilemap;
-    GameObject _self;
+public class ShadowGenerator : BaseClass{
+    // public Tilemap tilemap;
+    // GameObject _self;
     static readonly FieldInfo _meshField;
     static readonly FieldInfo _shapePathField;
     static readonly MethodInfo _generateShadowMeshMethod;
@@ -22,22 +22,17 @@ public class ShadowGenerator : MonoBehaviour{
                                     .GetMethod("GenerateShadowMesh", BindingFlags.Public | BindingFlags.Static);
     }
 
-
-    void Start(){
-        _generate_shadow();
-    }
-
-    public void _generate_shadow(){
-        _self = this.gameObject;
+    public static void _generate_shadow(GameObject obj, CompositeCollider2D collider){
+        GameObject _self = obj;
         Transform container_old = _self.transform.Find("Container_ShadowCasters");
         if (container_old != null){
-            Destroy(container_old.gameObject);
+            GameObject.Destroy(container_old.gameObject);
         }
         
         GameObject container = new GameObject("Container_ShadowCasters");
         container.transform.SetParent(_self.transform);
 
-        CompositeCollider2D collider = tilemap.GetComponent<CompositeCollider2D>();
+        // CompositeCollider2D collider = tilemap.GetComponent<CompositeCollider2D>();
         for (int i = 0; i < collider.pathCount; i++){
             Vector2[] path_vertices = new Vector2[collider.GetPathPointCount(i)];
             Vector3[] points = new Vector3[collider.GetPathPointCount(i)];
@@ -47,10 +42,10 @@ public class ShadowGenerator : MonoBehaviour{
                 points[j] = new Vector3(path_vertices[j].x, path_vertices[j].y, 0);
             }
 
-            GameObject obj = new("ShadowCasters_" + i);
-            obj.transform.SetParent(container.transform);
+            GameObject shadow_obj = new("ShadowCasters_" + i);
+            shadow_obj.transform.SetParent(container.transform);
 
-            ShadowCaster2D shadowCaster = obj.AddComponent<ShadowCaster2D>();
+            ShadowCaster2D shadowCaster = shadow_obj.AddComponent<ShadowCaster2D>();
             shadowCaster.selfShadows = true;
             _shapePathField.SetValue(shadowCaster, points);
             _meshField.SetValue(shadowCaster, new Mesh());
