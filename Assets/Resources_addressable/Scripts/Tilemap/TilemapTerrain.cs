@@ -54,7 +54,7 @@ public struct TerrainHier1Info{
     public bool isExist;
 }
 
-public class TilemapTerrain{
+public class TilemapTerrain: BaseClass{
     List<TerrainHier2Info> _terrains_hier2 = new();
     List<TerrainHier1Info> _terrains_hier1 = new();
     public Dictionary<string, TerrainHier1Info> ID2TerrainHier1 = new();
@@ -177,7 +177,7 @@ public class TilemapTerrain{
         _terrains_hier1.Add(new TerrainHier1Info{
             ID = "1", name = "sky", tags = new string[]{"sky"},
             h_avail = new int[]{100, 999999999},
-            surface = "0", minerals = new string[]{}
+            surface = _GCfg._empty_tile, minerals = new string[]{}
         });
         _terrains_hier1.Add(new TerrainHier1Info{
             ID = "2", name = "underground gravel", tags = new string[]{"underground"},

@@ -16,11 +16,13 @@ public struct SystemConfig{
     public string version;
     public string save_playing;
     // ---------- tilemap config ----------
-    public Vector3Int TMap_tiles_per_block;
+    public Vector3Int TMap_tiles_per_block;         // how many tiles in one block, axis-z is no support
     // ----- loading
-    public int TMap_tiles_per_loading;
-    public int TMap_interval_per_loading;
-    public Vector3Int TMap_blocks_around_loading;
+    public int TMap_tiles_per_loading;              // when loading, how many tiles in one time
+    public int TMap_interval_per_loading;           // when loading, how long to wait between each loading
+    public Vector3Int TMap_blocks_around_loading;   // when loading, how many blocks around the player to load
+
+    public Vector3Int TMap_tileNeighborsCheck_max; // how far can be check, neighbor of RuleTile, only use to load placeholder.
 
     // ---------- Camera ----------
     // ----- player camera
@@ -65,6 +67,7 @@ public class GameConfigs{
     public string __PhysicsMaterialsInfo_path { get { return Path.Combine(__root_dir, "PhysicsMaterialsInfo.json"); } }
 
     // ---------- tilemap config ----------
+    public string _empty_tile => "0";
     // public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } }
     // public Vector3Int _TMap_tiles_per_block { get { return _sysCfg.TMap_tiles_per_block; } }
     // public int _TMap_tiles_per_loading { get { return _sysCfg.TMap_tiles_per_loading; } }

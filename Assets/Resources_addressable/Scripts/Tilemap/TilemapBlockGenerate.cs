@@ -91,7 +91,7 @@ public class TilemapBlockGenerate: BaseClass{
                 if ((y < perlin && !block.direction_reverse) || (y >= perlin && block.direction_reverse))
                     map[x, y] = surface;
                 else
-                    map[x, y] = "0";
+                    map[x, y] = _GCfg._empty_tile;
             }
         }
         block.map = map;
@@ -116,13 +116,13 @@ public class TilemapBlockGenerate: BaseClass{
             perlin = height_gen._get_height(x);
             for (int y = 0; y < perlin; y++){
                 if (up_surface != null && up_surface != self_surface) // up is different, need transition
-                    if (block.map[x, BSize.y - y - 1] != "0") block.map[x, BSize.y - y - 1] = up_surface;
+                    if (block.map[x, BSize.y - y - 1] != _GCfg._empty_tile) block.map[x, BSize.y - y - 1] = up_surface;
                 if (down_surface != null && down_surface != self_surface) // down is different, need transition
-                    if (block.map[x, y] != "0") block.map[x, y] = down_surface;
+                    if (block.map[x, y] != _GCfg._empty_tile) block.map[x, y] = down_surface;
                 if (left_surface != null && left_surface != self_surface) // left is different, need transition
-                    if (block.map[y, x] != "0") block.map[y, x] = left_surface;
+                    if (block.map[y, x] != _GCfg._empty_tile) block.map[y, x] = left_surface;
                 if (right_surface != null && right_surface != self_surface) // right is different, need transition
-                    if (block.map[BSize.y - y - 1, x] != "0") block.map[BSize.y - y - 1, x] = right_surface;
+                    if (block.map[BSize.y - y - 1, x] != _GCfg._empty_tile) block.map[BSize.y - y - 1, x] = right_surface;
             }
         }
         return block;

@@ -31,7 +31,7 @@ public class TilemapBlockMineral: BaseClass {
         // ---------- fill map ----------
         for (int x = 0; x < BSize.x; x++){
             for (int y = 0; y < BSize.y; y++){
-                if (block.map[x, y] == "0") continue;
+                if (block.map[x, y] == _GCfg._empty_tile) continue;
                 tile_index = 0;
                 foreach (KeyValuePair<string, float> kvp in tileID2rarity){
                     tile_index += 1;
