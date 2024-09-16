@@ -297,46 +297,28 @@ public class TilemapDraw: BaseClass{
         
             int tile_per_group = Mathf.Min(_GCfg._sysCfg.TMap_tiles_per_loading, region.tiles.Count());
             for (int i = 0; i < region.tiles.Count(); i += tile_per_group) {
-                // ArraySegment<Vector3Int> positions_segment = new(region.positions, i, tile_per_group);
                 Vector3Int[] positions_segment = new ArraySegment<Vector3Int>(region.positions, i, tile_per_group).ToArray();
                 TileBase[] tiles_segment = new ArraySegment<TileBase>(region.tiles, i, tile_per_group).ToArray();
                 tilemap.SetTiles(positions_segment, tiles_segment);
                 await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
-
             }
-
-            // int tile_per_group = position_all.Count;
-            // int tile_per_group = 32*32;
-            // int tile_per_group = _GCfg._sysCfg.TMap_tiles_per_loading;
-            // int group_count = Mathf.Max(position_all.Count / tile_per_group, 1);
-            // for(int i = 0; i < group_count; i++){
-            //     Vector3Int[] tmp_positions = position_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
-            //     TileBase[] tmp_tiles = tiles_all.GetRange(i * tile_per_group, tile_per_group).ToArray();
-            //     tilemap.SetTiles(tmp_positions, tmp_tiles);
-            //     // await UniTask.Yield();
-            //     await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
-            // }
         }
 
         // ---------- Method 2: Draw tiles BY SetTiles ----------
         else if (draw_method == 2){
             tilemap.SetTiles(region.positions, region.tiles);
-            // await UniTask.Yield();
-            // await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
+            await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
         }
 
         // ---------- Method 3: Draw tiles by SetTilesBlock ----------
         else if (draw_method == 3){
-            // foreach(TilemapRegion4Draw region in regions){
             Vector3Int origin = region.positions[0];
             Vector3Int size = region.positions[^1] - origin + Vector3Int.one;
-            // Debug.Log(size);
             BoundsInt bounds = new(origin.x, origin.y, 0, size.x, size.y, 1);
             tilemap.SetTilesBlock(bounds, region.tiles);
-            // await UniTask.Yield();
-            // await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
-            // }
+            await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
         }
+
         // tilemap.GetComponent<ShadowGenerator>()._generate_shadow();
 
         // stopwatch.Stop();

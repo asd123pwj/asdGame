@@ -49,7 +49,15 @@
             "relative_path": "Brick/Block_Brick_P3D.asset",
             "tags": ["uncommon"]
         },
-
+        "b6":{
+            "category": "Block",
+            "name": "沙子",
+            "tileType": "Rule",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "Sand/Block_Sand_P3D.asset",
+            "tags": ["common"]
+        },
 
 
 

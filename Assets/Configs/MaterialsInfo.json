@@ -6,6 +6,9 @@
         },
         "TilemapLitMaterial": {
             "path": "Assets/Resources_addressable/Material/TilemapLitMaterial.mat"
+        },
+        "TransparentSprite":{
+            "path": "Assets/Resources_addressable/Material/TransparentSprite.mat"
         }
     }
 }

@@ -61,7 +61,7 @@ public class TilemapController: BaseClass{
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
         Vector3Int block_offsets = _mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
     
-        List<TilemapRegion4Draw> regions = new();
+        // List<TilemapRegion4Draw> regions = new();
         List<Vector3Int> block_offsets_list = new();
 
         Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocks_around_loading;
@@ -92,11 +92,26 @@ public class TilemapController: BaseClass{
 
             Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "Block").TMap;
             TMapDraw._draw_region(TMap, region);
+            List<Vector3Int> positions = new();
+            List<TileBase> tiles = new();
+
+            // foreach (var position in region.positions) {
+            //     TileBase tile = Pseudo3DRuleTile._delete_tile_alphaOverlap(TMap, position);
+            //     if (tile != null){
+            //         positions.Add(position);
+            //         tiles.Add(tile);
+            //     }
+            // }
+            // TilemapRegion4Draw transparent_region = new(){ tiles = tiles.ToArray(), positions = positions.ToArray() };
+            // TMapDraw._draw_region(TMap, transparent_region);
+
             foreach (Vector3Int offsets in regions_placeholder.Keys){
                 Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "Block").TMap;
                 TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]);
             }
         }
+
+        // await UniTask.Delay(1000);
 
         foreach (Vector3Int BOffsets in block_offsets_list){
             ShadowGenerator._generate_shadow(

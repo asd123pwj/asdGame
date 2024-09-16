@@ -72,12 +72,20 @@ public class TilemapMonitor: BaseClass{
 
         // ----- TilemapRenderer
         obj.TMap_renderer = obj.obj.AddComponent<TilemapRenderer>();
-        obj.TMap_renderer.material = _MatSys._mat._get_mat("TilemapLitMaterial");
+        obj.TMap_renderer.material = _MatSys._mat._get_mat("TransparentSprite");
         // !!! Necessary for Pseudo3D: 
         // TilemapRenderer.Mode.Individual: make tile overlap tile, while Mode.Chunk make tile overlap tile only same type
         // URP render data, "Transparency Sort Axis" with "x=-1, y=-1, z=0": make top overlap bottom, make right overlap left
         // Now, I dont need to draw tilemap in different overlap, "7 sprite for 1 tile" is PAST, "1 sprite for 1 tile" is NOW.
         obj.TMap_renderer.mode = TilemapRenderer.Mode.Individual;
+        // Color color = obj.TMap_renderer.material.color;
+        // color.a = 0.5f;
+        // obj.TMap_renderer.material.color = color;
+
+        // MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
+        // obj.TMap_renderer.GetPropertyBlock(propertyBlock);
+        // propertyBlock.SetFloat("_Alpha", 0.5f); // 假设材质有一个 _Alpha 属性控制透明度
+        // obj.TMap_renderer.SetPropertyBlock(propertyBlock);
 
         // ----- TilemapCollider2D
         obj.TMap_collider = obj.obj.AddComponent<TilemapCollider2D>();
