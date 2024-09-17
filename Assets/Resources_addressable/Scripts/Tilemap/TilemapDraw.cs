@@ -9,9 +9,14 @@ using Unity.Profiling;
 using System;
 
 
-public struct TilemapRegion4Draw{
+public struct Region4DrawTilemapBlock{
     public Vector3Int[] positions;
     public TileBase[] tiles;
+}
+
+public struct RegionsInTilemapBlock{
+    public Region4DrawTilemapBlock opaque_block;
+    public Region4DrawTilemapBlock transparent_block;
 }
 
 
@@ -49,19 +54,21 @@ public class TilemapDraw: BaseClass{
 
 
 
-    public TilemapRegion4Draw _get_draw_region(TilemapBlock block){
-        Vector3Int block_origin_pos = block.offsets * block.size; 
-        List<TileBase> __tiles = new();
-        List<Vector3Int> __positions = new();
+    public Region4DrawTilemapBlock _get_draw_region(TilemapBlock block){
+        Vector3Int block_origin_pos = block.offsets * block.size;
+        Dictionary<Vector3Int, TileBase> pos_tile_kvp = new();
+        // List<TileBase> __tiles = new();
+        // List<Vector3Int> __positions = new();
         for (int x = 0; x < block.size.x; x++){
             for (int y = 0; y < block.size.y; y++){
                 if (block.map[x, y] == _GCfg._empty_tile) continue;
                 TileBase tile = _MatSys._tile._get_tile(block.map[x, y]);
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
+                pos_tile_kvp.Add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
             }
         }
-        TilemapRegion4Draw region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        Region4DrawTilemapBlock region = new(){ tiles = pos_tile_kvp.Values.ToArray(), positions = pos_tile_kvp.Keys.ToArray() };
         return region;
 
 
@@ -83,12 +90,12 @@ public class TilemapDraw: BaseClass{
         // return region;
     }
 
-    public Dictionary<Vector3Int, TilemapRegion4Draw> _get_draw_regions_placeholder(TilemapBlock block){
+    public Dictionary<Vector3Int, Region4DrawTilemapBlock> _get_draw_regions_placeholder(TilemapBlock block){
         // This function aims draw placeholder tiles around the block,
         Vector3Int block_origin_pos = block.offsets * block.size; 
         Vector3Int block_offset;
-        TilemapRegion4Draw region;
-        Dictionary<Vector3Int, TilemapRegion4Draw> regions = new();
+        Region4DrawTilemapBlock region;
+        Dictionary<Vector3Int, Region4DrawTilemapBlock> regions = new();
         List<TileBase> __tiles = new();
         List<Vector3Int> __positions = new();
 
@@ -227,7 +234,7 @@ public class TilemapDraw: BaseClass{
         return null;
     }
 
-    public async UniTaskVoid _draw_regions(Tilemap tilemap, List<TilemapRegion4Draw> regions){
+    public async UniTaskVoid _draw_regions(Tilemap tilemap, List<Region4DrawTilemapBlock> regions){
         Debug.LogError("DISCARD FUNCTION: _draw_regions");
         // System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
         // stopwatch.Start();
@@ -280,7 +287,7 @@ public class TilemapDraw: BaseClass{
 
     // public void _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions){
     // public async UniTaskVoid _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions, CancellationToken cancel_token){
-    public async UniTaskVoid _draw_region(Tilemap tilemap, TilemapRegion4Draw region){
+    public async UniTaskVoid _draw_region(Tilemap tilemap, Region4DrawTilemapBlock region){
         // System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
         // stopwatch.Start();
         // ProfilerMarker profiler_marker = new ProfilerMarker("TilemapDrawMarker");

@@ -87,11 +87,11 @@ public class TilemapController: BaseClass{
 
             // regions.Clear();
             // regions.Add(TMapDraw._get_draw_region(block));
-            TilemapRegion4Draw region = TMapDraw._get_draw_region(block);
-            Dictionary<Vector3Int, TilemapRegion4Draw> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
+            Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
+            Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
 
             Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "Block").TMap;
-            TMapDraw._draw_region(TMap, region);
+            TMapDraw._draw_region(TMap, region).Forget();
             List<Vector3Int> positions = new();
             List<TileBase> tiles = new();
 
@@ -107,7 +107,7 @@ public class TilemapController: BaseClass{
 
             foreach (Vector3Int offsets in regions_placeholder.Keys){
                 Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "Block").TMap;
-                TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]);
+                TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
             }
         }
 
@@ -232,7 +232,7 @@ public class TilemapController: BaseClass{
         }
 
 
-        List<TilemapRegion4Draw> regions = new();
+        List<Region4DrawTilemapBlock> regions = new();
         List<Vector3Int> loads_wait = loads_new.Except(loads).ToList();
         foreach(Vector3Int block_offsets in loads_wait){
             TilemapBlock block = TMapGen._generate_block(block_offsets);
@@ -262,7 +262,7 @@ public class TilemapController: BaseClass{
         Vector3Int map_pos = TMap_modify.WorldToCell(spawn_worldPos);
         TilemapBlock block = TMapGen._generate_spawn_block(map_pos, TMap_modify);
         TMapSL._load_block(block);
-        List<TilemapRegion4Draw> regions = new(){TMapDraw._get_draw_region(block)};
+        List<Region4DrawTilemapBlock> regions = new(){TMapDraw._get_draw_region(block)};
         // TMapDraw._draw_region(TMap_modify, regions, new()).Forget();
         TMapDraw._draw_regions(TMap_modify, regions).Forget();
         return block;
