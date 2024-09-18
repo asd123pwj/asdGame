@@ -5,8 +5,10 @@
   "TMap_tiles_per_block": {"x": 32, "y": 32, "z": 1},
   "TMap_tiles_per_loading": 1024,
   "TMap_interval_per_loading": 0,
-  "TMap_blocks_around_loading": {"x": 4, "y": 2, "z": 1},
+  "TMap_blocksAround_RadiusMinusOne_loading": {"x": 4, "y": 2, "z": 1},
   "TMap_tileNeighborsCheck_max": {"x": 4, "y": 1, "z": 1},
+
+  "BuildGen_MatchKernelSize_RadiusMinusOne_max": {"x": 3, "y": 1, "z": 1},
 
   "CAM_rowTiles_in_playerCamera_max": 192,
   "CAM_rowTiles_in_playerCamera_min": 16,

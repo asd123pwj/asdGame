@@ -11,20 +11,24 @@ public struct SaveConfig{
 }
 
 public struct SystemConfig{
-    // ---------- system config ----------
+    // ---------- system config ---------- //
     // ----- config
     public string version;
     public string save_playing;
-    // ---------- tilemap config ----------
+    // ---------- tilemap config ---------- //
     public Vector3Int TMap_tiles_per_block;         // how many tiles in one block, axis-z is no support
     // ----- loading
     public int TMap_tiles_per_loading;              // when loading, how many tiles in one time
     public int TMap_interval_per_loading;           // when loading, how long to wait between each loading
-    public Vector3Int TMap_blocks_around_loading;   // when loading, how many blocks around the player to load
+    public Vector3Int TMap_blocksAround_RadiusMinusOne_loading;   // when loading, how many blocks around the player to load
 
+    // ----- RuleTile
     public Vector3Int TMap_tileNeighborsCheck_max; // how far can be check, neighbor of RuleTile, only use to load placeholder.
 
-    // ---------- Camera ----------
+    // ----- Build Generation
+    public Vector3Int BuildGen_MatchKernelSize_RadiusMinusOne_max;
+
+    // ---------- Camera ---------- //
     // ----- player camera
     public float CAM_rowTiles_in_playerCamera_max;
     public float CAM_rowTiles_in_playerCamera_min;
@@ -65,6 +69,7 @@ public class GameConfigs{
     public string __MaterialsInfo_path { get { return Path.Combine(__root_dir, "MaterialsInfo.json"); } }
     public string __MeshesInfo_path { get { return Path.Combine(__root_dir, "MeshesInfo.json"); } }
     public string __PhysicsMaterialsInfo_path { get { return Path.Combine(__root_dir, "PhysicsMaterialsInfo.json"); } }
+    public string __TerrainsInfo_path { get { return Path.Combine(__root_dir, "TerrainsInfo.json"); } }
 
     // ---------- tilemap config ----------
     public string _empty_tile => "0";

@@ -4,7 +4,8 @@
         "Block": "Assets/Resources_addressable/Tilemap/Block/",
         "BlockDecoration": "Assets/Resources_addressable/Tilemap/BlockDecoration/",
         "Furniture": "Assets/Resources_addressable/Tilemap/Furniture/",
-        "Placeholder": "Assets/Resources_addressable/Tilemap/Placeholder/"
+        "Placeholder": "Assets/Resources_addressable/Tilemap/Placeholder/",
+        "Wall": "Assets/Resources_addressable/Tilemap/Wall/"
     },
     "items":{
         "b1":{
@@ -69,7 +70,7 @@
             "description": "",
             "refUrl": "https://www.cvh.ac.cn/spms/detail.php?id=e7f43301",
             "root_path_key": "BlockDecoration",
-            "relative_path": "BlockDecoration_Rand_Grid2x2_Grass_Mang.asset",
+            "relative_path": "BlockDecoration_Grass_Mang.asset",
             "tags": ["uncommon"]
         },
 
@@ -79,13 +80,14 @@
         "f1":{
             "category": "Furniture",
             "name": "木桌",
-            "tileType": "Rule",
-            "tilePerGrid": "2x2",
-            "description": "",
-            "refUrl": "https://www.cvh.ac.cn/spms/detail.php?id=e7f43301",
             "root_path_key": "Furniture",
-            "relative_path": "Furniture_Rule_Grid2x2_Table_Wooden.asset",
-            "tags": ["uncommon"]
+            "relative_path": "Furniture_Table_Wooden.asset"
+        },
+        "f2":{
+            "category": "Furniture",
+            "name": "篝火",
+            "root_path_key": "Furniture",
+            "relative_path": "Furniture_Campfire.asset"
         },
 
 
@@ -108,6 +110,16 @@
             "name": "缺失块占位符",
             "root_path_key": "Placeholder",
             "relative_path": "Placeholder_Missing_Block.asset"
+        },
+
+
+
+
+        "w1":{
+            "category": "Wall",
+            "name": "石头栅栏",
+            "root_path_key": "Wall",
+            "relative_path": "Wall_Fence_Stone.asset"
         }
     }
 }

@@ -16,6 +16,7 @@ public class MaterialSystem: BaseClass{
     public MaterialManager _mat;
     public MeshManager _mesh;
     public PhysicsMaterialManager _phyMat;
+    public TerrainManager _terrain;
 
     public override void _init(){
         _obj = new();
@@ -25,6 +26,7 @@ public class MaterialSystem: BaseClass{
         _mat = new();
         _mesh = new();
         _phyMat = new();
+        _terrain = new();
     }
     
     public bool _check_all_info_initDone(){
@@ -36,6 +38,7 @@ public class MaterialSystem: BaseClass{
         if (!_mat._check_info_initDone()) return false;
         if (!_mesh._check_info_initDone()) return false;
         if (!_phyMat._check_info_initDone()) return false;
+        if (!_terrain._check_info_initDone()) return false;
         return true;
     }
 

@@ -22,7 +22,7 @@ public class ShadowGenerator : BaseClass{
                                     .GetMethod("GenerateShadowMesh", BindingFlags.Public | BindingFlags.Static);
     }
 
-    public static void _generate_shadow(GameObject obj, CompositeCollider2D collider){
+    public static void _generate_shadow_from_compCollider(GameObject obj, CompositeCollider2D collider){
         GameObject _self = obj;
         Transform container_old = _self.transform.Find("Container_ShadowCasters");
         if (container_old != null){

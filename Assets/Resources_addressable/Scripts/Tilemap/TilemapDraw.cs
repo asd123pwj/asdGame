@@ -14,12 +14,6 @@ public struct Region4DrawTilemapBlock{
     public TileBase[] tiles;
 }
 
-public struct RegionsInTilemapBlock{
-    public Region4DrawTilemapBlock opaque_block;
-    public Region4DrawTilemapBlock transparent_block;
-}
-
-
 public class TilemapDraw: BaseClass{
     // public TilemapConfig _tilemap_base;
     // GameConfigs _GCfg;
@@ -227,8 +221,14 @@ public class TilemapDraw: BaseClass{
     TileBase get_placeholder_tile(TilemapBlock block, Vector3Int position){
         string tile_ID = block.map[position.x, position.y];
         TileBase tile = _MatSys._tile._get_tile(tile_ID);
-        if (tile is Pseudo3DRuleTile P3DTile){
-            TileBase placeholder = P3DTile.isTransparent ? _MatSys._tile._get_tile("p2") : _MatSys._tile._get_tile("p1");
+        if (tile is RuleOverrideTile overrideTile){
+            if (overrideTile.m_Tile is Pseudo3DRuleTile P3DTile_){
+                TileBase placeholder = P3DTile_.isTransparent ? _MatSys._tile._get_tile("p2") : _MatSys._tile._get_tile("p1");
+                return placeholder;
+            }
+        }
+        else if (tile is Pseudo3DRuleTile P3DTile__){
+            TileBase placeholder = P3DTile__.isTransparent ? _MatSys._tile._get_tile("p2") : _MatSys._tile._get_tile("p1");
             return placeholder;
         }
         return null;
