@@ -14,16 +14,14 @@ public class TilemapBlockGameObject{
 public class TilemapMonitor: BaseClass{
     // ---------- Config ----------
     // ---------- unity ----------
-    Tilemap TMap { get => _TMapSys._tilemap_modify; }
+    // Tilemap TMap { get => _TMapSys._tilemap_modify; }
     // ---------- status ----------
     // public Dictionary<int[,], TilemapBlock> _blocks;
     // ---------- Tilemap Container ----------
     public Dictionary<string, GameObject> _TMap_containers;
     public Dictionary<string, Dictionary<Vector3Int, TilemapBlockGameObject>> _TMap_obj;
 
-    // Start is called before the first frame update
     public TilemapMonitor(){
-        // _GCfg = game_configs;
     }
 
     public override void _init(){
@@ -64,8 +62,6 @@ public class TilemapMonitor: BaseClass{
         obj.obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[tilemap_type].transform);
         obj.obj.name = block_offsets.x + "_" + block_offsets.y;
         obj.obj.layer = LayerMask.NameToLayer(layer_name);
-        // position.z: right > left, up > down, finally, Pseudo3DTile will overall well.
-        // obj.TMap_obj.transform.position = new (0, 0, (block_offsets.x + block_offsets.y) * z_scale * -1);
 
         // ----- Tilemap
         obj.TMap = obj.obj.AddComponent<Tilemap>();
@@ -78,14 +74,6 @@ public class TilemapMonitor: BaseClass{
         // URP render data, "Transparency Sort Axis" with "x=-1, y=-1, z=0": make top overlap bottom, make right overlap left
         // Now, I dont need to draw tilemap in different overlap, "7 sprite for 1 tile" is PAST, "1 sprite for 1 tile" is NOW.
         obj.TMap_renderer.mode = TilemapRenderer.Mode.Individual;
-        // Color color = obj.TMap_renderer.material.color;
-        // color.a = 0.5f;
-        // obj.TMap_renderer.material.color = color;
-
-        // MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
-        // obj.TMap_renderer.GetPropertyBlock(propertyBlock);
-        // propertyBlock.SetFloat("_Alpha", 0.5f); // 假设材质有一个 _Alpha 属性控制透明度
-        // obj.TMap_renderer.SetPropertyBlock(propertyBlock);
 
         // ----- TilemapCollider2D
         obj.TMap_collider = obj.obj.AddComponent<TilemapCollider2D>();

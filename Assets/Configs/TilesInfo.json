@@ -62,20 +62,6 @@
 
 
 
-        "bd1":{
-            "category": "BlockDecoration",
-            "name": "芒草",
-            "tileType": "Rand",
-            "tilePerGrid": "2x2",
-            "description": "",
-            "refUrl": "https://www.cvh.ac.cn/spms/detail.php?id=e7f43301",
-            "root_path_key": "BlockDecoration",
-            "relative_path": "BlockDecoration_Grass_Mang.asset",
-            "tags": ["uncommon"]
-        },
-
-
-
 
         "f1":{
             "category": "Furniture",

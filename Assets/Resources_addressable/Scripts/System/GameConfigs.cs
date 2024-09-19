@@ -70,6 +70,8 @@ public class GameConfigs{
     public string __MeshesInfo_path { get { return Path.Combine(__root_dir, "MeshesInfo.json"); } }
     public string __PhysicsMaterialsInfo_path { get { return Path.Combine(__root_dir, "PhysicsMaterialsInfo.json"); } }
     public string __TerrainsInfo_path { get { return Path.Combine(__root_dir, "TerrainsInfo.json"); } }
+    public string __spritesInfo_path { get { return Path.Combine(__root_dir, "SpritesInfo.json"); } }
+    
 
     // ---------- tilemap config ----------
     public string _empty_tile => "0";

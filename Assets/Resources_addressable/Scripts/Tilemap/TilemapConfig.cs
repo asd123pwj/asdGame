@@ -24,30 +24,9 @@ public class TilemapConfig: BaseClass{
     public Dictionary<Vector3Int, TilemapBlock> __blockLoads_infos = new();
 
     public TilemapConfig(){
-        // _GCfg = game_configs;
-        // load_tiles_info();
     }
 
     // ---------- mapping ----------
-    // public TileBase _load_tile_by_name(string name){
-    //     if (name == "") return null; // No tile
-    //     if (__name2tile.ContainsKey(name)) return __name2tile[name]; // Tile have been loaded
-    //     return __name2tile[name];
-    //     // // Load tile
-    //     // string tile_path = _tiles_info.tiles[name].path;
-    //     // TileBase tile = Resources.Load<TileBase>(tile_path);
-    //     // _name2tile.Add(name, tile);
-    //     // return tile;
-    // }
-
-    // public TileBase _load_tile_by_ID(int ID){
-    //     return _load_tile_by_name(__ID2tileName[ID]);
-    // }
-
-    // public int _map_tile_to_ID(TileBase tile){
-    //     if (tile == null) return 0;
-    //     else return _tiles_info.tiles[tile.name].ID;
-    // }
 
     public Vector3Int _mapping_worldXY_to_mapXY(Vector3 world_pos, Tilemap tilemap){
         Vector3Int map_pos = tilemap.WorldToCell(world_pos);
@@ -59,7 +38,7 @@ public class TilemapConfig: BaseClass{
         return _mapping_mapXY_to_blockXY(map_pos);
     }
 
-    public Vector3Int _mapping_mapXY_to_blockXY(Vector3Int map_pos){
+    public Vector3Int _mapping_mapXY_to_blockXY(Vector3Int map_pos){ // !!! 这里在tilemap偏移时会出错
         Vector3Int block_offsets = new Vector3Int {
             x = Mathf.Abs(map_pos.x) / _GCfg._sysCfg.TMap_tiles_per_block.x,
             y = Mathf.Abs(map_pos.y) / _GCfg._sysCfg.TMap_tiles_per_block.y};
@@ -70,7 +49,7 @@ public class TilemapConfig: BaseClass{
         return block_offsets;
     }
 
-    public Vector3Int _mapping_mapXY_to_tileXY_in_block(Vector3Int map_pos){
+    public Vector3Int _mapping_mapXY_to_tileXY_in_block(Vector3Int map_pos){ // !!! 这里在tilemap偏移时会出错
         Vector3Int block_offsets = _mapping_mapXY_to_blockXY(map_pos);
         Vector3Int tile_offsets = new Vector3Int {
             x = map_pos.x - block_offsets.x * _GCfg._sysCfg.TMap_tiles_per_block.x,

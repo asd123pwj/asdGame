@@ -59,11 +59,11 @@ public class TilemapController: BaseClass{
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        Vector3Int block_offsets = _mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
+        Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
     
         List<Vector3Int> block_offsets_list = new();
 
-        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocks_around_loading;
+        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocksAround_RadiusMinusOne_loading;
         for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
             for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
                 block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
@@ -137,7 +137,7 @@ public class TilemapController: BaseClass{
         // if (_CtrlSys._player == null) return;
         Vector3 world_pos = _CtrlSys._player.transform.position;
         // Vector3 world_pos = new(0, 0);
-        Vector3Int block_offsets = _mapping_worldXY_to_blockXY(world_pos, TMap_modify);
+        Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(world_pos, TMap_modify);
         // Debug.Log("offsets: " + block_offsets);
         if (_tilemapBlock_offsets != block_offsets){
             // init
@@ -191,7 +191,7 @@ public class TilemapController: BaseClass{
         //     }
         // }
 
-        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocks_around_loading;
+        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocksAround_RadiusMinusOne_loading;
         // int loadBound = 4;
         // for (int r = 0; r < loadBound; r++){
         //     for (int x = -r; x <= r; x++){
@@ -246,17 +246,17 @@ public class TilemapController: BaseClass{
 
 
     // ---------- mapping ----------
-    public Vector3Int _mapping_worldXY_to_mapXY(Vector3 world_pos, Tilemap tilemap){
-        return TMapCfg._mapping_worldXY_to_mapXY(world_pos, tilemap);
-    }
+    // public Vector3Int _mapping_worldXY_to_mapXY(Vector3 world_pos, Tilemap tilemap){
+    //     return TMapCfg._mapping_worldXY_to_mapXY(world_pos, tilemap);
+    // }
 
-    public Vector3Int _mapping_worldXY_to_blockXY(Vector3 world_pos, Tilemap tilemap){
-        return TMapCfg._mapping_worldXY_to_blockXY(world_pos, tilemap);
-    }
+    // public Vector3Int _mapping_worldXY_to_blockXY(Vector3 world_pos, Tilemap tilemap){
+    //     return TMapCfg._mapping_worldXY_to_blockXY(world_pos, tilemap);
+    // }
 
-    public Vector3Int _mapping_mapXY_to_blockXY(Vector3Int map_pos){
-        return TMapCfg._mapping_mapXY_to_blockXY(map_pos);
-    }
+    // public Vector3Int _mapping_mapXY_to_blockXY(Vector3Int map_pos){
+    //     return TMapCfg._mapping_mapXY_to_blockXY(map_pos);
+    // }
 
     
 }

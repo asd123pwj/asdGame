@@ -27,6 +27,7 @@ public class TilemapSystem : BaseClass{
     public TilemapSaveLoad _TMapSL;
     public TilemapController _TMapCtrl;
     public TilemapMonitor _TMapMon;
+    public PlantMonitor _PlantMon;
     // ---------- status ----------
 
     public override void _init(){
@@ -37,6 +38,7 @@ public class TilemapSystem : BaseClass{
         _TMapSL = new();
         _TMapCtrl = new();
         _TMapMon = new();
+        _PlantMon = new();
     }
 
     

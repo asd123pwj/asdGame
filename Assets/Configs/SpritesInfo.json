@@ -1,0 +1,15 @@
+{
+    "version": "0.17.7c",
+    "items":{
+        "bd1":{
+            "name": "芒草",
+            "description": "",
+            "refUrl": "https://www.cvh.ac.cn/spms/detail.php?id=e7f43301",
+            "path": "Assets/Resources_addressable/Graphics/BlockDecoration/BlockDecoration_Grass_Mang.png",
+            "tags": ["uncommon"],
+            "sprites": [
+                "[bd_H1_1]", "[bd_H1_2]", "[bd_H1_3]", "[bd_H1_4]", "[bd_H2_1]"
+            ]
+        }
+    }
+}
