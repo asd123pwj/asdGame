@@ -10,6 +10,26 @@
             "sprites": [
                 "[bd_H1_1]", "[bd_H1_2]", "[bd_H1_3]", "[bd_H1_4]", "[bd_H2_1]"
             ]
+        },
+        "bd2":{
+            "name": "仙人掌",
+            "description": "",
+            "path": "Assets/Resources_addressable/Graphics/BlockDecoration/BlockDecoration_Plant_Cactus.png",
+            "tags": ["uncommon"],
+            "sprites": [
+                "[bd_H1_1]", "[bd_H1_2]", "[bd_H1_3]", "[bd_H1_4]", "[bd_H2_1]"
+            ]
+        },
+        "bd3":{
+            "name": "棒槌树",
+            "description": "",
+            "refUrl": "https://baike.baidu.com/item/%E6%A3%92%E9%94%A4%E6%A0%91",
+            "path": "Assets/Resources_addressable/Graphics/BlockDecoration/BlockDecoration_Tree_Pachypodium.png",
+            "tags": ["uncommon"],
+            "sprites": [
+                "[bd_H1_1]", "[bd_H1_2]", "[bd_H1_3]", "[bd_H1_4]", "[bd_H2_1]", "[bd_H2_2]", "[bd_H3_1]"
+            ]
         }
+
     }
 }

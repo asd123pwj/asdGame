@@ -74,7 +74,7 @@ public class TilemapController: BaseClass{
         stopwatch.Start();
         foreach (Vector3Int BOffsets in block_offsets_list){
             TilemapBlock block = TMapGen._generate_block(BOffsets);
-            TMapSL._load_block(block);
+            _TMapSys._TMapMon._load_block(block);
 
             Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
             Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
@@ -211,7 +211,7 @@ public class TilemapController: BaseClass{
         List<Vector3Int> loads_wait = loads_new.Except(loads).ToList();
         foreach(Vector3Int block_offsets in loads_wait){
             TilemapBlock block = TMapGen._generate_block(block_offsets);
-            TMapSL._load_block(block);
+            _TMapSys._TMapMon._load_block(block);
             regions.Add(TMapDraw._get_draw_region(block));
         }
         // if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions, cancel_token.Token).Forget();
@@ -227,7 +227,7 @@ public class TilemapController: BaseClass{
         }
         List<Vector3Int> unloads_wait = loads.Except(unloads_new).ToList();
         foreach(Vector3Int block_offsets in unloads_wait){
-            TMapSL._unload_block(block_offsets);
+            _TMapSys._TMapMon._unload_block(block_offsets);
         }
         await UniTask.Yield();
         // yield return null;
@@ -236,7 +236,7 @@ public class TilemapController: BaseClass{
     public TilemapBlock _generate_spawn_block(Vector3 spawn_worldPos){
         Vector3Int map_pos = TMap_modify.WorldToCell(spawn_worldPos);
         TilemapBlock block = TMapGen._generate_spawn_block(map_pos, TMap_modify);
-        TMapSL._load_block(block);
+        _TMapSys._TMapMon._load_block(block);
         List<Region4DrawTilemapBlock> regions = new(){TMapDraw._get_draw_region(block)};
         // TMapDraw._draw_region(TMap_modify, regions, new()).Forget();
         TMapDraw._draw_regions(TMap_modify, regions).Forget();

@@ -12,7 +12,7 @@ using System.Collections.Concurrent;
 
 
 public class TilemapSaveLoad: BaseClass{
-    TilemapConfig _tilemap_base { get => _sys._TMapSys._TMapCfg; }
+    TilemapConfig TMapCfg { get => _sys._TMapSys._TMapCfg; }
     // GameConfigs _game_configs;
 
     // public TilemapSaveLoad(TilemapConfig tilemap_base, GameConfigs game_configs){
@@ -20,23 +20,6 @@ public class TilemapSaveLoad: BaseClass{
     //     _game_configs = game_configs;
     // }
 
-    public void _load_block(TilemapBlock block){
-        if (_tilemap_base.__blockLoads_list.Contains(block.offsets)) return;
-        _tilemap_base.__blockLoads_infos.Add(block.offsets, block);
-        _tilemap_base.__blockLoads_list.Add(block.offsets);
-    } 
-
-    public void _unload_block(Vector3Int block_offsets){
-        // delete in tilemap
-        clear_block(block_offsets);
-        // delete in memory
-        if (_tilemap_base.__blockLoads_infos.ContainsKey(block_offsets)) _tilemap_base.__blockLoads_infos.Remove(block_offsets);
-        if (_tilemap_base.__blockLoads_list.Contains(block_offsets)) _tilemap_base.__blockLoads_list.Remove(block_offsets);
-    }
-
-    void clear_block(Vector3Int block_offsets){
-        // no implement
-    }
 
 
     // // ---------- save tilemap ----------

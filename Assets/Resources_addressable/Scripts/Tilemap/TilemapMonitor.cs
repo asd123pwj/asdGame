@@ -15,8 +15,8 @@ public class TilemapMonitor: BaseClass{
     // ---------- Config ----------
     // ---------- unity ----------
     // Tilemap TMap { get => _TMapSys._tilemap_modify; }
-    // ---------- status ----------
-    // public Dictionary<int[,], TilemapBlock> _blocks;
+    // ---------- Sub scripts ----------
+    TilemapConfig TMapCfg { get => _sys._TMapSys._TMapCfg; }
     // ---------- Tilemap Container ----------
     public Dictionary<string, GameObject> _TMap_containers;
     public Dictionary<string, Dictionary<Vector3Int, TilemapBlockGameObject>> _TMap_obj;
@@ -38,6 +38,38 @@ public class TilemapMonitor: BaseClass{
             _TMap_obj.Add(tilemap_type, new());
         }
     }
+
+
+
+
+    public void _load_block(TilemapBlock block){
+        if (TMapCfg.__blockLoads_list.Contains(block.offsets)) return;
+        TMapCfg.__blockLoads_infos.Add(block.offsets, block);
+        TMapCfg.__blockLoads_list.Add(block.offsets);
+    } 
+
+    public void _unload_block(Vector3Int block_offsets){
+        // delete in tilemap
+        clear_block(block_offsets);
+        // delete in memory
+        if (TMapCfg.__blockLoads_infos.ContainsKey(block_offsets)) TMapCfg.__blockLoads_infos.Remove(block_offsets);
+        if (TMapCfg.__blockLoads_list.Contains(block_offsets)) TMapCfg.__blockLoads_list.Remove(block_offsets);
+    }
+
+    void clear_block(Vector3Int block_offsets){
+        // no implement
+    }
+
+    public TilemapBlock _get_block(Vector3Int block_offsets){
+        return TMapCfg.__blockLoads_infos[block_offsets];
+    }
+
+
+
+
+
+
+
 
     // public Tilemap _get_tilemap(Vector3Int block_offsets, string tilemap_type){
     //     return _get_TilemapBlockGameObject(block_offsets, tilemap_type).TMap;

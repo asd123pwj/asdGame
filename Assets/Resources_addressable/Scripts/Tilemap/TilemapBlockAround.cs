@@ -9,7 +9,7 @@ public class TilemapBlockAround: BaseClass {
     TilemapConfig _tilemap_base { get => _TMapSys._TMapCfg; }
     // readonly GameConfigs _game_configs;
     TilemapBlock _block;
-    readonly TilemapTerrain _terrain;
+    TilemapTerrain _terrain { get => _TMapSys._TMapGen._terrain; }
     public TilemapBlock up { get { return _get_around("up"); }}
     public TilemapBlock down { get { return _get_around("down"); }}
     public TilemapBlock left { get { return _get_around("left"); }}
@@ -23,15 +23,16 @@ public class TilemapBlockAround: BaseClass {
     public TerrainHier2Info left_terrainType { get { return _get_terrainType("left"); }}
     public TerrainHier2Info right_terrainType { get { return _get_terrainType("right"); }}
 
-    public TilemapBlockAround(TilemapTerrain terrain){
+    public TilemapBlockAround(TilemapBlock block){
+        _block = block;
         // _tilemap_base = tilemap_base;
         // _game_configs = game_configs;
-        _terrain = terrain;
+        // _terrain = terrain;
     }
 
-    public void _set_block(TilemapBlock block){
-        _block = block;
-    }
+    // public void _set_block(TilemapBlock block){
+    //     _block = block;
+    // }
 
     public TerrainHier1Info _get_terrainInfo(string direction){
         TilemapBlock around_block = _get_around(direction);

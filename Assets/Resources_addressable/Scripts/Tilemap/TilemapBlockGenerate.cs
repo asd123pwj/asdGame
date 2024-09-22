@@ -7,9 +7,9 @@ public class TilemapBlockGenerate: BaseClass{
     TilemapConfig TMapCfg { get => _TMapSys._TMapCfg; }
     // GameConfigs _GCfg;
     // DirectionsConfig DirCfg = new();
-    TilemapBlockAround BAround;
+    // TilemapBlockAround BAround;
     TilemapBlockDirection BDir;
-    TilemapTerrain _terrain;
+    public TilemapTerrain _terrain;
     TilemapBlockMineral _block_mineral;
     // TilemapBlockGameObject BObj;
     // TilemapSaveLoad _saveLoad;
@@ -19,7 +19,7 @@ public class TilemapBlockGenerate: BaseClass{
         // _tilemap_base = tilemap_base;
         // _GCfg = game_configs;
         _terrain = new();
-        BAround = new(_terrain);
+        // BAround = new(_terrain);
         BDir = new();
         _block_mineral = new(_terrain);
         // _block_transition = new(_tilemap_base, _game_configs, _terrain);
@@ -62,7 +62,7 @@ public class TilemapBlockGenerate: BaseClass{
             size = _GCfg._sysCfg.TMap_tiles_per_block,
             // seed = _GCfg._sysCfg.seed
         };
-        BAround._set_block(block);
+        TilemapBlockAround BAround = new(block);
 
         block = _terrain._random_terrainHier1(block, BAround);
         block = _terrain._random_terrainHier2_random(block, BAround);

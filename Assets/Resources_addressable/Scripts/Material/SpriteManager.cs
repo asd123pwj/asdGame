@@ -68,7 +68,7 @@ public class SpriteManager: BaseClass{
             _ID_to_subID2Sprites[ID].Add(subID, handle);
         }
         else 
-            Debug.LogError("Failed to load sprite: " + handle.DebugName);
+            Debug.LogError("Failed to load sprite: ID-" + ID + ", subID-" + subID);
     }
 
 }
