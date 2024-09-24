@@ -20,7 +20,7 @@ public class TilemapTerrain: BaseClass{
     public TilemapBlock _random_terrainHier1(TilemapBlock block, TilemapBlockAround around_blocks){
         List<string> terrains_avail = get_available_terrainsHier1(block);
         float[] terrains_prob = get_terrains_prob(terrains_avail, around_blocks);
-        string terrain_ID = terrains_avail[random_by_prob(terrains_prob, block.offsets)];
+        string terrain_ID = terrains_avail[RandomGenerator._random_by_prob(terrains_prob, block.offsets)];
         block.terrain_ID = terrain_ID;
         return block;
     }
@@ -28,7 +28,7 @@ public class TilemapTerrain: BaseClass{
     public TilemapBlock _random_terrainHier2_random(TilemapBlock block, TilemapBlockAround around_blocks){
         List<TerrainHier2Info> terrainTypes_avail = get_available_terrainHier2(block.terrain_ID);
         float[] terrainTypes_prob = get_terrainHier2_prob(terrainTypes_avail, around_blocks);
-        string[] terrainTypes_tags = terrainTypes_avail[random_by_prob(terrainTypes_prob, block.offsets)].tags;
+        string[] terrainTypes_tags = terrainTypes_avail[RandomGenerator._random_by_prob(terrainTypes_prob, block.offsets)].tags;
         block.terrain_tags = terrainTypes_tags;
         block.scale = tags2TerrainHier2[terrainTypes_tags].scale;
         return block;
@@ -95,16 +95,16 @@ public class TilemapTerrain: BaseClass{
 
     // ---------- other ----------
 
-    int random_by_prob(float[] probs, Vector3Int offsets){
-        int random_offset = offsets.x + offsets.y;
-        float sum = probs.Sum();
-        float target = Random.Range(random_offset, sum + random_offset) - random_offset;
-        for(int i = 0; i < probs.Length; i++){
-            target -= probs[i];
-            if(target <= 0) return i;
-        }
-        return probs.Length - 1;
-    }
+    // int random_by_prob(float[] probs, Vector3Int offsets){
+    //     int random_offset = offsets.x + offsets.y;
+    //     float sum = probs.Sum();
+    //     float target = Random.Range(random_offset, sum + random_offset) - random_offset;
+    //     for(int i = 0; i < probs.Length; i++){
+    //         target -= probs[i];
+    //         if(target <= 0) return i;
+    //     }
+    //     return probs.Length - 1;
+    // }
 
     // // ---------- init ----------
     // void init_ID2TerrainHier1Info(){

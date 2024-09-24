@@ -19,19 +19,21 @@ public class TilemapSystem : BaseClass{
     // InputSystem _input_base;
     // GameConfigs _GCfg { get => sys._GCfg; }
     // ---------- unity ----------
-    public Tilemap _tilemap_modify;
+    // public Tilemap _tilemap_modify;
     // ---------- sub script ----------
-    public TilemapBlockGenerate _TMapGen;
+    public TilemapBlockGenerator _TMapGen;
     public TilemapDraw _TMapDraw;
     public TilemapConfig _TMapCfg;
     public TilemapSaveLoad _TMapSL;
     public TilemapController _TMapCtrl;
     public TilemapMonitor _TMapMon;
     public PlantMonitor _PlantMon;
+    public BuildGenerator _BuildGenerator;
+    public TilemapBlockGameObjectGenerator _TMapObjGen;
     // ---------- status ----------
 
     public override void _init(){
-        _tilemap_modify = _sys._searchInit<Tilemap>("Tilemap", "Block_1x1");
+        // _tilemap_modify = _sys._searchInit<Tilemap>("Tilemap", "Block_1x1");
         _TMapCfg = new();
         _TMapDraw = new();
         _TMapGen = new();
@@ -39,6 +41,8 @@ public class TilemapSystem : BaseClass{
         _TMapCtrl = new();
         _TMapMon = new();
         _PlantMon = new();
+        _BuildGenerator = new();
+        _TMapObjGen = new();
     }
 
     

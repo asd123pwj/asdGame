@@ -264,23 +264,23 @@ class DirectionsConfig{
             dirs_prob[i] = terrain_type.dirs_prob[dir_index];
         }
         // ----- random a direction
-        string direction_ID = dirs_avail[random_by_prob(dirs_prob, block.offsets)];
+        string direction_ID = dirs_avail[RandomGenerator._random_by_prob(dirs_prob, block.offsets)];
         string[] direction = mapping_ID_to_directionInfo(direction_ID).direction;
         return direction;
     }
 
-    int random_by_prob(float[] probs, Vector3Int offsets){
-        float sum = probs.Sum();
-        int random_offset = offsets.x + offsets.y;
-        float target = Random.Range(random_offset, sum + random_offset) - random_offset;
-        for(int i = 0; i < probs.Length; i++){
-            target -= probs[i];
-            if(target <= 0){
-                return i;
-            }
-        }
-        return probs.Length - 1;
-    }
+    // int random_by_prob(float[] probs, Vector3Int offsets){
+    //     float sum = probs.Sum();
+    //     int random_offset = offsets.x + offsets.y;
+    //     float target = Random.Range(random_offset, sum + random_offset) - random_offset;
+    //     for(int i = 0; i < probs.Length; i++){
+    //         target -= probs[i];
+    //         if(target <= 0){
+    //             return i;
+    //         }
+    //     }
+    //     return probs.Length - 1;
+    // }
 
     _DirectionsInfo mapping_ID_to_directionInfo(string ID){
         for (int i = 0; i < directions_info.Length; i++){
@@ -341,8 +341,8 @@ public class TilemapBlockDirection{
             TilemapTerrain terrain, 
             Vector3Int[] extra_groundPos, 
             string[] direction){
-        int random_offset_1 = block.offsets.x + block.offsets.y + 100;
-        int random_offset_2 = block.offsets.x + block.offsets.y - 100;
+        // int random_offset_1 = block.offsets.x + block.offsets.y + 100;
+        // int random_offset_2 = block.offsets.x + block.offsets.y - 100;
         Vector3Int BSize = block.size;    // for convenience
         int min_h = 1;        // min_h also means boundBottom_h or boundTop_h
         int max_h = BSize.y - min_h;
@@ -385,13 +385,13 @@ public class TilemapBlockDirection{
                 block.right.y = around_blocks.right.left.y;
             } else if (around_blocks.left.isExist){
                 block.left.y = around_blocks.left.right.y;
-                block.right.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
+                block.right.y = RandomGenerator._range(min_h, max_h, block.offsets);//RandomGenerator._range(min_h, max_h, block.offsets);
             } else if (around_blocks.right.isExist){
-                block.left.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
+                block.left.y = RandomGenerator._range(min_h, max_h, block.offsets);
                 block.right.y = around_blocks.right.left.y;
             } else{
-                block.left.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
-                block.right.y = Random.Range(min_h + random_offset_2, max_h + random_offset_2) - random_offset_2;
+                block.left.y = RandomGenerator._range(min_h, max_h, block.offsets);
+                block.right.y = RandomGenerator._range(min_h, max_h, block.offsets, 100); //Random.Range(min_h + random_offset_2, max_h + random_offset_2) - random_offset_2;
             }
             // ---------- for extra groundPos
             if (extra_groundPos != null){
@@ -409,13 +409,13 @@ public class TilemapBlockDirection{
                     block.down.x = around_blocks.down.up.x;
                 } else if (around_blocks.up.isExist){
                     block.up.x = around_blocks.up.down.x;
-                    block.down.x = Random.Range(block.up.x + random_offset_1, max_w + random_offset_1) - random_offset_1;
+                    block.down.x = RandomGenerator._range(block.up.x, max_w, block.offsets); //Random.Range(block.up.x + random_offset_1, max_w + random_offset_1) - random_offset_1;
                 } else if (around_blocks.down.isExist){
                     block.down.x = around_blocks.down.up.x;
-                    block.up.x = Random.Range(min_w + random_offset_1, block.down.x + random_offset_1) - random_offset_1;
+                    block.up.x = RandomGenerator._range(min_w, block.down.x, block.offsets); //Random.Range(min_w + random_offset_1, block.down.x + random_offset_1) - random_offset_1;
                 } else {
-                    block.up.x = Random.Range(min_w + random_offset_1, max_w + random_offset_1) - random_offset_1;
-                    block.down.x = Random.Range(block.up.x + random_offset_2, max_w + random_offset_2) - random_offset_2;
+                    block.up.x = RandomGenerator._range(min_w, max_w, block.offsets);
+                    block.down.x = RandomGenerator._range(block.up.x, max_w, block.offsets, 100); //Random.Range(block.up.x + random_offset_2, max_w + random_offset_2) - random_offset_2;
                 }
                 block.groundPos.Add(new(0, BSize.y));
                 block.groundPos.Add(block.up);
@@ -428,13 +428,13 @@ public class TilemapBlockDirection{
                     block.down.x = around_blocks.down.up.x;
                 } else if (around_blocks.up.isExist){
                     block.up.x = around_blocks.up.down.x;
-                    block.down.x = Random.Range(min_w + random_offset_1, block.up.x + random_offset_1) - random_offset_1;
+                    block.down.x = RandomGenerator._range(min_w, block.up.x, block.offsets); //Random.Range(min_w + random_offset_1, block.up.x + random_offset_1) - random_offset_1;
                 } else if (around_blocks.down.isExist){
                     block.down.x = around_blocks.down.up.x;
-                    block.up.x = Random.Range(block.down.x + random_offset_1, max_w + random_offset_1) - random_offset_1;
+                    block.up.x = RandomGenerator._range(block.down.x, max_w, block.offsets);//Random.Range(block.down.x + random_offset_1, max_w + random_offset_1) - random_offset_1;
                 } else {
-                    block.up.x = Random.Range(min_w + random_offset_1, max_w + random_offset_1) - random_offset_1;
-                    block.down.x = Random.Range(min_w + random_offset_2, block.up.x + random_offset_2) - random_offset_2;
+                    block.up.x = RandomGenerator._range(min_w, max_w, block.offsets);
+                    block.down.x = RandomGenerator._range(min_w, block.up.x, block.offsets, 100);
                 }
                 block.groundPos.Add(new(0, 0));
                 block.groundPos.Add(block.down);
@@ -449,13 +449,13 @@ public class TilemapBlockDirection{
                     block.up.x = around_blocks.up.down.x;
                 } else if (around_blocks.left.isExist) {
                     block.left.y = around_blocks.left.right.y;
-                    block.up.x = Random.Range(min_w + random_offset_1, max_w + random_offset_1) - random_offset_1;
+                    block.up.x = RandomGenerator._range(min_w, max_w, block.offsets);
                 } else if (around_blocks.up.isExist) {
-                    block.left.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
+                    block.left.y = RandomGenerator._range(min_h, max_h, block.offsets);
                     block.up.x = around_blocks.up.down.x;
                 } else {
-                    block.left.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
-                    block.up.x = Random.Range(min_w + random_offset_2, max_w + random_offset_2) - random_offset_2;
+                    block.left.y = RandomGenerator._range(min_h, max_h, block.offsets);
+                    block.up.x = RandomGenerator._range(min_w, max_w, block.offsets, 100); //Random.Range(min_w + random_offset_2, max_w + random_offset_2) - random_offset_2;
                 }
                 block.groundPos.Add(block.left);
                 block.groundPos.Add(block.up);
@@ -467,13 +467,13 @@ public class TilemapBlockDirection{
                     block.down.x = around_blocks.down.up.x;
                 } else if (around_blocks.left.isExist) {
                     block.left.y = around_blocks.left.right.y;
-                    block.down.x = Random.Range(min_w + random_offset_1, max_w + random_offset_1) - random_offset_1;
+                    block.down.x = RandomGenerator._range(min_w, max_w, block.offsets);
                 } else if (around_blocks.down.isExist) {
-                    block.left.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
+                    block.left.y = RandomGenerator._range(min_h, max_h, block.offsets);
                     block.down.x = around_blocks.down.up.x;
                 } else {
-                    block.left.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
-                    block.down.x = Random.Range(min_w + random_offset_2, max_w + random_offset_2) - random_offset_2;
+                    block.left.y = RandomGenerator._range(min_h, max_h, block.offsets);
+                    block.down.x = RandomGenerator._range(min_w, max_w, block.offsets, 100);
                 }
                 block.groundPos.Add(block.left);
                 block.groundPos.Add(block.down);
@@ -487,13 +487,13 @@ public class TilemapBlockDirection{
                     block.up.x = around_blocks.up.down.x;
                 } else if (around_blocks.right.isExist) {
                     block.right.y = around_blocks.right.left.y;
-                    block.up.x = Random.Range(min_w + random_offset_1, max_w + random_offset_1) - random_offset_1;
+                    block.up.x = RandomGenerator._range(min_w, max_w, block.offsets);
                 } else if (around_blocks.up.isExist) {
-                    block.right.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
+                    block.right.y = RandomGenerator._range(min_h, max_h, block.offsets);
                     block.up.x = around_blocks.up.down.x;
                 } else{
-                    block.right.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
-                    block.up.x = Random.Range(min_w + random_offset_2, max_w + random_offset_2) - random_offset_2;
+                    block.right.y = RandomGenerator._range(min_h, max_h, block.offsets);
+                    block.up.x = RandomGenerator._range(min_w, max_w, block.offsets, 100);
                 }
                 block.groundPos.Add(new(0, BSize.y));
                 block.groundPos.Add(block.up);
@@ -505,13 +505,13 @@ public class TilemapBlockDirection{
                     block.down.x = around_blocks.down.up.x;
                 } else if (around_blocks.right.isExist) {
                     block.right.y = around_blocks.right.left.y;
-                    block.down.x = Random.Range(min_w + random_offset_1, max_w + random_offset_1) - random_offset_1;
+                    block.down.x = RandomGenerator._range(min_w, max_w, block.offsets);
                 } else if (around_blocks.down.isExist) {
-                    block.right.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
+                    block.right.y = RandomGenerator._range(min_h, max_h, block.offsets);
                     block.down.x = around_blocks.down.up.x;
                 } else {
-                    block.right.y = Random.Range(min_h + random_offset_1, max_h + random_offset_1) - random_offset_1;
-                    block.down.x = Random.Range(min_w + random_offset_2, max_w + random_offset_2) - random_offset_2;
+                    block.right.y = RandomGenerator._range(min_h, max_h, block.offsets);
+                    block.down.x = RandomGenerator._range(min_w, max_w, block.offsets, 100);
                 }
                 block.groundPos.Add(new(0, 0));
                 block.groundPos.Add(block.down);

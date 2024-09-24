@@ -20,9 +20,9 @@ public class TilemapController: BaseClass{
     // GameConfigs _GCfg;
     // TilemapSystem TMapSys { get => _GCfg._TMapSys; }
     // ---------- unity ----------
-    Tilemap TMap_modify { get => _TMapSys._tilemap_modify; }
+    // Tilemap TMap_modify { get => _TMapSys._tilemap_modify; }
     // ---------- sub script ----------
-    TilemapBlockGenerate TMapGen { get => _TMapSys._TMapGen; }
+    TilemapBlockGenerator TMapGen { get => _TMapSys._TMapGen; }
     TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
     TilemapConfig TMapCfg { get => _TMapSys._TMapCfg; }
     TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
@@ -59,7 +59,7 @@ public class TilemapController: BaseClass{
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
+        Vector3Int block_offsets = TMapCfg._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, "L1_Middle");
     
         List<Vector3Int> block_offsets_list = new();
 
@@ -74,24 +74,24 @@ public class TilemapController: BaseClass{
         stopwatch.Start();
         foreach (Vector3Int BOffsets in block_offsets_list){
             TilemapBlock block = TMapGen._generate_block(BOffsets);
-            _TMapSys._TMapMon._load_block(block);
+            _TMapSys._TMapMon._load_block(block, "L1_Middle");
 
             Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
             Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
 
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "Block").TMap;
+            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").TMap;
             TMapDraw._draw_region(TMap, region).Forget();
 
             foreach (Vector3Int offsets in regions_placeholder.Keys){
-                Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "Block").TMap;
+                Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "L1_Middle").TMap;
                 TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
             }
         }
 
         foreach (Vector3Int BOffsets in block_offsets_list){
             ShadowGenerator._generate_shadow_from_compCollider(
-                _TMapSys._TMapMon._get_blkObj(BOffsets, "Block").obj,
-                _TMapSys._TMapMon._get_blkObj(BOffsets, "Block").compositeCollider
+                _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").obj,
+                _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").compositeCollider
             );
         }
 
@@ -104,6 +104,7 @@ public class TilemapController: BaseClass{
         return true;
     }
 
+
     public override bool _check_allow_init(){
         if (!_sys._initDone) return false;
         if (!_MatSys._check_all_info_initDone()) return false;
@@ -112,6 +113,70 @@ public class TilemapController: BaseClass{
         // return _GCfg._MatSys._TMap._check_info_initDone();
     }
 
+
+
+
+
+
+
+    public bool _prepare_zone(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+        // Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
+        Vector3Int block_offsets = TMapCfg._mapping_worldPos_to_mapPos(keyPos.mouse_pos_world, "L1_Middle");
+    
+        List<Vector3Int> block_offsets_list = new();
+
+        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocksAround_RadiusMinusOne_loading;
+        for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
+            for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
+                block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
+            }
+        }
+
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+        foreach (Vector3Int BOffsets in block_offsets_list){
+            TilemapBlock block = TMapGen._generate_block(BOffsets);
+            _TMapSys._TMapMon._load_block(block, "L1_Middle");
+
+            Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
+            Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
+
+            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").TMap;
+            TMapDraw._draw_region(TMap, region).Forget();
+
+            foreach (Vector3Int offsets in regions_placeholder.Keys){
+                Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "L1_Middle").TMap;
+                TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
+            }
+        }
+
+        foreach (Vector3Int BOffsets in block_offsets_list){
+            ShadowGenerator._generate_shadow_from_compCollider(
+                _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").obj,
+                _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").compositeCollider
+            );
+        }
+
+        stopwatch.Stop();
+        Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds + ", regions: " + block_offsets_list.Count);
+        // if (regions.Count > 0) {
+        //     Tilemap TMap = _TMapSys._TMapMon._get_tilemap(block)
+        //     TMapDraw._draw_region(TMap_modify, regions).Forget();
+        // }
+        return true;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     async UniTaskVoid query_trigger(float query_time){
     // IEnumerator query_trigger(float query_time){
         while (true){
@@ -119,7 +184,7 @@ public class TilemapController: BaseClass{
                 await UniTask.Delay(TimeSpan.FromSeconds(query_time));
                 continue;
             }
-            _generate_spawn_block(new(0, 0));
+            // _generate_spawn_block(new(0, 0));
             // ---------- query ----------
             query_isTilemapBlockChange();
 
@@ -137,7 +202,8 @@ public class TilemapController: BaseClass{
         // if (_CtrlSys._player == null) return;
         Vector3 world_pos = _CtrlSys._player.transform.position;
         // Vector3 world_pos = new(0, 0);
-        Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(world_pos, TMap_modify);
+        // Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(world_pos, TMap_modify);
+        Vector3Int block_offsets = TMapCfg._mapping_worldPos_to_blockOffsets(world_pos, "L1_Middle");
         // Debug.Log("offsets: " + block_offsets);
         if (_tilemapBlock_offsets != block_offsets){
             // init
@@ -156,92 +222,93 @@ public class TilemapController: BaseClass{
             // if (_cancel_balanceTilemap != null) _cancel_balanceTilemap.Cancel();
             // _cancel_balanceTilemap = new CancellationTokenSource();
             // _balance_tilemap(_tilemapBlock_offsets, _cancel_balanceTilemap).Forget();
-            _balance_tilemap(_tilemapBlock_offsets).Forget();
+            // _balance_tilemap(_tilemapBlock_offsets).Forget();
             _tilemapBlockChange = false;
             // Debug.Log("_tilemapBlockChange = false");
         }
     }
 
     // public async UniTaskVoid _balance_tilemap(Vector3Int block_offsets_new, CancellationTokenSource cancel_token) {
-    public async UniTaskVoid _balance_tilemap(Vector3Int block_offsets_new) {
-    // public IEnumerator _balance_tilemap(Vector3Int block_offsets_new) {
-    // public void _balance_tilemap(Vector3Int block_offsets_new, CancellationTokenSource cancel_token) {
-        // cancel_token = new CancellationTokenSource();
-        Vector3Int BOffsets = block_offsets_new;
-        int loadB = _GCfg.__block_loadBound;
-        int unloadB = _GCfg.__block_unloadBound;
-        List<Vector3Int> loads = new List<Vector3Int>(TMapCfg.__blockLoads_list);
-        List<Vector3Int> loads_new = new List<Vector3Int>();
-        List<Vector3Int> unloads_new = new List<Vector3Int>();
+    // public async UniTaskVoid _balance_tilemap(Vector3Int block_offsets_new) {
+    // // public IEnumerator _balance_tilemap(Vector3Int block_offsets_new) {
+    // // public void _balance_tilemap(Vector3Int block_offsets_new, CancellationTokenSource cancel_token) {
+    //     // cancel_token = new CancellationTokenSource();
+    //     Vector3Int BOffsets = block_offsets_new;
+    //     int loadB = _GCfg.__block_loadBound;
+    //     int unloadB = _GCfg.__block_unloadBound;
+    //     List<Vector3Int> loads = new List<Vector3Int>(_TMapSys._TMapMon._TMap_blocks["L1_Middle"].Keys);
+    //     List<Vector3Int> loads_new = new List<Vector3Int>();
+    //     List<Vector3Int> unloads_new = new List<Vector3Int>();
 
-        // for (int r = 0; r < loadB; r++){
-        //     for (int x = -r; x <= r; x++){
-        //         int y = r - Mathf.Abs(x);
-        //         loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
-        //         if (y != 0) loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
-        //     }
-        // }
+    //     // for (int r = 0; r < loadB; r++){
+    //     //     for (int x = -r; x <= r; x++){
+    //     //         int y = r - Mathf.Abs(x);
+    //     //         loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
+    //     //         if (y != 0) loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
+    //     //     }
+    //     // }
 
-        // int loadBound = 4;
-        // for (int r = 0; r < loadB; r++){
-        //     for (int x = -r; x <= r; x++){
-        //         int y = r - Mathf.Abs(x);
-        //         loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
-        //         if (y != 0) loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
-        //     }
-        // }
+    //     // int loadBound = 4;
+    //     // for (int r = 0; r < loadB; r++){
+    //     //     for (int x = -r; x <= r; x++){
+    //     //         int y = r - Mathf.Abs(x);
+    //     //         loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
+    //     //         if (y != 0) loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
+    //     //     }
+    //     // }
 
-        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocksAround_RadiusMinusOne_loading;
-        // int loadBound = 4;
-        // for (int r = 0; r < loadBound; r++){
-        //     for (int x = -r; x <= r; x++){
-        //         int y = r - Mathf.Abs(x);
-        //         block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
-        //         if (y != 0) block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y - y));
-        //     }
-        // }
-        for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
-            for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
-                loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
-            }
-        }
-
-
-        List<Region4DrawTilemapBlock> regions = new();
-        List<Vector3Int> loads_wait = loads_new.Except(loads).ToList();
-        foreach(Vector3Int block_offsets in loads_wait){
-            TilemapBlock block = TMapGen._generate_block(block_offsets);
-            _TMapSys._TMapMon._load_block(block);
-            regions.Add(TMapDraw._get_draw_region(block));
-        }
-        // if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions, cancel_token.Token).Forget();
-        if (regions.Count > 0) TMapDraw._draw_regions(TMap_modify, regions).Forget();
+    //     Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocksAround_RadiusMinusOne_loading;
+    //     // int loadBound = 4;
+    //     // for (int r = 0; r < loadBound; r++){
+    //     //     for (int x = -r; x <= r; x++){
+    //     //         int y = r - Mathf.Abs(x);
+    //     //         block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
+    //     //         if (y != 0) block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y - y));
+    //     //     }
+    //     // }
+    //     for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
+    //         for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
+    //             loads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
+    //         }
+    //     }
 
 
-        for (int r = 0; r < unloadB; r++){
-            for (int x = -r; x <= r; x++){
-                int y = r - Mathf.Abs(x);
-                unloads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
-                if (y != 0) unloads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
-            }
-        }
-        List<Vector3Int> unloads_wait = loads.Except(unloads_new).ToList();
-        foreach(Vector3Int block_offsets in unloads_wait){
-            _TMapSys._TMapMon._unload_block(block_offsets);
-        }
-        await UniTask.Yield();
-        // yield return null;
-    }
+    //     List<Region4DrawTilemapBlock> regions = new();
+    //     List<Vector3Int> loads_wait = loads_new.Except(loads).ToList();
+    //     foreach(Vector3Int block_offsets in loads_wait){
+    //         TilemapBlock block = TMapGen._generate_block(block_offsets);
+    //         _TMapSys._TMapMon._load_block(block, "L1_Middle");
+    //         regions.Add(TMapDraw._get_draw_region(block));
+    //     }
+    //     // if (regions.Count > 0) TMapDraw._draw_region(TMap_modify, regions, cancel_token.Token).Forget();
+    //     if (regions.Count > 0) TMapDraw._draw_regions(TMap_modify, regions).Forget();
 
-    public TilemapBlock _generate_spawn_block(Vector3 spawn_worldPos){
-        Vector3Int map_pos = TMap_modify.WorldToCell(spawn_worldPos);
-        TilemapBlock block = TMapGen._generate_spawn_block(map_pos, TMap_modify);
-        _TMapSys._TMapMon._load_block(block);
-        List<Region4DrawTilemapBlock> regions = new(){TMapDraw._get_draw_region(block)};
-        // TMapDraw._draw_region(TMap_modify, regions, new()).Forget();
-        TMapDraw._draw_regions(TMap_modify, regions).Forget();
-        return block;
-    }
+
+    //     for (int r = 0; r < unloadB; r++){
+    //         for (int x = -r; x <= r; x++){
+    //             int y = r - Mathf.Abs(x);
+    //             unloads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y + y));
+    //             if (y != 0) unloads_new.Add(new Vector3Int(BOffsets.x + x, BOffsets.y - y));
+    //         }
+    //     }
+    //     List<Vector3Int> unloads_wait = loads.Except(unloads_new).ToList();
+    //     foreach(Vector3Int block_offsets in unloads_wait){
+    //         _TMapSys._TMapMon._unload_block(block_offsets, "L1_Middle");
+    //     }
+    //     await UniTask.Yield();
+    //     // yield return null;
+    // }
+
+    // public TilemapBlock _generate_spawn_block(Vector3 spawn_worldPos){
+    //     // Vector3Int map_pos = TMap_modify.WorldToCell(spawn_worldPos);
+    //     Vector3Int map_pos = TMapCfg._mapping_worldPos_to_mapPos(spawn_worldPos, "L1_Middle");
+    //     TilemapBlock block = TMapGen._generate_spawn_block(map_pos, TMap_modify);
+    //     _TMapSys._TMapMon._load_block(block, "L1_Middle");
+    //     List<Region4DrawTilemapBlock> regions = new(){TMapDraw._get_draw_region(block)};
+    //     // TMapDraw._draw_region(TMap_modify, regions, new()).Forget();
+    //     TMapDraw._draw_regions(TMap_modify, regions).Forget();
+    //     return block;
+    // }
     
 
 

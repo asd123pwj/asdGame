@@ -17,10 +17,15 @@ public struct SystemConfig{
     public string save_playing;
     // ---------- tilemap config ---------- //
     public Vector3Int TMap_tiles_per_block;         // how many tiles in one block, axis-z is no support
+    public Vector3Int TMap_blocks_per_zone;         // how many blocks in one region, axis-z is no support
+    
     // ----- loading
     public int TMap_tiles_per_loading;              // when loading, how many tiles in one time
     public int TMap_interval_per_loading;           // when loading, how long to wait between each loading
     public Vector3Int TMap_blocksAround_RadiusMinusOne_loading;   // when loading, how many blocks around the player to load
+
+    // ----- Tilemap gameObject
+    public Dictionary<string, Vector3> TMap_tilemap_obj_origin_offset;
 
     // ----- RuleTile
     public Vector3Int TMap_tileNeighborsCheck_max; // how far can be check, neighbor of RuleTile, only use to load placeholder.

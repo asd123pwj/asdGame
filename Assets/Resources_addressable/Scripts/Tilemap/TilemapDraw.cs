@@ -9,9 +9,16 @@ using Unity.Profiling;
 using System;
 
 
-public struct Region4DrawTilemapBlock{
-    public Vector3Int[] positions;
-    public TileBase[] tiles;
+public class Region4DrawTilemapBlock{
+    public Vector3Int[] positions => pos_tile_kvp.Keys.ToArray();
+    public TileBase[] tiles => pos_tile_kvp.Values.ToArray();
+
+    public Dictionary<Vector3Int, TileBase> pos_tile_kvp = new();
+
+    public void _add(Vector3Int pos, TileBase tile){
+        pos_tile_kvp.Add(pos, tile);
+    }
+    
 }
 
 public class TilemapDraw: BaseClass{
@@ -50,19 +57,20 @@ public class TilemapDraw: BaseClass{
 
     public Region4DrawTilemapBlock _get_draw_region(TilemapBlock block){
         Vector3Int block_origin_pos = block.offsets * block.size;
-        Dictionary<Vector3Int, TileBase> pos_tile_kvp = new();
+        // Dictionary<Vector3Int, TileBase> pos_tile_kvp = new();
+        Region4DrawTilemapBlock region = new();
         // List<TileBase> __tiles = new();
         // List<Vector3Int> __positions = new();
         for (int x = 0; x < block.size.x; x++){
             for (int y = 0; y < block.size.y; y++){
                 if (block.map[x, y] == _GCfg._empty_tile) continue;
                 TileBase tile = _MatSys._tile._get_tile(block.map[x, y]);
-                pos_tile_kvp.Add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+                region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
                 // __tiles.Add(tile);
                 // __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
             }
         }
-        Region4DrawTilemapBlock region = new(){ tiles = pos_tile_kvp.Values.ToArray(), positions = pos_tile_kvp.Keys.ToArray() };
+        // Region4DrawTilemapBlock region = new(){ tiles = pos_tile_kvp.Values.ToArray(), positions = pos_tile_kvp.Keys.ToArray() };
         return region;
 
 
@@ -88,131 +96,149 @@ public class TilemapDraw: BaseClass{
         // This function aims draw placeholder tiles around the block,
         Vector3Int block_origin_pos = block.offsets * block.size; 
         Vector3Int block_offset;
-        Region4DrawTilemapBlock region;
+        Region4DrawTilemapBlock region = new();
         Dictionary<Vector3Int, Region4DrawTilemapBlock> regions = new();
-        List<TileBase> __tiles = new();
-        List<Vector3Int> __positions = new();
+        // List<TileBase> __tiles = new();
+        // List<Vector3Int> __positions = new();
 
         Vector3Int neighbor = _GCfg._sysCfg.TMap_tileNeighborsCheck_max;
         // ----- lower left quarter
 
         block_offset = block.offsets + new Vector3Int(-1, -1, 0);
-        __tiles.Clear();
-        __positions.Clear();
+        region.pos_tile_kvp.Clear();
+        // __tiles.Clear();
+        // __positions.Clear();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < neighbor.y; y++){
                 if (block.map[x, y] == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
+                region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
             }
         }
-        region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
         regions.Add(block_offset, region);
 
         // ----- upper left quarter
         block_offset = block.offsets + new Vector3Int(-1, 1, 0);
-        __tiles.Clear();
-        __positions.Clear();
+        region.pos_tile_kvp.Clear();
+        // __tiles.Clear();
+        // __positions.Clear();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < neighbor.y; y++){
                 if (block.map[x, block.size.y - 1 - y] == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, block.size.y - 1 - y, 0));
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0));
+                region._add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0), tile);
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0));
             }
         }
-        region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
         regions.Add(block_offset, region);
 
         // ----- lower right quarter
         block_offset = block.offsets + new Vector3Int(1, -1, 0);
-        __tiles.Clear();
-        __positions.Clear();
+        region.pos_tile_kvp.Clear();
+        // __tiles.Clear();
+        // __positions.Clear();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < neighbor.y; y++){
                 if (block.map[block.size.x - 1 - x, y] == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, y, 0));
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0));
+                region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0), tile);
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0));
             }
         }
-        region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region.pos_tile_kvp.Clear();
         regions.Add(block_offset, region);
 
         // ----- upper right quarter
         block_offset = block.offsets + new Vector3Int(1, 1, 0);
-        __tiles.Clear();
-        __positions.Clear();
+        // __tiles.Clear();
+        // __positions.Clear();
+        region.pos_tile_kvp.Clear();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < neighbor.y; y++){
                 if (block.map[block.size.x - 1 - x, block.size.y - 1 - y] == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0));
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0));
+                region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0), tile);
+                
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0));
             }
         }
-        region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
         regions.Add(block_offset, region);
 
         // ----- left side
         block_offset = block.offsets + new Vector3Int(-1, 0, 0);
-        __tiles.Clear();
-        __positions.Clear();
+        region.pos_tile_kvp.Clear();
+        // __tiles.Clear();
+        // __positions.Clear();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < block.size.y; y++){
                 if (block.map[x, y] == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
+                region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
             }
         }
-        region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
         regions.Add(block_offset, region);
         // ----- right side
-        __tiles.Clear();
-        __positions.Clear();
+        // __tiles.Clear();
+        // __positions.Clear();
+        region.pos_tile_kvp.Clear();
         block_offset = block.offsets + new Vector3Int(1, 0, 0);
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < block.size.y; y++){
                 if (block.map[block.size.x - 1 - x, y] == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, y, 0));
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0));
+                region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0), tile);
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0));
             }
         }
-        region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
         regions.Add(block_offset, region);
 
         
         // ----- bottom side
         block_offset = block.offsets + new Vector3Int(0, -1, 0);
-        __tiles.Clear();
-        __positions.Clear();
+        // __tiles.Clear();
+        // __positions.Clear();
+        region.pos_tile_kvp.Clear();
         for (int x = 0; x < block.size.x; x++){
             for (int y = 0; y < neighbor.y; y++){
                 if (block.map[x, y] == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
+                region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(x, y, 0));
             }
         }
-        region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
         regions.Add(block_offset, region);
 
         // ----- top side
         block_offset = block.offsets + new Vector3Int(0, 1, 0);
-        __tiles.Clear();
-        __positions.Clear();
+        region.pos_tile_kvp.Clear();
+        // __tiles.Clear();
+        // __positions.Clear();
         for (int x = 0; x < block.size.x; x++){
             for (int y = 0; y < neighbor.y; y++){
                 if (block.map[x, block.size.y - 1 - y] == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, block.size.y - 1 - y, 0));
-                __tiles.Add(tile);
-                __positions.Add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0));
+                region._add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0), tile);
+                // __tiles.Add(tile);
+                // __positions.Add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0));
             }
         }
-        region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
+        // region = new(){ tiles = __tiles.ToArray(), positions = __positions.ToArray() };
         regions.Add(block_offset, region);
 
         return regions;
@@ -297,10 +323,10 @@ public class TilemapDraw: BaseClass{
         
         // ---------- Method 1: Draw tiles BY SetTiles ----------
         if (draw_method == 1){
-            List<Vector3Int> position_all = new();
-            List<TileBase> tiles_all = new();
-            position_all.AddRange(region.positions);
-            tiles_all.AddRange(region.tiles);
+            // List<Vector3Int> position_all = new();
+            // List<TileBase> tiles_all = new();
+            // position_all.AddRange(region.positions);
+            // tiles_all.AddRange(region.tiles);
         
             int tile_per_group = Mathf.Min(_GCfg._sysCfg.TMap_tiles_per_loading, region.tiles.Count());
             for (int i = 0; i < region.tiles.Count(); i += tile_per_group) {

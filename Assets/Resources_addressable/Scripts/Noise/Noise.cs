@@ -1,3 +1,6 @@
+// Thanks to Auburn, I copy FastNoiseLite in 2024/09/13, https://github.com/Auburn/FastNoiseLite/blob/master/CSharp/FastNoiseLite.cs
+
+
 public class Noise{
     public int seed;
     // FastNoise _noise_generator;

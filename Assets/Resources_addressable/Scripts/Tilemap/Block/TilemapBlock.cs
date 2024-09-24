@@ -12,7 +12,7 @@ public class TilemapBlock: BaseClass{
     public string terrain_ID;
     public string[] terrain_tags;
     public Vector3Int offsets;
-    public Vector3Int size;
+    public Vector3Int size => _GCfg._sysCfg.TMap_tiles_per_block;
     // public int seed;
     // public BoundTiles bounds;
     public float scale;
@@ -27,9 +27,9 @@ public class TilemapBlock: BaseClass{
     public List<LayerInfo> layers;
     public bool isExist;
 
+    public int initStage;
 
-
-    public TilemapBlock(int seed=-1){
+    public TilemapBlock(){
         // if (seed == -1)
         //     seed = Random.Range(0, 1000000);
         // this.seed = seed;

@@ -57,7 +57,13 @@ public class TilemapBlockAround: BaseClass {
         else if (direction == "right")
             direction_offsets.x = 1;
         Vector3Int block_offsets = new(_block.offsets.x + direction_offsets.x, _block.offsets.y + direction_offsets.y);
-        TilemapBlock block_around = _tilemap_base.__blockLoads_list.Contains(block_offsets) ? _tilemap_base.__blockLoads_infos[block_offsets] : new();
+        // if (_TMapSys._TMapMon._check_block_load(block_offsets, "Block")){
+        TilemapBlock block_around =
+            _TMapSys._TMapMon._check_block_load(block_offsets, "L1_Middle") 
+            ? _TMapSys._TMapMon._get_block(block_offsets, "L1_Middle")
+            : new();
+        // }
+        // TilemapBlock block_around = _TMapSys._TMapMon._get_block(block_offsets, "Block");//.Contains(block_offsets) ? _tilemap_base.__blockLoads_infos[block_offsets] : new();
         return block_around;
     }
 }
