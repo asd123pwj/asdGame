@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 public class TilemapMonitor: BaseClass{
     // ---------- Config ---------- //
     // ---------- Sub Scripts ---------- //
-    TilemapConfig TMapCfg { get => _sys._TMapSys._TMapCfg; }
+    TilemapAxis TMapCfg { get => _sys._TMapSys._TMapAxis; }
     // ---------- Tilemap Status ---------- //
     // ----- Blocks ----- //
     public Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> _TMap_blocks;
@@ -40,33 +40,31 @@ public class TilemapMonitor: BaseClass{
         foreach(var tilemap_type in _TMap_containers.Keys){
             _TMap_blocks.Add(tilemap_type, new());
         }
-        // _TMap_blocks = new(){
-        //     { "L1_Front", new() },
-        //     { "L1_Middle", new() },
-        //     { "L1_Back", new() },
-        // };
     }
 
 
 
 
-    public void _load_block(TilemapBlock block, string layer_type){
-        if (_TMap_blocks[layer_type].ContainsKey(block.offsets)) return;
+    public bool _load_block(TilemapBlock block, string layer_type){
+        if (_check_block_load(block.offsets, layer_type)) return false;
         _TMap_blocks[layer_type].Add(block.offsets, block);
-        // __blockLoads_list.Add(block.offsets);
+        return true;
+    } 
+
+    
+    public void _update_block(TilemapBlock block, string layer_type){
+        if (_check_block_load(block.offsets, layer_type)) 
+            _TMap_blocks[layer_type][block.offsets] = block;
+        else
+            _TMap_blocks[layer_type].Add(block.offsets, block);
     } 
 
     public void _unload_block(Vector3Int block_offsets, string layer_type){
-        // delete in tilemap
-        clear_block(block_offsets, layer_type);
-        // delete in memory
+        clear_block_tilemap(block_offsets, layer_type);
         if (_TMap_blocks[layer_type].ContainsKey(block_offsets)) _TMap_blocks[layer_type].Remove(block_offsets);
-        // if (__blockLoads_list.Contains(block_offsets)) __blockLoads_list.Remove(block_offsets);
     }
 
-    void clear_block(Vector3Int block_offsets, string layer_type){
-        // no implement
-    }
+    void clear_block_tilemap(Vector3Int block_offsets, string layer_type){ /* no implement */}
 
     public bool _check_block_load(Vector3Int block_offsets, string layer_type){
         return _TMap_blocks[layer_type].ContainsKey(block_offsets);

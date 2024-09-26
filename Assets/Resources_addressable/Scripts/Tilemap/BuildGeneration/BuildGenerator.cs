@@ -25,7 +25,7 @@ public class BuildGenerator : BaseClass{
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        Vector3Int block_offsets = _TMapSys._TMapCfg._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, "L1_Middle");
+        Vector3Int block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, "L1_Middle");
     
 
         System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
@@ -66,7 +66,7 @@ public class BuildGenerator : BaseClass{
     public Region4DrawTilemapBlock _generate_build(Vector2 mouse_pos){
         // Tilemap posRef_tilemap = _TMapSys._TMapMon._get_TilemapBlockGameObject(Vector3Int.zero, "L1_Middle").TMap;
         string layer_type = "L1_Middle";
-        Vector3Int mouse_origin_mapPos = _TMapSys._TMapCfg._mapping_worldPos_to_mapPos(mouse_pos, layer_type);;
+        Vector3Int mouse_origin_mapPos = _TMapSys._TMapAxis._mapping_worldPos_to_mapPos(mouse_pos, layer_type);;
         // Vector3Int currentBlock_offset;
         Vector3Int build_origin_relativePos = new(0, 0, 0);
         string build_overlap_rule = "completly overlap";
@@ -79,10 +79,10 @@ public class BuildGenerator : BaseClass{
                 for (int j = 0; j < build_template[key].GetLength(1); j++){
                     // ----- Get tile pos in block
                     Vector3Int currentTile_mapPos = mouse_origin_mapPos + build_origin_relativePos + new Vector3Int(j, i, 0);
-                    Vector3Int currentBlock_offset = _TMapSys._TMapCfg._mapping_mapPos_to_blockOffsets(currentTile_mapPos);
+                    Vector3Int currentBlock_offset = _TMapSys._TMapAxis._mapping_mapPos_to_blockOffsets(currentTile_mapPos);
                     TilemapBlock block = _TMapSys._TMapMon._get_block(currentBlock_offset, layer_type);
 
-                    Vector3Int currentTile_inBlockPos = _TMapSys._TMapCfg._mapping_mapPos_to_inBlockPos(currentTile_mapPos);
+                    Vector3Int currentTile_inBlockPos = _TMapSys._TMapAxis._mapping_mapPos_to_posInBlock(currentTile_mapPos);
                     Debug.Log(currentTile_inBlockPos);
                     string current_tile_ID = block.map[currentTile_inBlockPos.x, currentTile_inBlockPos.y];
                     string build_template_tile_ID = build_template[key][i, j];

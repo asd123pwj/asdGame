@@ -24,11 +24,9 @@ public class PlantBase : BaseClass{
     }
 
     public override void _init(){
-        Debug.Log(place_tile_pos);
         _place_pos.x = find_generation_x();
         _place_pos.y = find_generation_y();
         init_gameObject();
-        Debug.Log(_place_pos);
     }
 
     void init_gameObject(){

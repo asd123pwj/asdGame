@@ -2,8 +2,8 @@
   "version": "0.17.7",
   "save_playing": "",
 
-  "TMap_tiles_per_block": {"x": 32, "y": 32, "z": 1},
-  "TMap_blocks_per_zone": {"x": 32, "y": 32, "z": 1},
+  "TMap_tiles_per_block": {"x": 8, "y": 8, "z": 1},
+  "TMap_blocks_per_zone": {"x": 6, "y": 6, "z": 1},
 
   "TMap_tiles_per_loading": 1024,
   "TMap_interval_per_loading": 0,

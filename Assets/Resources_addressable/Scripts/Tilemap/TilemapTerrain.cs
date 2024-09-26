@@ -25,7 +25,7 @@ public class TilemapTerrain: BaseClass{
         return block;
     }
 
-    public TilemapBlock _random_terrainHier2_random(TilemapBlock block, TilemapBlockAround around_blocks){
+    public TilemapBlock _random_terrainHier2(TilemapBlock block, TilemapBlockAround around_blocks){
         List<TerrainHier2Info> terrainTypes_avail = get_available_terrainHier2(block.terrain_ID);
         float[] terrainTypes_prob = get_terrainHier2_prob(terrainTypes_avail, around_blocks);
         string[] terrainTypes_tags = terrainTypes_avail[RandomGenerator._random_by_prob(terrainTypes_prob, block.offsets)].tags;

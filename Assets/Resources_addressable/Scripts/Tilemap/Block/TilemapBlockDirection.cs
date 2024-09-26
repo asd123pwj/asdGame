@@ -255,7 +255,8 @@ class DirectionsConfig{
         TerrainHier2Info terrain_type = terrain.tags2TerrainHier2[block.terrain_tags];
         string[] dirs_avail = get_available_directions(around_blocks, terrain_type.dirs_avail);
         // no available direction, throw the "error" direction
-        if (dirs_avail.Length == 0) return new string[]{"error", ""};
+        if (dirs_avail.Length == 0) 
+            return new string[]{"error", ""};
         // ----- get probability of available direction
         float[] dirs_prob = new float[dirs_avail.Length];
         int dir_index;
@@ -371,12 +372,12 @@ public class TilemapBlockDirection{
                 block.groundPos.Add(extra_groundPos[i]);
             }
         if (direction[0] == "error"){
-            for (int i = 0; i < BSize.x; i++){
-                if (i % 2 == 0)
-                    block.groundPos.Add(new(i, BSize.y));
-                else
-                    block.groundPos.Add(new(i, 1));
-            }
+            // for (int i = 0; i < BSize.x; i++){
+            //     if (i % 2 == 0)
+            //         block.groundPos.Add(new(i, BSize.y));
+            //     else
+            //         block.groundPos.Add(new(i, 1));
+            // }
             block.isExist = false;
         }
         if (direction[0] == "horizontal"){

@@ -7,7 +7,7 @@ using UnityEngine;
 using System.Threading;
 
 public class TilemapBlockMineral: BaseClass {
-    TilemapConfig _tilemap_base { get => _TMapSys._TMapCfg; }
+    TilemapAxis _tilemap_base { get => _TMapSys._TMapAxis; }
     // GameConfigs _GCfg;
     TilemapTerrain _terrain;
 
@@ -55,10 +55,10 @@ class RaritySearcher{
         {"rare", 0.4f},
         {"mysterious", 0.2f},
         {"root", 0.1f}};
-    TilemapConfig _tilemap_base;
+    TilemapAxis _tilemap_base;
     GameConfigs GCfg;
 
-    public RaritySearcher(TilemapConfig tilemap_base, GameConfigs game_configs){
+    public RaritySearcher(TilemapAxis tilemap_base, GameConfigs game_configs){
         _tilemap_base = tilemap_base;
         GCfg = game_configs;
     }

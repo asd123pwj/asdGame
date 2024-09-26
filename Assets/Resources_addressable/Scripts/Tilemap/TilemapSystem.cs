@@ -23,18 +23,19 @@ public class TilemapSystem : BaseClass{
     // ---------- sub script ----------
     public TilemapBlockGenerator _TMapGen;
     public TilemapDraw _TMapDraw;
-    public TilemapConfig _TMapCfg;
+    public TilemapAxis _TMapAxis;
     public TilemapSaveLoad _TMapSL;
     public TilemapController _TMapCtrl;
     public TilemapMonitor _TMapMon;
     public PlantMonitor _PlantMon;
     public BuildGenerator _BuildGenerator;
     public TilemapBlockGameObjectGenerator _TMapObjGen;
+    public TilemapZoneGenerator _TMapZoneGen;
     // ---------- status ----------
 
     public override void _init(){
         // _tilemap_modify = _sys._searchInit<Tilemap>("Tilemap", "Block_1x1");
-        _TMapCfg = new();
+        _TMapAxis = new();
         _TMapDraw = new();
         _TMapGen = new();
         _TMapSL = new();
@@ -43,6 +44,7 @@ public class TilemapSystem : BaseClass{
         _PlantMon = new();
         _BuildGenerator = new();
         _TMapObjGen = new();
+        _TMapZoneGen = new();
     }
 
     

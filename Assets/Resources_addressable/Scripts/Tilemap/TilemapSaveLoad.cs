@@ -12,7 +12,7 @@ using System.Collections.Concurrent;
 
 
 public class TilemapSaveLoad: BaseClass{
-    TilemapConfig TMapCfg { get => _sys._TMapSys._TMapCfg; }
+    TilemapAxis TMapCfg { get => _sys._TMapSys._TMapAxis; }
     // GameConfigs _game_configs;
 
     // public TilemapSaveLoad(TilemapConfig tilemap_base, GameConfigs game_configs){

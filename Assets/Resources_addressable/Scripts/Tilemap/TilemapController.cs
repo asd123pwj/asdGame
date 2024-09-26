@@ -24,7 +24,7 @@ public class TilemapController: BaseClass{
     // ---------- sub script ----------
     TilemapBlockGenerator TMapGen { get => _TMapSys._TMapGen; }
     TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
-    TilemapConfig TMapCfg { get => _TMapSys._TMapCfg; }
+    TilemapAxis TMapCfg { get => _TMapSys._TMapAxis; }
     TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
     // ---------- status ----------
     private Vector3Int _tilemapBlock_offsets;
@@ -70,11 +70,11 @@ public class TilemapController: BaseClass{
             }
         }
 
-        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        System.Diagnostics.Stopwatch stopwatch = new();
         stopwatch.Start();
         foreach (Vector3Int BOffsets in block_offsets_list){
             TilemapBlock block = TMapGen._generate_block(BOffsets);
-            _TMapSys._TMapMon._load_block(block, "L1_Middle");
+            // _TMapSys._TMapMon._load_block(block, "L1_Middle");
 
             Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
             Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
@@ -136,7 +136,7 @@ public class TilemapController: BaseClass{
         stopwatch.Start();
         foreach (Vector3Int BOffsets in block_offsets_list){
             TilemapBlock block = TMapGen._generate_block(BOffsets);
-            _TMapSys._TMapMon._load_block(block, "L1_Middle");
+            // _TMapSys._TMapMon._load_block(block, "L1_Middle");
 
             Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
             Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);

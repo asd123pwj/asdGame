@@ -16,6 +16,7 @@ public class Noise{
         _noise_generator.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
         _noise_generator.SetFrequency(0.01f*scale);
         float noise_value = _noise_generator.GetNoise(x, y);
+        noise_value = (noise_value + 1) / 2; // normalize to 0~1
         return noise_value;
     }
 
@@ -29,6 +30,7 @@ public class Noise{
         noise_generator.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
         noise_generator.SetFrequency(0.01f*scale);
         float noise_value = noise_generator.GetNoise(x, y);
+        noise_value = (noise_value + 1) / 2; // normalize to 0~1
         return noise_value;
     }
 

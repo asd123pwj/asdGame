@@ -6,7 +6,7 @@ using UnityEngine;
 
 
 public class TilemapBlockAround: BaseClass {
-    TilemapConfig _tilemap_base { get => _TMapSys._TMapCfg; }
+    TilemapAxis _tilemap_base { get => _TMapSys._TMapAxis; }
     // readonly GameConfigs _game_configs;
     TilemapBlock _block;
     TilemapTerrain _terrain { get => _TMapSys._TMapGen._terrain; }
