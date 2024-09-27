@@ -25,14 +25,14 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Transparent-Overlap"
         Pass
         {
             Tags { "LightMode" = "Universal2D" }
-            // ---------- Transparent overlap Start ----------
-            Stencil
-            {
-                Ref 1  
-                Comp Greater  
-                Pass Replace  
-            }
-            // ---------- Transparent overlap End ----------
+            // // ---------- Transparent overlap Start ----------
+            // Stencil
+            // {
+            //     Ref 1  
+            //     Comp Greater  
+            //     Pass Replace  
+            // }
+            // // ---------- Transparent overlap End ----------
 
             HLSLPROGRAM
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"

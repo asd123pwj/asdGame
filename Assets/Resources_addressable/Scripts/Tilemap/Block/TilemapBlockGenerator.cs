@@ -43,13 +43,15 @@ public class TilemapBlockGenerator: BaseClass{
                                         // int initStage_begin=0, 
                                         int initStage_end=99, 
                                         Vector3Int[] extra_targets=null, 
-                                        string[] direction=null){
+                                        string[] direction=null,
+                                        string layer_type = "L1_Middle"){
         TilemapBlock block = 
-            _TMapSys._TMapMon._check_block_load(block_offsets, "L1_Middle")
-            ? _TMapSys._TMapMon._get_block(block_offsets, "L1_Middle")
+            _TMapSys._TMapMon._check_block_load(block_offsets, layer_type)
+            ? _TMapSys._TMapMon._get_block(block_offsets, layer_type)
             : new(){
               offsets = block_offsets,
               isExist = true,
+              layer = layer_type
               };
         TilemapBlockAround BAround = new(block);
         int initStage_begin = System.Math.Max(block.initStage, 0);
@@ -64,7 +66,7 @@ public class TilemapBlockGenerator: BaseClass{
         if (initStage_begin <= 7 && initStage_end >= 7) block = _block_mineral._generate_2DBlock_mineral(block);
         
         block.initStage = initStage_end;
-        _TMapSys._TMapMon._update_block(block, "L1_Middle");
+        _TMapSys._TMapMon._update_block(block);
         return block;
     }
 
@@ -119,7 +121,7 @@ public class TilemapBlockGenerator: BaseClass{
             }
             if (ground_end == -2) ground_end = BSize.x;
             for (int i = ground_start; i < ground_end; i++){
-                float y = block._perlin(i, 0) * BSize.y / 4;
+                float y = block._perlin(i, 0, scale:4) * BSize.y / 4;
                 for (int j = 0; j < y; j++){
                     block.map[i, j] = self_surface;
                 }
@@ -144,7 +146,7 @@ public class TilemapBlockGenerator: BaseClass{
             }
             if (ground_end == -2) ground_end = BSize.x;
             for (int i = ground_start; i < ground_end; i++){
-                float y = block._perlin(i, BSize.y) * BSize.y / 4;
+                float y = block._perlin(i, BSize.y, scale:4) * BSize.y / 4;
                 for (int j = 0; j < y; j++){
                     block.map[i, BSize.y - 1 - j] = self_surface;
                 }
@@ -169,7 +171,7 @@ public class TilemapBlockGenerator: BaseClass{
             }
             if (ground_end == -2) ground_end = BSize.y;
             for (int j = ground_start; j < ground_end; j++){
-                float x = block._perlin(0, j) * BSize.x / 4;
+                float x = block._perlin(0, j, scale:4) * BSize.x / 4;
                 for (int i = 0; i < x; i++){
                     block.map[i, j] = self_surface;
                 }
@@ -194,7 +196,7 @@ public class TilemapBlockGenerator: BaseClass{
             }
             if (ground_end == -2) ground_end = BSize.y;
             for (int j = ground_start; j < ground_end; j++){
-                float x = block._perlin(BSize.x, j) * BSize.x / 4;
+                float x = block._perlin(BSize.x, j, scale:4) * BSize.x / 4;
                 for (int i = 0; i < x; i++){
                     block.map[BSize.x - 1 - i, j] = self_surface;
                 }

@@ -45,18 +45,18 @@ public class TilemapMonitor: BaseClass{
 
 
 
-    public bool _load_block(TilemapBlock block, string layer_type){
-        if (_check_block_load(block.offsets, layer_type)) return false;
-        _TMap_blocks[layer_type].Add(block.offsets, block);
+    public bool _load_block(TilemapBlock block){
+        if (_check_block_load(block.offsets, block.layer)) return false;
+        _TMap_blocks[block.layer].Add(block.offsets, block);
         return true;
     } 
 
     
-    public void _update_block(TilemapBlock block, string layer_type){
-        if (_check_block_load(block.offsets, layer_type)) 
-            _TMap_blocks[layer_type][block.offsets] = block;
+    public void _update_block(TilemapBlock block){
+        if (_check_block_load(block.offsets, block.layer)) 
+            _TMap_blocks[block.layer][block.offsets] = block;
         else
-            _TMap_blocks[layer_type].Add(block.offsets, block);
+            _TMap_blocks[block.layer].Add(block.offsets, block);
     } 
 
     public void _unload_block(Vector3Int block_offsets, string layer_type){

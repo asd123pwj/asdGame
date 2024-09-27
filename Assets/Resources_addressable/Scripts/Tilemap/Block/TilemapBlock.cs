@@ -24,7 +24,7 @@ public class TilemapBlock: BaseClass{
     public string[] direction;
     public bool direction_reverse;
     public string[,] map;
-    public List<LayerInfo> layers;
+    public string layer;
     public bool isExist;
 
     public int initStage;

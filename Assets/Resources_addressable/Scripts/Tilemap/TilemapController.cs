@@ -47,10 +47,10 @@ public class TilemapController: BaseClass{
         return;
         // _generate_spawn_block(new(0, 0));
         // Debug.Log("a");
-        query_isTilemapBlockChange();
-        // _tilemapBlockChange = true;
+        // query_isTilemapBlockChange();
+        // // _tilemapBlockChange = true;
 
-        trigger_tilemapBlockChange();
+        // trigger_tilemapBlockChange();
     }
 
     public override void _init(){
@@ -75,17 +75,18 @@ public class TilemapController: BaseClass{
         foreach (Vector3Int BOffsets in block_offsets_list){
             TilemapBlock block = TMapGen._generate_block(BOffsets);
             // _TMapSys._TMapMon._load_block(block, "L1_Middle");
+            TMapDraw._draw_block(block);
 
-            Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
-            Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
+            // Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
+            // Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
 
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").TMap;
-            TMapDraw._draw_region(TMap, region).Forget();
+            // Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").TMap;
+            // TMapDraw._draw_region(TMap, region).Forget();
 
-            foreach (Vector3Int offsets in regions_placeholder.Keys){
-                Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "L1_Middle").TMap;
-                TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
-            }
+            // foreach (Vector3Int offsets in regions_placeholder.Keys){
+            //     Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "L1_Middle").TMap;
+            //     TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
+            // }
         }
 
         foreach (Vector3Int BOffsets in block_offsets_list){
@@ -136,18 +137,19 @@ public class TilemapController: BaseClass{
         stopwatch.Start();
         foreach (Vector3Int BOffsets in block_offsets_list){
             TilemapBlock block = TMapGen._generate_block(BOffsets);
+            TMapDraw._draw_block(block);
             // _TMapSys._TMapMon._load_block(block, "L1_Middle");
 
-            Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
-            Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
+            // Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
+            // Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
 
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").TMap;
-            TMapDraw._draw_region(TMap, region).Forget();
+            // Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").TMap;
+            // TMapDraw._draw_region(TMap, region).Forget();
 
-            foreach (Vector3Int offsets in regions_placeholder.Keys){
-                Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "L1_Middle").TMap;
-                TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
-            }
+            // foreach (Vector3Int offsets in regions_placeholder.Keys){
+            //     Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "L1_Middle").TMap;
+            //     TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
+            // }
         }
 
         foreach (Vector3Int BOffsets in block_offsets_list){

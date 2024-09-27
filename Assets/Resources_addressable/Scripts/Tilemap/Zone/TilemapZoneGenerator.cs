@@ -93,45 +93,35 @@ public class TilemapZoneGenerator: BaseClass{
 
         for (int i = 0; i < connected_size.x; i++){
             Vector3Int block_offsets = block_origin + new Vector3Int(i, 0, 0);
-            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
+            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
             
-            Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-            _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+            _TMapSys._TMapDraw._draw_block(block);
         }
         for (int j = 1; j < connected_size.y; j++){
             Vector3Int block_offsets = block_origin + new Vector3Int(0, j, 0);
-            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
+            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
             
-            Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-            _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+            _TMapSys._TMapDraw._draw_block(block);
         }
         for (int i = 1; i < zone_size.x - 1; i++){
             for (int j = 1; j < zone_size.y - 1; j++){
                 Vector3Int block_offsets = block_origin + new Vector3Int(i, j, 0);
-                TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
-                
-                Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-                Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-                _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+                TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
+            
+            _TMapSys._TMapDraw._draw_block(block);
             }
         }
         for (int i = connected_size.x; i < zone_size.x; i++){
             Vector3Int block_offsets = block_origin + new Vector3Int(i, zone_size.y - 1, 0);
-            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
+            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
             
-            Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-            _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+            _TMapSys._TMapDraw._draw_block(block);
         }
         for (int j = zone_size.y - 2; j >= connected_size.y; j--){
             Vector3Int block_offsets = block_origin + new Vector3Int(zone_size.x - 1, j, 0);
-            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
+            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
             
-            Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-            _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+            _TMapSys._TMapDraw._draw_block(block);
         }
 
         stopwatch.Stop();
@@ -144,19 +134,15 @@ public class TilemapZoneGenerator: BaseClass{
 
         for (int i = connected_size.x; i < zone_size.x; i++){
             Vector3Int block_offsets = block_origin + new Vector3Int(i, 0, 0);
-            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
+            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
             
-            Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-            _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+            _TMapSys._TMapDraw._draw_block(block);
         }
         for (int j = 1; j < connected_size.y; j++){
             Vector3Int block_offsets = block_origin + new Vector3Int(zone_size.x - 1, j, 0);
-            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
+            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
             
-            Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-            _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+            _TMapSys._TMapDraw._draw_block(block);
         }
 
     }
@@ -166,19 +152,16 @@ public class TilemapZoneGenerator: BaseClass{
 
         for (int i = connected_size.x - 1; i >= 0; i--){
             Vector3Int block_offsets = block_origin + new Vector3Int(i, zone_size.y - 1, 0);
-            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
+            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
             
-            Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-            _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+            
+            _TMapSys._TMapDraw._draw_block(block);
         }
         for (int j = zone_size.y - 2; j >= connected_size.y; j--){
             Vector3Int block_offsets = block_origin + new Vector3Int(0, j, 0);
-            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:5);
+            TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:6);
             
-            Region4DrawTilemapBlock region = _TMapSys._TMapDraw._get_draw_region(block);
-            Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
-            _TMapSys._TMapDraw._draw_region(TMap, region).Forget();
+            _TMapSys._TMapDraw._draw_block(block);
         }
 
     }
