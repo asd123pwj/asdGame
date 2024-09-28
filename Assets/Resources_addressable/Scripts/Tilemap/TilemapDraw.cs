@@ -22,9 +22,16 @@ public class Region4DrawTilemapBlock{
 }
 
 public class TilemapDraw: BaseClass{
+    // ---------- Status ---------- // 
+    List<Vector3Int> done_block_offsets = new();
 
 
-    public void _draw_block(TilemapBlock block){
+    public bool _draw_block(TilemapBlock block){
+        if (done_block_offsets.Contains(block.offsets)) return false;
+        done_block_offsets.Add(block.offsets);
+        if (block.offsets.x == 2 && block.offsets.y == -9) {
+            int a = 1;
+        }
         Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block.offsets, block.layer).TMap;
         Region4DrawTilemapBlock region_block = _get_draw_region(block);
         _draw_region(TMap, region_block).Forget();
@@ -35,7 +42,7 @@ public class TilemapDraw: BaseClass{
             Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(kvp.Key, block.layer).TMap;
             _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true).Forget();
         }
-
+        return true;
     }
 
 
@@ -192,9 +199,13 @@ public class TilemapDraw: BaseClass{
 
         Color transparent = new(1, 1, 1, 0);
         int tile_per_group = Mathf.Min(_GCfg._sysCfg.TMap_tiles_per_loading, region.tiles.Count());
+        Vector3Int[] positions = region.positions;
+        TileBase[] tiles = region.tiles;
         for (int i = 0; i < region.tiles.Count(); i += tile_per_group) {
-            Vector3Int[] positions_segment = new ArraySegment<Vector3Int>(region.positions, i, tile_per_group).ToArray();
-            TileBase[] tiles_segment = new ArraySegment<TileBase>(region.tiles, i, tile_per_group).ToArray();
+            if (i + tile_per_group > region.tiles.Count()) 
+                tile_per_group = region.tiles.Count() - i;
+            Vector3Int[] positions_segment = new ArraySegment<Vector3Int>(positions, i, tile_per_group).ToArray();
+            TileBase[] tiles_segment = new ArraySegment<TileBase>(tiles, i, tile_per_group).ToArray();
             
             // ----- Draw tile ----- //
             tilemap.SetTiles(positions_segment, tiles_segment);

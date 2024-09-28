@@ -6,15 +6,15 @@ using System.Reflection;
 public class BaseClass{
     // ---------- System Tools ----------
     public static SystemManager _sys;
-    public GameConfigs _GCfg { get { return _sys._GCfg; } }
-    public ControlSystem _CtrlSys { get { return _sys._CtrlSys; } }
-    public InputSystem _InputSys { get { return _sys._InputSys; } }
-    public TilemapSystem _TMapSys { get { return _sys._TMapSys; } }
-    public ObjectSystem _ObjSys { get { return _sys._ObjSys; } }
-    public UISystem _UISys { get { return _sys._UISys; } }
-    public MaterialSystem _MatSys { get => _sys._MatSys; }
-    public UpdateSystem _UpdateSys { get => _sys._UpdateSys; }
-    public CameraManager _CamMgr { get => _sys._CamMgr; }
+    public GameConfigs _GCfg => _sys._GCfg; 
+    public ControlSystem _CtrlSys => _sys._CtrlSys; 
+    public InputSystem _InputSys => _sys._InputSys; 
+    public TilemapSystem _TMapSys => _sys._TMapSys; 
+    public ObjectSystem _ObjSys => _sys._ObjSys; 
+    public UISystem _UISys => _sys._UISys; 
+    public MaterialSystem _MatSys => _sys._MatSys; 
+    public UpdateSystem _UpdateSys => _sys._UpdateSys; 
+    public CameraManager _CamMgr  => _sys._CamMgr; 
     // ---------- Config ----------
     public float update_interval = 0;
     // ---------- Status ----------
@@ -25,8 +25,9 @@ public class BaseClass{
         init().Forget();
     }
 
-    public virtual void _update(){
-    }
+    public virtual void _update(){}
+
+    public virtual async UniTask _loop(){}
 
     public virtual bool _check_allow_init(){
         return true;
@@ -41,6 +42,7 @@ public class BaseClass{
             }
             _init();
             register_update();
+            run_loop();
             _initDone = true;
             break;
         }
@@ -51,6 +53,18 @@ public class BaseClass{
         bool is_overridden = method.DeclaringType != typeof(BaseClass);
         if (is_overridden){
             _UpdateSys._add_updater(_update, update_interval);
+        }
+    }
+
+    void run_loop(){
+        MethodInfo method = GetType().GetMethod("_loop");
+        bool is_overridden = method.DeclaringType != typeof(BaseClass);
+        if (is_overridden){
+            // _loop().Forget();
+            // while (true){
+                _loop().Forget();
+                // await UniTask.DelayFrame(loop_interval);
+            // }
         }
     }
 }

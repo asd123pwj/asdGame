@@ -56,17 +56,44 @@ public class TilemapBlockGenerator: BaseClass{
         TilemapBlockAround BAround = new(block);
         int initStage_begin = System.Math.Max(block.initStage, 0);
         initStage_end = System.Math.Max(block.initStage, initStage_end);
+        bool need_update = false;
 
-        if (initStage_begin <= 1 && initStage_end >= 1) block = _terrain._random_terrainHier1(block, BAround);
-        if (initStage_begin <= 2 && initStage_end >= 2) block = _terrain._random_terrainHier2(block, BAround);
-        if (initStage_begin <= 3 && initStage_end >= 3) block = BDir._random_direction(block, BAround, _terrain, extra_targets, direction);
-        if (initStage_begin <= 4 && initStage_end >= 4) block = fill_1DBlock(block);
-        if (initStage_begin <= 5 && initStage_end >= 5) block = generate_errorBlock_transition(block, BAround);
-        if (initStage_begin <= 6 && initStage_end >= 6) block = generate_2Dblock_transition(block, BAround);
-        if (initStage_begin <= 7 && initStage_end >= 7) block = _block_mineral._generate_2DBlock_mineral(block);
-        
-        block.initStage = initStage_end;
-        _TMapSys._TMapMon._update_block(block);
+        if (block.offsets.x == 2 && block.offsets.y == -9) {
+            int a = 1;
+        }
+        if (initStage_begin <= 1 && initStage_end >= 1) {
+            block = _terrain._random_terrainHier1(block, BAround);
+            need_update = true;
+        }
+        if (initStage_begin <= 2 && initStage_end >= 2) {
+            block = _terrain._random_terrainHier2(block, BAround);
+            need_update = true;
+        }
+        if (initStage_begin <= 3 && initStage_end >= 3) {
+            block = BDir._random_direction(block, BAround, _terrain, extra_targets, direction);
+            need_update = true;
+        }
+        if (initStage_begin <= 4 && initStage_end >= 4) {
+            block = fill_1DBlock(block);
+            need_update = true;
+        }
+        if (initStage_begin <= 5 && initStage_end >= 5) {
+            block = generate_errorBlock_transition(block, BAround);
+            need_update = true;
+        }
+        if (initStage_begin <= 6 && initStage_end >= 6) {
+            block = generate_2Dblock_transition(block, BAround);
+            need_update = true;
+        }
+        if (initStage_begin <= 7 && initStage_end >= 7) {
+            block = _block_mineral._generate_2DBlock_mineral(block);
+            need_update = true;
+        }
+
+        if (need_update) {
+            block.initStage = initStage_end;
+            _TMapSys._TMapMon._update_block(block);
+        }
         return block;
     }
 

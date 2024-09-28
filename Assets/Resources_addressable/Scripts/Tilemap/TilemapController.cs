@@ -9,6 +9,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using System;
+using System.Threading.Tasks;
 
 
 
@@ -26,9 +27,11 @@ public class TilemapController: BaseClass{
     TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
     TilemapAxis TMapCfg { get => _TMapSys._TMapAxis; }
     TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
-    // ---------- status ----------
+    // ---------- status ---------- // 
     private Vector3Int _tilemapBlock_offsets;
     private bool _tilemapBlockChange = true;
+    public Vector3Int _query_point;
+    public Vector3Int _query_point_prev = new(-999999999, -999999999, -999999999);
     // private CancellationTokenSource _cancel_balanceTilemap;
 
     // Start is called before the first frame update
@@ -42,20 +45,74 @@ public class TilemapController: BaseClass{
         
     }
 
-    public override void _update(){
-        // if (!_check_loaded()) return;
-        return;
-        // _generate_spawn_block(new(0, 0));
-        // Debug.Log("a");
-        // query_isTilemapBlockChange();
-        // // _tilemapBlockChange = true;
-
-        // trigger_tilemapBlockChange();
-    }
-
     public override void _init(){
         _sys._InputSys._register_action("Menu 4", tmp_draw, "isFirstDown");
 
+    }
+
+    // public override void _update(){
+    //     _task_update_queryPoint();
+    //     if (_query_point_prev == _query_point) return;
+    //     // _task_prepare_tilemap();
+    //     ThreadMonitor._add_untilDone(_task_prepare_tilemap);
+    //     Debug.Log("prepare tilemap");
+    //     _task_draw_tilemap();
+    //     _query_point_prev = _query_point;
+    // }
+
+    public override async UniTask _loop(){
+        while(true){
+            _task_update_queryPoint();
+            if (_query_point_prev == _query_point) {
+                await UniTask.Yield();
+                continue;
+            }
+            // _task_prepare_tilemap();
+            var task = UniTask.RunOnThreadPool(() => _task_prepare_tilemap());
+            await task;
+            _task_draw_tilemap();
+            _query_point_prev = _query_point;
+            await UniTask.Yield();
+        }
+    }
+
+    
+    public void _task_update_queryPoint(){
+        if (_CtrlSys == null || _CtrlSys._player == null) {
+            _query_point = Vector3Int.zero;
+        }
+        else{
+            Vector3 player_pos = _CtrlSys._player.transform.position;
+            _query_point = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(player_pos, "L1_Middle");
+        }
+    }
+
+    public bool _task_prepare_tilemap(){
+        // while (true) ;
+        Vector3Int prepare_r = _GCfg._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+        for (int x = -prepare_r.x; x <= prepare_r.x; x++){
+            for (int y = -prepare_r.y; y <= prepare_r.y; y++){
+                _TMapSys._TMapZoneGen._prepare_zone_in_blockOffsets(_query_point + new Vector3Int(x, y));
+            }
+        }
+        return true;
+    }
+
+    public void _task_draw_tilemap(){
+        Vector3Int draw_r = _GCfg._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+        for (int x = -draw_r.x; x <= draw_r.x; x++){
+            for (int y = -draw_r.y; y <= draw_r.y; y++){
+                if (!_TMapSys._TMapMon._check_block_load(_query_point + new Vector3Int(x, y), "L1_Middle")) continue;
+                TilemapBlock block = _TMapSys._TMapMon._get_block(_query_point + new Vector3Int(x, y), "L1_Middle");
+                // TilemapBlock block = TMapGen._generate_block(_query_point + new Vector3Int(x, y));
+                TMapDraw._draw_block(block);
+                
+                ShadowGenerator._generate_shadow_from_compCollider(
+                    _TMapSys._TMapMon._get_blkObj(block.offsets, "L1_Middle").obj,
+                    _TMapSys._TMapMon._get_blkObj(block.offsets, "L1_Middle").compositeCollider
+                );
+            }
+        }
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
@@ -63,7 +120,7 @@ public class TilemapController: BaseClass{
     
         List<Vector3Int> block_offsets_list = new();
 
-        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocksAround_RadiusMinusOne_loading;
+        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
         for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
             for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
                 block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
@@ -126,7 +183,7 @@ public class TilemapController: BaseClass{
     
         List<Vector3Int> block_offsets_list = new();
 
-        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_blocksAround_RadiusMinusOne_loading;
+        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
         for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
             for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
                 block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));

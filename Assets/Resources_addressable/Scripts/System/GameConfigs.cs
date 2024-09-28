@@ -22,7 +22,8 @@ public struct SystemConfig{
     // ----- loading
     public int TMap_tiles_per_loading;              // when loading, how many tiles in one time
     public int TMap_interval_per_loading;           // when loading, how long to wait between each loading
-    public Vector3Int TMap_blocksAround_RadiusMinusOne_loading;   // when loading, how many blocks around the player to load
+    public Vector3Int TMap_draw_blocksAround_RadiusMinusOne_loading;   // when loading, how many blocks around the player to load
+    public Vector3Int TMap_prepare_blocksAround_RadiusMinusOne_loading; 
 
     // ----- Tilemap gameObject
     public Dictionary<string, Vector3> TMap_tilemap_obj_origin_offset;
@@ -121,6 +122,8 @@ public class GameConfigs{
     void set_random(int seed){
         UnityEngine.Random.InitState(seed);
         _noise = new(seed);
+        RandomGenerator._rand = new(seed);
+        RandomGenerator._seed = seed;
     }
 
     public void select_save(string name){

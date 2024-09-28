@@ -26,15 +26,7 @@ public class Updater {
 }
 
 public class UpdateSystem: BaseClass{
-    // ---------- System Tools ----------
-    // SystemManager sys;
     List<Updater> updaters = new();
-
-    // public UpdateSystem(SystemManager sys){
-    //     this.sys = sys;
-    //     // _HierSearch = GameObject.Find("System").GetComponent<SystemManager>();
-    //     // _HierSearch._UpdateSys = this;
-    // }
 
     public void Update(){
         foreach (Updater updater in updaters){
