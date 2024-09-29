@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using MathNet.Numerics.LinearAlgebra;
 using UnityEngine.Tilemaps;
+using MathNet.Numerics.LinearAlgebra.Single;
 
 public struct LayerInfo{
     public int tile_ID;
@@ -24,19 +25,23 @@ public class TilemapBlock: BaseClass{
     public string[] direction;
     public bool direction_reverse;
     public string[,] map;
+    public Matrix<int> typeMap;
     public string layer;
     public bool isExist;
 
     public int initStage;
 
     public TilemapBlock(){
-        // if (seed == -1)
-        //     seed = Random.Range(0, 1000000);
-        // this.seed = seed;
-        // _noise = new Noise(seed);
+        typeMap = Matrix<int>.Build.Dense(size.x, size.y, 0);
     }
 
-
+    public void _update_typeMap(){
+        for (int i = 0; i < size.x; i++){
+            for (int j = 0; j < size.y; j++){
+                typeMap[i, j] = map[i, j] == "0" ? 0 : 1;
+            }
+        }
+    }
 
     public float _perlin(int x, int y, float scale){
         x += offsets.x * size.x;
