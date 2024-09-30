@@ -9,7 +9,7 @@ public class TilemapMonitor: BaseClass{
     TilemapAxis TMapCfg { get => _sys._TMapSys._TMapAxis; }
     // ---------- Tilemap Status ---------- //
     // ----- Blocks ----- //
-    public Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> _TMap_blocks;
+    public Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> _TMap_blocks => TilemapBlock.our;
     // ----- Containers ----- //
     public Dictionary<string, GameObject> _TMap_containers;
     // ----- GameObjects ----- //
@@ -36,7 +36,6 @@ public class TilemapMonitor: BaseClass{
         }
 
         // ---------- GameObject Container Init ---------- //
-        _TMap_blocks = new();
         foreach(var tilemap_type in _TMap_containers.Keys){
             _TMap_blocks.Add(tilemap_type, new());
         }
