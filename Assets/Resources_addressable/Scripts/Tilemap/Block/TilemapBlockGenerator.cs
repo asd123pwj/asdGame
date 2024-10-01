@@ -58,19 +58,19 @@ public class TilemapBlockGenerator: BaseClass{
         initStage_end = System.Math.Max(block.initStage, initStage_end);
         bool need_update = false;
 
-        if (block.offsets.x == 2 && block.offsets.y == -9) {
-            int a = 1;
-        }
+        // if (block.offsets.x == 2 && block.offsets.y == -9) {
+        //     int a = 1;
+        // }
         if (initStage_begin <= 1 && initStage_end >= 1) {
-            block = _terrain._random_terrainHier1(block, BAround);
+            block = _terrain._random_terrainHier1(block);
             need_update = true;
         }
         if (initStage_begin <= 2 && initStage_end >= 2) {
-            block = _terrain._random_terrainHier2(block, BAround);
+            block = _terrain._random_terrainHier2(block);
             need_update = true;
         }
         if (initStage_begin <= 3 && initStage_end >= 3) {
-            block = BDir._random_direction(block, BAround, _terrain, extra_targets, direction);
+            block = BDir._random_direction(block, _terrain, extra_targets, direction);
             need_update = true;
         }
         if (initStage_begin <= 4 && initStage_end >= 4) {
@@ -78,11 +78,11 @@ public class TilemapBlockGenerator: BaseClass{
             need_update = true;
         }
         if (initStage_begin <= 5 && initStage_end >= 5) {
-            block = generate_errorBlock_transition(block, BAround);
+            block = generate_errorBlock_transition(block);
             need_update = true;
         }
         if (initStage_begin <= 6 && initStage_end >= 6) {
-            block = generate_2Dblock_transition(block, BAround);
+            block = generate_2Dblock_transition(block);
             need_update = true;
         }
         if (initStage_begin <= 7 && initStage_end >= 7) {
@@ -118,11 +118,11 @@ public class TilemapBlockGenerator: BaseClass{
                     map[x, y] = _GCfg._empty_tile;
             }
         }
-        block.map = map;
+        block._set_map(map);
         return block;
     }
 
-    TilemapBlock generate_errorBlock_transition(TilemapBlock block, TilemapBlockAround around_blocks){
+    TilemapBlock generate_errorBlock_transition(TilemapBlock block){
         if (block.direction[0] != "error"){
             return block;
         }
@@ -132,16 +132,17 @@ public class TilemapBlockGenerator: BaseClass{
 
         int ground_start = -1, ground_end = -2;
         // ----- Generate Buttom ----- //
+        TilemapBlockAround around_blocks = block._get_around();
         while (around_blocks.down.isExist){
             for (int i = 0; i < BSize.x; i++){
-                if (around_blocks.down.map[i, BSize.y - 1] != _GCfg._empty_tile){
+                if (around_blocks.down._get_map()[i, BSize.y - 1] != _GCfg._empty_tile){
                     ground_start = i; 
                     break;
                 }
             }
             if (ground_start == -1) break;
             for (int i = ground_start; i < BSize.x; i++){
-                if (around_blocks.down.map[i, BSize.y - 1] == _GCfg._empty_tile){
+                if (around_blocks.down._get_map()[i, BSize.y - 1] == _GCfg._empty_tile){
                     ground_end = i;
                     break;
                 }
@@ -150,7 +151,7 @@ public class TilemapBlockGenerator: BaseClass{
             for (int i = ground_start; i < ground_end; i++){
                 float y = block._perlin(i, 0, scale:4) * BSize.y / 4;
                 for (int j = 0; j < y; j++){
-                    block.map[i, j] = self_surface;
+                    block._get_map()[i, j] = self_surface;
                 }
             }
             break;
@@ -159,14 +160,14 @@ public class TilemapBlockGenerator: BaseClass{
         ground_start = -1; ground_end = -2;
         while (around_blocks.up.isExist){
             for (int i = 0; i < BSize.x; i++){
-                if (around_blocks.up.map[i, 0] != _GCfg._empty_tile){
+                if (around_blocks.up._get_map()[i, 0] != _GCfg._empty_tile){
                     ground_start = i; 
                     break;
                 }
             }
             if (ground_start == -1) break;
             for (int i = ground_start; i < BSize.x; i++){
-                if (around_blocks.up.map[i, 0] == _GCfg._empty_tile){
+                if (around_blocks.up._get_map()[i, 0] == _GCfg._empty_tile){
                     ground_end = i;
                     break;
                 }
@@ -175,7 +176,7 @@ public class TilemapBlockGenerator: BaseClass{
             for (int i = ground_start; i < ground_end; i++){
                 float y = block._perlin(i, BSize.y, scale:4) * BSize.y / 4;
                 for (int j = 0; j < y; j++){
-                    block.map[i, BSize.y - 1 - j] = self_surface;
+                    block._get_map()[i, BSize.y - 1 - j] = self_surface;
                 }
             }
             break;
@@ -184,14 +185,14 @@ public class TilemapBlockGenerator: BaseClass{
         ground_start = -1; ground_end = -2;
         while (around_blocks.left.isExist){
             for (int j = 0; j < BSize.y; j++){
-                if (around_blocks.left.map[BSize.x - 1, j] != _GCfg._empty_tile){
+                if (around_blocks.left._get_map()[BSize.x - 1, j] != _GCfg._empty_tile){
                     ground_start = j; 
                     break;
                 }
             }
             if (ground_start == -1) break;
             for (int j = ground_start; j < BSize.y; j++){
-                if (around_blocks.left.map[BSize.x - 1, j] == _GCfg._empty_tile){
+                if (around_blocks.left._get_map()[BSize.x - 1, j] == _GCfg._empty_tile){
                     ground_end = j;
                     break;
                 }
@@ -200,7 +201,7 @@ public class TilemapBlockGenerator: BaseClass{
             for (int j = ground_start; j < ground_end; j++){
                 float x = block._perlin(0, j, scale:4) * BSize.x / 4;
                 for (int i = 0; i < x; i++){
-                    block.map[i, j] = self_surface;
+                    block._get_map()[i, j] = self_surface;
                 }
             }
             break;
@@ -209,14 +210,14 @@ public class TilemapBlockGenerator: BaseClass{
         ground_start = -1; ground_end = -2;
         while (around_blocks.right.isExist){
             for (int j = 0; j < BSize.y; j++){
-                if (around_blocks.right.map[0, j] != _GCfg._empty_tile){
+                if (around_blocks.right._get_map()[0, j] != _GCfg._empty_tile){
                     ground_start = j; 
                     break;
                 }
             }
             if (ground_start == -1) break;
             for (int j = ground_start; j < BSize.y; j++){
-                if (around_blocks.right.map[0, j] == _GCfg._empty_tile){
+                if (around_blocks.right._get_map()[0, j] == _GCfg._empty_tile){
                     ground_end = j;
                     break;
                 }
@@ -225,7 +226,7 @@ public class TilemapBlockGenerator: BaseClass{
             for (int j = ground_start; j < ground_end; j++){
                 float x = block._perlin(BSize.x, j, scale:4) * BSize.x / 4;
                 for (int i = 0; i < x; i++){
-                    block.map[BSize.x - 1 - i, j] = self_surface;
+                    block._get_map()[BSize.x - 1 - i, j] = self_surface;
                 }
             }
             break;
@@ -234,7 +235,7 @@ public class TilemapBlockGenerator: BaseClass{
         return block;
     }
 
-    TilemapBlock generate_2Dblock_transition(TilemapBlock block, TilemapBlockAround around_blocks){
+    TilemapBlock generate_2Dblock_transition(TilemapBlock block){
         // ---------- init ----------
         Vector3Int BSize = _GCfg._sysCfg.TMap_tiles_per_block;    // for convenience
         int perlin;
@@ -242,6 +243,7 @@ public class TilemapBlockGenerator: BaseClass{
         height_gen._Add(new(0, BSize.y / 8));
         height_gen._Add(new(BSize.x-1, BSize.y / 8));
         // around surface
+        TilemapBlockAround around_blocks = block._get_around();
         string self_surface = _terrain.ID2TerrainHier1[block.terrain_ID].surface;
         string up_surface = around_blocks.up_terrainInfo.surface;
         string down_surface = around_blocks.down_terrainInfo.surface;
@@ -252,13 +254,13 @@ public class TilemapBlockGenerator: BaseClass{
             perlin = height_gen._get_height(x);
             for (int y = 0; y < perlin; y++){
                 if (up_surface != null && up_surface != self_surface) // up is different, need transition
-                    if (block.map[x, BSize.y - y - 1] != _GCfg._empty_tile) block.map[x, BSize.y - y - 1] = up_surface;
+                    if (block._get_map()[x, BSize.y - y - 1] != _GCfg._empty_tile) block._set_map(x, BSize.y - y - 1, up_surface);
                 if (down_surface != null && down_surface != self_surface) // down is different, need transition
-                    if (block.map[x, y] != _GCfg._empty_tile) block.map[x, y] = down_surface;
+                    if (block._get_map()[x, y] != _GCfg._empty_tile) block._set_map(x, y, down_surface);
                 if (left_surface != null && left_surface != self_surface) // left is different, need transition
-                    if (block.map[y, x] != _GCfg._empty_tile) block.map[y, x] = left_surface;
+                    if (block._get_map()[y, x] != _GCfg._empty_tile) block._set_map(y, x, left_surface);
                 if (right_surface != null && right_surface != self_surface) // right is different, need transition
-                    if (block.map[BSize.y - y - 1, x] != _GCfg._empty_tile) block.map[BSize.y - y - 1, x] = right_surface;
+                    if (block._get_map()[BSize.y - y - 1, x] != _GCfg._empty_tile) block._set_map(BSize.y - y - 1, x, right_surface);
             }
         }
         return block;

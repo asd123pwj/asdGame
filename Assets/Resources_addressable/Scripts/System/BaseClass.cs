@@ -27,7 +27,7 @@ public class BaseClass{
 
     public virtual void _update(){}
 
-    public virtual async UniTask _loop(){}
+    public virtual async UniTask _loop(){await UniTask.Delay(0); /* just placeholder */}
 
     public virtual bool _check_allow_init(){
         return true;

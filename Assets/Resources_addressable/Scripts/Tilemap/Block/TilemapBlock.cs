@@ -14,9 +14,9 @@ public class MapStatusRule{
     public int status;
     public Dictionary<Vector3Int, Func<string, bool>> rule;
 
-    public bool check(string[,] map, Vector3Int pos){
+    // public bool check(string[,] map, Vector3Int pos){
 
-    }
+    // }
 }
 
 public class TilemapBlock: BaseClass{
@@ -40,50 +40,57 @@ public class TilemapBlock: BaseClass{
     public List<Vector3Int> status_mapGround;
     public string layer;
     public bool isExist;
-    static List<MapStatusRule> rules = new() { 
-        new() {
-            status = 1,
-            rule = {{Vector3Int.up, (tile) => tile == "0" }, {Vector3Int.zero, (tile) => tile != "0" }},
-        }
-    };
+    // static List<MapStatusRule> rules = new() { 
+    //     new() {
+    //         status = 1,
+    //         rule = {{Vector3Int.up, (tile) => tile == "0" }, {Vector3Int.zero, (tile) => tile != "0" }},
+    //     }
+    // };
 
     public int initStage;
 
     public TilemapBlock(){
     }
 
+    public TilemapBlockAround _get_around() => new(this);
+
     public string[,] _get_map() => map;
+    public string _get_map(int x, int y) => map[x, y];
+    public string _get_map(Vector3Int pos) => map[pos.x, pos.y];
     public void _set_map(string[,] map){
         this.map = map;
     } 
     public void _set_map(Dictionary<Vector3Int, string> map){
         foreach (var pair in map){
-            this.map[pair.Key.x, pair.Key.y] = pair.Value;
+            _set_map(pair.Key, pair.Value);
+            // this.map[pair.Key.x, pair.Key.y] = pair.Value;
         }
-        // this.map = map;
+    } 
+    public void _set_map(Vector3Int pos, string tile_ID){
+        map[pos.x, pos.y] = tile_ID;
+    } 
+    public void _set_map(int x, int y, string tile_ID){
+        map[x, y] = tile_ID;
     } 
 
-    public void _update_status_typeMap(){
-        status_mapGround = new List<Vector3Int>();
-        for (int i = 0; i < size.x; i++){
-            for (int j = 0; j < size.y - 1; j++){
-                // ----- check ground ----- //
-                foreach (var rule in rules){
-                    foreach (var kvp in rule.rule){
-                        status_mapGround.Add(new(i, j));
-                        if (kvp.Value(map[i + kvp.Key.x, j + kvp.Key.y])){
-                            status_mapGround.Add(new Vector3Int(i, j, 0));
-                            continue;
-                        }
-                        status_mapGround.Remove(new(i, j));
-                    }
-                }
-                // if (map[i, j + 1] == "0" && map[i, j] != "0") {
-                //     status_mapGround.Add(new Vector3Int(i, j, 0));
-                // }
-            }
-        }
-    }
+    // public void _update_status_typeMap(){
+    //     status_mapGround = new List<Vector3Int>();
+    //     for (int i = 0; i < size.x; i++){
+    //         for (int j = 0; j < size.y - 1; j++){
+    //             // ----- check ground ----- //
+    //             foreach (var rule in rules){
+    //                 foreach (var kvp in rule.rule){
+    //                     status_mapGround.Add(new(i, j));
+    //                     if (kvp.Value(map[i + kvp.Key.x, j + kvp.Key.y])){
+    //                         status_mapGround.Add(new Vector3Int(i, j, 0));
+    //                         continue;
+    //                     }
+    //                     status_mapGround.Remove(new(i, j));
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     public float _perlin(int x, int y, float scale){
         x += offsets.x * size.x;
@@ -105,4 +112,6 @@ public class TilemapBlock: BaseClass{
     public float _perlin(int x){
         return _perlin(x, scale);
     }
+
+    
 }

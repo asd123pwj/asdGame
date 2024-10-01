@@ -250,8 +250,9 @@ class DirectionsConfig{
         }
     };
 
-    public string[] _random_direction(TilemapBlockAround around_blocks, TilemapBlock block, TilemapTerrain terrain){
+    public string[] _random_direction(TilemapBlock block, TilemapTerrain terrain){
         // ----- get available directions FROM terrain type of block
+        TilemapBlockAround around_blocks = block._get_around();
         TerrainHier2Info terrain_type = terrain.tags2TerrainHier2[block.terrain_tags];
         string[] dirs_avail = get_available_directions(around_blocks, terrain_type.dirs_avail);
         // no available direction, throw the "error" direction
@@ -338,7 +339,7 @@ public class TilemapBlockDirection{
 
     public TilemapBlock _random_direction(
             TilemapBlock block, 
-            TilemapBlockAround around_blocks, 
+            // TilemapBlockAround around_blocks, 
             TilemapTerrain terrain, 
             Vector3Int[] extra_groundPos, 
             string[] direction){
@@ -349,10 +350,11 @@ public class TilemapBlockDirection{
         int max_h = BSize.y - min_h;
         int min_w = 1;
         int max_w = BSize.x - min_w;
+        TilemapBlockAround around_blocks = block._get_around();
         // if (direction[0] == "random"){
         //     direction = _directions_config.select_direction_random(around_blocks);
         // }
-        direction ??= DirCfg._random_direction(around_blocks, block, terrain);
+        direction ??= DirCfg._random_direction(block, terrain);
         block.direction = direction;
         block.up = new(-1, BSize.y);
         block.down = new(-1, 0);
@@ -371,6 +373,7 @@ public class TilemapBlockDirection{
             for(int i = 0; i < extra_groundPos.Length; i++){
                 block.groundPos.Add(extra_groundPos[i]);
             }
+
         if (direction[0] == "error"){
             // for (int i = 0; i < BSize.x; i++){
             //     if (i % 2 == 0)
@@ -380,7 +383,7 @@ public class TilemapBlockDirection{
             // }
             block.isExist = false;
         }
-        if (direction[0] == "horizontal"){
+        else if (direction[0] == "horizontal"){
             if (around_blocks.left.isExist && around_blocks.right.isExist) {
                 block.left.y = around_blocks.left.right.y;
                 block.right.y = around_blocks.right.left.y;

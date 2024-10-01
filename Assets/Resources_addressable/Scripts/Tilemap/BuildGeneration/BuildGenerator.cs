@@ -69,7 +69,7 @@ public class BuildGenerator : BaseClass{
         Vector3Int mouse_origin_mapPos = _TMapSys._TMapAxis._mapping_worldPos_to_mapPos(mouse_pos, layer_type);;
         // Vector3Int currentBlock_offset;
         Vector3Int build_origin_relativePos = new(0, 0, 0);
-        string build_overlap_rule = "completly overlap";
+        // string build_overlap_rule = "completly overlap";
         Dictionary<string, string[,]> build_template = this.build_template;
         Region4DrawTilemapBlock region = new();
 
@@ -84,7 +84,7 @@ public class BuildGenerator : BaseClass{
 
                     Vector3Int currentTile_inBlockPos = _TMapSys._TMapAxis._mapping_mapPos_to_posInBlock(currentTile_mapPos);
                     // Debug.Log(currentTile_inBlockPos);
-                    string current_tile_ID = block.map[currentTile_inBlockPos.x, currentTile_inBlockPos.y];
+                    string current_tile_ID = block._get_map(currentTile_inBlockPos);
                     string build_template_tile_ID = build_template[key][i, j];
                     
                     TileBase tile = _MatSys._tile._get_tile(build_template_tile_ID);

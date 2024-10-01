@@ -31,13 +31,13 @@ public class TilemapBlockMineral: BaseClass {
         // ---------- fill map ----------
         for (int x = 0; x < BSize.x; x++){
             for (int y = 0; y < BSize.y; y++){
-                if (block.map[x, y] == _GCfg._empty_tile) continue;
+                if (block._get_map(x, y) == _GCfg._empty_tile) continue;
                 tile_index = 0;
                 foreach (KeyValuePair<string, float> kvp in tileID2rarity){
                     tile_index += 1;
                     perlin = block._perlin(x + BSize.x * tile_index, y + BSize.y * tile_index, 4f);
                     if(perlin > kvp.Value){
-                        block.map[x, y] = kvp.Key;
+                        block._set_map(x, y, kvp.Key);
                         break;
                     }
                 }
@@ -55,11 +55,11 @@ class RaritySearcher{
         {"rare", 0.4f},
         {"mysterious", 0.2f},
         {"root", 0.1f}};
-    TilemapAxis _tilemap_base;
+    // TilemapAxis _tilemap_base;
     GameConfigs GCfg;
 
     public RaritySearcher(TilemapAxis tilemap_base, GameConfigs game_configs){
-        _tilemap_base = tilemap_base;
+        // _tilemap_base = tilemap_base;
         GCfg = game_configs;
     }
 
