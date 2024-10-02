@@ -4,14 +4,8 @@ using UnityEngine.Tilemaps;
 
 
 public class PlantMonitor: BaseClass{
-    // ---------- Config ----------
-    // ---------- unity ----------
-    // Tilemap TMap { get => _TMapSys._tilemap_modify; }
-    // ---------- status ----------
-    // public Dictionary<int[,], TilemapBlock> _blocks;
-    // ---------- Tilemap Container ----------
+    // ---------- Plant Container ----------
     public Dictionary<string, Transform> _TMapBD_containers;
-    // public Dictionary<string, Dictionary<Vector3Int, TilemapBlockGameObject>> _TMap_obj;
 
     public PlantMonitor(){
     }
@@ -28,7 +22,14 @@ public class PlantMonitor: BaseClass{
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        new PlantBase(keyPos.mouse_pos_world, _TMapBD_containers["BlockDecoration"]);
+        // new PlantBase(keyPos.mouse_pos_world, _TMapBD_containers["BlockDecoration"]);
+        Vector3Int block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, "L1_Middle");
+        TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, "L1_Middle");
+        block.status._update_status_typeMap();
+        foreach (var pos in block.status.positions["ground"]){
+            Vector2 world_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_worldPos(pos, block_offsets, "L1_Middle");
+            new PlantBase(world_pos, _TMapBD_containers["BlockDecoration"]);
+        }
         return true;
     }
 

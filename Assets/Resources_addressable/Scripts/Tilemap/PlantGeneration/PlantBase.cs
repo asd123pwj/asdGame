@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class PlantBase : BaseClass{
     // Tilemap place_tilemap;
-    Vector2 place_tile_pos;
+    Vector2 place_world_pos;
+    Vector3Int place_map_pos;
     Transform container;
 
     // ---------- Status ---------- //
@@ -11,11 +12,16 @@ public class PlantBase : BaseClass{
     public GameObject _self;
     public SpriteRenderer _renderer;
 
-    public PlantBase(Vector2 place_tile_pos, Transform container){
+    public PlantBase(Vector2 place_world_pos, Transform container){
         // this.place_tilemap = place_tilemap;
-        this.place_tile_pos = place_tile_pos;
+        this.place_world_pos = place_world_pos;
         this.container = container;
-
+    }
+    public PlantBase(Vector3Int place_map_pos, Transform container){
+        // this.place_tilemap = place_tilemap;
+        this.place_map_pos = place_map_pos;
+        this.container = container;
+        place_world_pos = new(place_map_pos.x, place_world_pos.y);
     }
 
     public override bool _check_allow_init(){
@@ -42,13 +48,14 @@ public class PlantBase : BaseClass{
     }
 
     float find_generation_x(){
-        return place_tile_pos.x;
+        return place_world_pos.x;
     }
 
     float find_generation_y() {
         float plant_height = 0;
-        float cell_size = 0;
-        Vector3 ray_pos = new(_place_pos.x, place_tile_pos.y + plant_height + cell_size, 0);
+        float cell_size = 1;
+        float tolerance = 0.01f;
+        Vector3 ray_pos = new(_place_pos.x, place_world_pos.y + plant_height + cell_size - tolerance, 0);
         RaycastHit2D hit = Physics2D.Raycast(ray_pos, Vector2.down);
 
         if (hit.collider != null) {

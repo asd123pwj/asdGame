@@ -54,8 +54,8 @@ public class TilemapDraw: BaseClass{
         // List<Vector3Int> __positions = new();
         for (int x = 0; x < block.size.x; x++){
             for (int y = 0; y < block.size.y; y++){
-                if (block._get_map(x, y) == _GCfg._empty_tile) continue;
-                TileBase tile = _MatSys._tile._get_tile(block._get_map(x, y));
+                if (block.map._get(x, y) == _GCfg._empty_tile) continue;
+                TileBase tile = _MatSys._tile._get_tile(block.map._get(x, y));
                 region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
             }
         }
@@ -77,7 +77,7 @@ public class TilemapDraw: BaseClass{
         region = new();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < neighbor.y; y++){
-                if (block._get_map(x, y) == _GCfg._empty_tile) continue;
+                if (block.map._get(x, y) == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
                 region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
             }
@@ -89,7 +89,7 @@ public class TilemapDraw: BaseClass{
         region = new();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < neighbor.y; y++){
-                if (block._get_map(x, block.size.y - 1 - y) == _GCfg._empty_tile) continue;
+                if (block.map._get(x, block.size.y - 1 - y) == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, block.size.y - 1 - y, 0));
                 region._add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0), tile);
             }
@@ -101,7 +101,7 @@ public class TilemapDraw: BaseClass{
         region = new();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < neighbor.y; y++){
-                if (block._get_map(block.size.x - 1 - x, y) == _GCfg._empty_tile) continue;
+                if (block.map._get(block.size.x - 1 - x, y) == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, y, 0));
                 region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0), tile);
             }
@@ -113,7 +113,7 @@ public class TilemapDraw: BaseClass{
         region = new();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < neighbor.y; y++){
-                if (block._get_map(block.size.x - 1 - x, block.size.y - 1 - y) == _GCfg._empty_tile) continue;
+                if (block.map._get(block.size.x - 1 - x, block.size.y - 1 - y) == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0));
                 region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0), tile);
             }
@@ -125,7 +125,7 @@ public class TilemapDraw: BaseClass{
         region = new();
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < block.size.y; y++){
-                if (block._get_map(x, y) == _GCfg._empty_tile) continue;
+                if (block.map._get(x, y) == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
                 region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
             }
@@ -136,7 +136,7 @@ public class TilemapDraw: BaseClass{
         block_offset = block.offsets + new Vector3Int(1, 0, 0);
         for (int x = 0; x < neighbor.x; x++){
             for (int y = 0; y < block.size.y; y++){
-                if (block._get_map(block.size.x - 1 - x, y) == _GCfg._empty_tile) continue;
+                if (block.map._get(block.size.x - 1 - x, y) == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, y, 0));
                 region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0), tile);
             }
@@ -149,7 +149,7 @@ public class TilemapDraw: BaseClass{
         region = new();
         for (int x = 0; x < block.size.x; x++){
             for (int y = 0; y < neighbor.y; y++){
-                if (block._get_map(x, y) == _GCfg._empty_tile) continue;
+                if (block.map._get(x, y) == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
                 region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
             }
@@ -161,7 +161,7 @@ public class TilemapDraw: BaseClass{
         region = new();
         for (int x = 0; x < block.size.x; x++){
             for (int y = 0; y < neighbor.y; y++){
-                if (block._get_map(x, block.size.y - 1 - y) == _GCfg._empty_tile) continue;
+                if (block.map._get(x, block.size.y - 1 - y) == _GCfg._empty_tile) continue;
                 TileBase tile = get_placeholder_tile(block, new Vector3Int(x, block.size.y - 1 - y, 0));
                 region._add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0), tile);
             }
@@ -172,7 +172,7 @@ public class TilemapDraw: BaseClass{
     }
 
     TileBase get_placeholder_tile(TilemapBlock block, Vector3Int position){
-        string tile_ID = block._get_map(position.x, position.y);
+        string tile_ID = block.map._get(position.x, position.y);
         TileBase tile = _MatSys._tile._get_tile(tile_ID);
         return tile;
         // if (tile is RuleOverrideTile overrideTile){

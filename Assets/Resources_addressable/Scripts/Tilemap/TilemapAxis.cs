@@ -45,6 +45,13 @@ public class TilemapAxis: BaseClass{
     //     Vector3Int map_pos = tilemap.WorldToCell(world_pos);
     //     return _mapping_mapXY_to_blockXY(map_pos);
     // }
+    public Vector2 _mapping_inBlockPos_to_worldPos(Vector3Int in_block_pos, Vector3Int block_offsets, string layer_type){
+        Vector3 offsets = _mapping_layerType_to_GameObjectOffsets(layer_type);
+        Vector2 world_pos = in_block_pos + block_offsets * _GCfg._sysCfg.TMap_tiles_per_block - offsets;
+        // Vector2 world_pos = new((in_block_pos.x + block_offsets.x + offsets.x), (in_block_pos.y + block_offsets.y + offsets.y));
+        return world_pos;
+
+    }
 
     public Vector3Int _mapping_worldPos_to_mapPos(Vector3 world_pos, string layer_type){
         Vector3 offsets = _mapping_layerType_to_GameObjectOffsets(layer_type);

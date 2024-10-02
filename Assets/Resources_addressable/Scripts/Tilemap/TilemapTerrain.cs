@@ -18,7 +18,7 @@ public class TilemapTerrain: BaseClass{
     }
 
     public TilemapBlock _random_terrainHier1(TilemapBlock block){
-        TilemapBlockAround around_blocks = block._get_around();
+        TilemapBlockAround around_blocks = block.around;
         List<string> terrains_avail = get_available_terrainsHier1(block);
         float[] terrains_prob = get_terrains_prob(terrains_avail, around_blocks);
         string terrain_ID = terrains_avail[RandomGenerator._random_by_prob(terrains_prob, block.offsets)];
@@ -27,7 +27,7 @@ public class TilemapTerrain: BaseClass{
     }
 
     public TilemapBlock _random_terrainHier2(TilemapBlock block){
-        TilemapBlockAround around_blocks = block._get_around();
+        TilemapBlockAround around_blocks = block.around;
         List<TerrainHier2Info> terrainTypes_avail = get_available_terrainHier2(block.terrain_ID);
         float[] terrainTypes_prob = get_terrainHier2_prob(terrainTypes_avail, around_blocks);
         string[] terrainTypes_tags = terrainTypes_avail[RandomGenerator._random_by_prob(terrainTypes_prob, block.offsets)].tags;

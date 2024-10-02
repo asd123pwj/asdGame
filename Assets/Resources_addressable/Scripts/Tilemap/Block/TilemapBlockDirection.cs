@@ -252,7 +252,7 @@ class DirectionsConfig{
 
     public string[] _random_direction(TilemapBlock block, TilemapTerrain terrain){
         // ----- get available directions FROM terrain type of block
-        TilemapBlockAround around_blocks = block._get_around();
+        TilemapBlockAround around_blocks = block.around;
         TerrainHier2Info terrain_type = terrain.tags2TerrainHier2[block.terrain_tags];
         string[] dirs_avail = get_available_directions(around_blocks, terrain_type.dirs_avail);
         // no available direction, throw the "error" direction
@@ -350,7 +350,7 @@ public class TilemapBlockDirection{
         int max_h = BSize.y - min_h;
         int min_w = 1;
         int max_w = BSize.x - min_w;
-        TilemapBlockAround around_blocks = block._get_around();
+        TilemapBlockAround around_blocks = block.around;
         // if (direction[0] == "random"){
         //     direction = _directions_config.select_direction_random(around_blocks);
         // }

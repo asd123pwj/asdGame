@@ -31,13 +31,13 @@ public class TilemapBlockMineral: BaseClass {
         // ---------- fill map ----------
         for (int x = 0; x < BSize.x; x++){
             for (int y = 0; y < BSize.y; y++){
-                if (block._get_map(x, y) == _GCfg._empty_tile) continue;
+                if (block.map._get(x, y) == _GCfg._empty_tile) continue;
                 tile_index = 0;
                 foreach (KeyValuePair<string, float> kvp in tileID2rarity){
                     tile_index += 1;
                     perlin = block._perlin(x + BSize.x * tile_index, y + BSize.y * tile_index, 4f);
                     if(perlin > kvp.Value){
-                        block._set_map(x, y, kvp.Key);
+                        block.map._set(x, y, kvp.Key);
                         break;
                     }
                 }
