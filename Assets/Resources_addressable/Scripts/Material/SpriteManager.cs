@@ -21,7 +21,7 @@ public struct SpritesInfo{
 
 public class SpriteManager: BaseClass{
     public SpritesInfo _infos;
-    public Dictionary<string, Dictionary<string, AsyncOperationHandle<Sprite>>> _ID_to_subID2Sprites = new();
+    public Dictionary<string, Dictionary<string, Sprite>> _ID_to_subID2Sprites = new();
 
     public SpriteManager(){
         load_items();
@@ -34,7 +34,7 @@ public class SpriteManager: BaseClass{
     // ---------- mapping ----------
     public Sprite _get_sprite(string ID, string subID){
         if (ID == "0") return null; // No sprite
-        if (_ID_to_subID2Sprites.ContainsKey(ID)) return _ID_to_subID2Sprites[ID][subID].Result; // Sprite have been loaded
+        if (_ID_to_subID2Sprites.ContainsKey(ID)) return _ID_to_subID2Sprites[ID][subID]; // Sprite have been loaded
         return null; // !!! 记得更新默认sprite。Can't find sprite, return missing placeholder
     }
 
@@ -56,19 +56,23 @@ public class SpriteManager: BaseClass{
 
     void load_item(string ID){
         _ID_to_subID2Sprites.Add(ID, new());
-        foreach (string subID in _infos.items[ID].sprites){
-            AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(_infos.items[ID].path + subID);
-            handle.Completed += (operationalHandle) => action_sprite_loaded(operationalHandle, ID, subID);
-
-        }
+        // foreach (string subID in _infos.items[ID].sprites){
+        //     AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(_infos.items[ID].path + subID);
+        //     handle.Completed += (operationalHandle) => action_sprite_loaded(operationalHandle, ID, subID);
+        // }
+        AsyncOperationHandle<Sprite[]> handle = Addressables.LoadAssetAsync<Sprite[]>(_infos.items[ID].path);
+        handle.Completed += (operationalHandle) => action_sprite_loaded(operationalHandle, ID);
     }
 
-    void action_sprite_loaded(AsyncOperationHandle<Sprite> handle, string ID, string subID){
+    void action_sprite_loaded(AsyncOperationHandle<Sprite[]> handle, string ID){
         if (handle.Status == AsyncOperationStatus.Succeeded) {
-            _ID_to_subID2Sprites[ID].Add(subID, handle);
+            Sprite[] sprites = handle.Result;
+            foreach(var sprite in sprites){
+                _ID_to_subID2Sprites[ID].Add(sprite.name, sprite);
+            }
         }
         else 
-            Debug.LogError("Failed to load sprite: ID-" + ID + ", subID-" + subID);
+            Debug.LogError("Failed to load sprite: ID-" + ID);
     }
 
 }

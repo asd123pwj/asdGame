@@ -5,7 +5,7 @@
             "name": "芒草",
             "description": "",
             "refUrl": "https://www.cvh.ac.cn/spms/detail.php?id=e7f43301",
-            "path": "Assets/Resources_addressable/Graphics/BlockDecoration/BlockDecoration_Grass_Mang.png",
+            "path": "sprite_bd1",
             "tags": ["uncommon"],
             "sprites": [
                 "[bd_H1_1]", "[bd_H1_2]", "[bd_H1_3]", "[bd_H1_4]", "[bd_H2_1]"
@@ -14,7 +14,7 @@
         "bd2":{
             "name": "仙人掌",
             "description": "",
-            "path": "Assets/Resources_addressable/Graphics/BlockDecoration/BlockDecoration_Plant_Cactus.png",
+            "path": "sprite_bd2",
             "tags": ["uncommon"],
             "sprites": [
                 "[bd_H1_1]", "[bd_H1_2]", "[bd_H1_3]", "[bd_H1_4]", "[bd_H2_1]"
@@ -24,7 +24,7 @@
             "name": "棒槌树",
             "description": "",
             "refUrl": "https://baike.baidu.com/item/%E6%A3%92%E9%94%A4%E6%A0%91",
-            "path": "Assets/Resources_addressable/Graphics/BlockDecoration/BlockDecoration_Tree_Pachypodium.png",
+            "path": "sprite_bd3",
             "tags": ["uncommon"],
             "sprites": [
                 "[bd_H1_1]", "[bd_H1_2]", "[bd_H1_3]", "[bd_H1_4]", "[bd_H2_1]", "[bd_H2_2]", "[bd_H3_1]"

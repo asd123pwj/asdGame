@@ -43,7 +43,7 @@ public class PlantBase : BaseClass{
 
         // ----- TilemapRenderer
         _renderer = _self.AddComponent<SpriteRenderer>();
-        _renderer.sprite = _MatSys._spr._get_sprite("bd1", "[bd_H2_1]");
+        _renderer.sprite = _MatSys._spr._get_sprite("bd1", "bd_H2_1");
         
     }
 

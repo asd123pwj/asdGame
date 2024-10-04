@@ -22,6 +22,7 @@ public struct TileInfo{
     public string refUrl;
     public string root_path_key;
     public string relative_path;
+    public string P3D_path;
     public string[] tags;
 };
 
@@ -29,11 +30,13 @@ public struct TilesInfo{
     public string version;
     public Dictionary<string, TileInfo> items;
     public Dictionary<string, string> root_paths;
+    public Dictionary<string, string> P3D_root;
 }
 
 public class TileManager: BaseClass{
     public TilesInfo _infos;
     public Dictionary<string, AsyncOperationHandle<TileBase>> _ID2Tile = new();
+    public Dictionary<string, Dictionary<string, AsyncOperationHandle<Sprite>>> _ID_to_subID2Sprites = new();
 
     public TileManager(){
         load_items();
@@ -66,11 +69,10 @@ public class TileManager: BaseClass{
         }
     }
 
+    // ----- tile ----- //
     void load_tile(string ID){
         TileInfo tile_info = _infos.items[ID];
-        string tile_root_path = _infos.root_paths[tile_info.root_path_key];
-        string tile_path = Path.Combine(tile_root_path, tile_info.relative_path);
-        AsyncOperationHandle<TileBase> handle = Addressables.LoadAssetAsync<TileBase>(tile_path);
+        AsyncOperationHandle<TileBase> handle = Addressables.LoadAssetAsync<TileBase>(tile_info.relative_path);
         handle.Completed += (operationalHandle) => action_tile_loaded(operationalHandle, ID);
     }
 
@@ -82,4 +84,21 @@ public class TileManager: BaseClass{
             Debug.LogError("Failed to load tile: " + handle.DebugName);
     }
 
+    // ----- P3D sprite ----- //
+    // void load_P3DSprite(string ID){
+    //     _ID_to_subID2Sprites.Add(ID, new());
+    //     foreach (string subID in _infos.items[ID].sprites){
+    //         AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(_infos.items[ID].path + subID);
+    //         handle.Completed += (operationalHandle) => action_sprite_loaded(operationalHandle, ID, subID);
+
+    //     }
+    // }
+
+    // void action_sprite_loaded(AsyncOperationHandle<Sprite> handle, string ID, string subID){
+    //     if (handle.Status == AsyncOperationStatus.Succeeded) {
+    //         _ID_to_subID2Sprites[ID].Add(subID, handle);
+    //     }
+    //     else 
+    //         Debug.LogError("Failed to load sprite: ID-" + ID + ", subID-" + subID);
+    // }
 }

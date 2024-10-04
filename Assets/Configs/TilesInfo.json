@@ -1,19 +1,12 @@
 {
     "version": "0.0.1",
-    "root_paths": {
-        "Block": "Assets/Resources_addressable/Tilemap/Block/",
-        "BlockDecoration": "Assets/Resources_addressable/Tilemap/BlockDecoration/",
-        "Furniture": "Assets/Resources_addressable/Tilemap/Furniture/",
-        "Placeholder": "Assets/Resources_addressable/Tilemap/Placeholder/",
-        "Wall": "Assets/Resources_addressable/Tilemap/Wall/"
-    },
     "items":{
         "b1":{
             "category": "Block",
             "name": "Grassy Soil",
             "description": "",
             "root_path_key": "Block",
-            "relative_path": "Soil/Block_Soil_Grassy_P3D.asset",
+            "relative_path": "tile_b1",
             "tags": ["common"]
         },
         "b2":{
@@ -21,7 +14,7 @@
             "name": "Mineral Test",
             "description": "",
             "root_path_key": "Block",
-            "relative_path": "Mineral/BlockMineralTest.asset",
+            "relative_path": "tile_b2",
             "tags": ["rare"]
         },
         "b3":{
@@ -29,7 +22,7 @@
             "name": "砾石",
             "description": "",
             "root_path_key": "Block",
-            "relative_path": "Stone/Block_Stone_Gravel_P3D.asset",
+            "relative_path": "tile_b3",
             "tags": ["uncommon"]
         },
         "b4":{
@@ -38,7 +31,7 @@
             "tileType": "Rule",
             "description": "",
             "root_path_key": "Block",
-            "relative_path": "Transparent/Block_Transparent_Glass_P3D.asset",
+            "relative_path": "tile_b4",
             "tags": ["uncommon"]
         },
         "b5":{
@@ -47,7 +40,7 @@
             "tileType": "Rule",
             "description": "",
             "root_path_key": "Block",
-            "relative_path": "Brick/Block_Brick_P3D.asset",
+            "relative_path": "tile_b5",
             "tags": ["uncommon"]
         },
         "b6":{
@@ -56,7 +49,8 @@
             "tileType": "Rule",
             "description": "",
             "root_path_key": "Block",
-            "relative_path": "Sand/Block_Sand_P3D.asset",
+            "relative_path": "tile_b6",
+            "P3D_path": "sprite_b6_P3D",
             "tags": ["common"]
         },
 
@@ -66,14 +60,32 @@
         "f1":{
             "category": "Furniture",
             "name": "木桌",
-            "root_path_key": "Furniture",
-            "relative_path": "Furniture_Table_Wooden.asset"
+            "relative_path": "tile_f1"
         },
         "f2":{
             "category": "Furniture",
             "name": "篝火",
-            "root_path_key": "Furniture",
-            "relative_path": "Furniture_Campfire.asset"
+            "relative_path": "tile_f2"
+        },
+        "f3_ro":{
+            "category": "Furniture",
+            "name": "木门-右侧打开",
+            "relative_path": "tile_f3_ro"
+        },
+        "f3_rc":{
+            "category": "Furniture",
+            "name": "木桌-右侧关闭",
+            "relative_path": "tile_f3_rc"
+        },
+        "f3_lo":{
+            "category": "Furniture",
+            "name": "木桌-左侧打开",
+            "relative_path": "tile_f3_lo"
+        },
+        "f3_lc":{
+            "category": "Furniture",
+            "name": "木桌-左侧关闭",
+            "relative_path": "tile_f3_lc"
         },
 
 
@@ -82,20 +94,17 @@
         "p1":{
             "category": "Placeholder",
             "name": "不透明块占位符",
-            "root_path_key": "Placeholder",
-            "relative_path": "Placeholder_Opaque_Block.asset"
+            "relative_path": "tile_p1"
         },
         "p2":{
             "category": "Placeholder",
             "name": "透明块占位符",
-            "root_path_key": "Placeholder",
-            "relative_path": "Placeholder_Transparent_Block.asset"
+            "relative_path": "tile_p2"
         },
         "p3":{
             "category": "Placeholder",
             "name": "缺失块占位符",
-            "root_path_key": "Placeholder",
-            "relative_path": "Placeholder_Missing_Block.asset"
+            "relative_path": "tile_p3"
         },
 
 
@@ -104,8 +113,12 @@
         "w1":{
             "category": "Wall",
             "name": "石头栅栏",
-            "root_path_key": "Wall",
-            "relative_path": "Wall_Fence_Stone.asset"
+            "relative_path": "tile_w1"
+        },
+        "w2":{
+            "category": "Wall",
+            "name": "石头栅栏",
+            "relative_path": "tile_w2"
         }
     }
 }
