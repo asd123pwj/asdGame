@@ -44,6 +44,7 @@ public class TilemapDraw: BaseClass{
         }
         return true;
     }
+    
 
 
     public Region4DrawTilemapBlock _get_draw_region(TilemapBlock block){
@@ -175,23 +176,9 @@ public class TilemapDraw: BaseClass{
         string tile_ID = block.map._get(position.x, position.y);
         TileBase tile = _MatSys._tile._get_tile(tile_ID);
         return tile;
-        // if (tile is RuleOverrideTile overrideTile){
-        //     if (overrideTile.m_Tile is Pseudo3DRuleTile P3DTile_){
-        //         TileBase placeholder = P3DTile_.isTransparent ? _MatSys._tile._get_tile("p2") : _MatSys._tile._get_tile("p1");
-        //         return placeholder;
-        //     }
-        // }
-        // else if (tile is Pseudo3DRuleTile P3DTile__){
-        //     TileBase placeholder = P3DTile__.isTransparent ? _MatSys._tile._get_tile("p2") : _MatSys._tile._get_tile("p1");
-        //     return placeholder;
-        // }
-        // return null;
     }
 
 
-
-    // public void _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions){
-    // public async UniTaskVoid _draw_region(Tilemap tilemap, List<TilemapRegion4Draw> regions, CancellationToken cancel_token){
     public async UniTaskVoid _draw_region(Tilemap tilemap, Region4DrawTilemapBlock region, bool isPlaceholder=false){
         // System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
         // stopwatch.Start();

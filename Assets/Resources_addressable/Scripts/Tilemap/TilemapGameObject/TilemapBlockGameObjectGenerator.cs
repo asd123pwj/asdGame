@@ -26,6 +26,7 @@ public class TilemapBlockGameObjectGenerator: BaseClass{
 
         // ----- Tilemap ----- //
         obj.TMap = obj.obj.AddComponent<Tilemap>();
+        obj.TMap.tileAnchor = Vector3Int.zero;
 
         // ----- TilemapRenderer ----- //
         obj.TMap_renderer = obj.obj.AddComponent<TilemapRenderer>();
@@ -36,7 +37,7 @@ public class TilemapBlockGameObjectGenerator: BaseClass{
         // --- TilemapRenderer.Mode.Individual: make tile overlap tile, while Mode.Chunk make tile overlap tile only same type
         // --- URP render data, "Transparency Sort Axis" with "x=-1, y=-1, z=0": make top overlap bottom, make right overlap left
         // --- Now, I dont need to draw tilemap in different overlap, "7 sprite for 1 tile" is PAST, "1 sprite for 1 tile" is NOW.
-        obj.TMap_renderer.mode = TilemapRenderer.Mode.Individual;
+        // obj.TMap_renderer.mode = TilemapRenderer.Mode.Individual;
 
         // ----- TilemapCollider2D ----- //
         obj.TMap_collider = obj.obj.AddComponent<TilemapCollider2D>();

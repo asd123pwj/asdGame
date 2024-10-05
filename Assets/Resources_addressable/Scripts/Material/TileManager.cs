@@ -36,7 +36,7 @@ public struct TilesInfo{
 public class TileManager: BaseClass{
     public TilesInfo _infos;
     public Dictionary<string, AsyncOperationHandle<TileBase>> _ID2Tile = new();
-    public Dictionary<string, Dictionary<string, AsyncOperationHandle<Sprite>>> _ID_to_subID2Sprites = new();
+    public Dictionary<string, Dictionary<string, Sprite>> _ID_to_subID2Sprites = new();
 
     public TileManager(){
         load_items();
@@ -52,12 +52,23 @@ public class TileManager: BaseClass{
         if (_ID2Tile.ContainsKey(ID)) return _ID2Tile[ID].Result; // Tile have been loaded
         return _ID2Tile["p3"].Result; // Can't find tile, return missing placeholder
     }
+    public Sprite _get_sprite(string ID, string sub_ID){
+        if (ID == "0") return null; // No sprite
+        if (_ID2Tile.ContainsKey(ID)) return _ID_to_subID2Sprites[ID][sub_ID]; // Sprite have been loaded
+        return null; // !!! TODO: Can't find sprite, return missing placeholder
+    }
 
     public TileInfo _get_info(string ID){
         return _infos.items[ID];
     }
-    public bool _check_loader(string ID){
+    public bool _check_tile_loaded(string ID){
         return _ID2Tile.ContainsKey(ID);
+    }
+    public bool _check_sprite_loaded(string ID){
+        return _ID_to_subID2Sprites.ContainsKey(ID);
+    }
+    public bool _check_sprite_loaded(string ID, string sub_ID){
+        return _ID_to_subID2Sprites[ID].ContainsKey(sub_ID);
     }
     
     // ---------- config ----------
@@ -66,6 +77,7 @@ public class TileManager: BaseClass{
         _infos = JsonConvert.DeserializeObject<TilesInfo>(jsonText);
         foreach (var tile_kv in _infos.items){
             load_tile(tile_kv.Key);
+            load_sprite_P3D(tile_kv.Key);
         }
     }
 
@@ -84,21 +96,23 @@ public class TileManager: BaseClass{
             Debug.LogError("Failed to load tile: " + handle.DebugName);
     }
 
+
     // ----- P3D sprite ----- //
-    // void load_P3DSprite(string ID){
-    //     _ID_to_subID2Sprites.Add(ID, new());
-    //     foreach (string subID in _infos.items[ID].sprites){
-    //         AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(_infos.items[ID].path + subID);
-    //         handle.Completed += (operationalHandle) => action_sprite_loaded(operationalHandle, ID, subID);
+    void load_sprite_P3D(string ID){
+        if (_infos.items[ID].P3D_path == null || _infos.items[ID].P3D_path == "") return;
+        _ID_to_subID2Sprites.Add(ID, new());
+        AsyncOperationHandle<Sprite[]> handle = Addressables.LoadAssetAsync<Sprite[]>(_infos.items[ID].P3D_path);
+        handle.Completed += (operationalHandle) => action_spriteP3D_loaded(operationalHandle, ID);
+    }
 
-    //     }
-    // }
+    void action_spriteP3D_loaded(AsyncOperationHandle<Sprite[]> handle, string ID){
+        if (handle.Status == AsyncOperationStatus.Succeeded) {
+            foreach(var sprite in handle.Result){
+                _ID_to_subID2Sprites[ID].Add(sprite.name, sprite);
+            }
+        }
+        else 
+            Debug.LogError("Failed to load sprite: ID-" + ID);
+    }
 
-    // void action_sprite_loaded(AsyncOperationHandle<Sprite> handle, string ID, string subID){
-    //     if (handle.Status == AsyncOperationStatus.Succeeded) {
-    //         _ID_to_subID2Sprites[ID].Add(subID, handle);
-    //     }
-    //     else 
-    //         Debug.LogError("Failed to load sprite: ID-" + ID + ", subID-" + subID);
-    // }
 }

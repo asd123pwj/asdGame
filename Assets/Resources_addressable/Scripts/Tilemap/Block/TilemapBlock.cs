@@ -46,7 +46,7 @@ public class TilemapBlock: BaseClass{
     public int initStage;
 
     public TilemapBlock(){
-        map = new(size);
+        map = new(this);
         status = new(map);
     }
 

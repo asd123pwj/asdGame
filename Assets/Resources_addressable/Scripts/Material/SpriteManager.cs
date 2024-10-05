@@ -56,18 +56,13 @@ public class SpriteManager: BaseClass{
 
     void load_item(string ID){
         _ID_to_subID2Sprites.Add(ID, new());
-        // foreach (string subID in _infos.items[ID].sprites){
-        //     AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(_infos.items[ID].path + subID);
-        //     handle.Completed += (operationalHandle) => action_sprite_loaded(operationalHandle, ID, subID);
-        // }
         AsyncOperationHandle<Sprite[]> handle = Addressables.LoadAssetAsync<Sprite[]>(_infos.items[ID].path);
         handle.Completed += (operationalHandle) => action_sprite_loaded(operationalHandle, ID);
     }
 
     void action_sprite_loaded(AsyncOperationHandle<Sprite[]> handle, string ID){
         if (handle.Status == AsyncOperationStatus.Succeeded) {
-            Sprite[] sprites = handle.Result;
-            foreach(var sprite in sprites){
+            foreach(var sprite in handle.Result){
                 _ID_to_subID2Sprites[ID].Add(sprite.name, sprite);
             }
         }

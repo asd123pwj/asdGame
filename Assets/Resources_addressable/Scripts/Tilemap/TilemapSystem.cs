@@ -28,9 +28,10 @@ public class TilemapSystem : BaseClass{
     public TilemapController _TMapCtrl;
     public TilemapMonitor _TMapMon;
     public PlantMonitor _PlantMon;
-    public BuildGenerator _BuildGenerator;
+    public BuildGenerator _BuildGen;
     public TilemapBlockGameObjectGenerator _TMapObjGen;
     public TilemapZoneGenerator _TMapZoneGen;
+    public TileP3DMonitor _P3DMon;
     // ---------- status ----------
 
     public override void _init(){
@@ -42,9 +43,10 @@ public class TilemapSystem : BaseClass{
         _TMapCtrl = new();
         _TMapMon = new();
         _PlantMon = new();
-        _BuildGenerator = new();
+        _BuildGen = new();
         _TMapObjGen = new();
         _TMapZoneGen = new();
+        _P3DMon = new();
     }
 
     

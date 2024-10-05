@@ -81,6 +81,7 @@ public class GameConfigs{
 
     // ---------- tilemap config ----------
     public string _empty_tile => "0";
+    public string _NotLoaded_tile => "0";
     // public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } }
     // public Vector3Int _TMap_tiles_per_block { get { return _sysCfg.TMap_tiles_per_block; } }
     // public int _TMap_tiles_per_loading { get { return _sysCfg.TMap_tiles_per_loading; } }

@@ -82,7 +82,7 @@ public class BuildGenerator : BaseClass{
                     Vector3Int currentBlock_offset = _TMapSys._TMapAxis._mapping_mapPos_to_blockOffsets(currentTile_mapPos);
                     TilemapBlock block = _TMapSys._TMapMon._get_block(currentBlock_offset, layer_type);
 
-                    Vector3Int currentTile_inBlockPos = _TMapSys._TMapAxis._mapping_mapPos_to_posInBlock(currentTile_mapPos);
+                    Vector3Int currentTile_inBlockPos = _TMapSys._TMapAxis._mapping_mapPos_to_inBlockPos(currentTile_mapPos);
                     // Debug.Log(currentTile_inBlockPos);
                     string current_tile_ID = block.map._get(currentTile_inBlockPos);
                     string build_template_tile_ID = build_template[key][i, j];
