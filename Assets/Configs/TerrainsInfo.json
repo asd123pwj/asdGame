@@ -6,7 +6,7 @@
             "name": "plain",
             "h_avail": [-999999999, 999999999],
             "surface": "b6",
-            "minerals": ["b3", "b4", "b5"],
+            "minerals": ["b4", "b5"],
             "tags": ["flat", "ground"]
         },
         "1":{

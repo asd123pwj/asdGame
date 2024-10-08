@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System;
+using Cysharp.Threading.Tasks;
 
 
 [CreateAssetMenu(menuName = "2D/Tiles/Pseudo3D Rule Tile")]
@@ -10,6 +11,21 @@ public class Pseudo3DRuleTile : RuleTile<Pseudo3DRuleTile.Neighbor> {
     public static SystemManager _sys;
     public bool isTransparent;
     public bool isPlaceholder;
+    // public string layer;
+    // public string tile_ID;
+    // public string tile_subID;
+    // public bool P3DChanged;
+    // public Vector3Int position;
+    // TileP3D P3D;
+    // static int num;
+    // GameObject _self;
+    // SpriteRenderer _renderer;
+
+    // public Pseudo3DRuleTile(){
+    //     // update_P3D().Forget();
+    //     // init_gameObject();
+    //     num++;
+    // }
 
     public class Neighbor : RuleTile.TilingRule.Neighbor {
         public const int Null = 3;
@@ -25,6 +41,39 @@ public class Pseudo3DRuleTile : RuleTile<Pseudo3DRuleTile.Neighbor> {
     }
 
 
+    // public void _update_sprite(){
+    //     // this.tile_ID = tile_ID;
+    //     // this.tile_subID = tile_subID;
+        
+    //     _self.transform.position = new(position.x, position.y, 0);
+    //     _renderer.sprite = _sys._MatSys._tile._get_P3D(tile_ID, tile_subID);
+
+    // }
+
+    // void init_gameObject(){
+    //     // ----- GameObject
+    //     // var container = _sys._TMapSys._P3DMon._TMapBD_containers["TileP3D"];
+    //     _self = new("P3D");
+    //     // _self.transform.SetParent(container);
+    //     // _self.transform.position = place_world_pos;
+
+    //     // ----- TilemapRenderer
+    //     _renderer = _self.AddComponent<SpriteRenderer>();
+    //     // _renderer.sprite = _sys._MatSys._tile._get_P3D(tile_ID, tile_subID);
+        
+    // }
+
+    // public void Update() {
+    //     Debug.Log("a");
+    //     // while (true) {
+    //     //     if (P3DChanged){
+    //     //         _sys._TMapSys._P3DMon._update_P3D(position, tile_ID, tile_subID, layer);
+    //     //         // P3DChanged = false;
+    //     //     }
+    //     //     await UniTask.Delay(100);
+    //     // }
+    // }
+
     public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData){
         base.GetTileData(position, tilemap, ref tileData);
         // var _ = tileData.sprite.name;
@@ -33,18 +82,39 @@ public class Pseudo3DRuleTile : RuleTile<Pseudo3DRuleTile.Neighbor> {
         if (_sys == null) return;
         // Vector2 world_pos = new(position.x, position.y);
         // Transform container = _sys._TMapSys._P3DMon._TMapBD_containers["TileP3D"];
+        // string new_tile_ID = _sys._MatSys._tile._get_ID(tileData.sprite);
+        // string new_tile_subID = tileData.sprite.name;
+        // if (new_tile_ID != null && new_tile_ID != tile_ID) {
+        //     tile_ID = new_tile_ID;
+        //     P3DChanged = true;
+        // }
+        // if (new_tile_subID != null && new_tile_subID != tile_subID) {
+        //     tile_subID = new_tile_subID;
+        //     P3DChanged = true;
+        // }
         string tile_ID = _sys._MatSys._tile._get_ID(tileData.sprite);
         string tile_subID = tileData.sprite.name;
         if (tile_ID == null) return;
         if (tile_subID == null) return;
-
+        // this.position = position;
+        string layer = tilemap.GetComponent<TilemapRenderer>().sortingLayerName;
+        if (layer == "") {
+            return;
+        }
         // new TileP3D(world_pos, container, tile_ID, tile_subID);
         /*
          * TODO: layer type
          */
-        string layer = "L1_Middle";
-
+        // layer = "L1_Middle";
+        // _update_sprite();
         _sys._TMapSys._P3DMon._update_P3D(position, tile_ID, tile_subID, layer);
+        // if (P3D == null){
+        //     // P3D ??= _sys._TMapSys._P3DMon._generate_P3D(position, tile_ID, tile_subID, layer);
+        //     P3D = new TileP3D(new(position.x, position.y), _sys._TMapSys._P3DMon._TMapBD_containers["TileP3D"], tile_ID, tile_subID);
+        // }
+        // else {
+        //     P3D._update_sprite2(tile_ID, tile_subID).Forget();
+        // }
         
 
         // var name = tileData.sprite.name;
