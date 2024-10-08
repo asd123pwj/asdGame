@@ -26,6 +26,7 @@ public class SystemManager : MonoBehaviour{
 
     void Start(){
         BaseClass._sys = this;
+        Pseudo3DRuleTile._sys = this;
         _UpdateSys = new();
         _CtrlSys = new(this);
         _GCfg = new(this);

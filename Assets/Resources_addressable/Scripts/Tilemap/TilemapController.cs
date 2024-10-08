@@ -45,6 +45,7 @@ public class TilemapController: BaseClass{
         
     }
 
+
     public override void _init(){
         _sys._InputSys._register_action("Menu 4", tmp_draw, "isFirstDown");
 
@@ -166,6 +167,7 @@ public class TilemapController: BaseClass{
     public override bool _check_allow_init(){
         if (!_sys._initDone) return false;
         if (!_MatSys._check_all_info_initDone()) return false;
+        if (!_MatSys._tile._check_P3D_all_loaded()) return false;
         if (!_InputSys._initDone) return false;
         return true;
         // return _GCfg._MatSys._TMap._check_info_initDone();

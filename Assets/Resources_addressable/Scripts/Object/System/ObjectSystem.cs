@@ -29,7 +29,7 @@ public class ObjectSystem: BaseClass{
     }
     
     public void _down_fire3(Vector2 mouse_pos){
-        _object_spawn._instantiate("yang", mouse_pos);
+        _object_spawn._instantiate("asd", mouse_pos);
     }
 
     // public void _down_fire2(Vector2 mouse_pos){

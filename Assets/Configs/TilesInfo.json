@@ -32,6 +32,7 @@
             "description": "",
             "root_path_key": "Block",
             "relative_path": "tile_b4",
+            "sprite": "sprite_b4",
             "P3D_path": "sprite_b4_P3D",
             "tags": ["uncommon"]
         },
@@ -42,6 +43,7 @@
             "description": "",
             "root_path_key": "Block",
             "relative_path": "tile_b5",
+            "sprite": "sprite_b5",
             "P3D_path": "sprite_b5_P3D",
             "tags": ["uncommon"]
         },
@@ -52,6 +54,7 @@
             "description": "",
             "root_path_key": "Block",
             "relative_path": "tile_b6",
+            "sprite": "sprite_b6",
             "P3D_path": "sprite_b6_P3D",
             "tags": ["common"]
         },

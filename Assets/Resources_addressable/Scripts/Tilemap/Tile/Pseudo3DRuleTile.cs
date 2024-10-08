@@ -4,131 +4,77 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System;
 
-// enum tileType {
-//     Other,
-//     Full,
-//     L43, L32, L21, L10, L3210,
-//     R43, R32, R21, R10, R3210,
-//     M,
-//     DL43, DL32, DL21, DL10, DL3210,
-//     DR43, DR32, DR21, DR10, DR3210,
-//     DM
-// }
 
 [CreateAssetMenu(menuName = "2D/Tiles/Pseudo3D Rule Tile")]
 public class Pseudo3DRuleTile : RuleTile<Pseudo3DRuleTile.Neighbor> {
-
+    public static SystemManager _sys;
     public bool isTransparent;
     public bool isPlaceholder;
-    // tileType tile_type = tileType.Other;
-
-
-    // static Vector3Int cell_size = new (32, 32, 1);
 
     public class Neighbor : RuleTile.TilingRule.Neighbor {
         public const int Null = 3;
         public const int NotNull = 4;
-        // public const int _Full = 5;
-        // public const int _L43 = 6;
-        // public const int _L32 = 7;
-        // public const int _L21 = 8;
-        // public const int _L10 = 9;
-        // public const int _L3210 = 10;
-        // public const int _R43 = 11;
-        // public const int _R32 = 12;
-        // public const int _R21 = 13;
-        // public const int _R10 = 14;
-        // public const int _R3210 = 15;
-        // public const int _M = 16;
-        // public const int _DL43 = 17;
-        // public const int _DL32 = 18;
-        // public const int _DL21 = 19;
-        // public const int _DL10 = 20;
-        // public const int _DL3210 = 21;
-        // public const int _DR43 = 22;
-        // public const int _DR32 = 23;
-        // public const int _DR21 = 24;
-        // public const int _DR10 = 25;
-        // public const int _DR3210 = 26;
-        // public const int _DM = 27;
-
-
-
-        // public const int Transparent = 5;
-        // public const int NotTransparent = 6;
-        // public const int TransparentOrNull = 7;
-        // public const int TransparentOrNotNull = 8;
     }
 
     public override bool RuleMatch(int neighbor, TileBase tile) {
         switch (neighbor) {
             case Neighbor.Null: return tile == null;
             case Neighbor.NotNull: return tile != null;
-            // case Neighbor._Full: return tile_type == tileType.Full;
-            // case Neighbor._L43: return tile_type == tileType.L43;
-            // case Neighbor._L32: return tile_type == tileType.L32;
-            // case Neighbor._L21: return tile_type == tileType.L21;
-            // case Neighbor._L10: return tile_type == tileType.L10;
-            // case Neighbor._L3210: return tile_type == tileType.L3210;
-            // case Neighbor._R43: return tile_type == tileType.R43;
-            // case Neighbor._R32: return tile_type == tileType.R32;
-            // case Neighbor._R21: return tile_type == tileType.R21;
-            // case Neighbor._R10: return tile_type == tileType.R10;
-            // case Neighbor._R3210: return tile_type == tileType.R3210;
-            // case Neighbor._M: return tile_type == tileType.M;
-            // case Neighbor._DL43: return tile_type == tileType.DL43;
-            // case Neighbor._DL32: return tile_type == tileType.DL32;
-            // case Neighbor._DL21: return tile_type == tileType.DL21;
-            // case Neighbor._DL10: return tile_type == tileType.DL10;
-            // case Neighbor._DL3210: return tile_type == tileType.DL3210;
-            // case Neighbor._DR43: return tile_type == tileType.DR43;
-            // case Neighbor._DR32: return tile_type == tileType.DR32;
-            // case Neighbor._DR21: return tile_type == tileType.DR21;
-            // case Neighbor._DR10: return tile_type == tileType.DR10;
-            // case Neighbor._DR3210: return tile_type == tileType.DR3210;
-            // case Neighbor._DM: return tile_type == tileType.DM;
-
-            // case Neighbor.Transparent: return tile is Pseudo3DRuleTile rule_tile && rule_tile.isTransparent;
-            // case Neighbor.NotTransparent: return tile is Pseudo3DRuleTile rule_tile_2 && !rule_tile_2.isTransparent;
-            // case Neighbor.TransparentOrNull: return tile == null || tile is Pseudo3DRuleTile rule_tile3 && rule_tile3.isTransparent;
-            // case Neighbor.TransparentOrNotNull: return tile != null || tile is Pseudo3DRuleTile rule_tile4 && rule_tile4.isTransparent;
         }
         return base.RuleMatch(neighbor, tile);
     }
 
 
-    // public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData){
-    //     base.GetTileData(position, tilemap, ref tileData);
-    //     // var _ = tileData.sprite.name;
-    //     tile_type = tileType.Other;
-    //     if (tileData.sprite == null) return;
-    //     switch (tileData.sprite.name) { 
-    //         case "__Full":    tile_type = tileType.Full; break;
-    //         case "__L43":     tile_type = tileType.L43; break;
-    //         case "__L32":     tile_type = tileType.L32; break;
-    //         case "__L21":     tile_type = tileType.L21; break;
-    //         case "__L10":     tile_type = tileType.L10; break;
-    //         case "__L3210":   tile_type = tileType.L3210; break;
-    //         case "__R43":     tile_type = tileType.R43; break;
-    //         case "__R32":     tile_type = tileType.R32; break;
-    //         case "__R21":     tile_type = tileType.R21; break;
-    //         case "__R10":     tile_type = tileType.R10; break;
-    //         case "__R3210":   tile_type = tileType.R3210; break;
-    //         case "__M":       tile_type = tileType.M; break;
-    //         case "__DL43":    tile_type = tileType.DL43; break;
-    //         case "__DL32":    tile_type = tileType.DL32; break;
-    //         case "__DL21":    tile_type = tileType.DL21; break;
-    //         case "__DL10":    tile_type = tileType.DL10; break;
-    //         case "__DL3210":  tile_type = tileType.DL3210; break;
-    //         case "__DR43":    tile_type = tileType.DR43; break;
-    //         case "__DR32":    tile_type = tileType.DR32; break;
-    //         case "__DR21":    tile_type = tileType.DR21; break;
-    //         case "__DR10":    tile_type = tileType.DR10; break;
-    //         case "__DR3210":  tile_type = tileType.DR3210; break;
-    //         case "__DM":      tile_type = tileType.DM; break;
-    //         default: tile_type = tileType.Other; break;
-    //     }
-    // }
+    public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData){
+        base.GetTileData(position, tilemap, ref tileData);
+        // var _ = tileData.sprite.name;
+        // tile_type = tileType.Other;
+        if (tileData.sprite == null) return;
+        if (_sys == null) return;
+        // Vector2 world_pos = new(position.x, position.y);
+        // Transform container = _sys._TMapSys._P3DMon._TMapBD_containers["TileP3D"];
+        string tile_ID = _sys._MatSys._tile._get_ID(tileData.sprite);
+        string tile_subID = tileData.sprite.name;
+        if (tile_ID == null) return;
+        if (tile_subID == null) return;
+
+        // new TileP3D(world_pos, container, tile_ID, tile_subID);
+        /*
+         * TODO: layer type
+         */
+        string layer = "L1_Middle";
+
+        _sys._TMapSys._P3DMon._update_P3D(position, tile_ID, tile_subID, layer);
+        
+
+        // var name = tileData.sprite.name;
+        // switch (tileData.sprite.name) { 
+        //     case "__Full":    tile_type = tileType.Full; break;
+        //     case "__L43":     tile_type = tileType.L43; break;
+        //     case "__L32":     tile_type = tileType.L32; break;
+        //     case "__L21":     tile_type = tileType.L21; break;
+        //     case "__L10":     tile_type = tileType.L10; break;
+        //     case "__L3210":   tile_type = tileType.L3210; break;
+        //     case "__R43":     tile_type = tileType.R43; break;
+        //     case "__R32":     tile_type = tileType.R32; break;
+        //     case "__R21":     tile_type = tileType.R21; break;
+        //     case "__R10":     tile_type = tileType.R10; break;
+        //     case "__R3210":   tile_type = tileType.R3210; break;
+        //     case "__M":       tile_type = tileType.M; break;
+        //     case "__DL43":    tile_type = tileType.DL43; break;
+        //     case "__DL32":    tile_type = tileType.DL32; break;
+        //     case "__DL21":    tile_type = tileType.DL21; break;
+        //     case "__DL10":    tile_type = tileType.DL10; break;
+        //     case "__DL3210":  tile_type = tileType.DL3210; break;
+        //     case "__DR43":    tile_type = tileType.DR43; break;
+        //     case "__DR32":    tile_type = tileType.DR32; break;
+        //     case "__DR21":    tile_type = tileType.DR21; break;
+        //     case "__DR10":    tile_type = tileType.DR10; break;
+        //     case "__DR3210":  tile_type = tileType.DR3210; break;
+        //     case "__DM":      tile_type = tileType.DM; break;
+        //     default: tile_type = tileType.Other; break;
+        // }
+    }
 
 
 

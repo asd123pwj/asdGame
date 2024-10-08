@@ -26,6 +26,13 @@ public class TileP3D : BaseClass{
         init_gameObject();
     }
 
+    public void _update_sprite(string tile_ID, string tile_subID){
+        this.tile_ID = tile_ID;
+        this.tile_subID = tile_subID;
+        _renderer.sprite = _MatSys._tile._get_P3D(tile_ID, tile_subID);
+
+    }
+
     void init_gameObject(){
         // ----- GameObject
         _self = new("P3D");
@@ -34,7 +41,7 @@ public class TileP3D : BaseClass{
 
         // ----- TilemapRenderer
         _renderer = _self.AddComponent<SpriteRenderer>();
-        _renderer.sprite = _MatSys._tile._get_sprite(tile_ID, tile_subID);
+        _renderer.sprite = _MatSys._tile._get_P3D(tile_ID, tile_subID);
         
     }
     

@@ -42,18 +42,18 @@ public class UIPrefabManager: BaseClass{
         return _ID2UIPrefab[ID].Result;
     }
 
-    void load_UIPrefab(string ID){
-        string UIPrefab_path = _infos.items[ID].path;
-        AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(UIPrefab_path);
-        handle.Completed += (operationalHandle) => action_UIPrefab_loaded(operationalHandle, ID);
-    }
-
     void load_items(){
         string jsonText = File.ReadAllText(_GCfg.__UIPrefabsInfo_path);
         _infos = JsonConvert.DeserializeObject<UIPrefabsInfo>(jsonText);
         foreach (var object_kv in _infos.items){
             load_UIPrefab(object_kv.Key);
         }
+    }
+
+    void load_UIPrefab(string ID){
+        string UIPrefab_path = _infos.items[ID].path;
+        AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(UIPrefab_path);
+        handle.Completed += (operationalHandle) => action_UIPrefab_loaded(operationalHandle, ID);
     }
 
     void action_UIPrefab_loaded(AsyncOperationHandle<GameObject> handle, string ID){
