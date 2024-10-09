@@ -76,38 +76,13 @@ public class Pseudo3DRuleTile : RuleTile<Pseudo3DRuleTile.Neighbor> {
 
     public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData){
         base.GetTileData(position, tilemap, ref tileData);
-        // var _ = tileData.sprite.name;
-        // tile_type = tileType.Other;
         if (tileData.sprite == null) return;
         if (_sys == null) return;
-        // Vector2 world_pos = new(position.x, position.y);
-        // Transform container = _sys._TMapSys._P3DMon._TMapBD_containers["TileP3D"];
-        // string new_tile_ID = _sys._MatSys._tile._get_ID(tileData.sprite);
-        // string new_tile_subID = tileData.sprite.name;
-        // if (new_tile_ID != null && new_tile_ID != tile_ID) {
-        //     tile_ID = new_tile_ID;
-        //     P3DChanged = true;
-        // }
-        // if (new_tile_subID != null && new_tile_subID != tile_subID) {
-        //     tile_subID = new_tile_subID;
-        //     P3DChanged = true;
-        // }
-        string tile_ID = _sys._MatSys._tile._get_ID(tileData.sprite);
-        string tile_subID = tileData.sprite.name;
-        if (tile_ID == null) return;
-        if (tile_subID == null) return;
-        // this.position = position;
         string layer = tilemap.GetComponent<TilemapRenderer>().sortingLayerName;
         if (layer == "") {
             return;
         }
-        // new TileP3D(world_pos, container, tile_ID, tile_subID);
-        /*
-         * TODO: layer type
-         */
-        // layer = "L1_Middle";
-        // _update_sprite();
-        _sys._TMapSys._P3DMon._update_P3D(position, tile_ID, tile_subID, layer);
+        _sys._TMapSys._P3DMon._update_P3D(position, layer);
         // if (P3D == null){
         //     // P3D ??= _sys._TMapSys._P3DMon._generate_P3D(position, tile_ID, tile_subID, layer);
         //     P3D = new TileP3D(new(position.x, position.y), _sys._TMapSys._P3DMon._TMapBD_containers["TileP3D"], tile_ID, tile_subID);
