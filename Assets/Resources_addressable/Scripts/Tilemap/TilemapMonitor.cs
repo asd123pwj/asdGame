@@ -42,24 +42,24 @@ public class TilemapMonitor: BaseClass{
     }
 
 
-    public bool _load_block(TilemapBlock block){
-        if (_check_block_load(block.offsets, block.layer)) return false;
-        _TMap_blocks[block.layer].Add(block.offsets, block);
-        return true;
-    } 
+    // public bool _load_block(TilemapBlock block){
+    //     if (_check_block_load(block.offsets, block.layer)) return false;
+    //     _TMap_blocks[block.layer].Add(block.offsets, block);
+    //     return true;
+    // } 
 
     
-    public void _update_block(TilemapBlock block){
-        if (_check_block_load(block.offsets, block.layer)) 
-            _TMap_blocks[block.layer][block.offsets] = block;
-        else
-            _TMap_blocks[block.layer].Add(block.offsets, block);
-    } 
+    // public void _update_block(TilemapBlock block){
+    //     if (_check_block_load(block.offsets, block.layer)) 
+    //         _TMap_blocks[block.layer][block.offsets] = block;
+    //     else
+    //         _TMap_blocks[block.layer].Add(block.offsets, block);
+    // } 
 
-    public void _unload_block(Vector3Int block_offsets, string layer_type){
-        clear_block_tilemap(block_offsets, layer_type);
-        if (_TMap_blocks[layer_type].ContainsKey(block_offsets)) _TMap_blocks[layer_type].Remove(block_offsets);
-    }
+    // public void _unload_block(Vector3Int block_offsets, string layer_type){
+    //     clear_block_tilemap(block_offsets, layer_type);
+    //     if (_TMap_blocks[layer_type].ContainsKey(block_offsets)) _TMap_blocks[layer_type].Remove(block_offsets);
+    // }
 
     void clear_block_tilemap(Vector3Int block_offsets, string layer_type){ /* no implement */}
 

@@ -23,7 +23,7 @@ public class TilemapController: BaseClass{
     // ---------- unity ----------
     // Tilemap TMap_modify { get => _TMapSys._tilemap_modify; }
     // ---------- sub script ----------
-    TilemapBlockGenerator TMapGen { get => _TMapSys._TMapGen; }
+    // TilemapBlockGenerator TMapGen { get => _TMapSys._TMapGen; }
     TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
     TilemapAxis TMapCfg { get => _TMapSys._TMapAxis; }
     TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
@@ -131,7 +131,8 @@ public class TilemapController: BaseClass{
         System.Diagnostics.Stopwatch stopwatch = new();
         stopwatch.Start();
         foreach (Vector3Int BOffsets in block_offsets_list){
-            TilemapBlock block = TMapGen._generate_block(BOffsets);
+            // TilemapBlock block = TMapGen._generate_block(BOffsets);
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(BOffsets);
             // _TMapSys._TMapMon._load_block(block, "L1_Middle");
             TMapDraw._draw_block(block);
 
@@ -179,53 +180,53 @@ public class TilemapController: BaseClass{
 
 
 
-    public bool _prepare_zone(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        // Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
-        Vector3Int block_offsets = TMapCfg._mapping_worldPos_to_mapPos(keyPos.mouse_pos_world, "L1_Middle");
+    // public bool _prepare_zone(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+    //     // Vector3Int block_offsets = TMapCfg._mapping_worldXY_to_blockXY(keyPos.mouse_pos_world, TMap_modify);
+    //     Vector3Int block_offsets = TMapCfg._mapping_worldPos_to_mapPos(keyPos.mouse_pos_world, "L1_Middle");
     
-        List<Vector3Int> block_offsets_list = new();
+    //     List<Vector3Int> block_offsets_list = new();
 
-        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
-        for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
-            for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
-                block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
-            }
-        }
+    //     Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
+    //     for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
+    //         for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
+    //             block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
+    //         }
+    //     }
 
-        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        stopwatch.Start();
-        foreach (Vector3Int BOffsets in block_offsets_list){
-            TilemapBlock block = TMapGen._generate_block(BOffsets);
-            TMapDraw._draw_block(block);
-            // _TMapSys._TMapMon._load_block(block, "L1_Middle");
+    //     System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+    //     stopwatch.Start();
+    //     foreach (Vector3Int BOffsets in block_offsets_list){
+    //         TilemapBlock block = TMapGen._generate_block(BOffsets);
+    //         TMapDraw._draw_block(block);
+    //         // _TMapSys._TMapMon._load_block(block, "L1_Middle");
 
-            // Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
-            // Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
+    //         // Region4DrawTilemapBlock region = TMapDraw._get_draw_region(block);
+    //         // Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = TMapDraw._get_draw_regions_placeholder(block);
 
-            // Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").TMap;
-            // TMapDraw._draw_region(TMap, region).Forget();
+    //         // Tilemap TMap = _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").TMap;
+    //         // TMapDraw._draw_region(TMap, region).Forget();
 
-            // foreach (Vector3Int offsets in regions_placeholder.Keys){
-            //     Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "L1_Middle").TMap;
-            //     TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
-            // }
-        }
+    //         // foreach (Vector3Int offsets in regions_placeholder.Keys){
+    //         //     Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(offsets, "L1_Middle").TMap;
+    //         //     TMapDraw._draw_region(TMap_placeholder, regions_placeholder[offsets]).Forget();
+    //         // }
+    //     }
 
-        foreach (Vector3Int BOffsets in block_offsets_list){
-            ShadowGenerator._generate_shadow_from_compCollider(
-                _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").obj,
-                _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").compositeCollider
-            );
-        }
+    //     foreach (Vector3Int BOffsets in block_offsets_list){
+    //         ShadowGenerator._generate_shadow_from_compCollider(
+    //             _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").obj,
+    //             _TMapSys._TMapMon._get_blkObj(BOffsets, "L1_Middle").compositeCollider
+    //         );
+    //     }
 
-        stopwatch.Stop();
-        Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds + ", regions: " + block_offsets_list.Count);
-        // if (regions.Count > 0) {
-        //     Tilemap TMap = _TMapSys._TMapMon._get_tilemap(block)
-        //     TMapDraw._draw_region(TMap_modify, regions).Forget();
-        // }
-        return true;
-    }
+    //     stopwatch.Stop();
+    //     Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds + ", regions: " + block_offsets_list.Count);
+    //     // if (regions.Count > 0) {
+    //     //     Tilemap TMap = _TMapSys._TMapMon._get_tilemap(block)
+    //     //     TMapDraw._draw_region(TMap_modify, regions).Forget();
+    //     // }
+    //     return true;
+    // }
 
 
 

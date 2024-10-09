@@ -45,7 +45,12 @@ public class TilemapBlock: BaseClass{
 
     public int initStage;
 
-    public TilemapBlock(){
+    public TilemapBlock(){}
+    public TilemapBlock(Vector3Int offsets, string layer){
+        this.offsets = offsets;
+        this.layer = layer;
+        isExist = true;
+        our[layer].Add(offsets, this);
         map = new(this);
         status = new(map);
     }
@@ -97,13 +102,13 @@ public class TilemapBlock: BaseClass{
     public float _perlin(int x, int y, float scale){
         x += offsets.x * size.x;
         y += offsets.y * size.y;
-        float perlin = _GCfg._noise._perlin(x, y, scale);
+        float perlin = _GCfg._noise._perlin_01(x, y, scale);
         return perlin;
     }
     
     public float _perlin(int x, float scale){
         x += offsets.x * size.x;
-        float perlin = _GCfg._noise._perlin(x, scale);
+        float perlin = _GCfg._noise._perlin_01(x, scale);
         return perlin;
     }
 

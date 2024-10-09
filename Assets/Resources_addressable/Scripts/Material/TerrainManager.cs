@@ -34,38 +34,37 @@ using Newtonsoft.Json;
  * |    sky     |   no   |      no      |    no   |     no      |   no   |   most  |
  *
  */
-public struct TerrainHier2Info{
-    public string[] tags;
-    public string name;
-    public float scale;
-    public string[] dirs_avail;         // available directions
-    public float[] dirs_prob;           // probability of each available directions
-    // public bool isExist;
-}
+// public struct TerrainHier2Info{
+//     public string[] tags;
+//     public string name;
+//     public float scale;
+//     public string[] dirs_avail;         // available directions
+//     public float[] dirs_prob;           // probability of each available directions
+//     // public bool isExist;
+// }
 
 public struct TerrainHier1Info{
     public string ID;
     public string name;
-    public string[] tags;
-    public int[] h_avail;               // where can it generating, height means block offset, left close right open interval
     public string surface;              // ID, surface tile
-    // public string tile_transition;      // ID, transition from terr1 to terr2, trans_tile is the surface_tile of terr2
+    public float prob;
+    public List<string[]> frequency;         // ["noise process type", "frequency", "scale"]
     public string[] minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
-    // public bool isExist;
 }
 
 public struct TerrainsInfo{
     public string version;
     public Dictionary<string, TerrainHier1Info> Hier1;
-    public Dictionary<string, TerrainHier2Info> Hier2;
 }
 
 public class TerrainManager: BaseClass{
     public TerrainsInfo _infos;
-    public List<TerrainHier2Info> _terrains_hier2 = new();
-    public List<TerrainHier1Info> _terrains_hier1 = new();
+    // public List<TerrainHier2Info> _terrains_hier2 = new();
     public Dictionary<string, TerrainHier1Info> _ID2TerrainHier1 = new();
-    public Dictionary<string[], TerrainHier2Info> _tags2TerrainHier2 = new();
+    // public List<string> _Hier1s = new();
+    public List<TerrainHier1Info> _hier1s = new();
+    public float[] _hier1s_prob;
+    // public Dictionary<string[], TerrainHier2Info> _tags2TerrainHier2 = new();
 
     public TerrainManager(){
         load_all();
@@ -96,23 +95,25 @@ public class TerrainManager: BaseClass{
     // }
 
     void load_Hier1(string ID){
-        _terrains_hier1.Add(_infos.Hier1[ID]);
+        _hier1s.Add(_infos.Hier1[ID]);
+        _hier1s_prob[_hier1s.Count - 1] = _infos.Hier1[ID].prob;
         _ID2TerrainHier1.Add(ID, _infos.Hier1[ID]);
     }
 
-    void load_Hier2(string ID){
-        _terrains_hier2.Add(_infos.Hier2[ID]);
-        _tags2TerrainHier2.Add(_infos.Hier2[ID].tags, _infos.Hier2[ID]);
-    }
+    // void load_Hier2(string ID){
+    //     _terrains_hier2.Add(_infos.Hier2[ID]);
+    //     _tags2TerrainHier2.Add(_infos.Hier2[ID].tags, _infos.Hier2[ID]);
+    // }
 
     void load_all(){
         string jsonText = File.ReadAllText(_GCfg.__TerrainsInfo_path);
         _infos = JsonConvert.DeserializeObject<TerrainsInfo>(jsonText);
+        _hier1s_prob = new float[_infos.Hier1.Count];
         foreach (var object_kv in _infos.Hier1){
             load_Hier1(object_kv.Key);
         }
-        foreach (var object_kv in _infos.Hier2){
-            load_Hier2(object_kv.Key);
-        }
+        // foreach (var object_kv in _infos.Hier2){
+        //     load_Hier2(object_kv.Key);
+        // }
     }
 }

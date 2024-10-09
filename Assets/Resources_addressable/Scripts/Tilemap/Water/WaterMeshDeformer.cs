@@ -72,8 +72,8 @@ public class WaterMeshDeformer : MonoBehaviour{
                 
             // }
             vertex.y = vertices_ori[i].y 
-                     + (noise._perlin(transform.position.x + vertex.x + Time.time * waveSpeed, 10)
-                        + noise._perlin(transform.position.y + vertex.y + Time.time * waveSpeed, 10)) 
+                     + (noise._perlin_01(transform.position.x + vertex.x + Time.time * waveSpeed, 10)
+                        + noise._perlin_01(transform.position.y + vertex.y + Time.time * waveSpeed, 10)) 
                      * waveHeight;
             vertex.z = vertices_ori[i].z - (current_row/(vertex_rowNum-1) + transform.position.y);
             vertices_new[i] = vertex;

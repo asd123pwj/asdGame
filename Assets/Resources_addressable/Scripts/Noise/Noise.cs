@@ -10,33 +10,26 @@ public class Noise{
         if (seed == -1) seed = System.DateTime.Now.Millisecond;
         this.seed = seed;
         _noise_generator = new(seed);
+        _noise_generator.SetCellularReturnType(FastNoiseLite.CellularReturnType.CellValue);
     }
 
-    public float _perlin(float x, float y, float scale){
+    public float _perlin(float x, float y, float frequnency){
         _noise_generator.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-        _noise_generator.SetFrequency(0.01f*scale);
+        _noise_generator.SetFrequency(0.01f*frequnency);
         float noise_value = _noise_generator.GetNoise(x, y);
-        noise_value = (noise_value + 1) / 2; // normalize to 0~1
         return noise_value;
     }
+    public float _perlin(float x, float frequnency) => _perlin(x, 0, frequnency);
+    public float _perlin_01(float x, float y, float frequnency) => (_perlin(x, y, frequnency) + 1) / 2;
+    public float _perlin_01(float x, float frequnency) => _perlin_01(x, 0, frequnency);
 
-    public float _perlin(float x, float scale){
-        float noise_value = _perlin(x, 0, scale);
+    public float _cellular(float x, float y, float frequnency) {
+        _noise_generator.SetNoiseType(FastNoiseLite.NoiseType.Cellular);
+        _noise_generator.SetFrequency(0.01f*frequnency);
+        float noise_value = _noise_generator.GetNoise(x, y);
         return noise_value;
     }
+    public float _cellular(float x, float frequnency) => _cellular(x, 0, frequnency);
 
-    static float _perlin(float x, float y, float scale, int seed){
-        FastNoiseLite noise_generator = new(seed);
-        noise_generator.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-        noise_generator.SetFrequency(0.01f*scale);
-        float noise_value = noise_generator.GetNoise(x, y);
-        noise_value = (noise_value + 1) / 2; // normalize to 0~1
-        return noise_value;
-    }
-
-    static float _perlin(float x, float scale, int seed){
-        float noise_value = _perlin(x, 0, scale, seed);
-        return noise_value;
-    }
 }
 

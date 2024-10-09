@@ -9,12 +9,12 @@ using System.Threading;
 public class TilemapBlockMineral: BaseClass {
     TilemapAxis _tilemap_base { get => _TMapSys._TMapAxis; }
     // GameConfigs _GCfg;
-    TilemapTerrain _terrain;
+    // TilemapTerrain _terrain;
 
-    public TilemapBlockMineral(TilemapTerrain terrain){
+    public TilemapBlockMineral(){
         // _tilemap_base = tilemap_base;
         // _GCfg = game_configs;
-        _terrain = terrain;
+        // _terrain = terrain;
     }
 
 
@@ -25,7 +25,7 @@ public class TilemapBlockMineral: BaseClass {
         int tile_index; // for generate different mineral in different place
         RaritySearcher rarity_searcher = new(_tilemap_base, _GCfg);
         // tile to rarity
-        string[] minerals = _terrain.ID2TerrainHier1[block.terrain_ID].minerals;
+        string[] minerals = _MatSys._terrain._ID2TerrainHier1[block.terrain_ID].minerals;
         if (minerals.Count() == 0) return block;
         Dictionary<string, float> tileID2rarity = rarity_searcher._mapping_tilesID_to_rarity(minerals);
         // ---------- fill map ----------

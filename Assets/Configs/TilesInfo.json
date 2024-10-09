@@ -58,6 +58,17 @@
             "P3D_path": "sprite_b6_P3D",
             "tags": ["common"]
         },
+        "b7":{
+            "category": "Block",
+            "name": "泥土",
+            "tileType": "Rule",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "tile_b7",
+            "sprite": "sprite_b7",
+            "P3D_path": "sprite_b7_P3D",
+            "tags": ["common"]
+        },
 
 
 

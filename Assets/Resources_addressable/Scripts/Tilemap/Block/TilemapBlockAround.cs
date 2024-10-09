@@ -8,7 +8,7 @@ using UnityEngine;
 public class TilemapBlockAround: BaseClass {
     // readonly GameConfigs _game_configs;
     TilemapBlock _block;
-    TilemapTerrain _terrain => _TMapSys._TMapGen._terrain; 
+    // TilemapTerrain _terrain => _TMapSys._TMapGen._terrain; 
     public TilemapBlock up => _get_around("up"); 
     public TilemapBlock down => _get_around("down"); 
     public TilemapBlock left => _get_around("left"); 
@@ -17,10 +17,10 @@ public class TilemapBlockAround: BaseClass {
     public TerrainHier1Info down_terrainInfo => _get_terrainInfo("down"); 
     public TerrainHier1Info left_terrainInfo => _get_terrainInfo("left"); 
     public TerrainHier1Info right_terrainInfo => _get_terrainInfo("right"); 
-    public TerrainHier2Info up_terrainType => _get_terrainType("up"); 
-    public TerrainHier2Info down_terrainType => _get_terrainType("down"); 
-    public TerrainHier2Info left_terrainType => _get_terrainType("left"); 
-    public TerrainHier2Info right_terrainType => _get_terrainType("right"); 
+    // public TerrainHier2Info up_terrainType => _get_terrainType("up"); 
+    // public TerrainHier2Info down_terrainType => _get_terrainType("down"); 
+    // public TerrainHier2Info left_terrainType => _get_terrainType("left"); 
+    // public TerrainHier2Info right_terrainType => _get_terrainType("right"); 
 
     public TilemapBlockAround(TilemapBlock block){
         _block = block;
@@ -28,15 +28,15 @@ public class TilemapBlockAround: BaseClass {
 
     public TerrainHier1Info _get_terrainInfo(string direction){
         TilemapBlock around_block = _get_around(direction);
-        if (around_block.isExist) return _terrain.ID2TerrainHier1[around_block.terrain_ID];
+        if (around_block.isExist) return _MatSys._terrain._ID2TerrainHier1[around_block.terrain_ID];
         else return new();
     }
 
-    public TerrainHier2Info _get_terrainType(string direction){
-        TilemapBlock around_block = _get_around(direction);
-        if (around_block.isExist) return _terrain.tags2TerrainHier2[around_block.terrain_tags];
-        else return new();
-    }
+    // public TerrainHier2Info _get_terrainType(string direction){
+    //     TilemapBlock around_block = _get_around(direction);
+    //     if (around_block.isExist) return _terrain.tags2TerrainHier2[around_block.terrain_tags];
+    //     else return new();
+    // }
 
     public TilemapBlock _get_around(string direction){
         Vector3Int block_offsets = new();
