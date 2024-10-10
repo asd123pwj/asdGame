@@ -26,23 +26,23 @@ public class TilemapDraw: BaseClass{
     List<Vector3Int> done_block_offsets = new();
 
 
-    public bool _draw_block(TilemapBlock block){
-        if (done_block_offsets.Contains(block.offsets)) return false;
+    public async UniTask _draw_block(TilemapBlock block){
+        if (done_block_offsets.Contains(block.offsets)) return;
         done_block_offsets.Add(block.offsets);
         // if (block.offsets.x == 2 && block.offsets.y == -9) {
         //     int a = 1;
         // }
         Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block.offsets, block.layer).TMap;
         Region4DrawTilemapBlock region_block = _get_draw_region(block);
-        _draw_region(TMap, region_block).Forget();
+        await _draw_region(TMap, region_block);
         
         Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = _get_draw_regions_placeholder(block);
 
         foreach (var kvp in regions_placeholder){
             Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(kvp.Key, block.layer).TMap;
-            _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true).Forget();
+            await _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true);
         }
-        return true;
+        // return true;
     }
     
 
@@ -179,7 +179,7 @@ public class TilemapDraw: BaseClass{
     }
 
 
-    public async UniTaskVoid _draw_region(Tilemap tilemap, Region4DrawTilemapBlock region, bool isPlaceholder=false){
+    public async UniTask _draw_region(Tilemap tilemap, Region4DrawTilemapBlock region, bool isPlaceholder=false){
         // System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
         // stopwatch.Start();
 

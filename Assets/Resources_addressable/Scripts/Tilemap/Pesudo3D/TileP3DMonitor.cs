@@ -25,11 +25,21 @@ public class TileP3DMonitor: BaseClass{
         }
 
         _P3Ds = new() { 
-            {"L1_Middle", new() }
+            {new LayerTTT(0).ToString(), new() },
+            {new LayerTTT(1).ToString(), new() },
+            {new LayerTTT(2).ToString(), new() },
+            {new LayerTTT(3).ToString(), new() },
+            {new LayerTTT(4).ToString(), new() },
+            {new LayerTTT(5).ToString(), new() },
         };
 
         queue = new() { 
-            {"L1_Middle", new() }
+            {new LayerTTT(0).ToString(), new() },
+            {new LayerTTT(1).ToString(), new() },
+            {new LayerTTT(2).ToString(), new() },
+            {new LayerTTT(3).ToString(), new() },
+            {new LayerTTT(4).ToString(), new() },
+            {new LayerTTT(5).ToString(), new() },
         };
 
         _sys._InputSys._register_action("Number 4", tmp_draw, "isFirstDown");
@@ -64,34 +74,34 @@ public class TileP3DMonitor: BaseClass{
     // }
     // public TileP3D _generate_P3D(Vector3Int map_pos, string tile_ID, string tile_subID, string layer){
     //     // queue[layer][map_pos] = new string[]{tile_ID, tile_subID};
-    //     // Vector2 world_pos = _TMapSys._TMapAxis._mapping_mapPos_to_worldPos(map_pos, "L1_Middle");
+    //     // Vector2 world_pos = _TMapSys._TMapAxis._mapping_mapPos_to_worldPos(map_pos, new LayerTTT());
     //     // TileP3D P3D = new TileP3D(world_pos, _TMapBD_containers["TileP3D"], tile_ID, tile_subID);
     //     TileP3D P3D = new TileP3D(map_pos, tile_ID, tile_subID, layer);
     //     _P3Ds[layer].Add(map_pos, P3D);
     //     return P3D;
     // }
 
-    public void _update_P3D(Vector3Int map_pos, string layer){
-        if (_P3Ds[layer].ContainsKey(map_pos)){
-                _P3Ds[layer][map_pos]._update_sprite2().Forget();
+    public void _update_P3D(Vector3Int map_pos, LayerTTT layer){
+        if (_P3Ds[layer.ToString()].ContainsKey(map_pos)){
+                _P3Ds[layer.ToString()][map_pos]._update_sprite2().Forget();
         }
         else {
             TileP3D P3D = new TileP3D(map_pos, layer);
-            _P3Ds[layer].Add(map_pos, P3D);
+            _P3Ds[layer.ToString()].Add(map_pos, P3D);
         }
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        Vector3Int block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, "L1_Middle");
-        TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, "L1_Middle");
+        Vector3Int block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerTTT());
+        TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, new LayerTTT());
         block.status._update_status_typeMap("TileP3D");
-        Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, "L1_Middle").TMap;
+        Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, new LayerTTT()).TMap;
         foreach (var pos in block.status.positions["TileP3D"]){
-            // Vector2 world_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_worldPos(pos, block_offsets, "L1_Middle");
+            // Vector2 world_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_worldPos(pos, block_offsets, new LayerTTT());
             Vector3Int map_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_mapPos(pos, block_offsets);
             // string tile_subID = TMap.GetSprite(map_pos).name;
             // new TileP3D(world_pos, _TMapBD_containers["TileP3D"], block.map._get(pos), tile_subID);
-            new TileP3D(map_pos, "L1_Middle");
+            new TileP3D(map_pos, new LayerTTT());
         }
         return true;
     }

@@ -11,7 +11,7 @@ public class TileP3D : BaseClass{
     public GameObject _self;
     public SpriteRenderer _renderer;
 
-    public TileP3D(Vector3Int map_pos, string layer){
+    public TileP3D(Vector3Int map_pos, LayerTTT layer){
         this.map_pos = map_pos;
         block_offsets = _TMapSys._TMapAxis._mapping_mapPos_to_blockOffsets(map_pos);
         TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, layer).TMap;

@@ -12,15 +12,16 @@ public class TilemapBlockGameObject{
 }
 
 public class TilemapBlockGameObjectGenerator: BaseClass{
-
     public TilemapBlockGameObjectGenerator(){
     }
-    public TilemapBlockGameObject _init_tilemap_gameObject(Vector3Int block_offsets, string layer_type="L1_Middle"){
-        TilemapBlockGameObject obj = new();
 
+
+    public TilemapBlockGameObject _init_tilemap_gameObject(Vector3Int block_offsets, LayerTTT layer_type=null){
+        TilemapBlockGameObject obj = new();
+        layer_type ??= new LayerTTT();
         // ----- GameObject ----- //
         obj.obj = new GameObject();
-        obj.obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[layer_type].transform);
+        obj.obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[layer_type.ToString()].transform);
         obj.obj.name = block_offsets.x + "_" + block_offsets.y;
         // obj.obj.layer = LayerMask.NameToLayer(layer_type);
 
@@ -31,7 +32,8 @@ public class TilemapBlockGameObjectGenerator: BaseClass{
         // ----- TilemapRenderer ----- //
         obj.TMap_renderer = obj.obj.AddComponent<TilemapRenderer>();
         obj.TMap_renderer.material = _MatSys._mat._get_mat("TransparentSprite");
-        obj.TMap_renderer.sortingLayerName = layer_type;
+        obj.TMap_renderer.sortingLayerName = "Layer";
+        obj.TMap_renderer.sortOrder = (TilemapRenderer.SortOrder)layer_type.sort_order;
 
         // --- !!! Necessary for Pseudo3D: 
         // --- TilemapRenderer.Mode.Individual: make tile overlap tile, while Mode.Chunk make tile overlap tile only same type

@@ -26,7 +26,7 @@ public class TilemapBlock: BaseClass{
     // string[,] map;
     public TilemapBlockMap map;
     // public List<Vector3Int> status_mapGround;
-    public string layer;
+    public LayerTTT layer;
     public bool isExist;
     public TilemapBlockAround around => new(this);
     public TilemapBlockMapStatus status;
@@ -46,11 +46,11 @@ public class TilemapBlock: BaseClass{
     public int initStage;
 
     public TilemapBlock(){}
-    public TilemapBlock(Vector3Int offsets, string layer){
+    public TilemapBlock(Vector3Int offsets, LayerTTT layer){
         this.offsets = offsets;
         this.layer = layer;
         isExist = true;
-        our[layer].Add(offsets, this);
+        our[layer.ToString()].Add(offsets, this);
         map = new(this);
         status = new(map);
     }
