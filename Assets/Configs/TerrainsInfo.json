@@ -4,7 +4,7 @@
         "0":{
             "ID": "0",
             "name": "flat desert",
-            "surface": "b6",
+            "surface": "b4",
             "prob": 1,
             "frequency": [],
             "minerals": ["b4", "b5"]

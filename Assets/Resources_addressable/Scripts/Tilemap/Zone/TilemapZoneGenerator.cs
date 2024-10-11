@@ -32,36 +32,8 @@ public class TilemapZoneGenerator: BaseClass{
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        Vector3Int block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerTTT());
-        
-        if (block_prepare_status.ContainsKey(block_offsets)) return false;
-        block_prepare_status[block_offsets] = PrepareStatus.inQueue;
-        // if (queue_block_offsets.Contains(block_offsets)) return false;
-        // queue_block_offsets.Add(block_offsets);
-
-        Vector3Int zone_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_zoneOffsets(keyPos.mouse_pos_world, new LayerTTT());
-        BlockTypeInZone block_type = _check_block_type_in_zone(block_offsets);
-        // Debug.Log(block_offsets + " - " + zone_offsets + " - " + block_type.ToString());
-        switch (block_type){
-            case BlockTypeInZone.Fixed: 
-                _prepare_zone(zone_offsets); 
-                break;
-            case BlockTypeInZone.UpperLeft: 
-                _prepare_zone(zone_offsets); 
-                _prepare_zone(zone_offsets + Vector3Int.up);
-                _prepare_zone(zone_offsets + Vector3Int.left);
-                _prepare_zoneConnected_upperLeft(zone_offsets); 
-                break;
-            case BlockTypeInZone.LowerRight: 
-                _prepare_zone(zone_offsets); 
-                _prepare_zone(zone_offsets + Vector3Int.down);
-                _prepare_zone(zone_offsets + Vector3Int.right); 
-                _prepare_zoneConnected_lowerRight(zone_offsets); 
-                break;
-        }
-        // queue_block_offsets.Remove(block_offsets);
-        // done_block_offsets.Add(block_offsets);
-        block_prepare_status[block_offsets] = PrepareStatus.Done;
+        Vector3Int block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerType());
+        _prepare_zone_in_blockOffsets(block_offsets);
         return true;
     }
 
@@ -69,26 +41,29 @@ public class TilemapZoneGenerator: BaseClass{
         if (block_prepare_status.ContainsKey(block_offsets)) return false;
         block_prepare_status[block_offsets] = PrepareStatus.inQueue;
         
-        Vector3Int zone_offsets = _TMapSys._TMapAxis._mapping_blockOffsets_to_zoneOffsets(block_offsets);
-        BlockTypeInZone block_type = _check_block_type_in_zone(block_offsets);
-        // Debug.Log(block_offsets + " - " + zone_offsets + " - " + block_type.ToString());
-        switch (block_type){
-            case BlockTypeInZone.Fixed: 
-                _prepare_zone(zone_offsets); 
-                break;
-            case BlockTypeInZone.UpperLeft: 
-                _prepare_zone(zone_offsets); 
-                _prepare_zone(zone_offsets + Vector3Int.up);
-                _prepare_zone(zone_offsets + Vector3Int.left);
-                _prepare_zoneConnected_upperLeft(zone_offsets); 
-                break;
-            case BlockTypeInZone.LowerRight: 
-                _prepare_zone(zone_offsets); 
-                _prepare_zone(zone_offsets + Vector3Int.down);
-                _prepare_zone(zone_offsets + Vector3Int.right); 
-                _prepare_zoneConnected_lowerRight(zone_offsets); 
-                break;
-        }
+
+        TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
+
+        // Vector3Int zone_offsets = _TMapSys._TMapAxis._mapping_blockOffsets_to_zoneOffsets(block_offsets);
+        // BlockTypeInZone block_type = _check_block_type_in_zone(block_offsets);
+        // // Debug.Log(block_offsets + " - " + zone_offsets + " - " + block_type.ToString());
+        // switch (block_type){
+        //     case BlockTypeInZone.Fixed: 
+        //         _prepare_zone(zone_offsets); 
+        //         break;
+        //     case BlockTypeInZone.UpperLeft: 
+        //         _prepare_zone(zone_offsets); 
+        //         _prepare_zone(zone_offsets + Vector3Int.up);
+        //         _prepare_zone(zone_offsets + Vector3Int.left);
+        //         _prepare_zoneConnected_upperLeft(zone_offsets); 
+        //         break;
+        //     case BlockTypeInZone.LowerRight: 
+        //         _prepare_zone(zone_offsets); 
+        //         _prepare_zone(zone_offsets + Vector3Int.down);
+        //         _prepare_zone(zone_offsets + Vector3Int.right); 
+        //         _prepare_zoneConnected_lowerRight(zone_offsets); 
+        //         break;
+        // }
 
         block_prepare_status[block_offsets] = PrepareStatus.Done;
         return true;
@@ -147,14 +122,14 @@ public class TilemapZoneGenerator: BaseClass{
         for (int i = 0; i < connected_size.x; i++){
             Vector3Int block_offsets = block_origin + new Vector3Int(i, 0, 0);
             // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             // _TMapSys._TMapDraw._draw_block(block);
         }
         for (int j = 1; j < connected_size.y; j++){
             Vector3Int block_offsets = block_origin + new Vector3Int(0, j, 0);
             // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             // _TMapSys._TMapDraw._draw_block(block);
         }
@@ -162,7 +137,7 @@ public class TilemapZoneGenerator: BaseClass{
             for (int j = 1; j < zone_size.y - 1; j++){
                 Vector3Int block_offsets = block_origin + new Vector3Int(i, j, 0);
                 // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-                TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+                TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             // _TMapSys._TMapDraw._draw_block(block);
             }
@@ -170,14 +145,14 @@ public class TilemapZoneGenerator: BaseClass{
         for (int i = connected_size.x; i < zone_size.x; i++){
             Vector3Int block_offsets = block_origin + new Vector3Int(i, zone_size.y - 1, 0);
             // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             // _TMapSys._TMapDraw._draw_block(block);
         }
         for (int j = zone_size.y - 2; j >= connected_size.y; j--){
             Vector3Int block_offsets = block_origin + new Vector3Int(zone_size.x - 1, j, 0);
             // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             // _TMapSys._TMapDraw._draw_block(block);
         }
@@ -197,14 +172,14 @@ public class TilemapZoneGenerator: BaseClass{
         for (int i = connected_size.x; i < zone_size.x; i++){
             Vector3Int block_offsets = block_origin + new Vector3Int(i, 0, 0);
             // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             // _TMapSys._TMapDraw._draw_block(block);
         }
         for (int j = 1; j < connected_size.y; j++){
             Vector3Int block_offsets = block_origin + new Vector3Int(zone_size.x - 1, j, 0);
             // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             // _TMapSys._TMapDraw._draw_block(block);
         }
@@ -221,7 +196,7 @@ public class TilemapZoneGenerator: BaseClass{
         for (int i = connected_size.x - 1; i >= 0; i--){
             Vector3Int block_offsets = block_origin + new Vector3Int(i, zone_size.y - 1, 0);
             // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             
             // _TMapSys._TMapDraw._draw_block(block);
@@ -229,7 +204,7 @@ public class TilemapZoneGenerator: BaseClass{
         for (int j = zone_size.y - 2; j >= connected_size.y; j--){
             Vector3Int block_offsets = block_origin + new Vector3Int(0, j, 0);
             // TilemapBlock block = _TMapSys._TMapGen._generate_block(block_offsets, initStage_end:99);
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
             
             // _TMapSys._TMapDraw._draw_block(block);
         }

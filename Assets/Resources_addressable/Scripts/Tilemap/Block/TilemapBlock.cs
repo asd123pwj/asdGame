@@ -26,7 +26,7 @@ public class TilemapBlock: BaseClass{
     // string[,] map;
     public TilemapBlockMap map;
     // public List<Vector3Int> status_mapGround;
-    public LayerTTT layer;
+    public LayerType layer;
     public bool isExist;
     public TilemapBlockAround around => new(this);
     public TilemapBlockMapStatus status;
@@ -46,7 +46,7 @@ public class TilemapBlock: BaseClass{
     public int initStage;
 
     public TilemapBlock(){}
-    public TilemapBlock(Vector3Int offsets, LayerTTT layer){
+    public TilemapBlock(Vector3Int offsets, LayerType layer){
         this.offsets = offsets;
         this.layer = layer;
         isExist = true;

@@ -11,7 +11,7 @@ using UnityEngine.Tilemaps;
 public class BuildGenerator : BaseClass{
 
     public Dictionary<string, string[,]> build_template => new(){
-        {new LayerTTT().ToString(), new string[,] {{ "f1", "f2", "f2",} } }
+        {new LayerType().ToString(), new string[,] {{ "f1", "f2", "f2",} } }
     };
 
     public void _BuildGenerator(){
@@ -41,7 +41,7 @@ public class BuildGenerator : BaseClass{
 
     public Region4DrawTilemapBlock _generate_build(Vector2 mouse_pos){
         // Tilemap posRef_tilemap = _TMapSys._TMapMon._get_TilemapBlockGameObject(Vector3Int.zero, new LayerTTT()).TMap;
-        LayerTTT layer_type = new LayerTTT();
+        LayerType layer_type = new LayerType();
         Vector3Int mouse_origin_mapPos = _TMapSys._TMapAxis._mapping_worldPos_to_mapPos(mouse_pos, layer_type);;
         // Vector3Int currentBlock_offset;
         Vector3Int build_origin_relativePos = new(0, 0, 0);

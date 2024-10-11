@@ -22,12 +22,12 @@ public class TilemapMonitor: BaseClass{
         // ---------- GameObject Container Init ---------- //
         // ----- Container Init ----- //
         _TMap_containers = new(){
-            { new LayerTTT(0).ToString(), new GameObject(new LayerTTT(0).ToString()) },
-            { new LayerTTT(1).ToString(), new GameObject(new LayerTTT(1).ToString()) },
-            { new LayerTTT(2).ToString(), new GameObject(new LayerTTT(2).ToString()) },
-            { new LayerTTT(3).ToString(), new GameObject(new LayerTTT(3).ToString()) },
-            { new LayerTTT(4).ToString(), new GameObject(new LayerTTT(4).ToString()) },
-            { new LayerTTT(5).ToString(), new GameObject(new LayerTTT(5).ToString()) },
+            { new LayerType(0).ToString(), new GameObject(new LayerType(0).ToString()) },
+            { new LayerType(1).ToString(), new GameObject(new LayerType(1).ToString()) },
+            { new LayerType(2).ToString(), new GameObject(new LayerType(2).ToString()) },
+            { new LayerType(3).ToString(), new GameObject(new LayerType(3).ToString()) },
+            { new LayerType(4).ToString(), new GameObject(new LayerType(4).ToString()) },
+            { new LayerType(5).ToString(), new GameObject(new LayerType(5).ToString()) },
         };
         foreach(var obj in _TMap_containers.Values){
             obj.transform.SetParent(_sys._grid.transform);
@@ -66,13 +66,13 @@ public class TilemapMonitor: BaseClass{
 
     void clear_block_tilemap(Vector3Int block_offsets, string layer_type){ /* no implement */}
 
-    public bool _check_block_load(Vector3Int block_offsets, LayerTTT layer_type) => _check_block_load(block_offsets, layer_type.ToString());
+    public bool _check_block_load(Vector3Int block_offsets, LayerType layer_type) => _check_block_load(block_offsets, layer_type.ToString());
     public bool _check_block_load(Vector3Int block_offsets, string layer_type){
         return _TMap_blocks[layer_type].ContainsKey(block_offsets);
     }
 
 
-    public TilemapBlock _get_block(Vector3Int block_offsets, LayerTTT layer_type) => _get_block(block_offsets, layer_type.ToString());
+    public TilemapBlock _get_block(Vector3Int block_offsets, LayerType layer_type) => _get_block(block_offsets, layer_type.ToString());
     public TilemapBlock _get_block(Vector3Int block_offsets, string layer_type){
         return _TMap_blocks[layer_type][block_offsets];
     }
@@ -83,7 +83,7 @@ public class TilemapMonitor: BaseClass{
     // }
     
     // public TilemapBlockGameObject _get_blkObj(Vector3Int block_offsets, LayerTTT layer_type) => _get_blkObj(block_offsets, layer_type.ToString());
-    public TilemapBlockGameObject _get_blkObj(Vector3Int block_offsets, LayerTTT layer_type){
+    public TilemapBlockGameObject _get_blkObj(Vector3Int block_offsets, LayerType layer_type){
         if(!_TMap_objs[layer_type.ToString()].ContainsKey(block_offsets)){
             TilemapBlockGameObject obj = _TMapSys._TMapObjGen._init_tilemap_gameObject(block_offsets, layer_type);
             _TMap_objs[layer_type.ToString()].Add(block_offsets, obj);

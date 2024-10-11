@@ -67,7 +67,7 @@ public class TilemapController: BaseClass{
         }
         else{
             Vector3 player_pos = _CtrlSys._player.transform.position;
-            _query_point = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, LayerType.Middle));
+            _query_point = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, MapLayerType.Middle));
         }
     }
 
@@ -86,21 +86,21 @@ public class TilemapController: BaseClass{
         Vector3Int draw_r = _GCfg._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
         for (int x = -draw_r.x; x <= draw_r.x; x++){
             for (int y = -draw_r.y; y <= draw_r.y; y++){
-                if (!_TMapSys._TMapMon._check_block_load(_query_point + new Vector3Int(x, y), new LayerTTT())) continue;
-                TilemapBlock block = _TMapSys._TMapMon._get_block(_query_point + new Vector3Int(x, y), new LayerTTT());
+                if (!_TMapSys._TMapMon._check_block_load(_query_point + new Vector3Int(x, y), new LayerType())) continue;
+                TilemapBlock block = _TMapSys._TMapMon._get_block(_query_point + new Vector3Int(x, y), new LayerType());
                 // TilemapBlock block = TMapGen._generate_block(_query_point + new Vector3Int(x, y));
                 await TMapDraw._draw_block(block);
                 
                 ShadowGenerator._generate_shadow_from_compCollider(
-                    _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerTTT()).obj,
-                    _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerTTT()).compositeCollider
+                    _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).obj,
+                    _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).compositeCollider
                 );
             }
         }
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        Vector3Int block_offsets = TMapCfg._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerTTT());
+        Vector3Int block_offsets = TMapCfg._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerType());
     
         List<Vector3Int> block_offsets_list = new();
 
@@ -114,15 +114,15 @@ public class TilemapController: BaseClass{
         System.Diagnostics.Stopwatch stopwatch = new();
         stopwatch.Start();
         foreach (Vector3Int BOffsets in block_offsets_list){
-            TilemapBlock block = _TMapSys._TerrGen._generate_block(BOffsets, new LayerTTT());
+            TilemapBlock block = _TMapSys._TerrGen._generate_block(BOffsets, new LayerType());
             TMapDraw._draw_block(block);
 
         }
 
         foreach (Vector3Int BOffsets in block_offsets_list){
             ShadowGenerator._generate_shadow_from_compCollider(
-                _TMapSys._TMapMon._get_blkObj(BOffsets, new LayerTTT()).obj,
-                _TMapSys._TMapMon._get_blkObj(BOffsets, new LayerTTT()).compositeCollider
+                _TMapSys._TMapMon._get_blkObj(BOffsets, new LayerType()).obj,
+                _TMapSys._TMapMon._get_blkObj(BOffsets, new LayerType()).compositeCollider
             );
         }
 

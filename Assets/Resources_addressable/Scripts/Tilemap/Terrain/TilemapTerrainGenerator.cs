@@ -16,7 +16,7 @@ public class TilemapTerrainGenerator: BaseClass{
 
 
     public TilemapBlock _generate_block(Vector3Int block_offsets,
-                                        LayerTTT layer_type){
+                                        LayerType layer_type){
 
         TilemapBlock block = 
             _TMapSys._TMapMon._check_block_load(block_offsets, layer_type)

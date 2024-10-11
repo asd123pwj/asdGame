@@ -9,6 +9,9 @@
         },
         "TransparentSprite":{
             "path": "Assets/Resources_addressable/Material/TransparentSprite.mat"
+        },
+        "TransparentSprite2":{
+            "path": "Assets/Resources_addressable/Material/TransparentSprite_2.mat"
         }
     }
 }
