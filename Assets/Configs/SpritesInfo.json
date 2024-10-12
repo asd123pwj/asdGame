@@ -30,10 +30,22 @@
                 "[bd_H1_1]", "[bd_H1_2]", "[bd_H1_3]", "[bd_H1_4]", "[bd_H2_1]", "[bd_H2_2]", "[bd_H3_1]"
             ]
         },
-        "bd4":{
+
+
+
+        "bd_p1":{
             "name": "草",
             "description": "",
-            "path": "sprite_bd4",
+            "path": "sprite_bd_p1",
+            "tags": ["uncommon"]
+        },
+
+
+
+        "bd_m1":{
+            "name": "煤炭",
+            "description": "",
+            "path": "sprite_bd_m1",
             "tags": ["uncommon"]
         }
 

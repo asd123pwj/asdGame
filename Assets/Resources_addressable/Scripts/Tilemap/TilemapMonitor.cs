@@ -45,25 +45,6 @@ public class TilemapMonitor: BaseClass{
     }
 
 
-    // public bool _load_block(TilemapBlock block){
-    //     if (_check_block_load(block.offsets, block.layer)) return false;
-    //     _TMap_blocks[block.layer].Add(block.offsets, block);
-    //     return true;
-    // } 
-
-    
-    // public void _update_block(TilemapBlock block){
-    //     if (_check_block_load(block.offsets, block.layer)) 
-    //         _TMap_blocks[block.layer][block.offsets] = block;
-    //     else
-    //         _TMap_blocks[block.layer].Add(block.offsets, block);
-    // } 
-
-    // public void _unload_block(Vector3Int block_offsets, string layer_type){
-    //     clear_block_tilemap(block_offsets, layer_type);
-    //     if (_TMap_blocks[layer_type].ContainsKey(block_offsets)) _TMap_blocks[layer_type].Remove(block_offsets);
-    // }
-
     void clear_block_tilemap(Vector3Int block_offsets, string layer_type){ /* no implement */}
 
     public bool _check_block_load(Vector3Int block_offsets, LayerType layer_type) => _check_block_load(block_offsets, layer_type.ToString());
@@ -84,6 +65,7 @@ public class TilemapMonitor: BaseClass{
     
     // public TilemapBlockGameObject _get_blkObj(Vector3Int block_offsets, LayerTTT layer_type) => _get_blkObj(block_offsets, layer_type.ToString());
     public TilemapBlockGameObject _get_blkObj(Vector3Int block_offsets, LayerType layer_type){
+        // return _get_block(block_offsets, layer_type.ToString()).obj;
         if(!_TMap_objs[layer_type.ToString()].ContainsKey(block_offsets)){
             TilemapBlockGameObject obj = _TMapSys._TMapObjGen._init_tilemap_gameObject(block_offsets, layer_type);
             _TMap_objs[layer_type.ToString()].Add(block_offsets, obj);

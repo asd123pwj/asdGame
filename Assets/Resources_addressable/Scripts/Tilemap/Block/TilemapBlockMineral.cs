@@ -18,33 +18,33 @@ public class TilemapBlockMineral: BaseClass {
     }
 
 
-    public TilemapBlock _generate_2DBlock_mineral(TilemapBlock block){
-        // ---------- init ----------
-        Vector3Int BSize = _GCfg._sysCfg.TMap_tiles_per_block;    // for convenience
-        float perlin;
-        int tile_index; // for generate different mineral in different place
-        RaritySearcher rarity_searcher = new(_tilemap_base, _GCfg);
-        // tile to rarity
-        string[] minerals = _MatSys._terrain._ID2TerrainHier1[block.terrain_ID].minerals;
-        if (minerals.Count() == 0) return block;
-        Dictionary<string, float> tileID2rarity = rarity_searcher._mapping_tilesID_to_rarity(minerals);
-        // ---------- fill map ----------
-        for (int x = 0; x < BSize.x; x++){
-            for (int y = 0; y < BSize.y; y++){
-                if (block.map._get(x, y) == _GCfg._empty_tile) continue;
-                tile_index = 0;
-                foreach (KeyValuePair<string, float> kvp in tileID2rarity){
-                    tile_index += 1;
-                    perlin = block._perlin(x + BSize.x * tile_index, y + BSize.y * tile_index, 4f);
-                    if(perlin > kvp.Value){
-                        block.map._set(x, y, kvp.Key);
-                        break;
-                    }
-                }
-            }
-        }
-        return block;
-    }
+    // public TilemapBlock _generate_2DBlock_mineral(TilemapBlock block){
+    //     // ---------- init ----------
+    //     Vector3Int BSize = _GCfg._sysCfg.TMap_tiles_per_block;    // for convenience
+    //     float perlin;
+    //     int tile_index; // for generate different mineral in different place
+    //     RaritySearcher rarity_searcher = new(_tilemap_base, _GCfg);
+    //     // tile to rarity
+    //     string[] minerals = _MatSys._terrain._ID2TerrainHier1[block.terrain_ID].minerals;
+    //     if (minerals.Count() == 0) return block;
+    //     Dictionary<string, float> tileID2rarity = rarity_searcher._mapping_tilesID_to_rarity(minerals);
+    //     // ---------- fill map ----------
+    //     for (int x = 0; x < BSize.x; x++){
+    //         for (int y = 0; y < BSize.y; y++){
+    //             if (block.map._get_tile(x, y) == _GCfg._empty_tile) continue;
+    //             tile_index = 0;
+    //             foreach (KeyValuePair<string, float> kvp in tileID2rarity){
+    //                 tile_index += 1;
+    //                 perlin = block._perlin(x + BSize.x * tile_index, y + BSize.y * tile_index, 4f);
+    //                 if(perlin > kvp.Value){
+    //                     block.map._set_tile(x, y, kvp.Key);
+    //                     break;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return block;
+    // }
 
 }
 

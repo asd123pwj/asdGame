@@ -5,23 +5,27 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 
-public class TileP3DMonitor: BaseClass{
+
+
+
+public class TileMonitor: BaseClass{
     // ---------- Plant Container ----------
-    public Dictionary<string, Transform> _TMapBD_containers;
+    public Dictionary<string, Transform> _containers;
+    public Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _tiles;
     public Dictionary<string, Dictionary<Vector3Int, TileP3D>> _P3Ds;
     public Dictionary<string, Dictionary<Vector3Int, DecorationBase>> _decorations;
     // public Dictionary<Pseudo3DRuleTile, TileP3D> _P3Dsssss;
     public int update_num = 100;
 
-    public TileP3DMonitor(){
+    public TileMonitor(){
         // update_interval = 0.5f;
     }
 
     public override void _init(){
-        _TMapBD_containers = new();
-        _TMapBD_containers.Add("TileP3D", new GameObject("TileP3D").transform);
-        _TMapBD_containers.Add("Decoration", new GameObject("Decoration").transform);
-        foreach(var obj in _TMapBD_containers.Values){
+        _containers = new();
+        _containers.Add("TileP3D", new GameObject("TileP3D").transform);
+        _containers.Add("Decoration", new GameObject("Decoration").transform);
+        foreach(var obj in _containers.Values){
             obj.transform.SetParent(_sys._grid.transform);
         }
 
@@ -46,6 +50,11 @@ public class TileP3DMonitor: BaseClass{
         _sys._InputSys._register_action("Number 4", tmp_draw, "isFirstDown");
     }
 
+    // public void _update_tile(Vector3Int map_pos, LayerType layer, string status){
+    //     if (_tiles[layer.ToString()].ContainsKey(map_pos)){
+    //         if
+    //     }
+    // }
 
     public void _update_P3D(Vector3Int map_pos, LayerType layer){
         if (_P3Ds[layer.ToString()].ContainsKey(map_pos)){

@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 public class DecorationBase : BaseClass{
     Vector3Int map_pos, block_offsets;
     Tilemap TMap;
-    Transform container => _TMapSys._P3DMon._TMapBD_containers["Decoration"];
+    Transform container => _TMapSys._P3DMon._containers["Decoration"];
     LayerType layer_decoration;
     // ---------- Status ---------- //
     public GameObject _self;
@@ -34,7 +34,7 @@ public class DecorationBase : BaseClass{
         Sprite spr = TMap.GetSprite(map_pos);
         if (spr != null){
             // string tile_ID = _MatSys._tile._get_ID(spr);
-            string tile_ID = "bd4";
+            string tile_ID = "bd_m1";
             string tile_subID = spr.name;
             _renderer.sprite = _MatSys._spr._get_sprite(tile_ID, tile_subID);
         }

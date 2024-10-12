@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 public class TileP3D : BaseClass{
     Vector3Int map_pos, block_offsets;
     Tilemap TMap;
-    Transform container => _TMapSys._P3DMon._TMapBD_containers["TileP3D"];
+    Transform container => _TMapSys._P3DMon._containers["TileP3D"];
     LayerType P3D_layer;
     // ---------- Status ---------- //
     public GameObject _self;
@@ -34,7 +34,8 @@ public class TileP3D : BaseClass{
             string tile_ID = _MatSys._tile._get_ID(spr);
             string tile_subID = spr.name;
             _renderer.sprite = _MatSys._tile._get_P3D(tile_ID, tile_subID);
-            string mat_ID = tile_ID == "b4" ? "TransparentSprite" : "TransparentSprite2";
+            // string mat_ID = tile_ID == "b4" ? "TransparentSprite" : "TransparentSprite2";
+            string mat_ID = "TransparentSprite";
             // _renderer.material = _MatSys._mat._get_mat("TilemapLitMaterial");
             _renderer.material = _MatSys._mat._get_mat(mat_ID);//TilemapLitMaterial
         }

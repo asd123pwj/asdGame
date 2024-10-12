@@ -34,10 +34,10 @@ public class TilemapTerrainGenerator: BaseClass{
                 Vector3Int map_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_mapPos(new(i, j), block.offsets);
                 TerrainHier1Info hier1 = surface._get_hier1(map_pos);
                 if (surface._check_surface(map_pos, hier1) == TerrainType.Overground){
-                    block.map._set(i, j, _GCfg._empty_tile);
+                    block.map._set_tile(i, j, _GCfg._empty_tile);
                 }
                 else {
-                    block.map._set(i, j, hier1.surface);
+                    block.map._set_tile(i, j, hier1.surface);
                 }
             }
         }
