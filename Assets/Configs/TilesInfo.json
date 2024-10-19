@@ -122,6 +122,11 @@
             "name": "缺失块占位符",
             "relative_path": "tile_p3"
         },
+        "p4":{
+            "category": "Placeholder",
+            "name": "Tilemap占位符",
+            "relative_path": "tile_p4"
+        },
 
 
 

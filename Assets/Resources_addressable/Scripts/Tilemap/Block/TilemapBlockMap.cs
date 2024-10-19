@@ -20,7 +20,10 @@ public class TilemapBlockMap: BaseClass{
     public string _get_tile(Vector3Int pos) => _get_tile(pos.x, pos.y);
     public TilemapTile _get(int x, int y) {
         if (x < block.size.x && y < block.size.y && x >= 0 && y >= 0){
-            if (map[x, y] == null) map[x, y] = new();
+            if (map[x, y] == null) {
+                Vector3Int map_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_mapPos(new(x, y), block.offsets);
+                map[x, y] = new(block, map_pos);
+            }
             return map[x, y];
         }
         else if (x >= block.size.x){

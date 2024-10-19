@@ -10,6 +10,7 @@ public class TilemapMonitor: BaseClass{
     // ---------- Tilemap Status ---------- //
     // ----- Blocks ----- //
     public Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> _TMap_blocks => TilemapBlock.our;
+    public Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _TMap_tiles => TilemapTile.our;
     // ----- Containers ----- //
     public Dictionary<string, GameObject> _TMap_containers;
     // ----- GameObjects ----- //
@@ -42,21 +43,23 @@ public class TilemapMonitor: BaseClass{
         foreach(var tilemap_type in _TMap_containers.Keys){
             _TMap_blocks.Add(tilemap_type, new());
         }
+        
+        foreach(var tilemap_type in _TMap_containers.Keys){
+            _TMap_tiles.Add(tilemap_type, new());
+        }
     }
 
 
     void clear_block_tilemap(Vector3Int block_offsets, string layer_type){ /* no implement */}
 
-    public bool _check_block_load(Vector3Int block_offsets, LayerType layer_type) => _check_block_load(block_offsets, layer_type.ToString());
-    public bool _check_block_load(Vector3Int block_offsets, string layer_type){
-        return _TMap_blocks[layer_type].ContainsKey(block_offsets);
-    }
+    public bool _check_block_load(Vector3Int block_offsets, LayerType layer_type) => _TMap_blocks[layer_type.ToString()].ContainsKey(block_offsets);
+    public bool _check_tile_load(Vector3Int map_pos, LayerType layer_type) => _TMap_tiles[layer_type.ToString()].ContainsKey(map_pos);
 
 
-    public TilemapBlock _get_block(Vector3Int block_offsets, LayerType layer_type) => _get_block(block_offsets, layer_type.ToString());
-    public TilemapBlock _get_block(Vector3Int block_offsets, string layer_type){
-        return _TMap_blocks[layer_type][block_offsets];
-    }
+    public TilemapBlock _get_block(Vector3Int block_offsets, LayerType layer_type) => _TMap_blocks[layer_type.ToString()][block_offsets];
+
+
+    public TilemapTile _get_tile(Vector3Int map_pos, LayerType layer_type) => _TMap_tiles[layer_type.ToString()][map_pos];
 
 
     // public TilemapBlockGameObject _get_blkObj(Vector3Int block_offsets, string tilemap_type){
