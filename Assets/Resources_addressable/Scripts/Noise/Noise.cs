@@ -31,5 +31,6 @@ public class Noise{
     }
     public float _cellular(float x, float frequnency) => _cellular(x, 0, frequnency);
 
+
 }
 

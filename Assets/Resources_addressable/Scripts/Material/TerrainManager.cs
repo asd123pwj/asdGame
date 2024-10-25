@@ -4,52 +4,28 @@ using Newtonsoft.Json;
 
 
 
-/*
- * ---------- type of terrainHier1 ----------
- * ---------- direction fluctuation
- * flat: 2
- * undulating: 1 3 7 9
- * steep: 4 6 14 16
- * suspended: 11 12 13 17 19
- * full: 5
- * empty: 0
- * ---------- ground
- * |    tag     |  flat  |  undulating  |  steep  |  suspended  |  full  |  empty  |
- * |------------|--------|--------------|---------|-------------|--------|---------|
- * |    flat    |  most  |     few      |   no    |     no      |  some  |   no    |
- * | undulating |  some  |     some     |   few   |     no      |  some  |   no    |
- * |   steep    |  some  |     some     |   some  |     few     |  some  |   no    |
- * |  suspended |  few   |     some     |   some  |     some    |  some  |   no    |
- *
- * ---------- underground
- * |    tag     |  flat  |  undulating  |  steep  |  suspended  |  full  |  empty  |
- * |------------|--------|--------------|---------|-------------|--------|---------|
- * |  spacious  |  most  |     few      |   some  |     few     |  few   |   some  |
- * |  roomy     |  some  |     some     |   some  |     some    |  some  |   some  |
- * |  narrow    |  few   |     some     |   few   |     some    |  most  |   few   |
- *
- * ---------- sky
- * |    tag     |  flat  |  undulating  |  steep  |  suspended  |  full  |  empty  |
- * |------------|--------|--------------|---------|-------------|--------|---------|
- * |    sky     |   no   |      no      |    no   |     no      |   no   |   most  |
- *
- */
-// public struct TerrainHier2Info{
-//     public string[] tags;
-//     public string name;
-//     public float scale;
-//     public string[] dirs_avail;         // available directions
-//     public float[] dirs_prob;           // probability of each available directions
-//     // public bool isExist;
-// }
 
 public struct TerrainHier1Info{
     public string ID;
     public string name;
     public string surface;              // ID, surface tile
     public float prob;
-    public List<string[]> frequency;         // ["noise process type", "frequency", "scale"]
-    public string[] minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
+    // public List<string[]> frequency;         // ["noise process type", "frequency", "scale"]
+    public List<SurfaceFrequency> frequency;
+    // public string[] minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
+    public List<MineralFrequency> minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
+}
+
+public struct SurfaceFrequency{
+    public string keep; // keep which part? "+": positive noise, "-": negative noise, other: keep all
+    public float f; // frequency
+    public int s; // scale, range of height: [-s*noise, s*noise]
+}
+
+public struct MineralFrequency{
+    public string ID; // mineral ID
+    public float f; // frequency
+    public float t; // noise threshold
 }
 
 public struct TerrainsInfo{

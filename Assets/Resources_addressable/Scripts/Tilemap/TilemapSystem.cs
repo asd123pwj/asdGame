@@ -31,7 +31,7 @@ public class TilemapSystem : BaseClass{
     public BuildGenerator _BuildGen;
     public TilemapBlockGameObjectGenerator _TMapObjGen;
     public TilemapZoneGenerator _TMapZoneGen;
-    public TileMonitor _P3DMon;
+    // public TileMonitor _P3DMon;
     public TilemapTerrainGenerator _TerrGen;
     // ---------- status ----------
 
@@ -47,7 +47,7 @@ public class TilemapSystem : BaseClass{
         _BuildGen = new();
         _TMapObjGen = new();
         _TMapZoneGen = new();
-        _P3DMon = new();
+        // _P3DMon = new();
         _TerrGen = new();
     }
 

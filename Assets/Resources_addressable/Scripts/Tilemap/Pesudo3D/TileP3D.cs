@@ -6,13 +6,14 @@ using UnityEngine.Tilemaps;
 public class TileP3D : BaseClass{
     Vector3Int map_pos, block_offsets;
     Tilemap TMap;
-    Transform container => _TMapSys._P3DMon._containers["TileP3D"];
+    // Transform container => _TMapSys._P3DMon._containers["TileP3D"];
+    Transform container;
     LayerType P3D_layer;
     // ---------- Status ---------- //
     public GameObject _self;
     public SpriteRenderer _renderer;
 
-    public TileP3D(Vector3Int map_pos, LayerType layer){
+    public TileP3D(Vector3Int map_pos, LayerType layer, Transform container){
         this.map_pos = map_pos;
         block_offsets = _TMapSys._TMapAxis._mapping_mapPos_to_blockOffsets(map_pos);
         TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, layer).TMap;
@@ -20,6 +21,8 @@ public class TileP3D : BaseClass{
         P3D_layer = new(layer.layer, MapLayerType.MiddleP3D);
         _renderer.sortingLayerID = P3D_layer.sortingLayerID;
         _renderer.sortingOrder = P3D_layer.sortingOrder;
+        this.container = container;
+        _self.transform.SetParent(container);
         _update_sprite().Forget();
     }
 
@@ -44,7 +47,6 @@ public class TileP3D : BaseClass{
 
     void init_gameObject(){
         _self = new("P3D");
-        _self.transform.SetParent(container);
         _renderer = _self.AddComponent<SpriteRenderer>();
     }
     

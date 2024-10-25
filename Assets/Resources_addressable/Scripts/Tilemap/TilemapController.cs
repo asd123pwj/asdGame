@@ -53,6 +53,7 @@ public class TilemapController: BaseClass{
             }
             // _task_prepare_tilemap();
             // var task = 
+            _task_prepare_gameObject();
             await UniTask.RunOnThreadPool(() => _task_prepare_tilemap());
             await _task_draw_tilemap();
             _query_point_prev = _query_point;
@@ -69,6 +70,17 @@ public class TilemapController: BaseClass{
             Vector3 player_pos = _CtrlSys._player.transform.position;
             _query_point = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, MapLayerType.Middle));
         }
+    }
+
+
+    public bool _task_prepare_gameObject(){
+        Vector3Int prepare_r = _GCfg._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+        for (int x = -prepare_r.x; x <= prepare_r.x; x++){
+            for (int y = -prepare_r.y; y <= prepare_r.y; y++){
+                _TMapSys._TMapMon._get_blkObj(_query_point + new Vector3Int(x, y), new LayerType());
+            }
+        }
+        return true;
     }
 
     public bool _task_prepare_tilemap(){

@@ -6,13 +6,15 @@ using UnityEngine.Tilemaps;
 public class DecorationBase : BaseClass{
     Vector3Int map_pos, block_offsets;
     Tilemap TMap;
-    Transform container => _TMapSys._P3DMon._containers["Decoration"];
+    Transform container;
     LayerType layer_decoration;
     // ---------- Status ---------- //
     public GameObject _self;
     public SpriteRenderer _renderer;
+    public SpriteMask _mask;
+    Sprite sprite;
 
-    public DecorationBase(Vector3Int map_pos, LayerType layer){
+    public DecorationBase(Vector3Int map_pos, LayerType layer, Sprite sprite, Transform container){
         this.map_pos = map_pos;
         block_offsets = _TMapSys._TMapAxis._mapping_mapPos_to_blockOffsets(map_pos);
         TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, layer).TMap;
@@ -21,6 +23,9 @@ public class DecorationBase : BaseClass{
         _renderer.sortingLayerID = layer_decoration.sortingLayerID;
         _renderer.sortingOrder = layer_decoration.sortingOrder;
         _renderer.material = _MatSys._mat._get_mat("TilemapLitMaterial");
+        _set_sprite(sprite);
+        this.container = container;
+        _self.transform.SetParent(container);
         // _renderer.material = _MatSys._mat._get_mat("TransparentSprite");//TilemapLitMaterial
         _update_sprite().Forget();
     }
@@ -29,22 +34,39 @@ public class DecorationBase : BaseClass{
         init_gameObject();
     }
 
+    public void _set_sprite(Sprite sprite){
+        this.sprite = sprite;
+    }
+
     public async UniTaskVoid _update_sprite(){
         await UniTask.Delay(50);
         Sprite spr = TMap.GetSprite(map_pos);
         if (spr != null){
-            // string tile_ID = _MatSys._tile._get_ID(spr);
-            string tile_ID = "bd_m1";
-            string tile_subID = spr.name;
-            _renderer.sprite = _MatSys._spr._get_sprite(tile_ID, tile_subID);
+            string mask_tile_ID = _MatSys._tile._get_ID(spr);
+            string mask_tile_subID = spr.name;
+            if (mask_tile_subID != "__Full"){
+                _mask.enabled = true;
+                _renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+                _mask.sprite = _MatSys._tile._get_sprite(mask_tile_ID, mask_tile_subID);
+            }
+            else {
+                _mask.enabled = false;
+                _renderer.maskInteraction = SpriteMaskInteraction.None;
+            }
+            // string tile_ID = "bd_m1";
+            // // string tile_subID = spr.name;
+            // string tile_subID = "__Full";
+            // sprite = _MatSys._spr._get_sprite(tile_ID, tile_subID);
+            _renderer.sprite = sprite;
         }
 
     }
 
     void init_gameObject(){
         _self = new("BlockDecoration");
-        _self.transform.SetParent(container);
         _renderer = _self.AddComponent<SpriteRenderer>();
+        // _mask = _self.AddComponent<SpriteMask>();
+        // _mask.enabled = false;
     }
     
 }

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TilemapTile{
+public class TilemapTile: BaseClass{
     public static Dictionary<string, Dictionary<Vector3Int, TilemapTile>> our = new();
     TilemapBlock block;
     Vector3Int map_pos;
@@ -10,6 +10,9 @@ public class TilemapTile{
     public string tile;
     bool enable_P3D = true;
     bool enable_decoration = true;
+    string mineral_ID;
+    string mineral_subID = "__Full";
+    Sprite decoration_sprite;
 
 
 
@@ -27,7 +30,7 @@ public class TilemapTile{
     public void _update_P3D(){
         if (enable_P3D){
             if (P3D == null){
-                P3D = new(map_pos, block.layer);
+                P3D = new(map_pos, block.layer, block.obj.P3D_container.transform);
             }
             else{
                 P3D._update_sprite().Forget();
@@ -38,12 +41,20 @@ public class TilemapTile{
         }
     }
 
+    public void _clear_mineral() { _set_mineral(null); }
+    public void _set_mineral(string mineral_ID) { 
+        this.mineral_ID = mineral_ID; 
+        decoration_sprite = _MatSys._spr._get_sprite(mineral_ID, mineral_subID);
+    }
     public void _update_decoration(){
+        enable_decoration = mineral_ID != null;
+        
         if (enable_decoration){
             if (decoration == null){
-                decoration = new(map_pos, block.layer);
+                decoration = new(map_pos, block.layer, decoration_sprite, block.obj.Decoration_container.transform);
             }
             else{
+                decoration._set_sprite(decoration_sprite);
                 decoration._update_sprite().Forget();
             }
         }

@@ -9,9 +9,11 @@ public class TilemapTerrainGenerator: BaseClass{
     // public int surface_top = 1000;
     // public int surface_buttom = -1000;
     TilemapTerrainSurface surface;
+    TilemapTerrainMineral mineral;
 
     public TilemapTerrainGenerator(){
         surface = new();
+        mineral = new();
     }
 
 
@@ -33,11 +35,15 @@ public class TilemapTerrainGenerator: BaseClass{
             for (int j = 0; j < block.size.y; j++){
                 Vector3Int map_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_mapPos(new(i, j), block.offsets);
                 TerrainHier1Info hier1 = surface._get_hier1(map_pos);
-                if (surface._check_surface(map_pos, hier1) == TerrainType.Overground){
-                    block.map._set_tile(i, j, _GCfg._empty_tile);
+                if (surface._check_underground(map_pos, hier1)){
+                    // ----- Base Tile ----- //
+                    block.map._set_tile(i, j, hier1.surface);
+                    // ----- Mineral ----- //
+                    string mineral_ID = mineral._get_mineral(map_pos, hier1.minerals);
+                    if (mineral_ID != null) block.map._get(i, j)._set_mineral(mineral_ID);
                 }
                 else {
-                    block.map._set_tile(i, j, hier1.surface);
+                    block.map._set_tile(i, j, _GCfg._empty_tile);
                 }
             }
         }

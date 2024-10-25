@@ -9,6 +9,8 @@ public class TilemapBlockGameObject{
     public TilemapCollider2D TMap_collider;
     public Rigidbody2D rb;
     public CompositeCollider2D compositeCollider;
+    public GameObject P3D_container;
+    public GameObject Decoration_container;
 }
 
 public class TilemapBlockGameObjectGenerator: BaseClass{
@@ -24,6 +26,12 @@ public class TilemapBlockGameObjectGenerator: BaseClass{
         obj.obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[layer_type.ToString()].transform);
         obj.obj.name = block_offsets.x + "_" + block_offsets.y;
         // obj.obj.layer = LayerMask.NameToLayer(layer_type);
+
+        // ----- Container ----- //
+        obj.P3D_container = new GameObject("P3Ds");
+        obj.P3D_container.transform.SetParent(obj.obj.transform);
+        obj.Decoration_container = new GameObject("Decorations");
+        obj.Decoration_container.transform.SetParent(obj.obj.transform);
 
         // ----- Tilemap ----- //
         obj.TMap = obj.obj.AddComponent<Tilemap>();
