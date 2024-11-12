@@ -7,8 +7,6 @@ using UnityEngine.Tilemaps;
 
 
 public class TilemapTerrainMineral: BaseClass{
-
-
     // ---------- Horizontal Edge ---------- //
     public bool _check_mineral(Vector3Int map_pos, float frequency, float thres){
         float h_ratio = _GCfg._noise._perlin_01(map_pos.x, map_pos.y, frequency);

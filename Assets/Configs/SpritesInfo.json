@@ -47,7 +47,12 @@
             "description": "",
             "path": "sprite_bd_m1",
             "tags": ["uncommon"]
+        },
+        "bd_m2":{
+            "name": "白色矿石",
+            "description": "",
+            "path": "sprite_bd_m2",
+            "tags": ["uncommon"]
         }
-
     }
 }

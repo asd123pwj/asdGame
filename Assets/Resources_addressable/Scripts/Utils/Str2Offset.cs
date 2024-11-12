@@ -6,9 +6,14 @@ public class Str2Offset{
 
     public static int _get(string str){
         if (!str2offset.ContainsKey(str)) {
-            str2offset.Add(str, str.GetHashCode() % 1000000);
+            int hash = 0;
+            for (int i=str.Length-1;  i >= 0; i--){
+                char c = str[i];
+                hash = (hash * 7 + c) & 0x7FFFFFFF;
+            }
+            str2offset.Add(str, hash);
+            // str2offset.Add(str, str.GetHashCode() % 1000000);
         }
         return str2offset[str];
-        
     }
 }

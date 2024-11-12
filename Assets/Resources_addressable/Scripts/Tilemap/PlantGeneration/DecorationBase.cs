@@ -11,7 +11,7 @@ public class DecorationBase : BaseClass{
     // ---------- Status ---------- //
     public GameObject _self;
     public SpriteRenderer _renderer;
-    public SpriteMask _mask;
+    // public SpriteMask _mask;
     Sprite sprite;
 
     public DecorationBase(Vector3Int map_pos, LayerType layer, Sprite sprite, Transform container){
@@ -42,17 +42,17 @@ public class DecorationBase : BaseClass{
         await UniTask.Delay(50);
         Sprite spr = TMap.GetSprite(map_pos);
         if (spr != null){
-            string mask_tile_ID = _MatSys._tile._get_ID(spr);
-            string mask_tile_subID = spr.name;
-            if (mask_tile_subID != "__Full"){
-                _mask.enabled = true;
-                _renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-                _mask.sprite = _MatSys._tile._get_sprite(mask_tile_ID, mask_tile_subID);
-            }
-            else {
-                _mask.enabled = false;
-                _renderer.maskInteraction = SpriteMaskInteraction.None;
-            }
+            // string mask_tile_ID = _MatSys._tile._get_ID(spr);
+            // string mask_tile_subID = spr.name;
+            // if (mask_tile_subID != "__Full"){
+            //     _mask.enabled = true;
+            //     _renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+            //     _mask.sprite = _MatSys._tile._get_sprite(mask_tile_ID, mask_tile_subID);
+            // }
+            // else {
+            //     _mask.enabled = false;
+            //     _renderer.maskInteraction = SpriteMaskInteraction.None;
+            // }
             // string tile_ID = "bd_m1";
             // // string tile_subID = spr.name;
             // string tile_subID = "__Full";

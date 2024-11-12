@@ -7,7 +7,7 @@
             "surface": "b4",
             "prob": 1,
             "frequency": [],
-            "minerals": [{"ID": "bd_m1", "f": 1, "t": 0}]
+            "minerals": [{"ID": "bd_m1", "f": 1, "t": 0.7}, {"ID": "bd_m2", "f": 1, "t": 0.7}]
         },
         "1":{
             "ID": "1",
@@ -15,7 +15,7 @@
             "surface": "b7",
             "prob": 1,
             "frequency": [{"keep": "+", "f": 1, "s": 100}],
-            "minerals": [{"ID": "bd_m1", "f": 1, "t": 0}]
+            "minerals": [{"ID": "bd_m1", "f": 1, "t": 0.7}, {"ID": "bd_m2", "f": 1, "t": 0.7}]
         }
     }
 
