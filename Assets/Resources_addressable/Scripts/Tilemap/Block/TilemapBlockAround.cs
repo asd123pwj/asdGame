@@ -13,10 +13,10 @@ public class TilemapBlockAround: BaseClass {
     public TilemapBlock down => _get_around("down"); 
     public TilemapBlock left => _get_around("left"); 
     public TilemapBlock right => _get_around("right"); 
-    public TerrainHier1Info up_terrainInfo => _get_terrainInfo("up"); 
-    public TerrainHier1Info down_terrainInfo => _get_terrainInfo("down"); 
-    public TerrainHier1Info left_terrainInfo => _get_terrainInfo("left"); 
-    public TerrainHier1Info right_terrainInfo => _get_terrainInfo("right"); 
+    public TerrainHier1 up_terrainInfo => _get_terrainInfo("up"); 
+    public TerrainHier1 down_terrainInfo => _get_terrainInfo("down"); 
+    public TerrainHier1 left_terrainInfo => _get_terrainInfo("left"); 
+    public TerrainHier1 right_terrainInfo => _get_terrainInfo("right"); 
     // public TerrainHier2Info up_terrainType => _get_terrainType("up"); 
     // public TerrainHier2Info down_terrainType => _get_terrainType("down"); 
     // public TerrainHier2Info left_terrainType => _get_terrainType("left"); 
@@ -26,7 +26,7 @@ public class TilemapBlockAround: BaseClass {
         _block = block;
     }
 
-    public TerrainHier1Info _get_terrainInfo(string direction){
+    public TerrainHier1 _get_terrainInfo(string direction){
         TilemapBlock around_block = _get_around(direction);
         if (around_block.isExist) return _MatSys._terrain._ID2TerrainHier1[around_block.terrain_ID];
         else return new();

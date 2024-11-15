@@ -28,8 +28,8 @@ public class TilemapController: BaseClass{
     TilemapAxis TMapCfg { get => _TMapSys._TMapAxis; }
     TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
     // ---------- status ---------- // 
-    private Vector3Int _tilemapBlock_offsets;
-    private bool _tilemapBlockChange = true;
+    // private Vector3Int _tilemapBlock_offsets;
+    // private bool _tilemapBlockChange = true;
     public Vector3Int _query_point;
     public Vector3Int _query_point_prev = new(-999999999, -999999999, -999999999);
 

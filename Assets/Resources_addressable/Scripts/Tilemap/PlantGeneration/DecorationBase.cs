@@ -12,9 +12,10 @@ public class DecorationBase : BaseClass{
     public GameObject _self;
     public SpriteRenderer _renderer;
     // public SpriteMask _mask;
-    Sprite sprite;
+    // Sprite sprite;
+    string sprite_ID;
 
-    public DecorationBase(Vector3Int map_pos, LayerType layer, Sprite sprite, Transform container){
+    public DecorationBase(Vector3Int map_pos, LayerType layer, string sprite_ID, Transform container){
         this.map_pos = map_pos;
         block_offsets = _TMapSys._TMapAxis._mapping_mapPos_to_blockOffsets(map_pos);
         TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, layer).TMap;
@@ -23,7 +24,7 @@ public class DecorationBase : BaseClass{
         _renderer.sortingLayerID = layer_decoration.sortingLayerID;
         _renderer.sortingOrder = layer_decoration.sortingOrder;
         _renderer.material = _MatSys._mat._get_mat("TilemapLitMaterial");
-        _set_sprite(sprite);
+        _set_sprite(sprite_ID);
         this.container = container;
         _self.transform.SetParent(container);
         // _renderer.material = _MatSys._mat._get_mat("TransparentSprite");//TilemapLitMaterial
@@ -34,8 +35,8 @@ public class DecorationBase : BaseClass{
         init_gameObject();
     }
 
-    public void _set_sprite(Sprite sprite){
-        this.sprite = sprite;
+    public void _set_sprite(string sprite_ID){
+        this.sprite_ID = sprite_ID;
     }
 
     public async UniTaskVoid _update_sprite(){
@@ -54,9 +55,9 @@ public class DecorationBase : BaseClass{
             //     _renderer.maskInteraction = SpriteMaskInteraction.None;
             // }
             // string tile_ID = "bd_m1";
-            // // string tile_subID = spr.name;
+            string sprite_subID = spr.name;
             // string tile_subID = "__Full";
-            // sprite = _MatSys._spr._get_sprite(tile_ID, tile_subID);
+            Sprite sprite = _MatSys._spr._get_sprite(sprite_ID, sprite_subID);
             _renderer.sprite = sprite;
         }
 

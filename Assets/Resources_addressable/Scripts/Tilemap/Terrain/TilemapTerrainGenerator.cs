@@ -34,10 +34,10 @@ public class TilemapTerrainGenerator: BaseClass{
         for (int i = 0; i < block.size.x; i++){
             for (int j = 0; j < block.size.y; j++){
                 Vector3Int map_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_mapPos(new(i, j), block.offsets);
-                TerrainHier1Info hier1 = surface._get_hier1(map_pos);
+                TerrainHier1 hier1 = surface._get_hier1(map_pos, _MatSys._terrain._infos.HierBase);
                 if (surface._check_underground(map_pos, hier1)){
                     // ----- Base Tile ----- //
-                    block.map._set_tile(i, j, hier1.surface);
+                    block.map._set_tile(i, j, hier1.base_tile);
                     // ----- Mineral ----- //
                     string mineral_ID = mineral._get_mineral(map_pos, hier1.minerals);
                     if (mineral_ID != null) block.map._get(i, j)._set_mineral(mineral_ID);

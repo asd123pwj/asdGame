@@ -5,40 +5,44 @@ using Newtonsoft.Json;
 
 
 
-public struct TerrainHier1Info{
+public struct TerrainHier1{
     public string ID;
     public string name;
-    public string surface;              // ID, surface tile
+    public string base_tile;              // ID, surface tile
     public float prob;
-    // public List<string[]> frequency;         // ["noise process type", "frequency", "scale"]
-    public List<SurfaceFrequency> frequency;
-    // public string[] minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
-    public List<MineralFrequency> minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
+    public List<NoiseCfg> surface;
+    public List<MineralInfo> minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
 }
 
-public struct SurfaceFrequency{
-    public string keep; // keep which part? "+": positive noise, "-": negative noise, other: keep all
-    public float f; // frequency
-    public int s; // scale, range of height: [-s*noise, s*noise]
+public struct MineralInfo{
+    public string ID;
+    public List<NoiseCfg> noise;
 }
 
-public struct MineralFrequency{
-    public string ID; // mineral ID
+public struct NoiseCfg{
     public float f; // frequency
-    public float t; // noise threshold
+    public float min, max; // scale for 1D noise, thres for 2D noise
+    public string fractal; // fractal type
+    public string noise; // noise type
+}
+
+public struct TerrainHierBase{
+    public List<NoiseCfg> x_noise;
+    public NoiseCfg Hier1;
 }
 
 public struct TerrainsInfo{
     public string version;
-    public Dictionary<string, TerrainHier1Info> Hier1;
+    public TerrainHierBase HierBase;
+    public Dictionary<string, TerrainHier1> Hier1;
 }
 
 public class TerrainManager: BaseClass{
     public TerrainsInfo _infos;
     // public List<TerrainHier2Info> _terrains_hier2 = new();
-    public Dictionary<string, TerrainHier1Info> _ID2TerrainHier1 = new();
+    public Dictionary<string, TerrainHier1> _ID2TerrainHier1 = new();
     // public List<string> _Hier1s = new();
-    public List<TerrainHier1Info> _hier1s = new();
+    public List<TerrainHier1> _hier1s = new();
     public float[] _hier1s_prob;
     // public Dictionary<string[], TerrainHier2Info> _tags2TerrainHier2 = new();
 

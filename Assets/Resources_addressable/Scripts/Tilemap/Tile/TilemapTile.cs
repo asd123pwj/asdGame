@@ -11,8 +11,8 @@ public class TilemapTile: BaseClass{
     bool enable_P3D = true;
     bool enable_decoration = true;
     string mineral_ID;
-    string mineral_subID = "__Full";
-    Sprite decoration_sprite;
+    // string mineral_subID = "__Full";
+    // Sprite decoration_sprite;
 
 
 
@@ -44,17 +44,17 @@ public class TilemapTile: BaseClass{
     public void _clear_mineral() { _set_mineral(null); }
     public void _set_mineral(string mineral_ID) { 
         this.mineral_ID = mineral_ID; 
-        decoration_sprite = _MatSys._spr._get_sprite(mineral_ID, mineral_subID);
+        // decoration_sprite = _MatSys._spr._get_sprite(mineral_ID, mineral_subID);
     }
     public void _update_decoration(){
         enable_decoration = mineral_ID != null;
         
         if (enable_decoration){
             if (decoration == null){
-                decoration = new(map_pos, block.layer, decoration_sprite, block.obj.Decoration_container.transform);
+                decoration = new(map_pos, block.layer, mineral_ID, block.obj.Decoration_container.transform);
             }
             else{
-                decoration._set_sprite(decoration_sprite);
+                decoration._set_sprite(mineral_ID);
                 decoration._update_sprite().Forget();
             }
         }

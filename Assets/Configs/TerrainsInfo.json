@@ -1,21 +1,45 @@
 {
     "version": "0.17.7b",
+    "HierBase":{
+        "x_noise": [
+            {"noise": "perlin", "f": 1, "min": -50, "max": 50}
+        ],
+        "Hier1": {"noise": "cellular_cell", "f": 10}
+    },
     "Hier1":{
         "0":{
             "ID": "0",
             "name": "flat desert",
-            "surface": "b4",
+            "base_tile": "b4",
             "prob": 1,
-            "frequency": [],
-            "minerals": [{"ID": "bd_m1", "f": 1, "t": 0.7}, {"ID": "bd_m2", "f": 1, "t": 0.7}]
+            "surface": [
+                {"noise": "perlin", "f": 1, "min": -100, "max": 100, "fractal": "fbm"}
+            ],
+            "minerals": [
+                {"ID": "bd_m1", "noise": [
+                    {"noise": "perlin", "f": 10, "min": 0.6}
+                ]}, 
+                {"ID": "bd_m2", "noise": [
+                    {"noise": "perlin", "f": 5, "max": 0.05}
+                ]}
+            ]
         },
         "1":{
             "ID": "1",
             "name": "undulating mountain",
-            "surface": "b7",
+            "base_tile": "b7",
             "prob": 1,
-            "frequency": [{"keep": "+", "f": 1, "s": 100}],
-            "minerals": [{"ID": "bd_m1", "f": 1, "t": 0.7}, {"ID": "bd_m2", "f": 1, "t": 0.7}]
+            "surface": [
+                {"noise": "perlin", "f": 1, "min": -100, "max": 100}
+            ],
+            "minerals": [
+                {"ID": "bd_m1", "noise": [
+                    {"noise": "perlin", "f": 10, "min": 0.6}
+                ]}, 
+                {"ID": "bd_m2", "noise": [
+                    {"noise": "perlin", "f": 5, "max": 0.05}
+                ]}
+            ]
         }
     }
 
