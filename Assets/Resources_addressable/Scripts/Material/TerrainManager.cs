@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 
 
-public struct TerrainHier1{
+public class TerrainHier1{
     public string ID;
     public string name;
     public string base_tile;              // ID, surface tile
@@ -14,24 +14,25 @@ public struct TerrainHier1{
     public List<MineralInfo> minerals;           // ID, which mineral can be generated. The tile further back has a higher priority
 }
 
-public struct MineralInfo{
+public class MineralInfo{
     public string ID;
     public List<NoiseCfg> noise;
 }
 
-public struct NoiseCfg{
+public class NoiseCfg{
     public float f; // frequency
     public float min, max; // scale for 1D noise, thres for 2D noise
     public string fractal; // fractal type
     public string noise; // noise type
 }
 
-public struct TerrainHierBase{
+public class TerrainHierBase{
     public List<NoiseCfg> x_noise;
     public NoiseCfg Hier1;
+    public float base_scale;
 }
 
-public struct TerrainsInfo{
+public class TerrainsInfo{
     public string version;
     public TerrainHierBase HierBase;
     public Dictionary<string, TerrainHier1> Hier1;
@@ -39,12 +40,9 @@ public struct TerrainsInfo{
 
 public class TerrainManager: BaseClass{
     public TerrainsInfo _infos;
-    // public List<TerrainHier2Info> _terrains_hier2 = new();
     public Dictionary<string, TerrainHier1> _ID2TerrainHier1 = new();
-    // public List<string> _Hier1s = new();
     public List<TerrainHier1> _hier1s = new();
     public float[] _hier1s_prob;
-    // public Dictionary<string[], TerrainHier2Info> _tags2TerrainHier2 = new();
 
     public TerrainManager(){
         load_all();
@@ -54,46 +52,41 @@ public class TerrainManager: BaseClass{
         return !(_infos.version == null);
     }
 
-    // public bool _check_Hier1_exist(string ID){
-    //     return _infos.Hier1.ContainsKey(ID);
-    // }
-
-    // public bool _check_loaded(string ID){
-    //     return _ID2PhysicsMaterial2D.ContainsKey(ID);
-    // }
-
-    // public PhysicsMaterial2D _get_phyMat(string ID){
-    //     return _ID2PhysicsMaterial2D[ID];
-    // }
-
-    // void load_item(string ID){
-        // PhysicsMaterial2D item = new() { 
-        //     friction = _infos.items[ID].friction,
-        //     bounciness = _infos.items[ID].bounciness
-        // };
-        // _ID2PhysicsMaterial2D.Add(ID, item);
-    // }
-
     void load_Hier1(string ID){
         _hier1s.Add(_infos.Hier1[ID]);
         _hier1s_prob[_hier1s.Count - 1] = _infos.Hier1[ID].prob;
         _ID2TerrainHier1.Add(ID, _infos.Hier1[ID]);
     }
 
-    // void load_Hier2(string ID){
-    //     _terrains_hier2.Add(_infos.Hier2[ID]);
-    //     _tags2TerrainHier2.Add(_infos.Hier2[ID].tags, _infos.Hier2[ID]);
-    // }
-
     void load_all(){
         string jsonText = File.ReadAllText(_GCfg.__TerrainsInfo_path);
         _infos = JsonConvert.DeserializeObject<TerrainsInfo>(jsonText);
+        rescale();
         _hier1s_prob = new float[_infos.Hier1.Count];
         foreach (var object_kv in _infos.Hier1){
             load_Hier1(object_kv.Key);
         }
-        // foreach (var object_kv in _infos.Hier2){
-        //     load_Hier2(object_kv.Key);
-        // }
+    }
+
+    void rescale(){
+        float base_scale = _infos.HierBase.base_scale;
+        for (int i = 0; i < _infos.HierBase.x_noise.Count; i++){
+            _infos.HierBase.x_noise[i].f *= base_scale;
+            _infos.HierBase.x_noise[i].min /= base_scale;
+            _infos.HierBase.x_noise[i].max /= base_scale;
+        }
+        _infos.HierBase.Hier1.f *= base_scale;
+        foreach (var key in _infos.Hier1.Keys){
+            for (int j = 0; j < _infos.Hier1[key].surface.Count; j++){
+                _infos.Hier1[key].surface[j].min /= base_scale;
+                _infos.Hier1[key].surface[j].max /= base_scale;
+                _infos.Hier1[key].surface[j].f *= base_scale;
+            }
+            for (int j = 0; j < _infos.Hier1[key].minerals.Count; j++){
+                for (int k = 0; k < _infos.Hier1[key].minerals[j].noise.Count; k++){
+                    _infos.Hier1[key].minerals[j].noise[k].f *= base_scale;
+                }
+            }
+        }
     }
 }

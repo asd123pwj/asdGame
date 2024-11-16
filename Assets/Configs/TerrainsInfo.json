@@ -1,33 +1,17 @@
 {
-    "version": "0.17.7b",
+    "version": "0.19.6",
     "HierBase":{
         "x_noise": [
-            {"noise": "perlin", "f": 1, "min": -50, "max": 50}
+            {"noise": "perlin", "f": 1, "min": -50, "max": 50, "fractal": "fbm"}
         ],
-        "Hier1": {"noise": "cellular_cell", "f": 10}
+        "Hier1": {"noise": "cellular_cell", "f": 0.1},
+        "base_scale": 10
     },
     "Hier1":{
         "0":{
             "ID": "0",
             "name": "flat desert",
-            "base_tile": "b4",
-            "prob": 1,
-            "surface": [
-                {"noise": "perlin", "f": 1, "min": -100, "max": 100, "fractal": "fbm"}
-            ],
-            "minerals": [
-                {"ID": "bd_m1", "noise": [
-                    {"noise": "perlin", "f": 10, "min": 0.6}
-                ]}, 
-                {"ID": "bd_m2", "noise": [
-                    {"noise": "perlin", "f": 5, "max": 0.05}
-                ]}
-            ]
-        },
-        "1":{
-            "ID": "1",
-            "name": "undulating mountain",
-            "base_tile": "b7",
+            "base_tile": "b6",
             "prob": 1,
             "surface": [
                 {"noise": "perlin", "f": 1, "min": -100, "max": 100}
@@ -37,11 +21,27 @@
                     {"noise": "perlin", "f": 10, "min": 0.6}
                 ]}, 
                 {"ID": "bd_m2", "noise": [
-                    {"noise": "perlin", "f": 5, "max": 0.05}
+                    {"noise": "cellular_2div", "f": 5, "max": 0.05}
+                ]}
+            ]
+        },
+        "1":{
+            "ID": "1",
+            "name": "undulating mountain",
+            "base_tile": "b7",
+            "prob": 1,
+            "surface": [
+                {"noise": "perlin", "f": 1, "min": -100, "max": 100},
+                {"noise": "perlin", "f": 1, "min": 0, "max": 200, "fractal": "ridged"}
+            ],
+            "minerals": [
+                {"ID": "bd_m1", "noise": [
+                    {"noise": "perlin", "f": 10, "min": 0.6}
+                ]}, 
+                {"ID": "bd_m2", "noise": [
+                    {"noise": "cellular_2div", "f": 5, "max": 0.05}
                 ]}
             ]
         }
     }
-
-
 }

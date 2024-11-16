@@ -6,8 +6,6 @@ using YamlDotNet.Core.Events;
 
 
 public class TilemapTerrainGenerator: BaseClass{
-    // public int surface_top = 1000;
-    // public int surface_buttom = -1000;
     TilemapTerrainSurface surface;
     TilemapTerrainMineral mineral;
 
