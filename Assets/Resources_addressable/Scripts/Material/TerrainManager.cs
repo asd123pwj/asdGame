@@ -20,15 +20,19 @@ public class MineralInfo{
 }
 
 public class NoiseCfg{
+    public List<NoiseCfg> precondition;
+    public List<NoiseCfg> x_noise;
+    public List<NoiseCfg> y_noise;
     public float f; // frequency
     public float min, max; // scale for 1D noise, thres for 2D noise
     public string fractal; // fractal type
     public string noise; // noise type
+    public bool ignoreX, ignoreY;   // if ignoreX == true, x = 0
 }
 
 public class TerrainHierBase{
-    public List<NoiseCfg> x_noise;
-    public NoiseCfg Hier1;
+    // public List<NoiseCfg> x_noise;
+    public List<NoiseCfg> Hier1;
     public float base_scale;
 }
 
@@ -68,25 +72,58 @@ public class TerrainManager: BaseClass{
         }
     }
 
-    void rescale(){
-        float base_scale = _infos.HierBase.base_scale;
-        for (int i = 0; i < _infos.HierBase.x_noise.Count; i++){
-            _infos.HierBase.x_noise[i].f *= base_scale;
-            _infos.HierBase.x_noise[i].min /= base_scale;
-            _infos.HierBase.x_noise[i].max /= base_scale;
-        }
-        _infos.HierBase.Hier1.f *= base_scale;
-        foreach (var key in _infos.Hier1.Keys){
-            for (int j = 0; j < _infos.Hier1[key].surface.Count; j++){
-                _infos.Hier1[key].surface[j].min /= base_scale;
-                _infos.Hier1[key].surface[j].max /= base_scale;
-                _infos.Hier1[key].surface[j].f *= base_scale;
+    void rescale(List<NoiseCfg> cfgs, bool isPrecondition){
+        if (cfgs == null) return;
+        foreach (var cfg in cfgs){
+            rescale(cfg.precondition, true);
+            rescale(cfg.x_noise, false);
+            rescale(cfg.y_noise, false);
+            cfg.f *= _infos.HierBase.base_scale;
+            if (!isPrecondition) {
+                cfg.min /= _infos.HierBase.base_scale;
+                cfg.max /= _infos.HierBase.base_scale;
             }
+        }
+    }
+
+    void rescale(){
+        // float base_scale = _infos.HierBase.base_scale;
+        rescale(_infos.HierBase.Hier1, true);
+        foreach (var key in _infos.Hier1.Keys){
+            rescale(_infos.Hier1[key].surface, false);
             for (int j = 0; j < _infos.Hier1[key].minerals.Count; j++){
                 for (int k = 0; k < _infos.Hier1[key].minerals[j].noise.Count; k++){
-                    _infos.Hier1[key].minerals[j].noise[k].f *= base_scale;
+                    rescale(_infos.Hier1[key].minerals[j].noise, true);
                 }
             }
         }
+        // for (int i = 0; i < _infos.HierBase.Hier1.Count; i++){
+        //     _infos.HierBase.Hier1[i].f *= base_scale;
+        //     for (int j = 0; j < _infos.HierBase.Hier1[i].precondition.Count; j++){
+        //         _infos.HierBase.Hier1[i].y_noise[j].f *= base_scale;
+        //     }
+        //     for (int j = 0; j < _infos.HierBase.Hier1[i].x_noise.Count; j++){
+        //         _infos.HierBase.Hier1[i].x_noise[j].min /= base_scale;
+        //         _infos.HierBase.Hier1[i].x_noise[j].max /= base_scale;
+        //         _infos.HierBase.Hier1[i].x_noise[j].f *= base_scale;
+        //     }
+        //     for (int j = 0; j < _infos.HierBase.Hier1[i].y_noise.Count; j++){
+        //         _infos.HierBase.Hier1[i].y_noise[j].min /= base_scale;
+        //         _infos.HierBase.Hier1[i].y_noise[j].max /= base_scale;
+        //         _infos.HierBase.Hier1[i].y_noise[j].f *= base_scale;
+        //     }
+        // }
+        // foreach (var key in _infos.Hier1.Keys){
+        //     for (int j = 0; j < _infos.Hier1[key].surface.Count; j++){
+        //         _infos.Hier1[key].surface[j].min /= base_scale;
+        //         _infos.Hier1[key].surface[j].max /= base_scale;
+        //         _infos.Hier1[key].surface[j].f *= base_scale;
+        //     }
+        //     for (int j = 0; j < _infos.Hier1[key].minerals.Count; j++){
+        //         for (int k = 0; k < _infos.Hier1[key].minerals[j].noise.Count; k++){
+        //             _infos.Hier1[key].minerals[j].noise[k].f *= base_scale;
+        //         }
+        //     }
+        // }
     }
 }

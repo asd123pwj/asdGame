@@ -27,17 +27,18 @@ public class Noise{
         _set_fractal_type(cfg.fractal);
         _set_noise(cfg.noise);
         float ratio = _get(pos.x, pos.y, cfg.f);
+        ratio = (cfg.max - cfg.min) * ratio + cfg.min;
         return ratio;
     }
-    public int _get_height(Vector3Int pos, NoiseCfg cfg) => Mathf.FloorToInt((cfg.max - cfg.min) * _get_ratio(pos, cfg) + cfg.min);
+    public int _get_height(Vector3Int pos, NoiseCfg cfg) => Mathf.FloorToInt(_get_ratio(pos, cfg));
 
-    public int _get_heights(Vector3Int pos, List<NoiseCfg> cfgs){
-        int h = 0;
-        foreach(NoiseCfg cfg in cfgs){
-            h += _get_height(pos, cfg);
-        }
-        return h;
-    }
+    // public int _get_heights(Vector3Int pos, List<NoiseCfg> cfgs){
+    //     int h = 0;
+    //     foreach(NoiseCfg cfg in cfgs){
+    //         h += _get_height(pos, cfg);
+    //     }
+    //     return h;
+    // }
 
     public bool _get_2D(Vector3Int map_pos, NoiseCfg cfg){
         _set_fractal_type(cfg.fractal);
@@ -49,16 +50,53 @@ public class Noise{
         return allowGenerate;
     }
 
-    public bool _get_2Ds(Vector3Int map_pos, List<NoiseCfg> cfgs){
-        foreach(NoiseCfg cfg in cfgs){
-            if (!_get_2D(map_pos, cfg)) return false;
+    // public bool _get_2Ds(Vector3Int map_pos, List<NoiseCfg> cfgs){
+    //     foreach(NoiseCfg cfg in cfgs){
+    //         if (!_get_2D(map_pos, cfg)) return false;
+    //     }
+    //     return true;
+    // }
+
+    public bool _get_bool(Vector3Int pos, List<NoiseCfg> cfgs){
+        bool allow = cfgs == null;
+        Vector3Int pos_with_noise = new();
+        if (cfgs != null) foreach(NoiseCfg cfg in cfgs){
+            pos_with_noise.x = _get_int(pos, cfg.x_noise) + (cfg.ignoreX ? 0 : pos.x);
+            pos_with_noise.y = _get_int(pos, cfg.y_noise) + (cfg.ignoreY ? 0 : pos.y);
+            if (cfg.precondition != null && !_get_bool(pos_with_noise, cfg.precondition)) continue;
+            if (_get_2D(pos_with_noise, cfg)) allow = true;
         }
-        return true;
+        return allow;
+    }
+
+    public int _get_int(Vector3Int pos, List<NoiseCfg> cfgs){
+        int value = 0;
+        Vector3Int pos_with_noise = new();
+        if (cfgs != null) foreach(NoiseCfg cfg in cfgs){
+            pos_with_noise.x = _get_int(pos, cfg.x_noise) + (cfg.ignoreX ? 0 : pos.x);
+            pos_with_noise.y = _get_int(pos, cfg.y_noise) + (cfg.ignoreY ? 0 : pos.y);
+            if (cfg.precondition != null && !_get_bool(pos_with_noise, cfg.precondition)) continue;
+            value += _get_height(pos_with_noise, cfg);
+        }
+        return value;
+    }
+    
+    public float _get_float(Vector3Int pos, List<NoiseCfg> cfgs){
+        float value = 0;
+        Vector3Int pos_with_noise = new();
+        if (cfgs != null) foreach(NoiseCfg cfg in cfgs){
+            pos_with_noise.x = _get_int(pos, cfg.x_noise) + (cfg.ignoreX ? 0 : pos.x);
+            pos_with_noise.y = _get_int(pos, cfg.y_noise) + (cfg.ignoreY ? 0 : pos.y);
+            if (cfg.precondition != null && !_get_bool(pos_with_noise, cfg.precondition)) continue;
+            value += _get_ratio(pos_with_noise, cfg);
+        }
+        return value;
     }
 
     // ---------- Noise Type ----------
     public void _set_noise(FastNoiseLite.NoiseType noise_type) => _noise_generator.SetNoiseType(noise_type);
     public void _noise_perlin() => _set_noise(FastNoiseLite.NoiseType.Perlin);
+    public void _noise_cellular() { _set_noise(FastNoiseLite.NoiseType.Cellular); _noise_generator.SetCellularReturnType(FastNoiseLite.CellularReturnType.Distance);}
     public void _noise_cellular_cell() { _set_noise(FastNoiseLite.NoiseType.Cellular); _noise_generator.SetCellularReturnType(FastNoiseLite.CellularReturnType.CellValue);}
     public void _noise_cellular_2div() { _set_noise(FastNoiseLite.NoiseType.Cellular); _noise_generator.SetCellularReturnType(FastNoiseLite.CellularReturnType.Distance2Div);}
     public void _noise_simplex2() => _set_noise(FastNoiseLite.NoiseType.OpenSimplex2);
@@ -66,6 +104,7 @@ public class Noise{
     public void _set_noise(string noise_type){
         switch(noise_type){
             case "perlin": _noise_perlin(); break;
+            case "cellular": _noise_cellular(); break;
             case "cellular_cell": _noise_cellular_cell(); break;
             case "cellular_2div": _noise_cellular_2div(); break;
             case "simplex2": _noise_simplex2(); break;
