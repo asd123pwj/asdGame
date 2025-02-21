@@ -6,8 +6,11 @@ public class TilemapTile: BaseClass{
     TilemapBlock block;
     Vector3Int map_pos;
     TileP3D P3D;
+    TileTile tileTile;
+    
     DecorationBase decoration;
     public string tile;
+    bool enable_tile = true;
     bool enable_P3D = true;
     bool enable_decoration = true;
     string mineral_ID;
@@ -26,6 +29,20 @@ public class TilemapTile: BaseClass{
     public void _set_tile(string tile) { this.tile = tile; }
 
     public string _get_tile() => tile;
+    
+    public void _update_tile(){
+        if (enable_tile){
+            if (tileTile == null){
+                tileTile = new(map_pos, block.layer, block.obj.tile_container.transform);
+            }
+            else{
+                tileTile._update_sprite().Forget();
+            }
+        }
+        else{
+            // TODO: delete P3D
+        }
+    }
 
     public void _update_P3D(){
         if (enable_P3D){

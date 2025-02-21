@@ -1,15 +1,9 @@
 {
-    "version": "0.19.7",
+    "version": "0.19.8",
     "HierBase":{
         "Hier1": [
-            {
-                "noise": "cellular_cell", 
-                "f": 0.1, 
-                "min": 0,
-                "max": 1,
-                "ignoreY": true,
-                "x_noise": [{"noise": "perlin", "f": 1, "min": -50, "max": 50, "fractal": "fbm"}]
-            }
+            {"noise": "cellular_cell", "f": 0.1, "min": 0, "max": 1, "ignoreY": true,
+                "x_noise": [{"noise": "perlin", "f": 1, "min": -50, "max": 50, "fractal": "fbm"}]}
         ],
         "base_scale": 1
     },
@@ -17,21 +11,17 @@
         "0":{
             "ID": "0",
             "name": "flat desert",
-            "base_tile": "b6",
+            "base_tile": "b8",
             "prob": 1,
             "surface": [
-                {"noise": "perlin", "f": 1, "min": 0, "max": 100, "ignoreY": true, 
-                    "precondition": [{"noise": "perlin", "f": 1, "max": 0.4, "ignoreY": true}]},
-                {"noise": "perlin", "f": 1, "min": 0, "max": 100, "ignoreY": true, 
-                    "precondition": [{"noise": "perlin", "f": 1, "min": 0.5, "ignoreY": true}]}
+                {"noise": "perlin", "f": 0.1, "min": -100, "max": 100, "ignoreY": true}
             ],
             "minerals": [
                 {"ID": "bd_m1", "noise": [
-                    {"noise": "simplex2", "f": 10, "min": 0.6},
-                    {"noise": "simplex2", "f": 10, "max": 0.5}
+                    {"noise": "cellular_2div", "f": 5, "max": 0.0005}
                 ]}, 
                 {"ID": "bd_m2", "noise": [
-                    {"noise": "cellular_2div", "f": 5, "max": 0.05}
+                    {"noise": "cellular_2div", "f": 3, "max": 0.05, "fractal": "fbm"}
                 ]}
             ]
         },

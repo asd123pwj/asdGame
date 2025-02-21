@@ -69,6 +69,28 @@
             "P3D_path": "sprite_b7_P3D",
             "tags": ["common"]
         },
+        "b8":{
+            "category": "Block",
+            "name": "棕色砖块",
+            "tileType": "Rule",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "tile_b8",
+            "sprite": "sprite_b8",
+            "P3D_path": "sprite_b8_P3D",
+            "tags": ["common"]
+        },
+        "b9":{
+            "category": "Block",
+            "name": "雪块",
+            "tileType": "Rule",
+            "description": "",
+            "root_path_key": "Block",
+            "relative_path": "tile_b9",
+            "sprite": "sprite_b9",
+            "P3D_path": "sprite_b9_P3D",
+            "tags": ["common"]
+        },
 
 
 

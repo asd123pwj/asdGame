@@ -42,17 +42,14 @@
 
 
 
-        "bd_m1":{
-            "name": "煤炭",
-            "description": "",
-            "path": "sprite_bd_m1",
-            "tags": ["uncommon"]
-        },
-        "bd_m2":{
-            "name": "白色矿石",
-            "description": "",
-            "path": "sprite_bd_m2",
-            "tags": ["uncommon"]
-        }
+        "bd_m1":{ "name": "黑色矿石", "path": "sprite_bd_m1" },
+        "bd_m2":{ "name": "白色矿石", "path": "sprite_bd_m2" },
+        "bd_m3":{ "name": "红色矿石", "path": "sprite_bd_m3" },
+        "bd_m4":{ "name": "橙色矿石", "path": "sprite_bd_m4" },
+        "bd_m5":{ "name": "黄色矿石", "path": "sprite_bd_m5" },
+        "bd_m6":{ "name": "绿色矿石", "path": "sprite_bd_m6" },
+        "bd_m7":{ "name": "青色矿石", "path": "sprite_bd_m7" },
+        "bd_m8":{ "name": "蓝色矿石", "path": "sprite_bd_m8" },
+        "bd_m9":{ "name": "紫色矿石", "path": "sprite_bd_m9" }
     }
 }

@@ -65,6 +65,7 @@ public class DecorationBase : BaseClass{
 
     void init_gameObject(){
         _self = new("BlockDecoration");
+        _self.isStatic = true;
         _renderer = _self.AddComponent<SpriteRenderer>();
         // _mask = _self.AddComponent<SpriteMask>();
         // _mask.enabled = false;

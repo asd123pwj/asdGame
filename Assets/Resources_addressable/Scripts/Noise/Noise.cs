@@ -32,14 +32,6 @@ public class Noise{
     }
     public int _get_height(Vector3Int pos, NoiseCfg cfg) => Mathf.FloorToInt(_get_ratio(pos, cfg));
 
-    // public int _get_heights(Vector3Int pos, List<NoiseCfg> cfgs){
-    //     int h = 0;
-    //     foreach(NoiseCfg cfg in cfgs){
-    //         h += _get_height(pos, cfg);
-    //     }
-    //     return h;
-    // }
-
     public bool _get_2D(Vector3Int map_pos, NoiseCfg cfg){
         _set_fractal_type(cfg.fractal);
         _set_noise(cfg.noise);
@@ -49,13 +41,6 @@ public class Noise{
         if (cfg.max != 0 && h_ratio > cfg.max) allowGenerate = false;
         return allowGenerate;
     }
-
-    // public bool _get_2Ds(Vector3Int map_pos, List<NoiseCfg> cfgs){
-    //     foreach(NoiseCfg cfg in cfgs){
-    //         if (!_get_2D(map_pos, cfg)) return false;
-    //     }
-    //     return true;
-    // }
 
     public bool _get_bool(Vector3Int pos, List<NoiseCfg> cfgs){
         bool allow = cfgs == null;

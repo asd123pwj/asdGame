@@ -3,6 +3,9 @@
     "items":{
         "Size1x1_Grid4x4_AxisXY":{
             "path": "Assets/Resources_addressable/Mesh/Size1x1_Grid4x4_AxisXY.asset"
+        },
+        "Size4x4_Grid4x4_AxisXY":{
+            "path": "Assets/Resources_addressable/Mesh/Size4x4_Grid4x4_AxisXY.asset"
         }
     }
 }

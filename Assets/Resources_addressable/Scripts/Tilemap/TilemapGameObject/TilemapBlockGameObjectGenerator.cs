@@ -4,11 +4,13 @@ using UnityEngine.Tilemaps;
 
 public class TilemapBlockGameObject{
     public GameObject obj;
+    public TilemapBlockStatus TMap_status;
     public Tilemap TMap;
-    public TilemapRenderer TMap_renderer;
+    // public TilemapRenderer TMap_renderer;
     public TilemapCollider2D TMap_collider;
     public Rigidbody2D rb;
     public CompositeCollider2D compositeCollider;
+    public GameObject tile_container;
     public GameObject P3D_container;
     public GameObject Decoration_container;
 }
@@ -24,24 +26,44 @@ public class TilemapBlockGameObjectGenerator: BaseClass{
         // ----- GameObject ----- //
         obj.obj = new GameObject();
         obj.obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[layer_type.ToString()].transform);
+        // obj.obj.transform.SetParent();
+
+        
         obj.obj.name = block_offsets.x + "_" + block_offsets.y;
         // obj.obj.layer = LayerMask.NameToLayer(layer_type);
 
         // ----- Container ----- //
-        obj.P3D_container = new GameObject("P3Ds");
-        obj.P3D_container.transform.SetParent(obj.obj.transform);
-        obj.Decoration_container = new GameObject("Decorations");
-        obj.Decoration_container.transform.SetParent(obj.obj.transform);
+        obj.tile_container = new GameObject("Tiles" + obj.obj.name);
+        // obj.tile_container.transform.SetParent(obj.obj.transform);
+        obj.tile_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()].transform);
+        
+        obj.P3D_container = new GameObject("P3Ds" + obj.obj.name);
+        // obj.P3D_container.transform.SetParent(obj.obj.transform);
+        obj.P3D_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()].transform);
+        
+        obj.Decoration_container = new GameObject("Decorations" + obj.obj.name);
+        // obj.Decoration_container.transform.SetParent(obj.obj.transform);
+        obj.Decoration_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()].transform);
 
         // ----- Tilemap ----- //
         obj.TMap = obj.obj.AddComponent<Tilemap>();
         obj.TMap.tileAnchor = Vector3Int.zero;
 
         // ----- TilemapRenderer ----- //
-        obj.TMap_renderer = obj.obj.AddComponent<TilemapRenderer>();
-        obj.TMap_renderer.material = _MatSys._mat._get_mat("TransparentSprite");
-        obj.TMap_renderer.sortingLayerID = layer_type.sortingLayerID;
-        obj.TMap_renderer.sortingOrder = layer_type.sortingOrder;
+        // obj.TMap_renderer = obj.obj.AddComponent<TilemapRenderer>();
+        // obj.TMap_renderer.material = _MatSys._mat._get_mat("TransparentSprite");
+        // obj.TMap_renderer.sortingLayerID = layer_type.sortingLayerID;
+        // obj.TMap_renderer.sortingOrder = layer_type.sortingOrder;
+        
+        // obj.TMap_renderer.renderingLayerMask = 0;
+
+
+        obj.TMap_status = obj.obj.AddComponent<TilemapBlockStatus>();
+        obj.TMap_status.sortingOrder = layer_type.sortingOrder;
+        // obj.TMap_renderer.material = _MatSys._mat._get_mat("TransparentSprite");
+        // obj.TMap_renderer.sortingLayerID = layer_type.sortingLayerID;
+        // obj.TMap_renderer.sortingOrder = layer_type.sortingOrder;
+
 
         // --- !!! Necessary for Pseudo3D: 
         // --- TilemapRenderer.Mode.Individual: make tile overlap tile, while Mode.Chunk make tile overlap tile only same type
@@ -59,6 +81,7 @@ public class TilemapBlockGameObjectGenerator: BaseClass{
         // ----- Rigidbody2D ----- //
         // --- When CompositeCollider2D add, Rigidbody2D will be added automatically by Unity.
         // obj.TMap_rb = obj.TMap_obj.AddComponent<Rigidbody2D>();
+
         obj.rb = obj.obj.GetComponent<Rigidbody2D>();
         obj.rb.bodyType = RigidbodyType2D.Static;
         obj.rb.sharedMaterial = _MatSys._phyMat._get_phyMat("Default");
