@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class TilemapTile: BaseClass{
-    public static Dictionary<string, Dictionary<Vector3Int, TilemapTile>> our = new();
+    public static Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _our = new();
     TilemapBlock block;
     Vector3Int map_pos;
     TileP3D P3D;
@@ -23,12 +23,24 @@ public class TilemapTile: BaseClass{
     public TilemapTile(TilemapBlock block, Vector3Int map_pos){
         this.block = block;
         this.map_pos = map_pos;
-        our[block.layer.ToString()].Add(map_pos, this);
+        _our[block.layer.ToString()].Add(map_pos, this);
     }
 
     public void _set_tile(string tile) { this.tile = tile; }
 
     public string _get_tile() => tile;
+
+    public static bool _check_tile(LayerType layer, Vector3Int map_pos) {
+        var tiles_in_layer = _our[layer.ToString()];
+        if (!tiles_in_layer.ContainsKey(map_pos)){
+            return false; // 20250303: I think this can not happen, it happen only in block no load
+        }
+        var tile = tiles_in_layer[map_pos];
+        if (tile.tile == "0"){
+            return false; // "0" is empty tile
+        }
+        return true;
+    } 
     
     public void _update_tile(){
         if (enable_tile){

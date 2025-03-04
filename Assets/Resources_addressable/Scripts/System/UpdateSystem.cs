@@ -34,11 +34,16 @@ public class UpdateSystem: BaseClass{
         }
     }
 
-    public void _add_updater(UpdateAction action, float interval){
+    public int _add_updater(UpdateAction action, float interval){
         _add_updater(new(action, interval));
+        return updaters.Count - 1;
     }
     public void _add_updater(Updater updater){
         updaters.Add(updater);
     }
+
+    // public void _update_updater(int update_order, UpdateAction action, float interval){
+    //     updaters[update_order] = new(action, interval);
+    // }
 
 }

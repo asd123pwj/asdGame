@@ -7,7 +7,7 @@ public class TilemapVisualization: BaseClass{
     public override void _init(){
         self = new GameObject("LineRenderer");
         self.transform.SetParent(_sys._system.transform);
-        self.transform.position = new(-0.5f, -0.5f, 0);
+        // self.transform.position = new(-0.5f, -0.5f, 0);
         lineRenderer = self.AddComponent<LineRenderer>();
         int rows = 900, cols = 1600;
         float cellSize = 1f;

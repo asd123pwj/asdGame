@@ -10,7 +10,7 @@ public class TilemapMonitor: BaseClass{
     // ---------- Tilemap Status ---------- //
     // ----- Blocks ----- //
     public Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> _TMap_blocks => TilemapBlock.our;
-    public Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _TMap_tiles => TilemapTile.our;
+    public Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _TMap_tiles => TilemapTile._our;
     // ----- Containers ----- //
     public Dictionary<string, GameObject> _TMap_containers;
     // ----- GameObjects ----- //
