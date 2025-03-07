@@ -22,9 +22,10 @@ public class WaterGenerator: BaseClass{
     public override void _update(){
         foreach(var waters in WaterBase._our.Values){
             foreach(var water in waters.Values){
-                _flow._flow(water);
+                _flow._flow_single(water);
             }
         }
+        _flow._flow_batch();
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
@@ -33,8 +34,8 @@ public class WaterGenerator: BaseClass{
         TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, layer);
         
         Vector3Int map_pos = _TMapSys._TMapAxis._mapping_worldPos_to_mapPos(keyPos.mouse_pos_world, layer);
-        new WaterBase(map_pos, block.layer, _water_containers["Water"]);
-        
+        WaterBase water = new WaterBase(map_pos, block.layer, _sys._TMapSys._TMapMon._transforms["Water"]);
+        water._full();
         return true;
     }
 }

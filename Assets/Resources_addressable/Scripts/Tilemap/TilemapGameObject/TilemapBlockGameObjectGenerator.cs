@@ -25,7 +25,7 @@ public class TilemapBlockGameObjectGenerator: BaseClass{
         layer_type ??= new LayerType();
         // ----- GameObject ----- //
         obj.obj = new GameObject();
-        obj.obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[layer_type.ToString()].transform);
+        obj.obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[layer_type.ToString()]);
         // obj.obj.transform.SetParent();
 
         
@@ -35,15 +35,15 @@ public class TilemapBlockGameObjectGenerator: BaseClass{
         // ----- Container ----- //
         obj.tile_container = new GameObject("Tiles" + obj.obj.name);
         // obj.tile_container.transform.SetParent(obj.obj.transform);
-        obj.tile_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()].transform);
+        obj.tile_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
         
         obj.P3D_container = new GameObject("P3Ds" + obj.obj.name);
         // obj.P3D_container.transform.SetParent(obj.obj.transform);
-        obj.P3D_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()].transform);
+        obj.P3D_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
         
         obj.Decoration_container = new GameObject("Decorations" + obj.obj.name);
         // obj.Decoration_container.transform.SetParent(obj.obj.transform);
-        obj.Decoration_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()].transform);
+        obj.Decoration_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
 
         // ----- Tilemap ----- //
         obj.TMap = obj.obj.AddComponent<Tilemap>();

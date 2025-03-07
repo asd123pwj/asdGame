@@ -12,7 +12,8 @@ public class TilemapMonitor: BaseClass{
     public Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> _TMap_blocks => TilemapBlock.our;
     public Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _TMap_tiles => TilemapTile._our;
     // ----- Containers ----- //
-    public Dictionary<string, GameObject> _TMap_containers;
+    public Dictionary<string, Transform> _TMap_containers;
+    public Dictionary<string, Transform> _transforms;
     // ----- GameObjects ----- //
     public Dictionary<string, Dictionary<Vector3Int, TilemapBlockGameObject>> _TMap_objs;
 
@@ -23,20 +24,28 @@ public class TilemapMonitor: BaseClass{
         // ---------- GameObject Container Init ---------- //
         // ----- Container Init ----- //
         _TMap_containers = new(){
-            { new LayerType(0).ToString(), new GameObject(new LayerType(0).ToString()) },
-            { new LayerType(1).ToString(), new GameObject(new LayerType(1).ToString()) },
-            { new LayerType(2).ToString(), new GameObject(new LayerType(2).ToString()) },
-            { new LayerType(3).ToString(), new GameObject(new LayerType(3).ToString()) },
-            { new LayerType(4).ToString(), new GameObject(new LayerType(4).ToString()) },
-            { new LayerType(5).ToString(), new GameObject(new LayerType(5).ToString()) },
+            { new LayerType(0).ToString(), new GameObject(new LayerType(0).ToString()).transform },
+            { new LayerType(1).ToString(), new GameObject(new LayerType(1).ToString()).transform },
+            { new LayerType(2).ToString(), new GameObject(new LayerType(2).ToString()).transform },
+            { new LayerType(3).ToString(), new GameObject(new LayerType(3).ToString()).transform },
+            { new LayerType(4).ToString(), new GameObject(new LayerType(4).ToString()).transform },
+            { new LayerType(5).ToString(), new GameObject(new LayerType(5).ToString()).transform },
         };
         foreach(var obj in _TMap_containers.Values){
-            obj.transform.SetParent(_sys._grid.transform);
+            obj.SetParent(_sys._grid.transform);
         }
         // ----- GameObject Init ----- //
         _TMap_objs = new();
         foreach(var tilemap_type in _TMap_containers.Keys){
             _TMap_objs.Add(tilemap_type, new());
+        }
+
+        // ----- Transform Init ----- //
+        _transforms = new(){
+            { "Water", new GameObject("Water").transform },
+        };
+        foreach(var obj in _transforms.Values){
+            obj.SetParent(_sys._grid.transform);
         }
 
         // ---------- GameObject Container Init ---------- //
