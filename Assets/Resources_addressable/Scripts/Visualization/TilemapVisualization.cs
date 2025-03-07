@@ -11,11 +11,14 @@ public class TilemapVisualization: BaseClass{
         lineRenderer = self.AddComponent<LineRenderer>();
         int rows = 900, cols = 1600;
         float cellSize = 1f;
-        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            // string mat_ID = "TransparentSprite";
+            // // _renderer.material = _MatSys._mat._get_mat("TilemapLitMaterial");
+            // _renderer.material = ;//TilemapLitMaterial
+        lineRenderer.material = _MatSys._mat._get_mat("TransparentSprite");
         lineRenderer.startWidth = 0.1f;
         lineRenderer.endWidth = 0.1f;
-        lineRenderer.startColor = Color.white;
-        lineRenderer.endColor = Color.white;
+        lineRenderer.startColor = new Color(1, 1, 1, 0.5f);
+        lineRenderer.endColor = new Color(1, 1, 1, 0.5f);
         lineRenderer.sortingLayerName = "UI-Foreground";
 
         float start_x = cols / 2 * cellSize;

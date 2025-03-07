@@ -28,6 +28,11 @@ public class VisualizationSystem : BaseClass{
         _tMapVis = new();
     }
     
+    public override bool _check_allow_init(){
+        if (!_sys._initDone) return false;
+        if (!_MatSys._check_all_info_initDone()) return false;
+        return true;
+    }
 
     
 }

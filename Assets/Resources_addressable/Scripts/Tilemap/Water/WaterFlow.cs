@@ -30,16 +30,32 @@ public class WaterFlow: BaseClass{
         if (check_empty_down(water)){
             flow_down(water);
         }
+        if (!check_allow_flow(water)) return;
+        if (check_empty_right(water)){
+            flow_right(water);
+        }
+        if (!check_allow_flow(water)) return;
+        if (check_empty_left(water)){
+            flow_left(water);
+        }
     }
 
     bool check_allow_flow(WaterBase water){
-        if (water._amount == 0) return false;
+        if (_diff.ContainsKey(water._layer.ToString()) && _diff[water._layer.ToString()].ContainsKey(water._map_pos)) {
+            if (water._amount + _diff[water._layer.ToString()][water._map_pos] == 0) return false;
+        }
+        else{
+            if (water._amount == 0) return false;
+        }
         return true;
     }
 
-    void flow_down(WaterBase water){
+    void flow_down(WaterBase water) => flow_amount(water, Vector3Int.down);
+    void flow_right(WaterBase water) => flow_amount(water, Vector3Int.right);
+    void flow_left(WaterBase water) => flow_amount(water, Vector3Int.left);
+    void flow_amount(WaterBase water, Vector3Int dir){
         Vector3Int current_pos = water._map_pos;
-        Vector3Int next_pos = current_pos + new Vector3Int(0, -1, 0);
+        Vector3Int next_pos = current_pos + dir;
         if (!_diff.ContainsKey(water._layer.ToString())) _diff.Add(water._layer.ToString(), new());
         if (!_diff[water._layer.ToString()].ContainsKey(current_pos)) _diff[water._layer.ToString()].Add(current_pos, 0);
         if (!_diff[water._layer.ToString()].ContainsKey(next_pos)) _diff[water._layer.ToString()].Add(next_pos, 0);
@@ -49,13 +65,9 @@ public class WaterFlow: BaseClass{
         _diff[water._layer.ToString()][next_pos] += 1;
     }
 
-    bool check_empty_down(WaterBase water){
-        Vector3Int pos = water._map_pos;
-        Vector3Int down_pos = pos + new Vector3Int(0, -1, 0);
-        if (check_empty(water._layer, down_pos)) return true;
-        return false;
-    }
-
+    bool check_empty_down(WaterBase water) => check_empty(water._layer, water._map_pos + Vector3Int.down);
+    bool check_empty_right(WaterBase water) => check_empty(water._layer, water._map_pos + Vector3Int.right);
+    bool check_empty_left(WaterBase water) => check_empty(water._layer, water._map_pos + Vector3Int.left);
     bool check_empty(LayerType layer, Vector3Int map_pos){
         return !TilemapTile._check_tile(layer, map_pos);
     }
