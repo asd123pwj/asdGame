@@ -1,3 +1,4 @@
+// Ref: https://www.jgallant.com/2d-liquid-simulator-with-cellular-automaton-in-unity/
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -24,7 +25,8 @@ public class WaterFlow: BaseClass{
                 // update water amount
                 WaterBase._our[layer][pos]._amount += _diff[layer][pos].total;
                 // update water sprite
-                WaterBase._our[layer][pos]._update_sprite().Forget();
+                // WaterBase._our[layer][pos]._update_sprite().Forget();
+                WaterBase._our[layer][pos]._update_mesh().Forget();
             }
         }
         _diff.Clear();
@@ -44,6 +46,10 @@ public class WaterFlow: BaseClass{
         if (check_flow_left(water)){
             flow_left(water);
         }
+        // if (!check_allow_flow(water)) return;
+        // if (check_flow_up(water)){
+        //     flow_up(water);
+        // }
     }
 
     bool check_allow_flow(WaterBase water){
@@ -65,6 +71,7 @@ public class WaterFlow: BaseClass{
     void flow_down(WaterBase water) => flow_amount(water, Vector3Int.down);
     void flow_right(WaterBase water) => flow_amount(water, Vector3Int.right);
     void flow_left(WaterBase water) => flow_amount(water, Vector3Int.left);
+    // void flow_up(WaterBase water) => flow_amount(water, Vector3Int.up);
     void flow_amount(WaterBase water, Vector3Int dir){
         Vector3Int current_pos = water._map_pos;
         Vector3Int next_pos = current_pos + dir;
@@ -81,6 +88,7 @@ public class WaterFlow: BaseClass{
     bool check_flow_down(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.down);
     bool check_flow_right(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.right);
     bool check_flow_left(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.left);
+    // bool check_flow_up(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.up);
     bool check_flow(WaterBase water, Vector3Int next_pos){
         if (TilemapTile._check_tile(water._layer, next_pos)) return false;  // have tile, can't fill. But I think it also can fill, cause some tile only part
         if (WaterBase._our.ContainsKey(water._layer.ToString()) && WaterBase._our[water._layer.ToString()].ContainsKey(next_pos) ){

@@ -34,7 +34,12 @@ public class WaterGenerator: BaseClass{
         TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, layer);
         
         Vector3Int map_pos = _TMapSys._TMapAxis._mapping_worldPos_to_mapPos(keyPos.mouse_pos_world, layer);
-        WaterBase water = new WaterBase(map_pos, block.layer, _sys._TMapSys._TMapMon._transforms["Water"]);
+
+        WaterBase water;
+        if (WaterBase._our.ContainsKey(layer.ToString()) && WaterBase._our[layer.ToString()].ContainsKey(map_pos)) 
+            water = WaterBase._our[layer.ToString()][map_pos];
+        else 
+            water = new WaterBase(map_pos, block.layer, _sys._TMapSys._TMapMon._transforms["Water"]);
         water._full();
         return true;
     }

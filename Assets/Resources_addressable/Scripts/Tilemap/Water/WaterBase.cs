@@ -6,39 +6,44 @@ using UnityEngine.Tilemaps;
 
 public class WaterBase : BaseClass{
     public static Dictionary<string, Dictionary<Vector3Int, WaterBase>> _our = new();
-    public Vector3Int _map_pos, _block_offsets;
     public static WaterFlow _flow = new();
     Tilemap TMap;
     // Transform container => _TMapSys._P3DMon._containers["TileP3D"];
     Transform container;
-    public LayerType _layer;
-    // ---------- Status ---------- //
+    // ---------- GameObject ---------- //
     public GameObject _self;
-    public SpriteRenderer _renderer;
+    Mesh mesh;
+    MeshRenderer meshRenderer;
+    MeshCollider meshCollider;
+    MeshFilter meshFilter;
+    // ---------- Status ---------- //
+    public Vector3Int _map_pos, _block_offsets;
+    public LayerType _layer;
+    Vector3[] vertices_ori;
+    Vector3[] vertices_new;
     public int _amount = 0; // 0 ~ _sys._GCfg._sysCfg.water_full_amount, 0 means empty
 
     public WaterBase(Vector3Int map_pos, LayerType layer, Transform container){
-        // _amount = 0;
+        if (!_our.ContainsKey(layer.ToString())) {
+            _our[layer.ToString()] = new();
+        }
+        _our[layer.ToString()].Add(map_pos, this);
         this._map_pos = map_pos;
         _block_offsets = _TMapSys._TMapAxis._mapping_mapPos_to_blockOffsets(map_pos);
         TMap = _TMapSys._TMapMon._get_blkObj(_block_offsets, layer).TMap;
         _self.transform.position = _TMapSys._TMapAxis._mapping_mapPos_to_worldPos(map_pos, layer);
         _layer = layer;
-        _renderer.sortingLayerID = _layer.sortingLayerID;
-        _renderer.sortingOrder = _layer.sortingOrder;
+        meshRenderer.sortingLayerID = _layer.sortingLayerID;
+        meshRenderer.sortingOrder = _layer.sortingOrder;
         this.container = container;
         _self.transform.SetParent(container);
-        _update_sprite().Forget();
+        init_mesh().Forget();
 
-        if (!_our.ContainsKey(layer.ToString())) {
-            _our[layer.ToString()] = new();
-        }
-        _our[layer.ToString()].Add(map_pos, this);
     }
 
     public void _full(){
         _amount = _sys._GCfg._sysCfg.water_full_amount;
-        _update_sprite().Forget();
+        _update_mesh().Forget();
     }
 
     public bool _isFull(){
@@ -48,25 +53,35 @@ public class WaterBase : BaseClass{
     public override void _init(){
         init_gameObject();
     }
-    
-    public async UniTaskVoid _update_sprite(){
-        await UniTask.Delay(50);
-        string tile_ID = "b5";
-        string tile_subID;
-        if (_amount == 1)
-            tile_subID = "__Full";
-        else
-            tile_subID = "__M";
 
-        _renderer.sprite = _MatSys._tile._get_sprite(tile_ID, tile_subID);
-        string mat_ID = "TransparentSprite";
-        _renderer.material = _MatSys._mat._get_mat(mat_ID);//TilemapLitMaterial
+    
+    public async UniTaskVoid init_mesh(){
+        await UniTask.Delay(50);
+        string mat_name = "Liquid_Water";
+        string mesh_name = "Size1x1_Grid4x4_AxisXY";
+        meshFilter.mesh = _sys._MatSys._mesh._get_mesh(mesh_name);
+        mesh = meshFilter.mesh;
+        meshRenderer.material = _sys._MatSys._mat._get_mat(mat_name);
+        meshCollider.sharedMesh = mesh;
+        vertices_ori = mesh.vertices;
+        vertices_new = new Vector3[vertices_ori.Length];
     }
 
+    public async UniTaskVoid _update_mesh(){
+        await UniTask.Delay(50);
+        if (_amount == 1)
+            _self.SetActive(true);
+        else
+            _self.SetActive(false);
+        
+    }
+    
     void init_gameObject(){
         _self = new("Water");
         _self.isStatic = true;
-        _renderer = _self.AddComponent<SpriteRenderer>();
+        meshRenderer = _self.AddComponent<MeshRenderer>();
+        meshCollider = _self.AddComponent<MeshCollider>();
+        meshFilter = _self.AddComponent<MeshFilter>();
     }
     
     
