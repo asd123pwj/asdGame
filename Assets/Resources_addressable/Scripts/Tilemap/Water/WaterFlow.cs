@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class WaterAmountDiff{
+    public bool isExist;
     public int decrease;
     public int increase;
     public int total => increase - decrease;
@@ -32,15 +33,15 @@ public class WaterFlow: BaseClass{
     public void _flow_single(WaterBase water){
         // Debug.Log("flow");
         if (!check_allow_flow(water)) return;
-        if (check_fill_down(water)){
+        if (check_flow_down(water)){
             flow_down(water);
         }
         if (!check_allow_flow(water)) return;
-        if (check_fill_right(water)){
+        if (check_flow_right(water)){
             flow_right(water);
         }
         if (!check_allow_flow(water)) return;
-        if (check_fill_left(water)){
+        if (check_flow_left(water)){
             flow_left(water);
         }
     }
@@ -55,29 +56,40 @@ public class WaterFlow: BaseClass{
         return true;
     }
 
+    WaterAmountDiff get_diff(WaterBase water) => get_diff(water._layer.ToString(), water._map_pos);
+    WaterAmountDiff get_diff(string layer, Vector3Int pos){
+        if (_diff.ContainsKey(layer) && _diff[layer].ContainsKey(pos)) return _diff[layer][pos];
+        return new();
+    }
+
     void flow_down(WaterBase water) => flow_amount(water, Vector3Int.down);
     void flow_right(WaterBase water) => flow_amount(water, Vector3Int.right);
     void flow_left(WaterBase water) => flow_amount(water, Vector3Int.left);
     void flow_amount(WaterBase water, Vector3Int dir){
         Vector3Int current_pos = water._map_pos;
         Vector3Int next_pos = current_pos + dir;
+        
         if (!_diff.ContainsKey(water._layer.ToString())) _diff.Add(water._layer.ToString(), new());
-        if (!_diff[water._layer.ToString()].ContainsKey(current_pos)) _diff[water._layer.ToString()].Add(current_pos, new());
-        if (!_diff[water._layer.ToString()].ContainsKey(next_pos)) _diff[water._layer.ToString()].Add(next_pos, new());
+        if (!get_diff(water).isExist) _diff[water._layer.ToString()].Add(current_pos, new() { isExist = true });
+        if (!get_diff(water._layer.ToString(), next_pos).isExist) _diff[water._layer.ToString()].Add(next_pos, new() { isExist = true });
         // Step 1: Event: Current water amount decrease, _diff -
-        _diff[water._layer.ToString()][current_pos].decrease += 1;
+        get_diff(water).decrease += 1;
         // Step 2: Event: Next water amount increase, _diff +
-        _diff[water._layer.ToString()][next_pos].increase += 1;
+        get_diff(water._layer.ToString(), next_pos).increase += 1;
     }
 
-    bool check_fill_down(WaterBase water) => check_fill(water._layer, water._map_pos + Vector3Int.down);
-    bool check_fill_right(WaterBase water) => check_fill(water._layer, water._map_pos + Vector3Int.right);
-    bool check_fill_left(WaterBase water) => check_fill(water._layer, water._map_pos + Vector3Int.left);
-    bool check_fill(LayerType layer, Vector3Int map_pos){
-        if (TilemapTile._check_tile(layer, map_pos)) return false;  // have tile, can't fill. But I think it also can fill, cause some tile only part
-        if (WaterBase._our.ContainsKey(layer.ToString())
-         && WaterBase._our[layer.ToString()].ContainsKey(map_pos) 
-         && WaterBase._our[layer.ToString()][map_pos]._isFull()) return false;  // full, can't fill
+    bool check_flow_down(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.down);
+    bool check_flow_right(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.right);
+    bool check_flow_left(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.left);
+    bool check_flow(WaterBase water, Vector3Int next_pos){
+        if (TilemapTile._check_tile(water._layer, next_pos)) return false;  // have tile, can't fill. But I think it also can fill, cause some tile only part
+        if (WaterBase._our.ContainsKey(water._layer.ToString()) && WaterBase._our[water._layer.ToString()].ContainsKey(next_pos) ){
+            int next_amount = WaterBase._our[water._layer.ToString()][next_pos]._amount;
+            int next_diff = get_diff(water._layer.ToString(), next_pos).total; // 0 if not exist
+            int cur_amount = water._amount;
+            int cur_decrease = get_diff(water).decrease; // 0 if not exist
+            if (next_amount + next_diff >= cur_amount + cur_decrease) return false;  
+        }
         return true;
     }
 }
