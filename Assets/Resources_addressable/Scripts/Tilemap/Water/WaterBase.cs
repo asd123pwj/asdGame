@@ -15,7 +15,7 @@ public class WaterBase : BaseClass{
     // ---------- Status ---------- //
     public GameObject _self;
     public SpriteRenderer _renderer;
-    public int _amount = 0; // 0 ~ 7, 0 means empty, 7 means full
+    public int _amount = 0; // 0 ~ _sys._GCfg._sysCfg.water_full_amount, 0 means empty
 
     public WaterBase(Vector3Int map_pos, LayerType layer, Transform container){
         // _amount = 0;
@@ -37,8 +37,12 @@ public class WaterBase : BaseClass{
     }
 
     public void _full(){
-        _amount = 1;
+        _amount = _sys._GCfg._sysCfg.water_full_amount;
         _update_sprite().Forget();
+    }
+
+    public bool _isFull(){
+        return _amount == _sys._GCfg._sysCfg.water_full_amount;
     }
 
     public override void _init(){

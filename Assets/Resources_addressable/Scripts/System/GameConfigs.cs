@@ -28,6 +28,9 @@ public struct SystemConfig{
     // ----- Tilemap gameObject
     public Dictionary<string, Vector3> TMap_tilemap_obj_origin_offset;
 
+    // ----- Water
+    public int water_full_amount;                   // when amount == this, water is full
+
     // ----- RuleTile
     public Vector3Int TMap_tileNeighborsCheck_max; // how far can be check, neighbor of RuleTile, only use to load placeholder.
 
@@ -88,6 +91,8 @@ public class GameConfigs{
     // public int _TMap_interval_per_loading { get { return _sysCfg.TMap_interval_per_loading; } }
     public int __block_loadBound { get {return 10; } }
     public int __block_unloadBound { get {return 10; } }
+
+    // public int __water_full_amount { get { return 1000; } }
 
     // ---------- save config ----------
     // config
