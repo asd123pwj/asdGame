@@ -7,21 +7,23 @@ using UnityEngine.Tilemaps;
 public class WaterBase : BaseClass{
     public static Dictionary<string, Dictionary<Vector3Int, WaterBase>> _our = new();
     public static WaterFlow _flow = new();
+    public static WaterWave _wave = new();
     Tilemap TMap;
     // Transform container => _TMapSys._P3DMon._containers["TileP3D"];
     Transform container;
     // ---------- GameObject ---------- //
     public GameObject _self;
-    Mesh mesh;
+    public Mesh mesh;
     MeshRenderer meshRenderer;
     MeshCollider meshCollider;
     MeshFilter meshFilter;
     // ---------- Status ---------- //
     public Vector3Int _map_pos, _block_offsets;
     public LayerType _layer;
-    Vector3[] vertices_ori;
-    Vector3[] vertices_new;
+    // public Vector3[] vertices_ori;
+    // public Vector3[] vertices_new;
     public int _amount = 0; // 0 ~ _sys._GCfg._sysCfg.water_full_amount, 0 means empty
+    bool _mesh_init_done;
 
     public WaterBase(Vector3Int map_pos, LayerType layer, Transform container){
         if (!_our.ContainsKey(layer.ToString())) {
@@ -63,16 +65,17 @@ public class WaterBase : BaseClass{
         mesh = meshFilter.mesh;
         meshRenderer.material = _sys._MatSys._mat._get_mat(mat_name);
         meshCollider.sharedMesh = mesh;
-        vertices_ori = mesh.vertices;
-        vertices_new = new Vector3[vertices_ori.Length];
+        // vertices_ori = mesh.vertices;
+        // vertices_new = new Vector3[vertices_ori.Length];
+        _mesh_init_done = true;
     }
 
     public async UniTaskVoid _update_mesh(){
         await UniTask.Delay(50);
-        if (_amount == 1)
-            _self.SetActive(true);
-        else
-            _self.SetActive(false);
+        while (!_mesh_init_done){
+            await UniTask.Delay(50);
+        }
+        _wave._wave(this);
         
     }
     

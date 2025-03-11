@@ -85,18 +85,19 @@ public class WaterFlow: BaseClass{
         get_diff(water._layer.ToString(), next_pos).increase += 1;
     }
 
-    bool check_flow_down(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.down);
+    bool check_flow_down(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.down, true);
     bool check_flow_right(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.right);
     bool check_flow_left(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.left);
     // bool check_flow_up(WaterBase water) => check_flow(water, water._map_pos + Vector3Int.up);
-    bool check_flow(WaterBase water, Vector3Int next_pos){
+    bool check_flow(WaterBase water, Vector3Int next_pos, bool isDown=false){
         if (TilemapTile._check_tile(water._layer, next_pos)) return false;  // have tile, can't fill. But I think it also can fill, cause some tile only part
-        if (WaterBase._our.ContainsKey(water._layer.ToString()) && WaterBase._our[water._layer.ToString()].ContainsKey(next_pos) ){
+        if (WaterBase._our.ContainsKey(water._layer.ToString()) && WaterBase._our[water._layer.ToString()].ContainsKey(next_pos)){
             int next_amount = WaterBase._our[water._layer.ToString()][next_pos]._amount;
             int next_diff = get_diff(water._layer.ToString(), next_pos).total; // 0 if not exist
             int cur_amount = water._amount;
             int cur_decrease = get_diff(water).decrease; // 0 if not exist
-            if (next_amount + next_diff >= cur_amount + cur_decrease) return false;  
+            if (!isDown) if (next_amount + next_diff + 1 >= cur_amount + cur_decrease) return false;  // why +1? Sample1: Left4 Right2 => L3 R3, S2: L4 R3 => L4 R3, S3: L3 R4 => L3 R4
+            if (isDown)  if (next_amount + next_diff >= _sys._GCfg._sysCfg.water_full_amount) return false;  // Sample1: Left4 Right2 => L3 R3, S2: L4 R3 => L4 R3, S3: L3 R4 => L3 R4
         }
         return true;
     }
