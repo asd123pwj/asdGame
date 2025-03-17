@@ -23,6 +23,11 @@ public class WaterBase : BaseClass{
     // public Vector3[] vertices_ori;
     // public Vector3[] vertices_new;
     public int _amount = 0; // 0 ~ _sys._GCfg._sysCfg.water_full_amount, 0 means empty
+    public int _increase = 0;
+    public int _decrease = 0;
+    public int _diff => _increase - _decrease;
+    public int _amount_after => _amount + _diff;
+    public int _amount_remain => _amount - _decrease;
     bool _mesh_init_done;
 
     public WaterBase(Vector3Int map_pos, LayerType layer, Transform container){

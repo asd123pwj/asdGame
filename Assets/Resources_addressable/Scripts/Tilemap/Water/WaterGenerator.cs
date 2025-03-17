@@ -1,6 +1,7 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 
 public class WaterGenerator: BaseClass{
     public Dictionary<string, Transform> _water_containers;
@@ -20,12 +21,32 @@ public class WaterGenerator: BaseClass{
     }
 
     public override void _update(){
-        foreach(var waters in WaterBase._our.Values){
-            foreach(var water in waters.Values){
+        List<string> layers = WaterBase._our.Keys.ToList();
+        for (int i = 0; i < layers.Count; i++){
+            List<Vector3Int> waters = WaterBase._our[layers[i]].Keys.ToList();
+            for (int j = 0; j < waters.Count; j++){
+                WaterBase water = WaterBase._our[layers[i]][waters[j]];
                 _flow._flow_single(water);
             }
         }
-        _flow._flow_batch();
+        layers = WaterBase._our.Keys.ToList();
+        for (int i = 0; i < layers.Count; i++){
+            List<Vector3Int> waters = WaterBase._our[layers[i]].Keys.ToList();
+            for (int j = 0; j < waters.Count; j++){
+                WaterBase water = WaterBase._our[layers[i]][waters[j]];
+                _flow._flow_stage2(water);
+            }
+        }
+        // foreach(var waters in WaterBase._our.Values){
+        //     foreach(var water in waters.Values){
+        //         _flow._flow_single(water);
+        //     }
+        // }
+        // foreach(var waters in WaterBase._our.Values){
+        //     foreach(var water in waters.Values){
+        //         _flow._flow_stage2(water);
+        //     }
+        // }
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
