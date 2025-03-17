@@ -17,7 +17,14 @@ public class WaterBase : BaseClass{
     MeshRenderer meshRenderer;
     MeshCollider meshCollider;
     MeshFilter meshFilter;
+    // ---------- Shortcut ---------- //
+    public WaterBase _up    => _get_neighbor(_map_pos + Vector3Int.up);
+    public WaterBase _down  => _get_neighbor(_map_pos + Vector3Int.down);
+    public WaterBase _left  => _get_neighbor(_map_pos + Vector3Int.left);
+    public WaterBase _right => _get_neighbor(_map_pos + Vector3Int.right);
     // ---------- Status ---------- //
+    public bool _isExist = true;
+
     public Vector3Int _map_pos, _block_offsets;
     public LayerType _layer;
     public int _amount = 0; // 0 ~ _sys._GCfg._sysCfg.water_full_amount, 0 means empty
@@ -26,10 +33,17 @@ public class WaterBase : BaseClass{
     public int _diff => _increase - _decrease;
     public int _amount_after => _amount + _diff;
     public int _amount_remain => _amount - _decrease;
+
+    public bool _flowed_left = false;
+    public bool _flowed_right = false;
+    public bool _flowed_down = false;
+
     public Vector3Int _water_fewer_left;    // Amount fewer than this, e.g. A1 B2 C2 D2, A1 is fewer than B2, C2, D2
     public Vector3Int _water_fewer_right;   // _water_fewer_right like _water_fewer_left
-    bool _mesh_init_done;
 
+
+    bool _mesh_init_done;
+    // public WaterBase() { _isExist = false; }
     public WaterBase(Vector3Int map_pos, LayerType layer, Transform container){
         if (!_our.ContainsKey(layer.ToString())) {
             _our[layer.ToString()] = new();
@@ -53,7 +67,8 @@ public class WaterBase : BaseClass{
         _update_mesh().Forget();
     }
 
-    public bool _isFull(){
+    public bool _check_full(bool isAfter=false){
+        if (isAfter) return _amount_after == _sys._GCfg._sysCfg.water_full_amount;
         return _amount == _sys._GCfg._sysCfg.water_full_amount;
     }
 
@@ -87,8 +102,11 @@ public class WaterBase : BaseClass{
         _self.isStatic = true;
         meshRenderer = _self.AddComponent<MeshRenderer>();
         meshCollider = _self.AddComponent<MeshCollider>();
-        meshFilter = _self.AddComponent<MeshFilter>();
+        meshFilter   = _self.AddComponent<MeshFilter>();
     }
     
-    
+    public WaterBase _get_neighbor(Vector3Int neighbor_pos){
+        if (_our[_layer.ToString()].ContainsKey(neighbor_pos)) return _our[_layer.ToString()][neighbor_pos];
+        return null;
+    }
 }
