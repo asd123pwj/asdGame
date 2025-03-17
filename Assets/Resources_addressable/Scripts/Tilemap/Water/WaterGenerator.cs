@@ -21,32 +21,9 @@ public class WaterGenerator: BaseClass{
     }
 
     public override void _update(){
-        List<string> layers = WaterBase._our.Keys.ToList();
-        for (int i = 0; i < layers.Count; i++){
-            List<Vector3Int> waters = WaterBase._our[layers[i]].Keys.ToList();
-            for (int j = 0; j < waters.Count; j++){
-                WaterBase water = WaterBase._our[layers[i]][waters[j]];
-                _flow._flow_single(water);
-            }
-        }
-        layers = WaterBase._our.Keys.ToList();
-        for (int i = 0; i < layers.Count; i++){
-            List<Vector3Int> waters = WaterBase._our[layers[i]].Keys.ToList();
-            for (int j = 0; j < waters.Count; j++){
-                WaterBase water = WaterBase._our[layers[i]][waters[j]];
-                _flow._flow_stage2(water);
-            }
-        }
-        // foreach(var waters in WaterBase._our.Values){
-        //     foreach(var water in waters.Values){
-        //         _flow._flow_single(water);
-        //     }
-        // }
-        // foreach(var waters in WaterBase._our.Values){
-        //     foreach(var water in waters.Values){
-        //         _flow._flow_stage2(water);
-        //     }
-        // }
+        _flow._flow_stage1();
+        _flow._flow_stage2();
+        _flow._flow_stage3();
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){

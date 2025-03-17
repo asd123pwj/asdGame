@@ -20,14 +20,14 @@ public class WaterBase : BaseClass{
     // ---------- Status ---------- //
     public Vector3Int _map_pos, _block_offsets;
     public LayerType _layer;
-    // public Vector3[] vertices_ori;
-    // public Vector3[] vertices_new;
     public int _amount = 0; // 0 ~ _sys._GCfg._sysCfg.water_full_amount, 0 means empty
     public int _increase = 0;
     public int _decrease = 0;
     public int _diff => _increase - _decrease;
     public int _amount_after => _amount + _diff;
     public int _amount_remain => _amount - _decrease;
+    public Vector3Int _water_fewer_left;    // Amount fewer than this, e.g. A1 B2 C2 D2, A1 is fewer than B2, C2, D2
+    public Vector3Int _water_fewer_right;   // _water_fewer_right like _water_fewer_left
     bool _mesh_init_done;
 
     public WaterBase(Vector3Int map_pos, LayerType layer, Transform container){
@@ -70,8 +70,6 @@ public class WaterBase : BaseClass{
         mesh = meshFilter.mesh;
         meshRenderer.material = _sys._MatSys._mat._get_mat(mat_name);
         meshCollider.sharedMesh = mesh;
-        // vertices_ori = mesh.vertices;
-        // vertices_new = new Vector3[vertices_ori.Length];
         _mesh_init_done = true;
     }
 
