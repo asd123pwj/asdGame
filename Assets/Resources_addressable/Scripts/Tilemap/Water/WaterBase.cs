@@ -109,4 +109,8 @@ public class WaterBase : BaseClass{
         if (_our[_layer.ToString()].ContainsKey(neighbor_pos)) return _our[_layer.ToString()][neighbor_pos];
         return null;
     }
+    public static WaterBase _get_neighbor(LayerType layer, Vector3Int neighbor_pos){
+        if (_our.ContainsKey(layer.ToString()) && _our[layer.ToString()].ContainsKey(neighbor_pos)) return _our[layer.ToString()][neighbor_pos];
+        return null;
+    }
 }

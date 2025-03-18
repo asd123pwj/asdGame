@@ -1,12 +1,11 @@
 using UnityEngine;
-using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 
 public class WaterGenerator: BaseClass{
     public Dictionary<string, Transform> _water_containers;
     public static WaterFlow _flow = new();
-    public override float _update_interval { get; set; } = 0.5f;
+    public override float _update_interval { get; set; } = 0.25f;
 
 
     public override void _init(){
@@ -21,9 +20,8 @@ public class WaterGenerator: BaseClass{
     }
 
     public override void _update(){
-        _flow._flow_stage1();
-        _flow._flow_stage2();
-        _flow._flow_stage3();
+        _flow._flow_logic();
+        _flow._flow_anime();
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){

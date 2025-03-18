@@ -14,7 +14,7 @@
             "base_tile": "b8",
             "prob": 1,
             "surface": [
-                {"noise": "perlin", "f": 1, "min": -100, "max": 100, "ignoreY": true}
+                {"noise": "perlin", "f": 2, "min": -100, "max": 100, "ignoreY": true}
             ],
             "minerals": [
                 {"ID": "bd_m1", "noise": [
