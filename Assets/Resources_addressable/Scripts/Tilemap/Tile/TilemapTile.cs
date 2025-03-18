@@ -14,6 +14,9 @@ public class TilemapTile: BaseClass{
     bool enable_P3D = true;
     bool enable_decoration = true;
     string mineral_ID;
+
+    public string _tile_ID => tileTile.tile_ID;
+    public string _tile_subID => tileTile.tile_subID;
     // string mineral_subID = "__Full";
     // Sprite decoration_sprite;
 
@@ -29,6 +32,12 @@ public class TilemapTile: BaseClass{
     public void _set_tile(string tile) { this.tile = tile; }
 
     public string _get_tile() => tile;
+    public static TilemapTile _get(LayerType layer, Vector3Int map_pos){
+        if (!_our.ContainsKey(layer.ToString())) return null;
+        if (!_our[layer.ToString()].ContainsKey(map_pos)) return null;
+        return _our[layer.ToString()][map_pos];
+    }
+
 
     public static bool _check_tile(LayerType layer, Vector3Int map_pos) {
         var tiles_in_layer = _our[layer.ToString()];

@@ -137,7 +137,9 @@ public class WaterFlow: BaseClass{
     }
 
     bool check_allow_water(LayerType layer, Vector3Int pos_dest){
-        if (TilemapTile._check_tile(layer, pos_dest)) return false;          // have tile, can't fill. But I think it also can fill, cause some tile only part
+        // If: Only full tile can't flow, part tile can flow
+        if (TilemapTile._check_tile(layer, pos_dest) && TilemapTile._get(layer, pos_dest)._tile_subID == _GCfg._sysCfg.TMap_fullTile_subID) return false;          
+        
         WaterBase water_dest = WaterBase._get_neighbor(layer, pos_dest);
         if (water_dest != null && water_dest._check_full(isAfter:true)) return false;
         return true;

@@ -33,6 +33,7 @@ public struct SystemConfig{
 
     // ----- RuleTile
     public Vector3Int TMap_tileNeighborsCheck_max; // how far can be check, neighbor of RuleTile, only use to load placeholder.
+    public string TMap_fullTile_subID;              // Usually, "__Full" means the full tile, for check water can flow or not
 
     // ----- Build Generation
     public Vector3Int BuildGen_MatchKernelSize_RadiusMinusOne_max;

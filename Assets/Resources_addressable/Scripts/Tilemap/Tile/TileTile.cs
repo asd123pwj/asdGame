@@ -9,9 +9,13 @@ public class TileTile : BaseClass{
     // Transform container => _TMapSys._P3DMon._containers["TileP3D"];
     Transform container;
     LayerType P3D_layer;
-    // ---------- Status ---------- //
+    
+    // ---------- GameObject ---------- //
     public GameObject _self;
     public SpriteRenderer _renderer;
+    // ---------- Status ---------- //
+    public string tile_ID = "";
+    public string tile_subID = "";
 
     public TileTile(Vector3Int map_pos, LayerType layer, Transform container){
         this.map_pos = map_pos;
@@ -34,8 +38,8 @@ public class TileTile : BaseClass{
         await UniTask.Delay(50);
         Sprite spr = TMap.GetSprite(map_pos);
         if (spr != null){
-            string tile_ID = _MatSys._tile._get_ID(spr);
-            string tile_subID = spr.name;
+            tile_ID = _MatSys._tile._get_ID(spr);
+            tile_subID = spr.name;
             _renderer.sprite = _MatSys._tile._get_sprite(tile_ID, tile_subID);
             // string mat_ID = tile_ID == "b4" ? "TransparentSprite" : "TransparentSprite2";
             string mat_ID = "TransparentSprite";
