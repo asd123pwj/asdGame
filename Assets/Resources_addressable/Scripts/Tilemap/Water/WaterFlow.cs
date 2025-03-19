@@ -45,7 +45,7 @@ public class WaterFlow: BaseClass{
                 while (!water._flowed_right){           // If: Only flow right once
                     pos_dest += Vector3Int.right;
                     if (water._get_neighbor(pos_dest) == null) null_count++;    
-                    if (null_count > 1) break;          // If: Only flow neighbor
+                    if (null_count > 1) break;          // If: Only flow neighbor, neigbhor of neighbor can't flow
                     if (check_flow(water, pos_dest)) {
                         flow(water, pos_dest);
                         water._flowed_right = true;
@@ -58,7 +58,7 @@ public class WaterFlow: BaseClass{
                  */
                 if (!water._flowed_right                // If: Only flow right once
                     && water._amount_remain == 1        // If: amount = 1 can flow
-                    && !(water._up != null && water._up._amount_after > 0) // If: Toppest can flow down
+                    && water._isToppest                 // If: Toppest can flow down
                     && water._down != null){            // If: Bottomest can't flow down
                     pos_dest = water._down._map_pos;
                     while (!water._flowed_right){
@@ -92,7 +92,7 @@ public class WaterFlow: BaseClass{
                  */
                 if (!water._flowed_left 
                     && water._amount_remain == 1 
-                    && !(water._up != null && water._up._amount_after > 0) 
+                    && water._isToppest
                     && water._down != null){
                     pos_dest = water._down._map_pos;
                     while (!water._flowed_left){
