@@ -33,12 +33,12 @@ public class CameraManager: BaseClass{
         cam_main = Camera.main;
         cam_player = _sys._searchInit<CinemachineVirtualCamera>("Camera", "Player Camera");
         // Set default camera
-        rowTiles_in_camera = _GCfg._sysCfg.CAM_rowTiles_in_playerCamera_default;
+        rowTiles_in_camera = GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_default;
         cam_player.m_Lens.OrthographicSize = orthographic_size;
     }
 
     public bool zoomIn(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        if (rowTiles_in_camera < _GCfg._sysCfg.CAM_rowTiles_in_playerCamera_max){
+        if (rowTiles_in_camera < GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_max){
             rowTiles_in_camera += 1f;
             cam_player.m_Lens.OrthographicSize = orthographic_size;
         }
@@ -46,7 +46,7 @@ public class CameraManager: BaseClass{
     }
 
     public bool zoomOut(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        if (rowTiles_in_camera > _GCfg._sysCfg.CAM_rowTiles_in_playerCamera_min){
+        if (rowTiles_in_camera > GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_min){
             rowTiles_in_camera -= 1f;
             cam_player.m_Lens.OrthographicSize = orthographic_size;
         }

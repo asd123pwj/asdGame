@@ -109,7 +109,7 @@ public class GameConfigs{
     public string __mapName_format { get { return Path.Combine(__map_dir, "Map_{x}_{y}.json"); } }
     
 
-    public SystemConfig _sysCfg;
+    public static SystemConfig _sysCfg;
     private Dictionary<string, SaveConfig> __saves_config;
 
     public GameConfigs(SystemManager sys){

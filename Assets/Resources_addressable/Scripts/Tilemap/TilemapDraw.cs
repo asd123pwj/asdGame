@@ -71,7 +71,7 @@ public class TilemapDraw: BaseClass{
         Vector3Int block_offset;
         Region4DrawTilemapBlock region;
         Dictionary<Vector3Int, Region4DrawTilemapBlock> regions = new();
-        Vector3Int neighbor = _GCfg._sysCfg.TMap_tileNeighborsCheck_max;
+        Vector3Int neighbor = GameConfigs._sysCfg.TMap_tileNeighborsCheck_max;
 
         // ----- lower left quarter
         block_offset = block.offsets + new Vector3Int(-1, -1, 0);
@@ -185,7 +185,7 @@ public class TilemapDraw: BaseClass{
 
 
         Color transparent = new(1, 1, 1, 0);
-        int tile_per_group = Mathf.Min(_GCfg._sysCfg.TMap_tiles_per_loading, region.tiles.Count());
+        int tile_per_group = Mathf.Min(GameConfigs._sysCfg.TMap_tiles_per_loading, region.tiles.Count());
         Vector3Int[] positions = region.positions;
         TileBase[] tiles = region.tiles;
         for (int i = 0; i < region.tiles.Count(); i += tile_per_group) {
@@ -204,7 +204,7 @@ public class TilemapDraw: BaseClass{
                 }
             }
 
-            await UniTask.Delay(_GCfg._sysCfg.TMap_interval_per_loading);
+            await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
         }
 
         // stopwatch.Stop();

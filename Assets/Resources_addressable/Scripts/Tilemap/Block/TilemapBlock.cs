@@ -13,7 +13,7 @@ public class TilemapBlock: BaseClass{
     public string terrain_ID;
     public string[] terrain_tags;
     public Vector3Int offsets;
-    public Vector3Int size => _GCfg._sysCfg.TMap_tiles_per_block;
+    public Vector3Int size => GameConfigs._sysCfg.TMap_tiles_per_block;
     // public int seed;
     // public BoundTiles bounds;
     // public float scale;

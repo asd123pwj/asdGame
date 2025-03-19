@@ -50,6 +50,10 @@ public class TilemapTile: BaseClass{
         }
         return true;
     } 
+    public static bool _check_fullTile(LayerType layer, Vector3Int map_pos) {        
+        if (_check_tile(layer, map_pos) && _get(layer, map_pos)._tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
+        return false;
+    }
     
     public void _update_tile(){
         if (enable_tile){

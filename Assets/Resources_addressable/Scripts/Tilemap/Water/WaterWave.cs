@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 
 public class WaterWave : BaseClass{
@@ -43,19 +40,41 @@ public class WaterWave : BaseClass{
     }
     
     public void _scale_to_amount(WaterBase water){
-        float scale = (float)water._amount / _sys._GCfg._sysCfg.water_full_amount;
         Vector3[] vertices_new = new Vector3[water.mesh.vertices.Length];
 
         int row = 5;
         int col = 5;
-        for (int x = 0; x < row; x++){
-            for (int y = 0; y < col; y++){
+        float height = (float)water._amount / GameConfigs._sysCfg.water_full_amount;
+
+        // ----- Water continuous
+        int amount_left, amount_right;
+        if (TilemapTile._check_fullTile(water._layer, water._map_pos + Vector3Int.left))
+            amount_left = water._amount;
+        else
+            amount_left = (water._left != null) ? water._left._amount : 0;
+        float height_left = (float)amount_left / GameConfigs._sysCfg.water_full_amount;
+
+        if (TilemapTile._check_fullTile(water._layer, water._map_pos + Vector3Int.right))
+            amount_right = water._amount;
+        else
+            amount_right = (water._right != null) ? water._right._amount : 0;
+        float height_right = (float)amount_right / GameConfigs._sysCfg.water_full_amount;
+
+        float[] heights = new float[5]{
+            height + (height_left - height) / 8 * 3,
+            height + (height_left - height) / 8 * 1,
+            height,
+            height + (height_right - height) / 8 * 1,
+            height + (height_right - height) / 8 * 3
+        };
+
+        for (int x = 0; x < col; x++){
+            for (int y = 0; y < row; y++){
                 int i = ixy.i(x, y, col);
                 Vector3 vertex = water.mesh.vertices[i];
-                vertex.x = x / (row - 1); // normalize
-                vertex.y = y / (col - 1) * scale;
+                vertex.x = (float) x / (col - 1); 
+                vertex.y = Mathf.Min((float) y / (row - 1), heights[x]);
                 vertices_new[i] = vertex;
-
             }
         }
         water.mesh.vertices = vertices_new;

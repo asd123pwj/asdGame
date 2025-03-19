@@ -65,13 +65,13 @@ public class WaterBase : BaseClass{
     }
 
     public void _full(){
-        _amount = _sys._GCfg._sysCfg.water_full_amount;
+        _amount = GameConfigs._sysCfg.water_full_amount;
         _update_mesh().Forget();
     }
 
     public bool _check_full(bool isAfter=false){
-        if (isAfter) return _amount_after == _sys._GCfg._sysCfg.water_full_amount;
-        return _amount == _sys._GCfg._sysCfg.water_full_amount;
+        if (isAfter) return _amount_after == GameConfigs._sysCfg.water_full_amount;
+        return _amount == GameConfigs._sysCfg.water_full_amount;
     }
 
     public override void _init(){

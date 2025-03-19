@@ -15,7 +15,7 @@ public enum PrepareStatus{ // even though there are two status, both of them are
 }
 
 public class TilemapZoneGenerator: BaseClass{
-    Vector3Int zone_size => _GCfg._sysCfg.TMap_blocks_per_zone;
+    Vector3Int zone_size => GameConfigs._sysCfg.TMap_blocks_per_zone;
     Vector3Int connected_size;
 
     // ---------- Status ---------- // 

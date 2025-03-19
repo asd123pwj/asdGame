@@ -75,7 +75,7 @@ public class TilemapController: BaseClass{
 
 
     public bool _task_prepare_gameObject(){
-        Vector3Int prepare_r = _GCfg._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+        Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
         for (int x = -prepare_r.x; x <= prepare_r.x; x++){
             for (int y = -prepare_r.y; y <= prepare_r.y; y++){
                 _TMapSys._TMapMon._get_blkObj(_query_point + new Vector3Int(x, y), new LayerType());
@@ -86,7 +86,7 @@ public class TilemapController: BaseClass{
 
     public bool _task_prepare_tilemap(){
         // while (true) ;
-        Vector3Int prepare_r = _GCfg._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+        Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
         for (int x = -prepare_r.x; x <= prepare_r.x; x++){
             for (int y = -prepare_r.y; y <= prepare_r.y; y++){
                 _TMapSys._TMapZoneGen._prepare_zone_in_blockOffsets(_query_point + new Vector3Int(x, y));
@@ -96,7 +96,7 @@ public class TilemapController: BaseClass{
     }
 
     public async UniTask _task_draw_tilemap(){
-        Vector3Int draw_r = _GCfg._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+        Vector3Int draw_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
         for (int x = -draw_r.x; x <= draw_r.x; x++){
             for (int y = -draw_r.y; y <= draw_r.y; y++){
                 if (!_TMapSys._TMapMon._check_block_load(_query_point + new Vector3Int(x, y), new LayerType())) continue;
@@ -117,7 +117,7 @@ public class TilemapController: BaseClass{
     
         List<Vector3Int> block_offsets_list = new();
 
-        Vector3Int blocks_around_loading = _GCfg._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
+        Vector3Int blocks_around_loading = GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
         for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
             for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
                 block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
