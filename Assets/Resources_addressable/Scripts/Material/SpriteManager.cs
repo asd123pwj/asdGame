@@ -41,13 +41,19 @@ public class SpriteManager: BaseClass{
     public SpriteInfo _get_info(string ID){
         return _infos.items[ID];
     }
-    public bool _check_loader(string ID, string subID){
+    public bool _check_loaded(string ID, string subID){
         return _ID_to_subID2Sprites[ID].ContainsKey(subID);
+    }
+    public bool _check_loaded(string ID){
+        foreach(var sprite in _infos.items[ID].sprites){
+            if (!_ID_to_subID2Sprites[ID].ContainsKey(sprite)) return false;
+        }
+        return true;
     }
     
     // ---------- config ----------
     void load_items(){
-        string jsonText = File.ReadAllText(_GCfg.__spritesInfo_path);
+        string jsonText = File.ReadAllText(_GCfg.__SpritesInfo_path);
         _infos = JsonConvert.DeserializeObject<SpritesInfo>(jsonText);
         foreach (var tile_kv in _infos.items){
             load_item(tile_kv.Key);

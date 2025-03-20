@@ -1,0 +1,10 @@
+{
+    "version": "0.0.1",
+    "items":{
+        "l1":{
+            "name": "水",
+            "sprite": "l1",
+            "material": "Liquid_Water"
+        }
+    }
+}

@@ -6,13 +6,14 @@ public class WaterWave : BaseClass{
     public float waveHeight = 20f;
     public float waveFrequency = 1f;
     public int wave_row_start = 2;
+    float P3D_scale = 1.5f; // 1.5f is for P3D, 1 is front, 0.5 is up/side
 
     public static Vector3[] vertices_ori_4x4 = new Vector3[25];
 
     public WaterWave(){
         for (int x = 0; x < 5; x++){
             for (int y = 0; y < 5; y++){
-                vertices_ori_4x4[ixy.i(x, y, 5)] = new() { x = x / (5 - 1), y = y / (5 - 1) };
+                vertices_ori_4x4[ixy.i(x, y, 5)] = new() { x = (float)x / (5 - 1) * P3D_scale, y = (float)y / (5 - 1) * P3D_scale }; 
             }
         }
     }
@@ -23,6 +24,9 @@ public class WaterWave : BaseClass{
             return;
         }
         water._self.SetActive(true);
+        //             _recover(water);
+        // return;
+
         if (water._isToppest){
             _scale_to_amount(water);
             water._isToppestBefore = true;
@@ -72,8 +76,8 @@ public class WaterWave : BaseClass{
             for (int y = 0; y < row; y++){
                 int i = ixy.i(x, y, col);
                 Vector3 vertex = water.mesh.vertices[i];
-                vertex.x = (float) x / (col - 1); 
-                vertex.y = Mathf.Min((float) y / (row - 1), heights[x]);
+                vertex.x = (float) x / (col - 1) * P3D_scale; 
+                vertex.y = Mathf.Min((float) y / (row - 1), heights[x]) * P3D_scale;
                 vertices_new[i] = vertex;
             }
         }

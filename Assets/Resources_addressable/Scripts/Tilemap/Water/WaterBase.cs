@@ -81,11 +81,16 @@ public class WaterBase : BaseClass{
     
     public async UniTaskVoid init_mesh(){
         await UniTask.Delay(50);
-        string mat_name = "Liquid_Water";
+        // string mat_name = "Liquid_Water";
+        string sprMat_name = "l1";
         string mesh_name = "Size1x1_Grid4x4_AxisXY";
         meshFilter.mesh = _sys._MatSys._mesh._get_mesh(mesh_name);
         mesh = meshFilter.mesh;
-        meshRenderer.material = _sys._MatSys._mat._get_mat(mat_name);
+        // meshRenderer.material = _sys._MatSys._mat._get_mat(mat_name);
+        List<string> items = new List<string>() {"__Full", "__Front", "__Side", "__Up"};
+        int randomIndex = Random.Range(0, items.Count);
+        meshRenderer.material = _sys._MatSys._sprMat._get_mat(sprMat_name, "__Front");
+        // meshRenderer.material = _sys._MatSys._sprMat._get_mat(sprMat_name, items[randomIndex]);
         meshCollider.sharedMesh = mesh;
         _mesh_init_done = true;
     }
