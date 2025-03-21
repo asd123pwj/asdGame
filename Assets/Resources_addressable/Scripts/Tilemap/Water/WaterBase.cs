@@ -3,20 +3,26 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+public enum WaterTextureStatus{
+    Normal,
+    Front,
+    FrontSide
+}
 
 public class WaterBase : BaseClass{
     public static Dictionary<string, Dictionary<Vector3Int, WaterBase>> _our = new();
     public static WaterFlow _flow = new();
     public static WaterWave _wave = new();
+    public static WaterTexture _texture = new();
     Tilemap TMap;
     // Transform container => _TMapSys._P3DMon._containers["TileP3D"];
     Transform container;
     // ---------- GameObject ---------- //
     public GameObject _self;
     public Mesh mesh;
-    MeshRenderer meshRenderer;
-    MeshCollider meshCollider;
-    MeshFilter meshFilter;
+    public MeshRenderer meshRenderer;
+    public MeshCollider meshCollider;
+    public MeshFilter meshFilter;
     // ---------- Shortcut ---------- //
     public WaterBase _up    => _get_neighbor(_map_pos + Vector3Int.up);
     public WaterBase _down  => _get_neighbor(_map_pos + Vector3Int.down);
@@ -24,8 +30,8 @@ public class WaterBase : BaseClass{
     public WaterBase _right => _get_neighbor(_map_pos + Vector3Int.right);
     // ---------- Status ---------- //
     public bool _isExist = true;
-    public bool _isToppest => !(_up != null && _up._amount_after > 0);
-    public bool _isToppestBefore = true;
+    public bool _isToppest => _up == null || _up._amount_after == 0;
+    public WaterTextureStatus _textureStatus = WaterTextureStatus.Normal;
 
     public Vector3Int _map_pos, _block_offsets;
     public LayerType _layer;
@@ -44,7 +50,7 @@ public class WaterBase : BaseClass{
     public Vector3Int _water_fewer_right;   // _water_fewer_right like _water_fewer_left
 
 
-    bool _mesh_init_done;
+    public bool _mesh_init_done;
     // public WaterBase() { _isExist = false; }
     public WaterBase(Vector3Int map_pos, LayerType layer, Transform container){
         if (!_our.ContainsKey(layer.ToString())) {
@@ -60,7 +66,7 @@ public class WaterBase : BaseClass{
         meshRenderer.sortingOrder = _layer.sortingOrder;
         this.container = container;
         _self.transform.SetParent(container);
-        init_mesh().Forget();
+        _texture._init_mesh(this).Forget();
 
     }
 
@@ -79,21 +85,21 @@ public class WaterBase : BaseClass{
     }
 
     
-    public async UniTaskVoid init_mesh(){
-        await UniTask.Delay(50);
-        // string mat_name = "Liquid_Water";
-        string sprMat_name = "l1";
-        string mesh_name = "Size1x1_Grid4x4_AxisXY";
-        meshFilter.mesh = _sys._MatSys._mesh._get_mesh(mesh_name);
-        mesh = meshFilter.mesh;
-        // meshRenderer.material = _sys._MatSys._mat._get_mat(mat_name);
-        List<string> items = new List<string>() {"__Full", "__Front", "__Side", "__Up"};
-        int randomIndex = Random.Range(0, items.Count);
-        meshRenderer.material = _sys._MatSys._sprMat._get_mat(sprMat_name, "__Front");
-        // meshRenderer.material = _sys._MatSys._sprMat._get_mat(sprMat_name, items[randomIndex]);
-        meshCollider.sharedMesh = mesh;
-        _mesh_init_done = true;
-    }
+    // public async UniTaskVoid init_mesh(){
+    //     await UniTask.Delay(50);
+    //     // string mat_name = "Liquid_Water";
+    //     string sprMat_name = "l1";
+    //     string mesh_name = "Size1x1_Grid4x4_AxisXY";
+    //     meshFilter.mesh = _sys._MatSys._mesh._get_mesh(mesh_name);
+    //     mesh = meshFilter.mesh;
+    //     // meshRenderer.material = _sys._MatSys._mat._get_mat(mat_name);
+    //     List<string> items = new List<string>() {"__Full", "__Front", "__Side", "__Up"};
+    //     int randomIndex = Random.Range(0, items.Count);
+    //     meshRenderer.material = _sys._MatSys._sprMat._get_mat(sprMat_name, "__Front");
+    //     // meshRenderer.material = _sys._MatSys._sprMat._get_mat(sprMat_name, items[randomIndex]);
+    //     meshCollider.sharedMesh = mesh;
+    //     _mesh_init_done = true;
+    // }
 
     public async UniTaskVoid _update_mesh(){
         await UniTask.Delay(50);

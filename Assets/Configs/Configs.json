@@ -25,7 +25,7 @@
 
   "CAM_rowTiles_in_playerCamera_max": 512,
   "CAM_rowTiles_in_playerCamera_min": 4,
-  "CAM_rowTiles_in_playerCamera_default": 64,
+  "CAM_rowTiles_in_playerCamera_default": 32,
 
   "seed": 20230204
 }

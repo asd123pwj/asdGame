@@ -11,7 +11,8 @@ public class WaterFlow: BaseClass{
             for (int j = 0; j < waters.Count; j++){
                 WaterBase water = WaterBase._our[layers[i]][waters[j]];
                 water._amount = water._amount_after;
-                if (water._diff != 0 || water._isToppest) water._update_mesh().Forget();
+                // if (water._diff != 0 || water._isToppest) 
+                water._update_mesh().Forget();
                 water._decrease = 0;
                 water._increase = 0;
                 water._flowed_down = false;
