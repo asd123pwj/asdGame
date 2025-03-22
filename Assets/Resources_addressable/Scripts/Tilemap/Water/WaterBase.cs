@@ -4,9 +4,10 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public enum WaterTextureStatus{
-    Normal,
+    Dynamic,
     Front,
-    FrontSide
+    FrontSide,
+    FrontSideDynamic
 }
 
 public class WaterBase : BaseClass{
@@ -30,8 +31,8 @@ public class WaterBase : BaseClass{
     public WaterBase _right => _get_neighbor(_map_pos + Vector3Int.right);
     // ---------- Status ---------- //
     public bool _isExist = true;
-    public bool _isToppest => _up == null || _up._amount_after == 0;
-    public WaterTextureStatus _textureStatus = WaterTextureStatus.Normal;
+    public bool _isToppest => (_up == null) || (_up._amount_after == 0);
+    public WaterTextureStatus _textureStatus = WaterTextureStatus.Dynamic;
 
     public Vector3Int _map_pos, _block_offsets;
     public LayerType _layer;
