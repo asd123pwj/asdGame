@@ -7,7 +7,7 @@ using UnityEngine.Tilemaps;
 public class TilemapTerrainSurface: BaseClass{
     public bool _check_underground(Vector3Int map_pos, TerrainHier1 hier1){
         // int surface_h = _GCfg._noise._get_heights(new(map_pos.x, 0), hier1.surface);
-        int surface_h = _GCfg._noise._get_int(map_pos, hier1.surface);
+        int surface_h = GameConfigs._noise._get_int(map_pos, hier1.surface);
         if (map_pos.y > surface_h) return false;
         else return true;
     }
@@ -17,7 +17,7 @@ public class TilemapTerrainSurface: BaseClass{
     public float _get_type_value(Vector3Int map_pos, TerrainHierBase hier_base){
         // int x_noise = _GCfg._noise._get_heights(map_pos, hier_base.x_noise);
         // float type_value = _GCfg._noise._get_ratio(new (map_pos.x + x_noise, 0, 0), hier_base.Hier1);
-        float type_value = _GCfg._noise._get_float(map_pos, hier_base.Hier1);
+        float type_value = GameConfigs._noise._get_float(map_pos, hier_base.Hier1);
 
         return type_value;
     }

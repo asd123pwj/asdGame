@@ -4,6 +4,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public class NoiseCfg{
+    public List<NoiseCfg> precondition;
+    public List<NoiseCfg> x_noise;
+    public List<NoiseCfg> y_noise;
+    public float f; // frequency
+    public float min, max; // scale for 1D noise, thres for 2D noise
+    public string fractal; // fractal type
+    public string noise; // noise type
+    public bool ignoreX, ignoreY;   // if ignoreX == true, x = 0
+}
+
 public class Noise{
     public int seed;
     FastNoiseLite _noise_generator;
@@ -23,16 +34,16 @@ public class Noise{
     public float _get(float x, float frequnency, bool norm=true) => _get(x, 0, frequnency, norm);
 
     // ---------- Get Noise ----------
-    public float _get_ratio(Vector3Int pos, NoiseCfg cfg){
+    public float _get_ratio(Vector3 pos, NoiseCfg cfg){
         _set_fractal_type(cfg.fractal);
         _set_noise(cfg.noise);
         float ratio = _get(pos.x, pos.y, cfg.f);
         ratio = (cfg.max - cfg.min) * ratio + cfg.min;
         return ratio;
     }
-    public int _get_height(Vector3Int pos, NoiseCfg cfg) => Mathf.FloorToInt(_get_ratio(pos, cfg));
+    public int _get_height(Vector3 pos, NoiseCfg cfg) => Mathf.FloorToInt(_get_ratio(pos, cfg));
 
-    public bool _get_2D(Vector3Int map_pos, NoiseCfg cfg){
+    public bool _get_2D(Vector3 map_pos, NoiseCfg cfg){
         _set_fractal_type(cfg.fractal);
         _set_noise(cfg.noise);
         float h_ratio = _get(map_pos.x, map_pos.y, cfg.f);
@@ -42,9 +53,9 @@ public class Noise{
         return allowGenerate;
     }
 
-    public bool _get_bool(Vector3Int pos, List<NoiseCfg> cfgs){
+    public bool _get_bool(Vector3 pos, List<NoiseCfg> cfgs){
         bool allow = cfgs == null;
-        Vector3Int pos_with_noise = new();
+        Vector3 pos_with_noise = new();
         if (cfgs != null) foreach(NoiseCfg cfg in cfgs){
             pos_with_noise.x = _get_int(pos, cfg.x_noise) + (cfg.ignoreX ? 0 : pos.x);
             pos_with_noise.y = _get_int(pos, cfg.y_noise) + (cfg.ignoreY ? 0 : pos.y);
@@ -54,9 +65,9 @@ public class Noise{
         return allow;
     }
 
-    public int _get_int(Vector3Int pos, List<NoiseCfg> cfgs){
+    public int _get_int(Vector3 pos, List<NoiseCfg> cfgs){
         int value = 0;
-        Vector3Int pos_with_noise = new();
+        Vector3 pos_with_noise = new();
         if (cfgs != null) foreach(NoiseCfg cfg in cfgs){
             pos_with_noise.x = _get_int(pos, cfg.x_noise) + (cfg.ignoreX ? 0 : pos.x);
             pos_with_noise.y = _get_int(pos, cfg.y_noise) + (cfg.ignoreY ? 0 : pos.y);
@@ -66,9 +77,9 @@ public class Noise{
         return value;
     }
     
-    public float _get_float(Vector3Int pos, List<NoiseCfg> cfgs){
+    public float _get_float(Vector3 pos, List<NoiseCfg> cfgs){
         float value = 0;
-        Vector3Int pos_with_noise = new();
+        Vector3 pos_with_noise = new();
         if (cfgs != null) foreach(NoiseCfg cfg in cfgs){
             pos_with_noise.x = _get_int(pos, cfg.x_noise) + (cfg.ignoreX ? 0 : pos.x);
             pos_with_noise.y = _get_int(pos, cfg.y_noise) + (cfg.ignoreY ? 0 : pos.y);

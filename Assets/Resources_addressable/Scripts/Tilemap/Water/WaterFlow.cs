@@ -5,6 +5,18 @@ using UnityEngine;
 
 public class WaterFlow: BaseClass{
     public void _flow_anime(){
+        WaterWaveNoise._update_time();
+        List<string> layers = WaterBase._our.Keys.ToList();
+        for (int i = 0; i < layers.Count; i++){
+            List<Vector3Int> waters = WaterBase._our[layers[i]].Keys.ToList();
+            for (int j = 0; j < waters.Count; j++){
+                WaterBase water = WaterBase._our[layers[i]][waters[j]];
+                water._update_mesh().Forget();
+            }
+        }     
+    }
+
+    public void _flow_info(){
         List<string> layers = WaterBase._our.Keys.ToList();
         for (int i = 0; i < layers.Count; i++){
             List<Vector3Int> waters = WaterBase._our[layers[i]].Keys.ToList();
@@ -12,10 +24,9 @@ public class WaterFlow: BaseClass{
                 WaterBase water = WaterBase._our[layers[i]][waters[j]];
                 water._amount = water._amount_after;
                 // if (water._diff != 0 || water._isToppest) 
-                water._update_mesh().Forget();
                 water._decrease = 0;
                 water._increase = 0;
-                water._flowed_down = false;
+                // water._flowed_down = false;
                 water._flowed_left = false;
                 water._flowed_right = false;
             }
@@ -34,7 +45,7 @@ public class WaterFlow: BaseClass{
                 if (!check_allow_flow(water)) continue;
                 if (check_flow_down(water)){    
                     flow_down(water);       
-                    water._flowed_down = true;
+                    // water._flowed_down = true;
                     continue;
                 }
 

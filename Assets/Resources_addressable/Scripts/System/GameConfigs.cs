@@ -30,6 +30,7 @@ public struct SystemConfig{
 
     // ----- Water
     public int water_full_amount;                   // when amount == this, water is full
+    public Dictionary<string, List<NoiseCfg>> water_wave_noise_cfgs;
 
     // ----- RuleTile
     public Vector3Int TMap_tileNeighborsCheck_max; // how far can be check, neighbor of RuleTile, only use to load placeholder.
@@ -60,7 +61,7 @@ public class GameConfigs{
     public UpdateSystem _UpdateSys { get => _sys._UpdateSys; }
 
     // ---------- Tools ----------
-    public Noise _noise;
+    public static Noise _noise;
 
     // ---------- system config ----------
     // config

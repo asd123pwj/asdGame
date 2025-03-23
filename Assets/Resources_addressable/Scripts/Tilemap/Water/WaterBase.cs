@@ -32,6 +32,7 @@ public class WaterBase : BaseClass{
     // ---------- Status ---------- //
     public bool _isExist = true;
     public bool _isToppest => (_up == null) || (_up._amount_after == 0);
+    public bool _isBottomest => (_down == null) || (_down._amount_after == 0);
     public WaterTextureStatus _textureStatus = WaterTextureStatus.Dynamic;
 
     public Vector3Int _map_pos, _block_offsets;
@@ -45,7 +46,7 @@ public class WaterBase : BaseClass{
 
     public bool _flowed_left = false;
     public bool _flowed_right = false;
-    public bool _flowed_down = false;
+    // public bool _flowed_down = false;
 
     public Vector3Int _water_fewer_left;    // Amount fewer than this, e.g. A1 B2 C2 D2, A1 is fewer than B2, C2, D2
     public Vector3Int _water_fewer_right;   // _water_fewer_right like _water_fewer_left

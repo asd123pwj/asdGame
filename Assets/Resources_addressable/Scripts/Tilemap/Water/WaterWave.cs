@@ -1,11 +1,41 @@
+using System.Collections.Generic;
 using UnityEngine;
 
+
+public class WaterWaveNoise{
+    // static Noise noise = new(GameConfigs._sysCfg.seed);
+    static Dictionary<string, List<NoiseCfg>> noise_cfgs => GameConfigs._sysCfg.water_wave_noise_cfgs;
+    static float time_cur = 0;
+    
+    public static void _update_time(){
+        time_cur = Time.time;
+    }
+
+    public static Vector3[] _wave_vertices(WaterBase water, Vector3[] vertices){
+        Vector3[] vertices_new = new Vector3[vertices.Length];
+        for (int x = 0; x < 7; x++){
+            for (int y = 0; y < 7; y++){
+                if ((y == 0 || (y == 1 && x == 5) || (y == 2 && x == 6)) && water._isBottomest) {
+                    vertices_new[ixy.i(x, y, 7)] = vertices[ixy.i(x, y, 7)];
+                    continue;  // Skip the bottomest row
+                }
+                Vector3 noise_pos = water._map_pos + vertices[ixy.i(x, y, 7)] + new Vector3(time_cur, 0);
+                float wave_height = GameConfigs._noise._get_float(noise_pos, noise_cfgs["Smooth"]);
+                vertices_new[ixy.i(x, y, 7)] = vertices[ixy.i(x, y, 7)] + new Vector3(0, wave_height);
+                    // vertices_new[ixy.i(x, y, 7)] = vertices[ixy.i(x, y, 7)];
+
+            }
+        }
+        return vertices_new;
+    }
+}
 
 public class WaterWave : BaseClass{
     public float waveSpeed = 1f;
     public float waveHeight = 20f;
     public float waveFrequency = 1f;
     public int wave_row_start = 2;
+    // static WaterWaveNoise wave_noise = new();
 
     // ----- P3D
     float P3D_scale = 1.5f; // 1.5f is for P3D, 1 is front, 0.5 is up/side
@@ -149,52 +179,48 @@ public class WaterWave : BaseClass{
             return;
         }
         water._self.SetActive(true);
+        Vector3[] vertices = vertices_6x6_front;
         if (water._isToppest){
-            _scale_to_amount(water);
+            vertices = _scale_to_amount(water);
             water._textureStatus = WaterTextureStatus.Dynamic;
-            return;
         }
-        if (water._right == null || water._right._amount == 0){
-            if (water._textureStatus == WaterTextureStatus.FrontSide) return;
-            water.mesh.vertices = vertices_6x6_frontSide;
+        else if (water._right == null || water._right._amount == 0){
+            vertices = vertices_6x6_frontSide;
             water._textureStatus = WaterTextureStatus.FrontSide;
-            water.mesh.RecalculateNormals();
         }
-        else if (water._right._textureStatus == WaterTextureStatus.FrontSide || water._right._textureStatus == WaterTextureStatus.Front){
-            if (water._textureStatus == WaterTextureStatus.Front) return;
-            water.mesh.vertices = vertices_6x6_front;
-            water._textureStatus = WaterTextureStatus.Front;
-            water.mesh.RecalculateNormals();
+        else if (water._right._textureStatus != WaterTextureStatus.Dynamic || water._right._textureStatus == WaterTextureStatus.Front){
+            vertices = vertices_6x6_front;
+            water._textureStatus = WaterTextureStatus.Front; 
         }
         else{
             float side_height = (water._amount + water._right._amount) / 2f;
             water._textureStatus = WaterTextureStatus.FrontSideDynamic;
             if (side_height == 0.5f)
-                water.mesh.vertices = vertices_6x6_frontSideH0d5;
+                vertices = vertices_6x6_frontSideH0d5;
             else if (side_height == 1f)
-                water.mesh.vertices = vertices_6x6_frontSideH1d0;
+                vertices = vertices_6x6_frontSideH1d0;
             else if (side_height == 1.5f)
-                water.mesh.vertices = vertices_6x6_frontSideH1d5;
+                vertices = vertices_6x6_frontSideH1d5;
             else if (side_height == 2f)
-                water.mesh.vertices = vertices_6x6_frontSideH2d0;
+                vertices = vertices_6x6_frontSideH2d0;
             else if (side_height == 2.5f)
-                water.mesh.vertices = vertices_6x6_frontSideH2d5;
+                vertices = vertices_6x6_frontSideH2d5;
             else if (side_height == 3f)
-                water.mesh.vertices = vertices_6x6_frontSideH3d0;
+                vertices = vertices_6x6_frontSideH3d0;
             else if (side_height == 3.5f)
-                water.mesh.vertices = vertices_6x6_frontSideH3d5;
+                vertices = vertices_6x6_frontSideH3d5;
             else if (side_height == 4f){
-                water.mesh.vertices = vertices_6x6_front;
+                vertices = vertices_6x6_front;
                 water._textureStatus = WaterTextureStatus.Front;
             }
             else
                 Debug.Log("Happen water should not happen");
-            water.mesh.RecalculateNormals();
-                
         }
+        water.mesh.vertices = WaterWaveNoise._wave_vertices(water, vertices);
+        water.mesh.RecalculateNormals();
     }
     
-    public void _scale_to_amount(WaterBase water){
+    public Vector3[] _scale_to_amount(WaterBase water){
         Vector3[] vertices_new = new Vector3[water.mesh.vertices.Length];
 
         int row_front = 5, col_front = 5; // Front
@@ -272,6 +298,7 @@ public class WaterWave : BaseClass{
         vertices_new[ixy.i(6, 5, col)] = vertices_new[ixy.i(4, 4, col)] + new Vector3(W2, h2, 0);
 
         water.mesh.vertices = vertices_new;
-        water.mesh.RecalculateNormals();
+        // water.mesh.RecalculateNormals();
+        return vertices_new;
     }
 }

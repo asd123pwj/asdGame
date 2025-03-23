@@ -5,7 +5,8 @@ using System.Linq;
 public class WaterGenerator: BaseClass{
     public Dictionary<string, Transform> _water_containers;
     public static WaterFlow _flow = new();
-    public override float _update_interval { get; set; } = 0.25f;
+    public override float _update_interval { get; set; } = 0.05f;
+    int count;
 
 
     public override void _init(){
@@ -20,7 +21,12 @@ public class WaterGenerator: BaseClass{
     }
 
     public override void _update(){
-        _flow._flow_logic();
+        count++;
+        if (count % 5 == 0){
+            _flow._flow_logic();
+            _flow._flow_info();
+            count = 0;
+        }
         _flow._flow_anime();
     }
 

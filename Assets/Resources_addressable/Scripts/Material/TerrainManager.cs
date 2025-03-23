@@ -19,16 +19,6 @@ public class MineralInfo{
     public List<NoiseCfg> noise;
 }
 
-public class NoiseCfg{
-    public List<NoiseCfg> precondition;
-    public List<NoiseCfg> x_noise;
-    public List<NoiseCfg> y_noise;
-    public float f; // frequency
-    public float min, max; // scale for 1D noise, thres for 2D noise
-    public string fractal; // fractal type
-    public string noise; // noise type
-    public bool ignoreX, ignoreY;   // if ignoreX == true, x = 0
-}
 
 public class TerrainHierBase{
     // public List<NoiseCfg> x_noise;

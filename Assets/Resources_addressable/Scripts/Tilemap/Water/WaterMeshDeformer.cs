@@ -92,7 +92,7 @@ public class WaterMeshDeformer : MonoBehaviour{
         Noise noise = new(0);
         // int wave_row_start = 3;
         float vertexNum_per_row = 5;
-        float vertex_rowNum = 5;
+        // float vertex_rowNum = 5;
         noise._noise_simplex2();
         for (int i = 0; i < vertices_ori.Length; i++){
             Vector3 vertex = vertices_ori[i];
