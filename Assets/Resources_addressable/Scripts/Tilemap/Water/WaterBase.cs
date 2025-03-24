@@ -31,8 +31,8 @@ public class WaterBase : BaseClass{
     public WaterBase _right => _get_neighbor(_map_pos + Vector3Int.right);
     // ---------- Status ---------- //
     public bool _isExist = true;
-    public bool _isToppest => (_up == null) || (_up._amount_after == 0);
-    public bool _isBottomest => (_down == null) || (_down._amount_after == 0);
+    public bool _isTop => (_up == null) || (_up._amount_after == 0);
+    public bool _isBottom => (_down == null) || (_down._amount_after == 0);
     public WaterTextureStatus _textureStatus = WaterTextureStatus.Dynamic;
 
     public Vector3Int _map_pos, _block_offsets;

@@ -23,10 +23,8 @@ public class WaterFlow: BaseClass{
             for (int j = 0; j < waters.Count; j++){
                 WaterBase water = WaterBase._our[layers[i]][waters[j]];
                 water._amount = water._amount_after;
-                // if (water._diff != 0 || water._isToppest) 
                 water._decrease = 0;
                 water._increase = 0;
-                // water._flowed_down = false;
                 water._flowed_left = false;
                 water._flowed_right = false;
             }
@@ -70,7 +68,7 @@ public class WaterFlow: BaseClass{
                  */
                 if (!water._flowed_right                // If: Only flow right once
                     && water._amount_remain == 1        // If: amount = 1 can flow
-                    && water._isToppest                 // If: Toppest can flow down
+                    && water._isTop                 // If: Toppest can flow down
                     && water._down != null){            // If: Bottomest can't flow down
                     pos_dest = water._down._map_pos;
                     while (!water._flowed_right){
@@ -104,7 +102,7 @@ public class WaterFlow: BaseClass{
                  */
                 if (!water._flowed_left 
                     && water._amount_remain == 1 
-                    && water._isToppest
+                    && water._isTop
                     && water._down != null){
                     pos_dest = water._down._map_pos;
                     while (!water._flowed_left){

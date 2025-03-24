@@ -3,7 +3,6 @@ using UnityEngine;
 
 
 public class WaterWaveNoise{
-    // static Noise noise = new(GameConfigs._sysCfg.seed);
     static Dictionary<string, List<NoiseCfg>> noise_cfgs => GameConfigs._sysCfg.water_wave_noise_cfgs;
     static float time_cur = 0;
     
@@ -15,14 +14,13 @@ public class WaterWaveNoise{
         Vector3[] vertices_new = new Vector3[vertices.Length];
         for (int x = 0; x < 7; x++){
             for (int y = 0; y < 7; y++){
-                if ((y == 0 || (y == 1 && x == 5) || (y == 2 && x == 6)) && water._isBottomest) {
+                if ((y == 0 || (y == 1 && x == 5) || (y == 2 && x == 6)) && water._isBottom) {
                     vertices_new[ixy.i(x, y, 7)] = vertices[ixy.i(x, y, 7)];
-                    continue;  // Skip the bottomest row
+                    continue;  // Skip the bottom row
                 }
                 Vector3 noise_pos = water._map_pos + vertices[ixy.i(x, y, 7)] + new Vector3(time_cur, 0);
                 float wave_height = GameConfigs._noise._get_float(noise_pos, noise_cfgs["Smooth"]);
                 vertices_new[ixy.i(x, y, 7)] = vertices[ixy.i(x, y, 7)] + new Vector3(0, wave_height);
-                    // vertices_new[ixy.i(x, y, 7)] = vertices[ixy.i(x, y, 7)];
 
             }
         }
@@ -180,7 +178,7 @@ public class WaterWave : BaseClass{
         }
         water._self.SetActive(true);
         Vector3[] vertices = vertices_6x6_front;
-        if (water._isToppest){
+        if (water._isTop){
             vertices = _scale_to_amount(water);
             water._textureStatus = WaterTextureStatus.Dynamic;
         }
@@ -188,7 +186,7 @@ public class WaterWave : BaseClass{
             vertices = vertices_6x6_frontSide;
             water._textureStatus = WaterTextureStatus.FrontSide;
         }
-        else if (water._right._textureStatus != WaterTextureStatus.Dynamic || water._right._textureStatus == WaterTextureStatus.Front){
+        else if (water._right._textureStatus != WaterTextureStatus.Dynamic){
             vertices = vertices_6x6_front;
             water._textureStatus = WaterTextureStatus.Front; 
         }
@@ -297,8 +295,6 @@ public class WaterWave : BaseClass{
         vertices_new[ixy.i(6, 4, col)] = vertices_new[ixy.i(4, 3, col)] + new Vector3(W2, h2, 0);
         vertices_new[ixy.i(6, 5, col)] = vertices_new[ixy.i(4, 4, col)] + new Vector3(W2, h2, 0);
 
-        water.mesh.vertices = vertices_new;
-        // water.mesh.RecalculateNormals();
         return vertices_new;
     }
 }
