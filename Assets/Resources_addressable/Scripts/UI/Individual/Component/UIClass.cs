@@ -9,6 +9,19 @@ using System;
 
 public class UIClass{
     static Dictionary<string, UIInfo> UIInfos { get { return get_all_UIInfo(); } }
+    readonly public static UIInfo UICommandWindow = new(){
+        type = "UICommandWindow",
+        background_key = "CommandWindow",
+        sizeDelta = new(800, 400),
+        interactions = new List<string>() {
+            "UISetTop",
+            "UIDrag",
+        },
+        subUIs = new(){
+            new() { type = "UICloseButtom" },
+            new() { type = "UIResizeButtom" },
+        },
+    };
     readonly public static UIInfo UIBackpack = new() {
         type = "UIBackpack",
         // base_type = "UIBase",
@@ -105,6 +118,19 @@ public class UIClass{
             "UISetTop",
             "UIDrop",
         },
+    };
+    readonly public static UIInputFieldInfo UIInputField = new() {
+        type = "UIInputField",
+        base_type = "UIInputField",
+        prefab_key = "InputField",
+        background_key = "Empty",
+        sizeDelta = new (400, 50),
+        enableNavigation = true,
+        interactions = new List<string>() {
+            "UISetTop",
+            "UISubmit",
+            // "UIDrag",
+        }
     };
     readonly public static UIScrollViewInfo UIScrollView = new() {
         type = "UIScrollView",

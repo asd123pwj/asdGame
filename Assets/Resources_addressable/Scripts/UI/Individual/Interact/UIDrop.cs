@@ -10,9 +10,9 @@ using Unity.VisualScripting;
 public class UIDrop: UIInteractBase{
     public UIDrop(UIBase Base): base(Base){}
     
-    public override void _Drop(PointerEventData eventData){
+    public override void _Drop(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        drop(eventData);
+        drop((PointerEventData)eventData);
     }
 
     bool allowDrop(PointerEventData eventData){

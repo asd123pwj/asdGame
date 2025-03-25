@@ -2,7 +2,10 @@
     "version": "0.0.1",
     "items":{
         "ScrollView":{
-            "path": "Assets/Resources_addressable/Prefab/UI/ScrollView.prefab"
+            "path": "UIPfb_ScrollView"
+        },
+        "InputField":{
+            "path": "UIPfb_InputField"
         }
     }
 }

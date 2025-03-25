@@ -12,7 +12,7 @@ public class UIDragInstantiate: UIDrag{
         _set_trigger(0);
     }
     
-    public override void _BeginDrag(PointerEventData eventData){
+    public override void _BeginDrag(BaseEventData eventData, bool isBuildIn=true){
         var canvasGroup = _self.GetComponent<CanvasGroup>();
         if (canvasGroup == null) 
             canvasGroup = _self.AddComponent<CanvasGroup>();
@@ -22,7 +22,7 @@ public class UIDragInstantiate: UIDrag{
         _rt_self.SetParent(_Base._UISys._foreground.transform);
     }
 
-    public override void _EndDrag(PointerEventData eventData){
+    public override void _EndDrag(BaseEventData eventData, bool isBuildIn=true){
         // EndDrag of base
         base._EndDrag(eventData);
         // Recovery checkpoint    
@@ -31,7 +31,7 @@ public class UIDragInstantiate: UIDrag{
         _Base._apply_UIPosition();
         // instantiate object
         if (_Base is UIThumbnail Thumb_base){
-            Thumb_base._instantiate(_get_mousePosWorld(eventData));
+            Thumb_base._instantiate(_get_mousePosWorld((PointerEventData)eventData));
         }
         else{
             Debug.LogWarning(GetType().Name + " should be attached into " + typeof(UIThumbnail).Name + ", but attached into " + _Base.GetType().Name);

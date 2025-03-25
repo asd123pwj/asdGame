@@ -11,7 +11,7 @@ public class UIClickCloseRightMenu: UIInteractBase{
         _set_trigger(0);
     }
 
-    public override void _PointerDown(PointerEventData eventData){
+    public override void _PointerDown(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
         close_rightMenu();
     }

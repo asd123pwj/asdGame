@@ -11,19 +11,19 @@ public class UIDrag: UIInteractBase{
         _set_trigger(0);
     }
     
-    public override void _PointerDown(PointerEventData eventData){
+    public override void _PointerDown(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        _update_mouseDown_mousePos_self(eventData);
-        _update_mouseDown_pos_self(eventData);
+        _update_mouseDown_mousePos_self((PointerEventData)eventData);
+        _update_mouseDown_pos_self((PointerEventData)eventData);
     }
     
-    public override void _Drag(PointerEventData eventData){
+    public override void _Drag(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        _update_mouseHold_mousePos_self(eventData);
+        _update_mouseHold_mousePos_self((PointerEventData)eventData);
         drag();
     }
 
-    public override void _BeginDrag(PointerEventData eventData){
+    public override void _BeginDrag(BaseEventData eventData, bool isBuildIn=true){
         var canvasGroup = _self.GetComponent<CanvasGroup>();
         if (canvasGroup == null) 
             canvasGroup = _self.AddComponent<CanvasGroup>();
@@ -31,7 +31,7 @@ public class UIDrag: UIInteractBase{
         drag_from_container();
     }
 
-    public override void _EndDrag(PointerEventData eventData){
+    public override void _EndDrag(BaseEventData eventData, bool isBuildIn=true){
         var canvasGroup = _self.GetComponent<CanvasGroup>();
         if (canvasGroup == null) 
             canvasGroup = _self.AddComponent<CanvasGroup>();

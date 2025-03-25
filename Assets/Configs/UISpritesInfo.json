@@ -18,6 +18,10 @@
         },
         "Empty":{
             "path": "Assets/Resources_addressable/Graphics/UI/Empty.png"
+        },
+
+        "CommandWindow":{
+            "path": "UISpr_CommandWindow"
         }
     }
 }

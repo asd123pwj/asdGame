@@ -16,7 +16,7 @@ public class UIToggle: UIInteractBase{
         find_target();
     }
 
-    public override void _PointerDown(PointerEventData eventData){
+    public override void _PointerDown(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
         toggle_interaction();
         toggle_subUI();

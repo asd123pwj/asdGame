@@ -13,9 +13,9 @@ public class UIDeselectClose: UIInteractBase{
     //     _Cfg._Event._event_Deselect.Add(interaction_Deselect);
     // }
     
-    public override void _Deselect(PointerEventData eventData){
+    public override void _Deselect(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        close(eventData);
+        close((PointerEventData)eventData);
     }
     
     void close(PointerEventData eventData){

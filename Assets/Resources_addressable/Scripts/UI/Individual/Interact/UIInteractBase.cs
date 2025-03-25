@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 using System.Linq;
 using Unity.VisualScripting;
 
-public delegate void _UIInteraction(PointerEventData eventData);
+public delegate void _UIInteraction(BaseEventData eventData, bool isBuildIn = true);
 
 public class UIInteractBase{
     // ---------- Sub Tools ----------
@@ -128,31 +128,34 @@ public class UIInteractBase{
     public void _enable(){ isEnable = true;}
     public void _disable(){ isEnable = false;}
     public void _toggle(){ isEnable = !isEnable; }
-    public bool _isAvailable(PointerEventData eventData){
+    public bool _isAvailable(BaseEventData eventData){
         if (!isEnable) return false;
-        if (!_mouseTrigger.Contains((int)eventData.button)) return false;
+        if (eventData is PointerEventData pointerEventData){
+            if (!_mouseTrigger.Contains((int)pointerEventData.button)) return false;
+        }
+        // if (!_mouseTrigger.Contains((int)eventData.button)) return false;
         return true;
     }
 
     // ---------- Interactions ----------
-    public virtual bool _main(PointerEventData eventData){ return true; }
-    public virtual void _PointerEnter(PointerEventData eventData) {  }
-    public virtual void _PointerExit(PointerEventData eventData) {  }
-    public virtual void _PointerDown(PointerEventData eventData) {  }
-    public virtual void _PointerUp(PointerEventData eventData) {  } 
-    public virtual void _PointerClick(PointerEventData eventData){  }
-    public virtual void _Drag(PointerEventData eventData) { }
-    public virtual void _Drop(PointerEventData eventData) { }
-    public virtual void _Scroll(PointerEventData eventData) { }
-    public virtual void _UpdateSelected(PointerEventData eventData) { }
-    public virtual void _Select(PointerEventData eventData) { }
-    public virtual void _Deselect(PointerEventData eventData) { }
-    public virtual void _Move(PointerEventData eventData) { }
-    public virtual void _InitializePotentialDrag(PointerEventData eventData) { }
-    public virtual void _BeginDrag(PointerEventData eventData) { }
-    public virtual void _EndDrag(PointerEventData eventData) { }
-    public virtual void _Submit(PointerEventData eventData) { }
-    public virtual void _Cancel(PointerEventData eventData) { }
+    public virtual bool _main(BaseEventData eventData){ return true; }
+    public virtual void _PointerEnter(BaseEventData eventData, bool isBuildIn=true) {  }
+    public virtual void _PointerExit(BaseEventData eventData, bool isBuildIn=true) {  }
+    public virtual void _PointerDown(BaseEventData eventData, bool isBuildIn=true) {  }
+    public virtual void _PointerUp(BaseEventData eventData, bool isBuildIn=true) {  } 
+    public virtual void _PointerClick(BaseEventData eventData, bool isBuildIn=true){  }
+    public virtual void _Drag(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _Drop(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _Scroll(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _UpdateSelected(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _Select(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _Deselect(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _Move(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _InitializePotentialDrag(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _BeginDrag(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _EndDrag(BaseEventData eventData, bool isBuildIn=true) { }
+    public virtual void _Submit(BaseEventData eventData, bool isBuildIn=true) { }   
+    public virtual void _Cancel(BaseEventData eventData, bool isBuildIn=true) { }
 
 
 }

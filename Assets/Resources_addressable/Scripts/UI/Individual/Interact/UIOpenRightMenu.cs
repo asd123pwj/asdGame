@@ -15,9 +15,11 @@ public class UIOpenRightMenu: UIInteractBase{
     //     _Cfg._Event._event_PointerDown.Add(interaction_PointerDown);
     // }
     
-    public override void _PointerDown(PointerEventData eventData){
+    public override void _PointerDown(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        open_rightMenu(eventData);
+        // if (eventData is PointerEventData)
+        //     open_rightMenu((PointerEventData)eventData);
+        open_rightMenu((PointerEventData)eventData);
     }
     
     void open_rightMenu(PointerEventData eventData) {

@@ -15,9 +15,9 @@ public class UIClickClose: UIInteractBase{
     //     _Cfg._Event._event_PointerDown.Add(interaction_PointerDown);
     // }
     
-    public override void _PointerDown(PointerEventData eventData){
+    public override void _PointerDown(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        close(eventData);
+        close((PointerEventData)eventData);
     }
     
     void close(PointerEventData eventData){

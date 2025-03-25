@@ -11,16 +11,16 @@ public class UIResizeSize: UIInteractBase{
         _set_trigger(0);
     }
     
-    public override void _PointerDown(PointerEventData eventData){
+    public override void _PointerDown(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        _update_mouseDown_mousePos_parent(eventData);
-        _update_mouseDown_size_parent(eventData);
+        _update_mouseDown_mousePos_parent((PointerEventData)eventData);
+        _update_mouseDown_size_parent((PointerEventData)eventData);
     }
 
-    public override void _Drag(PointerEventData eventData){
+    public override void _Drag(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        _update_mouseHold_mousePos_parent(eventData);
-        resize(eventData);
+        _update_mouseHold_mousePos_parent((PointerEventData)eventData);
+        resize((PointerEventData)eventData);
     }
     
     void resize(PointerEventData eventData){ 

@@ -106,7 +106,8 @@ public class UITrigger{
         }
         if (Base._Event._event_Submit.Count > 0) { 
             entry = new() { eventID = EventTriggerType.Submit }; 
-            entry.callback.AddListener((data) => Base._Event._action_submit((PointerEventData)data)); 
+            // entry.callback.AddListener((data) => Base._Event._action_submit((PointerEventData)data)); 
+            entry.callback.AddListener((data) => Base._Event._action_submit(data)); 
             eventTrigger.triggers.Add(entry); 
         }
         if (Base._Event._event_Cancel.Count > 0) { 
