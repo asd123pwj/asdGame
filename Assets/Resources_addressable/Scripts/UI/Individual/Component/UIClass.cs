@@ -11,15 +11,20 @@ public class UIClass{
     static Dictionary<string, UIInfo> UIInfos { get { return get_all_UIInfo(); } }
     readonly public static UIInfo UICommandWindow = new(){
         type = "UICommandWindow",
-        background_key = "CommandWindow",
+        background_key = "ui_1",
         sizeDelta = new(800, 400),
         interactions = new List<string>() {
             "UISetTop",
             "UIDrag",
         },
         subUIs = new(){
-            new() { type = "UICloseButtom" },
-            new() { type = "UIResizeButtom" },
+            new() { type = "UICloseButtom", sizeDelta = new(25, 25)},
+            new() { type = "UIResizeButtom", sizeDelta = new(25, 25)},
+            new() { type = "UIInputField", sizeDelta = new(800-25-2*2, 25-2*2),
+                    pivot = new(0, 0), anchorMin = new(0, 0), anchorMax = new(0, 0),
+                    anchoredPosition = new(2, 2),
+
+                    },
         },
     };
     readonly public static UIInfo UIBackpack = new() {
@@ -40,7 +45,7 @@ public class UIClass{
     };
     readonly public static UIInfo UICloseButtom = new() {
         type = "UICloseButtom",
-        background_key = "Close",
+        background_key = "ui_3",
         anchorMin = new(1, 1), anchorMax = new(1, 1), pivot = new (1, 1), 
         sizeDelta = new(50, 50),
         interactions = new List<string>() {
@@ -57,7 +62,7 @@ public class UIClass{
     };
     readonly public static UIInfo UIResizeButtom = new() {
         type = "UIResizeButtom",
-        background_key = "ResizeButtom",
+        background_key = "ui_4",
         anchorMin = new(1, 0), anchorMax = new(1, 0), pivot = new (1, 0), 
         sizeDelta = new (50, 50),
         interactions = new List<string>() {
@@ -123,7 +128,7 @@ public class UIClass{
         type = "UIInputField",
         base_type = "UIInputField",
         prefab_key = "InputField",
-        background_key = "Empty",
+        background_key = "ui_2",
         sizeDelta = new (400, 50),
         enableNavigation = true,
         interactions = new List<string>() {

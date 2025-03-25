@@ -160,12 +160,19 @@ public class UIBase: BaseClass{
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(100);
         }
-        if (_MatSys._UISpr._check_exist(_background_key)){
-            while (!_MatSys._UISpr._check_loaded(_background_key)) {
+        // if (_MatSys._UISpr._check_exist(_background_key)){
+        //     while (!_MatSys._UISpr._check_loaded(_background_key)) {
+        //         Debug.Log("waiting for UI sprite loaded: " + _name + " - " + _background_key);
+        //         await UniTask.Delay(100);
+        //     }
+        //     img.sprite = _MatSys._UISpr._get_spr(_background_key);
+        // }
+        if (_MatSys._spr._check_exist(_background_key)){
+            while (!_MatSys._spr._check_loaded(_background_key)) {
                 Debug.Log("waiting for UI sprite loaded: " + _name + " - " + _background_key);
                 await UniTask.Delay(100);
             }
-            img.sprite = _MatSys._UISpr._get_spr(_background_key);
+            img.sprite = _MatSys._spr._get_sprite(_background_key);
         }
         else{
             img.color = new(1, 1, 1, 1);
@@ -225,9 +232,9 @@ public class UIBase: BaseClass{
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(100);
         }
-        if (_MatSys._UISpr._check_exist(_background_key)){
-            while (!_MatSys._UISpr._check_loaded(_background_key)) {
-                Debug.Log("waiting for UI prefab loaded: " + _name + " - " + _background_key);
+        if (_MatSys._UIPfb._check_exist(_prefab_name)){
+            while (!_MatSys._UIPfb._check_loaded(_prefab_name)) {
+                Debug.Log("waiting for UI prefab loaded: " + _name + " - " + _prefab_name);
                 await UniTask.Delay(100);
             }
             GameObject obj = _MatSys._UIPfb._get_pfb(_prefab_name);

@@ -52,6 +52,11 @@
         "bd_m8":{ "name": "蓝色矿石", "path": "sprite_bd_m8" },
         "bd_m9":{ "name": "紫色矿石", "path": "sprite_bd_m9" },
         
-        "l1":{ "name": "水", "path": "sprite_l1", "sprites": ["__Full", "__Front", "__Side", "__Up"]}
+        "l1":{ "name": "水", "path": "sprite_l1", "sprites": ["__Full", "__Front", "__Side", "__Up"]},
+
+        "ui_1":{ "name": "命令行窗口", "path": "UISpr_CommandWindow" },
+        "ui_2":{ "name": "圆形按钮", "path": "UISpr_CircleButtom" },
+        "ui_3":{ "name": "关闭按钮", "path": "UISpr_CloseButtom" },
+        "ui_4":{ "name": "缩放按钮", "path": "UISpr_ResizeButtom" }
     }
 }

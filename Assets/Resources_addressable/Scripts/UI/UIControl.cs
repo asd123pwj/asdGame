@@ -48,8 +48,8 @@ public class UIControl: BaseClass{
         // Debug.Log(a.name);
 
         // return _UISys._UIDraw._open_or_close("UIScrollView");
-        // return _UISys._UIDraw._open_or_close("UICommandWindow");
-        return _UISys._UIDraw._open_or_close("UIInputField");
+        return _UISys._UIDraw._open_or_close("UICommandWindow");
+        // return _UISys._UIDraw._open_or_close("UIInputField");
     }
 
     public bool _close_menu(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
