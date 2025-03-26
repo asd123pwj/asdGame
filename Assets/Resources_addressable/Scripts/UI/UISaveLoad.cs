@@ -9,6 +9,8 @@ using System;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.Linq;
+using Force.DeepCloner;
+using Unity.VisualScripting;
 
 public struct UIStorage{
     public Dictionary<string, UIInfo> fg;
@@ -16,34 +18,18 @@ public struct UIStorage{
 }
 
 public class UISaveLoad: BaseClass{
-    // ---------- UI Tool ----------
-    // GameConfigs _GCfg;
-    // UISystem _UISys { get { return _GCfg._UISys; } }
-    // ---------- Sub Tools ----------
-    // ---------- Status ----------
-
-    // public UISaveLoad(GameConfigs GCfg){
-    //     _GCfg = GCfg;
-    // }
-
-    UIStorage init_UIStorage(){
-        return new(){
-            fg = new(),
-            fg_Hier = new()
-        };
-    }
+    UIStorage init_UIStorage() => new(){ fg = new(), fg_Hier = new()};
 
     public bool _save_UI(){
-        UIs UIs = _UISys._UIMonitor._get_UIs().Copy();
         UIStorage storage = init_UIStorage();
-        // Dictionary<string, UIInfo> UIInfos = new();
+        UIs UIs = _UISys._UIMonitor._get_UIs();
+        storage.fg_Hier = UIs.fg_Hier;
         foreach (var UI in UIs.fg.Values){
             UI._update_info();
             UIInfo info_clear = UI._info._prune();
-            // UIs.fg[info_clear.name] = info_clear;
             storage.fg.Add(info_clear.name, info_clear);
         }
-        storage.fg_Hier = UIs.fg_Hier;
+
         save_UIStorage(storage, _GCfg.__UI_path);
         return true;
     }
@@ -71,24 +57,6 @@ public class UISaveLoad: BaseClass{
         File.WriteAllText(save_path, json);
     }
 
-    // static UIStorage load_UIStorage(string load_path){
-    //     // if (File.Exists(load_path)){
-    //     //     string json = File.ReadAllText(load_path);
-    //     //     UIStorage UIStorage = JsonConvert.DeserializeObject<UIStorage>(json);
-    //     //     return UIStorage;
-    //     // }
-    //     if (File.Exists(load_path)){
-    //         string json = File.ReadAllText(load_path);
-    //         JsonSerializerSettings settings = new JsonSerializerSettings{
-    //             TypeNameHandling = TypeNameHandling.Auto,
-    //             Converters = new List<JsonConverter> { new UIInfoConverter() }
-    //         };
-    //         UIStorage UIStorage = JsonConvert.DeserializeObject<UIStorage>(json, settings);
-    //         return UIStorage;
-    //     }
-    //     return new();
-    // }
-
     static UIStorage load_UIStorage(string loadPath){
         if (File.Exists(loadPath)){
             string json = File.ReadAllText(loadPath);
@@ -103,18 +71,46 @@ public class UISaveLoad: BaseClass{
                 string key = item.Path.Split('.').Last();
                 JObject value = (JObject)item.First;
 
-                string typeName = value["info_type"].ToString();
-                Type type = Type.GetType(typeName);
-                if (type != null){
-                    UIInfo uiInfo = (UIInfo)value.ToObject(type);
+                UIInfo uiInfo = DeserializeUIInfo(value);
+                if (uiInfo != null){
                     storage.fg[key] = uiInfo;
                 }
             }
-
             return storage;
         }
-
         return new();
     }
+
+
+
+    static UIInfo DeserializeUIInfo(JObject jsonObject){
+        if (!jsonObject.ContainsKey("info_type")){
+            return null;
+        }
+
+        string info_type = jsonObject["info_type"].ToString();
+        Type type = Type.GetType(info_type);
+        if (type == null){
+            return null;
+        }
+
+        UIInfo info = (UIInfo)jsonObject.ToObject(type);
+
+        if (jsonObject.ContainsKey("subUIs")){
+            JArray subUIsArray = (JArray)jsonObject["subUIs"];
+            List<UIInfo> subUIs = new();
+
+            foreach (var subUI in subUIsArray){
+                JObject subUIObject = (JObject)subUI;
+                UIInfo subUIInfo = DeserializeUIInfo(subUIObject);
+                if (subUIInfo != null){
+                    subUIs.Add(subUIInfo);
+                }
+            }
+            info.subUIs = subUIs; 
+        }
+        return info;
+    }
+
 
 }

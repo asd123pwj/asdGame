@@ -7,17 +7,9 @@ using UnityEngine.EventSystems;
 using System;
 
 public class UIBase: BaseClass{
-    // ---------- System Tools ----------
-    // public UIIndividual _ui;
-    // public SystemManager _sys;
-    // public MaterialSystem _MatSys { get { return _HierSearch._MatSys; } }
-    // public InputSystem _InputSys { get { return _HierSearch._InputSys; } }
-    // public UISystem _UISys { get { return _HierSearch._UISys; } }
     // ---------- Sub Tools ----------
     public UIEvent _Event;
     public UITrigger _Trigger;
-    // public UIInteract _Interact;
-    // public UIControl _Ctrl;
     public UIInteractionManager _InteractMgr;
     public UITag _Tag;
     // ---------- Unity ----------
@@ -30,7 +22,7 @@ public class UIBase: BaseClass{
     public string _class_name { get { return _info.base_type; } set { _info.base_type = value; } }
     public string _prefab_name { get { return _info.prefab_key; } set { _info.prefab_key = value; } }
     public string _background_key { get { return _info.background_key; } set { _info.background_key = value; } }
-    
+    public float _PixelsPerUnitMultiplier { get { return _info.PixelsPerUnitMultiplier; } set { _info.PixelsPerUnitMultiplier = value; } }
     // ----- Position
     public bool _isButtom;
     public bool _enableNavigation { get { return _info.enableNavigation; } set { _info.enableNavigation = value; } }
@@ -49,9 +41,6 @@ public class UIBase: BaseClass{
     public bool _isAvailable { get{ return _self.activeSelf; }}
     public List<UIBase> _subUIs;
     bool allow_init = false;
-    // ---------- Key ----------
-    // public string _subUIKey_Ctrl { get => "ControlUIs"; }
-    // ---------- Extra Parameter for children class ----------
     
 
     public UIBase(GameObject parent, UIInfo info=null){
@@ -84,6 +73,7 @@ public class UIBase: BaseClass{
         init_interactions().Forget();
         // _EXTRA_init_subUIs();
         // ----- Activate
+        
         _enable();
         // ----- Done
         _init_done();
@@ -155,7 +145,6 @@ public class UIBase: BaseClass{
     // ---------- Background ----------
     async UniTaskVoid set_background(){
         while (!_initDone) await UniTask.Delay(100);
-        Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
         while (!_MatSys._check_all_info_initDone()) {
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(100);
@@ -167,15 +156,24 @@ public class UIBase: BaseClass{
         //     }
         //     img.sprite = _MatSys._UISpr._get_spr(_background_key);
         // }
-        if (_MatSys._spr._check_exist(_background_key)){
-            while (!_MatSys._spr._check_loaded(_background_key)) {
-                Debug.Log("waiting for UI sprite loaded: " + _name + " - " + _background_key);
-                await UniTask.Delay(100);
+        if (_background_key == "")
+            ;
+        else {
+            Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
+            if (_MatSys._spr._check_exist(_background_key)){
+                while (!_MatSys._spr._check_loaded(_background_key)) {
+                    Debug.Log("waiting for UI sprite loaded: " + _name + " - " + _background_key);
+                    await UniTask.Delay(100);
+                }
+                img.sprite = _MatSys._spr._get_sprite(_background_key);
             }
-            img.sprite = _MatSys._spr._get_sprite(_background_key);
-        }
-        else{
-            img.color = new(1, 1, 1, 1);
+            else{
+                img.color = new(1, 1, 1, 1);
+            }
+            if (_info.check_PixelsPerUnitMultiplier){
+                img.type = Image.Type.Sliced;
+                img.pixelsPerUnitMultiplier = _PixelsPerUnitMultiplier;
+            }
         }
         _apply_UIPosition();
         _apply_UIShape();

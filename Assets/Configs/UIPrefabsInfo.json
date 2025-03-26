@@ -6,6 +6,11 @@
         },
         "InputField":{
             "path": "UIPfb_InputField"
+        },
+        "ScrollText":{
+            "path": "UIPfb_ScrollText"
         }
+
+        
     }
 }

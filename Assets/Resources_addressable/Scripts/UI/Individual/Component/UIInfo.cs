@@ -38,9 +38,21 @@ public class UIInfo{
     private string _prefab_key;
     [JsonIgnore] public string prefab_key { get => _prefab_key; set => _prefab_key = value; }
 
+    // ---------- Image ---------- //
     [JsonProperty("background_key", NullValueHandling = NullValueHandling.Ignore)]
     private string _background_key;
-    [JsonIgnore] public string background_key { get => _background_key; set => _background_key = value; }
+    private string _background_key_default { get => ""; }
+    [JsonIgnore] public string background_key { get => _background_key ?? _background_key_default; set => _background_key = value; }
+
+    [JsonProperty("PixelsPerUnitMultiplier", NullValueHandling = NullValueHandling.Ignore)]
+    private float? _PixelsPerUnitMultiplier;
+    private float _PixelsPerUnitMultiplier_default = 1;
+    [JsonIgnore] public float PixelsPerUnitMultiplier { get => _PixelsPerUnitMultiplier ?? _PixelsPerUnitMultiplier_default; set => _PixelsPerUnitMultiplier = value; }
+    [JsonIgnore] public bool check_PixelsPerUnitMultiplier { get => _PixelsPerUnitMultiplier != null; }
+    // [JsonProperty("image_type", NullValueHandling = NullValueHandling.Ignore)]
+    // private Image.Type? _image_type;
+    // private Image.Type _image_type_default { get => Image.Type.Simple; }
+    // [JsonIgnore] public Image.Type image_type { get => _image_type ?? _image_type_default; set => _image_type = value; }
 
     // ---------- Position ----------
     [JsonProperty("rotation", NullValueHandling = NullValueHandling.Ignore)] 

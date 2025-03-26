@@ -6,12 +6,13 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Linq;
 using System;
+using Force.DeepCloner;
 
 public class UIClass{
     static Dictionary<string, UIInfo> UIInfos { get { return get_all_UIInfo(); } }
     readonly public static UIInfo UICommandWindow = new(){
         type = "UICommandWindow",
-        background_key = "ui_1",
+        background_key = "ui_1", 
         sizeDelta = new(800, 400),
         interactions = new List<string>() {
             "UISetTop",
@@ -20,17 +21,20 @@ public class UIClass{
         subUIs = new(){
             new() { type = "UICloseButtom", sizeDelta = new(25, 25)},
             new() { type = "UIResizeButtom", sizeDelta = new(25, 25)},
-            new() { type = "UIInputField", sizeDelta = new(800-25-2*2, 25-2*2),
+            new UIInputFieldInfo() { type = "UIInputField", sizeDelta = new(800-25-2*2, 25-2*2),
                     pivot = new(0, 0), anchorMin = new(0, 0), anchorMax = new(0, 0),
-                    anchoredPosition = new(2, 2),
+                    anchoredPosition = new(2, 2), PixelsPerUnitMultiplier=4
+            },
+            new UIScrollTextInfo() { type = "UIScrollText", 
+                sizeDelta = new(800-25, 400-25*2-12.5f*2), anchoredPosition = new(12.5f, -(25+12.5f)),
 
-                    },
+            },
         },
     };
     readonly public static UIInfo UIBackpack = new() {
         type = "UIBackpack",
         // base_type = "UIBase",
-        background_key = "Default",
+        background_key = "ui_1",
         sizeDelta = new(1600, 900), 
         subUIs = new(){
             new() { type = "UICloseButtom" },
@@ -68,6 +72,25 @@ public class UIClass{
         interactions = new List<string>() {
             "UISetTop",
             "UIResizeScaleConstrait",
+        },
+    };
+    readonly public static UIScrollTextInfo UIScrollText = new(){
+        type = "UIScrollText",
+        base_type = "UIScrollText",
+        prefab_key = "ScrollText",
+        background_key = "ui_2", PixelsPerUnitMultiplier=2,
+        // sizeDelta = new(0, 0),
+        // anchorMin = new(0.01f, 0.01f), anchorMax = new(0.99f, 0.99f), pivot = new (0.5f, 0.5f), 
+        enableNavigation = true,
+        interactions = new List<string>() {
+            "UISetTop",
+        },
+    };
+    readonly public static UIInfo UIImage = new(){
+        type = "UIImage", //sizeDelta = new(0, 0),
+        // anchorMin = new(0, 0), anchorMax = new(0, 1), pivot = new (0.5f, 0.5f), 
+        interactions = new List<string>() {
+            "UISetTop",
         },
     };
     readonly public static UIInfo UIRightMenu = new() {
@@ -128,7 +151,7 @@ public class UIClass{
         type = "UIInputField",
         base_type = "UIInputField",
         prefab_key = "InputField",
-        background_key = "ui_2",
+        background_key = "ui_2", PixelsPerUnitMultiplier=8, 
         sizeDelta = new (400, 50),
         enableNavigation = true,
         interactions = new List<string>() {
@@ -198,7 +221,8 @@ public class UIClass{
     public static UIInfo _set_default(string type, UIInfo info=null){
         UIInfo info_ = info ?? UIInfos[type];
         if (info == null){
-            info_ = UIInfos[type].Copy();
+            // info_ = UIInfos[type].Copy();
+            info_ = UIInfos[type].DeepClone();
         }
         if (info != null){
             info_ = cover_default(info_);
@@ -230,7 +254,8 @@ public class UIClass{
             }
             type = type.BaseType;
         }
-        return new_UIInfo.Copy();
+        // return new_UIInfo.Copy();
+        return new_UIInfo.DeepClone();
     }
 
     static UIInfo convert_baseClass_to_subClass(UIInfo base_UIInfo, UIInfo sub_UIInfo){
