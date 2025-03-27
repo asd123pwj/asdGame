@@ -121,6 +121,14 @@ public class UIInfo{
         set => _enableNavigation = value;
     }
 
+    [JsonProperty("messageID", NullValueHandling = NullValueHandling.Ignore)]
+    private string _messageID;
+    private string _messageID_default { get => ""; }
+    [JsonIgnore] public string messageID {
+        get => _messageID ?? _messageID_default;
+        set => _messageID = value;
+    }
+
     // ---------- Status ----------
     [JsonIgnore] public bool isItem = false;
     [JsonProperty("item_index", NullValueHandling = NullValueHandling.Ignore)]

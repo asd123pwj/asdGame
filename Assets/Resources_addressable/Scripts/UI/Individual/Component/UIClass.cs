@@ -23,11 +23,12 @@ public class UIClass{
             new() { type = "UIResizeButtom", sizeDelta = new(25, 25)},
             new UIInputFieldInfo() { type = "UIInputField", sizeDelta = new(800-25-2*2, 25-2*2),
                     pivot = new(0, 0), anchorMin = new(0, 0), anchorMax = new(0, 0),
-                    anchoredPosition = new(2, 2), PixelsPerUnitMultiplier=4
+                    anchoredPosition = new(2, 2), PixelsPerUnitMultiplier=4,
+                    messageID = "UICommandWindowShow",
             },
             new UIScrollTextInfo() { type = "UIScrollText", 
                 sizeDelta = new(800-25, 400-25*2-12.5f*2), anchoredPosition = new(12.5f, -(25+12.5f)),
-
+                messageID = "UICommandWindowShow",
             },
         },
     };

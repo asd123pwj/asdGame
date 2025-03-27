@@ -44,12 +44,22 @@ public class UIScrollText: UIBase{
         // if (_info is UIScrollTextInfo info){
         //     TMP_Text.color = info.color;
         // }
+        
     }
 
     public override void _init_done(){
         if (_info is UIScrollTextInfo info){
             TMP_Text.color = info.color;
         }
+    }
+
+    public override void _register_receiver(){
+        base._register_receiver();
+        MessageBus._add_receiver(_messageID, _update_text);
+    }
+
+    public void _update_text(string text){
+        _text = text;
     }
 
     // void onSubmit(string _) => _Event._action_submit(new(EventSystem.current), false);
