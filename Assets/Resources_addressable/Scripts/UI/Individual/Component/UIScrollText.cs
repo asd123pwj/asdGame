@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using TMPro;
 using Newtonsoft.Json;
+using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
 public class UIScrollTextInfo: UIInfo{
     
@@ -19,6 +21,7 @@ public class UIScrollText: UIBase{
 
     // ---------- Child ---------- //
     TextMeshProUGUI TMP_Text;
+    ScrollRect ScrollRect;
     GameObject Viewport;
     GameObject Content;
     GameObject Scrollbar_Horizontal;
@@ -40,6 +43,7 @@ public class UIScrollText: UIBase{
         Scrollbar_Vertical = _self.transform.Find("Scrollbar Vertical").gameObject;
         Text = Content.transform.Find("Text").gameObject;
         TMP_Text = Text.GetComponent<TextMeshProUGUI>();
+        ScrollRect = _self.GetComponent<ScrollRect>();
         // Text = _self.GetComponent<TextMeshProUGUI>() ?? _self.AddComponent<TextMeshProUGUI>();
         // if (_info is UIScrollTextInfo info){
         //     TMP_Text.color = info.color;
@@ -59,7 +63,13 @@ public class UIScrollText: UIBase{
     }
 
     public void _update_text(string text){
-        _text = text;
+        _text = _text + "\n" + text;
+        move_buttom().Forget();
+    }
+
+    async UniTaskVoid move_buttom(){
+        await UniTask.Delay(10);
+        ScrollRect.normalizedPosition = Vector2.zero;
     }
 
     // void onSubmit(string _) => _Event._action_submit(new(EventSystem.current), false);
