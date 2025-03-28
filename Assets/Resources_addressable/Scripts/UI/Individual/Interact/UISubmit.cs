@@ -13,7 +13,7 @@ public class UISubmit: UIInteractBase{
     
     void submit(BaseEventData eventData){
         if (_Base is UIInputField inputField){
-            MessageBus._send(_Base._messageID, inputField._text);
+            _Base._Msg._send(_Base._messageID, inputField._text);
         }
         else{
             Debug.Log("No inputField");

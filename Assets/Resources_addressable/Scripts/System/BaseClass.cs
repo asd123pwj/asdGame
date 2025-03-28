@@ -15,6 +15,7 @@ public class BaseClass{
     public MaterialSystem _MatSys => _sys._MatSys; 
     public UpdateSystem _UpdateSys => _sys._UpdateSys; 
     public CameraManager _CamMgr  => _sys._CamMgr; 
+    public MessageBus _Msg => _sys._Msg;
     // ---------- Config ----------
     public virtual float _update_interval { get; set; } = 0;
     // public virtual int a  = 1;

@@ -15,6 +15,8 @@ public class SystemManager : MonoBehaviour{
     public UpdateSystem _UpdateSys;
     public CameraManager _CamMgr;
     public VisualizationSystem _VisSys;
+    public MessageBus _Msg;
+    public CommandSystem _Cmd;
     // ---------- Unity ----------
     public GameObject _input;
     public GameObject _system;
@@ -38,6 +40,8 @@ public class SystemManager : MonoBehaviour{
         _MatSys = new();
         _CamMgr = new();
         _VisSys = new();
+        _Msg = new();
+        _Cmd = new();
         _initDone = true;
         // _input = GameObject.Find("Input");
         // _system = GameObject.Find("System");

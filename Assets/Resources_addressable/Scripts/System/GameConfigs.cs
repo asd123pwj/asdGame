@@ -12,14 +12,16 @@ public struct SaveConfig{
 
 public struct SystemConfig{
     // ---------- system config ---------- //
-    // ----- config
+    // ----- config ----- //
     public string version;
     public string save_playing;
+    // ----- message node ----- //
+    public string Msg_command;
     // ---------- tilemap config ---------- //
     public Vector3Int TMap_tiles_per_block;         // how many tiles in one block, axis-z is no support
     public Vector3Int TMap_blocks_per_zone;         // how many blocks in one region, axis-z is no support
     
-    // ----- loading
+    // ----- loading ----- //
     public int TMap_tiles_per_loading;              // when loading, how many tiles in one time
     public int TMap_interval_per_loading;           // when loading, how long to wait between each loading
     public Vector3Int TMap_draw_blocksAround_RadiusMinusOne_loading;   // when loading, how many blocks around the player to load
@@ -28,19 +30,19 @@ public struct SystemConfig{
     // ----- Tilemap gameObject
     public Dictionary<string, Vector3> TMap_tilemap_obj_origin_offset;
 
-    // ----- Water
+    // ----- Water ----- //
     public int water_full_amount;                   // when amount == this, water is full
     public Dictionary<string, List<NoiseCfg>> water_wave_noise_cfgs;
 
-    // ----- RuleTile
+    // ----- RuleTile ----- //
     public Vector3Int TMap_tileNeighborsCheck_max; // how far can be check, neighbor of RuleTile, only use to load placeholder.
     public string TMap_fullTile_subID;              // Usually, "__Full" means the full tile, for check water can flow or not
 
-    // ----- Build Generation
+    // ----- Build Generation ----- //
     public Vector3Int BuildGen_MatchKernelSize_RadiusMinusOne_max;
 
     // ---------- Camera ---------- //
-    // ----- player camera
+    // ----- player camera ----- //
     public float CAM_rowTiles_in_playerCamera_max;
     public float CAM_rowTiles_in_playerCamera_min;
     public float CAM_rowTiles_in_playerCamera_default;

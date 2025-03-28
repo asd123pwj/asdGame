@@ -2,6 +2,8 @@
     "version": "0.18.1",
     "save_playing": "",
 
+    "Msg_command": "COMMAND",
+
     "TMap_tiles_per_block": {"x": 8, "y": 8, "z": 1},
     "TMap_blocks_per_zone": {"x": 8, "y": 8, "z": 1},
 

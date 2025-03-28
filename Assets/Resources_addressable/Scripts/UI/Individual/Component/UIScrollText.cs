@@ -59,7 +59,7 @@ public class UIScrollText: UIBase{
 
     public override void _register_receiver(){
         base._register_receiver();
-        MessageBus._add_receiver(_messageID, _update_text);
+        _Msg._add_receiver(_messageID, _update_text);
     }
 
     public void _update_text(string text){

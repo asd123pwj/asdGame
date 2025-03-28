@@ -72,7 +72,7 @@ public class UIBase: BaseClass{
         init_sub_script();
         init_sub_UIs();
         init_interactions().Forget();
-        _register_message();
+        // _register_message();
         _register_receiver();
         // _EXTRA_init_subUIs();
         // ----- Activate
@@ -127,11 +127,11 @@ public class UIBase: BaseClass{
         _localScale = _self.transform.localScale;
     }
 
-    public virtual void _register_message(){
-        if (_messageID == "") return;
-        MessageBus._init_message_node(_messageID);
-        // MessageBus._add_receiver(_messageID, _Event._action_message);
-    }
+    // public virtual void _register_message(){
+    //     if (_messageID == "") return;
+    //     // _Msg._init_message_node(_messageID);
+    //     // MessageBus._add_receiver(_messageID, _Event._action_message);
+    // }
     public virtual void _register_receiver(){}
 
     public void _set_parent(GameObject parent=null){
