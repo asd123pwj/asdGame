@@ -60,7 +60,7 @@ public class InputStatus{
 
     void update_keyStatus(){
         foreach (string key in _input_key){
-            if (InputSystem._onEdit) if (!_input_key_availableOnEdit.Contains(key)) continue;
+            if (InputSystem._onEdit && !_input_key_availableOnEdit.Contains(key)) continue;
             if (key == "Up") set_keyStatus(key, Input.GetAxisRaw("Vertical") > 0); 
             else if (key == "Down") set_keyStatus(key, Input.GetAxisRaw("Vertical") < 0); 
             else if (key == "Left") set_keyStatus(key, Input.GetAxisRaw("Horizontal") < 0); 
