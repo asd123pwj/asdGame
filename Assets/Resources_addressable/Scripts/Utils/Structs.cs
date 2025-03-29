@@ -1,4 +1,3 @@
-
 public static class ixy{
     public static int x(int i, int col) => i % col;
     public static int y(int i, int row) => i / row;

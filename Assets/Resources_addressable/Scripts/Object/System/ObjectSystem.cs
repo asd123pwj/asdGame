@@ -18,14 +18,17 @@ public class ObjectSystem: BaseClass{
     // GameConfigs _GCfg { get { return _HierSearch._GCfg; } }
     // ----------
     // public ObjectList _object_list;
-    // ---------- Spawn
+    // ---------- Command ---------- //
+    public ObjectCommandHandler _handler = new();
+    // ---------- Spawn ---------- //
     public ObjectSpawn _object_spawn;
-    // ---------- Status ----------
+    // ---------- Status ---------- //
     public Dictionary<GameObject, ObjectConfig> _obj2base = new();
 
 
     public override void _init(){
         _object_spawn = new(_GCfg);
+        _handler.register();
     }
     
     public void _down_fire3(Vector2 mouse_pos){

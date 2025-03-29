@@ -6,12 +6,11 @@ using System.Linq;
 
 public class Command{
     public string name { get; set; }
-    public List<Parameter> args { get; set; } = new List<Parameter>();
+    public Dictionary<string, object> args { get; set; } = new Dictionary<string, object>();
 }
 
-public class Parameter{
-    public string key { get; set; }
-    public object value { get; set; }
+public static class argType{
+    public static float toFloat(object value) => value is int i ? (float)i : (float)value;
 }
 
 public class CommandParser{ // Thank Deepseek
@@ -30,24 +29,27 @@ public class CommandParser{ // Thank Deepseek
     static readonly Parser<object> NumberValue =
         Parse.DecimalInvariant
             .Select(s => s.Contains('.') 
-                ? (object)double.Parse(s, CultureInfo.InvariantCulture) 
+                ? (object)float.Parse(s, CultureInfo.InvariantCulture) 
                 : (object)int.Parse(s, CultureInfo.InvariantCulture));
 
     static readonly Parser<object> ParameterValue =
         NumberValue.Or(StringValue);
 
-    static readonly Parser<Parameter> Parameter =
+    static readonly Parser<KeyValuePair<string, object>> Parameter =
         from dash in Parse.Char('-')
         from name in Identifier
         from ws in Parse.WhiteSpace.AtLeastOnce()
         from value in ParameterValue
-        select new Parameter { key = name, value = value };
+        select new KeyValuePair<string, object> ( name, value );
 
     public static readonly Parser<Command> Command =
         from name in Identifier
         from ws in Parse.WhiteSpace.AtLeastOnce()
-        from parameters in Parameter.Many()
-        select new Command { name = name, args = parameters.ToList() };
+        from parameters in Parameter.DelimitedBy(Parse.WhiteSpace.AtLeastOnce())
+        select new Command { 
+            name = name, 
+            args = parameters.ToDictionary(p => p.Key, p => p.Value) 
+        };
 
     public static Command parse(string input){
         return Command.Parse(input);
@@ -55,16 +57,25 @@ public class CommandParser{ // Thank Deepseek
 }
 
 
+public delegate void CommandHandler(Dictionary<string, object> args);
 public class CommandSystem: BaseClass{
+    static Dictionary<string, CommandHandler> handlers = new();
+
     public CommandSystem(){
         _sys._Msg._add_receiver(GameConfigs._sysCfg.Msg_command, _parse);
     }
     
     public void _parse(string command){
-        Command result = CommandParser.parse(command);
-        Debug.Log($"Command: {result.name}");
-        foreach (var arg in result.args){
-            Debug.Log($"{arg.key} = {arg.value}");
+        Command cmd = CommandParser.parse(command);
+        if (handlers.ContainsKey(cmd.name)){
+            handlers[cmd.name](cmd.args);
         }
+        else{
+            Debug.Log($"No command: {cmd.name}");
+        }
+    }
+
+    public static void _add(string name, CommandHandler handler){
+        handlers.Add(name, handler);
     }
 }
