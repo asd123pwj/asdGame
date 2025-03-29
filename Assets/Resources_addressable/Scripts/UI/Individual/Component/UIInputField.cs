@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using TMPro;
+using Cysharp.Threading.Tasks;
 
 public class UIInputFieldInfo: UIInfo{
 }
@@ -28,9 +29,23 @@ public class UIInputField: UIBase{
         Text = TextArea.transform.Find("Text").gameObject;
         inputField = _self.GetComponent<TMP_InputField>();
         inputField.onSubmit.AddListener(onSubmit);
+        inputField.onEndEdit.AddListener(onEditEnd);
+        inputField.onSelect.AddListener(onSelect);
         
     }
 
+    void onSelect(string _){
+        Debug.Log("Select");
+    }
+    void onEditEnd(string _){
+        Debug.Log("Edit End");
+        removeFocus().Forget();
+    }
+    async UniTaskVoid removeFocus(){
+        await UniTask.Delay(1);
+        inputField.interactable = false;  
+        inputField.interactable = true;   
+    }
     void onSubmit(string _) => _Event._action_submit(new(EventSystem.current), false);
 
     public override void _update_info(){

@@ -28,6 +28,7 @@ public class InputSystem : BaseClass{
     InputStatus _InputStatus;
     // ---------- Status ----------
     public KeyPos _keyPos = new();
+    public static bool _onEdit = false;
     public Dictionary<string, KeyInfo> _keyStatus = new();
 
     // void Start(){
@@ -39,6 +40,7 @@ public class InputSystem : BaseClass{
     // }
 
     public override void _update(){
+        if (_onEdit) Debug.Log("InputSystem is on edit.");
         update_keyPos();
         _InputStatus._update();
         _InputSingle._update(_keyPos, _InputStatus._keyStatus);
