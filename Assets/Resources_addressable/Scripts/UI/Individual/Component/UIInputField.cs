@@ -35,10 +35,12 @@ public class UIInputField: UIBase{
     }
 
     void onSelect(string _){
-        Debug.Log("Select");
+        // Debug.Log("Select");
+        InputSystem._onEdit = true;
     }
     void onEditEnd(string _){
-        Debug.Log("Edit End");
+        // Debug.Log("Edit End");
+        InputSystem._onEdit = false;
         removeFocus().Forget();
     }
     async UniTaskVoid removeFocus(){

@@ -40,7 +40,7 @@ public class InputSystem : BaseClass{
     // }
 
     public override void _update(){
-        if (_onEdit) Debug.Log("InputSystem is on edit.");
+        // if (_onEdit) Debug.Log("InputSystem is on edit.");
         update_keyPos();
         _InputStatus._update();
         _InputSingle._update(_keyPos, _InputStatus._keyStatus);
