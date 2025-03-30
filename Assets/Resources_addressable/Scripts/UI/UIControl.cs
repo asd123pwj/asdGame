@@ -26,12 +26,18 @@ public class UIControl: BaseClass{
         _GCfg._InputSys._register_action("Menu Wheel", _close_menu, "isFirstDown");
         _GCfg._InputSys._register_action("Save", _save_UI, "isFirstDown");
         _GCfg._InputSys._register_action("Load", _load_UI, "isFirstDown");
+        _GCfg._InputSys._register_action("o", _open_o, "isFirstDown");
+
         
     }
 
     // public void _update(){
 
     // }
+
+    public bool _open_o(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+        return _UISys._UIDraw._open_or_close("UIKeyboardShortcut");
+    }
 
     public bool _open_menu1(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
         return _UISys._UIDraw._open_or_close("UIBackpack", "back");

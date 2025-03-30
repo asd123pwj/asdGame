@@ -166,8 +166,10 @@ public class UIBase: BaseClass{
         //     }
         //     img.sprite = _MatSys._UISpr._get_spr(_background_key);
         // }
-        if (_background_key == "")
-            ;
+        if (_background_key == "") {
+            Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
+            img.color = new(0, 0, 0, 0);
+        }
         else {
             Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
             if (_MatSys._spr._check_exist(_background_key)){

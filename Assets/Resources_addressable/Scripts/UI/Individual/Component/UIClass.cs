@@ -50,9 +50,9 @@ public class UIClass{
     };
     readonly public static UIInfo UICloseButtom = new() {
         type = "UICloseButtom",
-        background_key = "ui_3",
+        background_key = "ui_3_16",
         anchorMin = new(1, 1), anchorMax = new(1, 1), pivot = new (1, 1), 
-        sizeDelta = new(50, 50),
+        sizeDelta = new(16, 16),
         interactions = new List<string>() {
             "UIClickClose",
         },
@@ -67,9 +67,9 @@ public class UIClass{
     };
     readonly public static UIInfo UIResizeButtom = new() {
         type = "UIResizeButtom",
-        background_key = "ui_4",
+        background_key = "ui_4_16",
         anchorMin = new(1, 0), anchorMax = new(1, 0), pivot = new (1, 0), 
-        sizeDelta = new (50, 50),
+        sizeDelta = new (16, 16),
         interactions = new List<string>() {
             "UISetTop",
             "UIResizeScaleConstrait",
@@ -160,6 +160,19 @@ public class UIClass{
             "UISubmit",
             // "UIDrag",
         }
+    };
+    readonly public static UIInfo UIKeyboardShortcut = new() {
+        type = "UIKeyboardShortcut",
+        background_key = "ui_5", 
+        sizeDelta = new (800*2, 288*2),
+        interactions = new List<string>() {
+            "UISetTop",
+            "UIDrag",
+        },
+        subUIs = new(){
+            new() { type = "UICloseButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, -7*2) },
+            new() { type = "UIResizeButtom", background_key="", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, 7*2) },
+        },
     };
     readonly public static UIScrollViewInfo UIScrollView = new() {
         type = "UIScrollView",

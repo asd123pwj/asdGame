@@ -10,21 +10,12 @@
         "Default":{
             "path": "Assets/Resources_addressable/Graphics/UI/Default.png"
         },
-        "ResizeButtom":{
-            "path": "UISpr_ResizeButtom"
-        },
         "RightMenu":{
             "path": "Assets/Resources_addressable/Graphics/UI/RightMenu.png"
         },
         "Empty":{
             "path": "Assets/Resources_addressable/Graphics/UI/Empty.png"
-        },
-
-        "CommandWindow":{
-            "path": "UISpr_CommandWindow"
-        },
-        "CircleButtom":{
-            "path": "UISpr_CircleButtom"
         }
+
     }
 }

@@ -22,10 +22,18 @@ public class InputStatus{
         "Zoom In", "Zoom Out",
         "Number 0", "Number 1", "Number 2", "Number 3", "Number 4", "Number 5", "Number 6", "Number 7", "Number 8", "Number 9",
         "Numpad 0", "Numpad 1", "Numpad 2", "Numpad 3", "Numpad 4", "Numpad 5", "Numpad 6", "Numpad 7", "Numpad 8", "Numpad 9",
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+        "`", "-", "=", "backspace", "[", "]", "\\", ";", "'", "enter", ",", ".", "/", "space",
+        "Numpad /", "Numpad *", "Numpad -", "Numpad +", 
+        "left shift", "right shift", "left ctrl", "right ctrl", "left alt", "right alt",
+        "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12",
+        "escape", "tab", "caps lock", "print screen", "scroll lock", "pause", "insert", "delete", "home", "end", "page up", "page down"
     };
     
     List<string> _input_key_availableOnEdit = new() { 
         "Save", "Load",
+        "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12",
+        "escape"
     };
 
     public InputStatus(){
