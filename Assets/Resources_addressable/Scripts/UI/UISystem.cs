@@ -37,6 +37,7 @@ public class UISystem : BaseClass{
         // _input_base = _HierSearch._searchInit<InputSystem>("Input");
         _foreground = _sys._UI;
         // _object_spawn = new(_game_configs, _object_list);
+        new UICommon();
     }
 
     // void Update(){

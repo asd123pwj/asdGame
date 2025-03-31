@@ -29,7 +29,7 @@ public class UIOpenRightMenu: UIInteractBase{
                 return;
             }
         }
-        UIInfo info = UIClass.UIRightMenuInteractionManager;
+        UIInfo info = UIClass._UIInfos["UIRightMenuInteractionManager"];
         info.anchoredPosition = _get_mousePosLocal(eventData);
         UIBase RMenu = UIDraw._draw_UI(_self, "UIRightMenuInteractionManager", info);
         _Base._subUIs.Add(RMenu);
