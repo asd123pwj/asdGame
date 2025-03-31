@@ -24,6 +24,7 @@ public class UISystem : BaseClass{
     public UIMonitor _UIMonitor;
     public UIControl _UICtrl;
     public UISaveLoad _UISL;
+    UIClass _UICls;
     // ---------- Status ----------
     public GameObject _foreground;
     public GameObject _background;
@@ -37,7 +38,6 @@ public class UISystem : BaseClass{
         // _input_base = _HierSearch._searchInit<InputSystem>("Input");
         _foreground = _sys._UI;
         // _object_spawn = new(_game_configs, _object_list);
-        new UICommon();
     }
 
     // void Update(){
@@ -49,7 +49,7 @@ public class UISystem : BaseClass{
         _UIMonitor = new();
         _UICtrl = new();
         _UISL = new();
-        
+        _UICls = new();
     }
     
 
