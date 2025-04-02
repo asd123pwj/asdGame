@@ -8,9 +8,12 @@ public class UICommandHandler: BaseClass{
 
     void toggleUI(Dictionary<string, object> args){
         /*
-         * toggleUI -x 99.9 -y 99 -type UIKeyboardShortcut -name NameOfUIKeyboardShortcut
+         * toggleUI -x 99.9 -y 99 -type UIKeyboardShortcut -name CustomName
          * toggleUI -type UIKeyboardShortcut
          * toggleUI -auto mouse -type UIKeyboardShortcut
+         * toggleUI -auto mouse -x 99.9 -type UIKeyboardShortcut
+         
+         * toggleUI -auto mouse -type UIBackpack
          */
         Vector2 spawn_pos = Vector2.zero;
         if (args.ContainsKey("auto")){

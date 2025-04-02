@@ -62,10 +62,10 @@ public class CommandSystem: BaseClass{
     static Dictionary<string, CommandHandler> handlers = new();
 
     public CommandSystem(){
-        _sys._Msg._add_receiver(GameConfigs._sysCfg.Msg_command, _parse);
+        _sys._Msg._add_receiver(GameConfigs._sysCfg.Msg_command, _execute);
     }
     
-    public void _parse(string command){
+    public static void _execute(string command){
         Command cmd = CommandParser.parse(command);
         if (handlers.ContainsKey(cmd.name)){
             handlers[cmd.name](cmd.args);

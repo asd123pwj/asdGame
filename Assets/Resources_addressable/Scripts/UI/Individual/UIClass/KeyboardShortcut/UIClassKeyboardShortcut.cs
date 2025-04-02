@@ -32,10 +32,10 @@ public class UIClassKeyboardShortcut{
                     },
                     items = new(){
                         new() {
-                            type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
+                            type = "UIExecuteCommand", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
                         },
                         new() {
-                            type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
+                            type = "UIInputField", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
                         },
                         new() {
                             type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
@@ -52,6 +52,18 @@ public class UIClassKeyboardShortcut{
             }
         });
 
+
+
+        UIClass._add("UIExecuteCommand", new (){
+            type="UIExecuteCommand",
+            background_key="p5", 
+            interactions = new List<string>() {
+                "UISetTop",
+                "UIExecuteCommand",
+                "UIScrollPass2Parent"
+            },
+            messageID = "UIExecuteCommand"
+        });
 
         UIClass._add("UIKeyShortcut", new (){
             type="UIKeyShortcut",

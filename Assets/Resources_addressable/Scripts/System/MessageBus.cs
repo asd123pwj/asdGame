@@ -26,10 +26,15 @@ public class MessageBus: BaseClass{
     }
 
     public void _send(string ID, string message){
-        if (!message_nodes.ContainsKey(ID)) return;
+        if (!message_nodes.ContainsKey(ID)) _init_message_node(ID);
         message_nodes[ID].message = message;
         foreach (var receiver in message_nodes[ID].receivers){
             receiver(message_nodes[ID].message);
         }
+    }
+
+    public string _get_message(string ID){
+        if (!message_nodes.ContainsKey(ID)) return "";
+        return message_nodes[ID].message;
     }
 }
