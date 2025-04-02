@@ -19,7 +19,7 @@ public class ObjectSystem: BaseClass{
     // ----------
     // public ObjectList _object_list;
     // ---------- Command ---------- //
-    public ObjectCommandHandler _handler = new();
+    public ObjectCommandHandler _handler;
     // ---------- Spawn ---------- //
     public ObjectSpawn _object_spawn;
     // ---------- Status ---------- //
@@ -28,6 +28,7 @@ public class ObjectSystem: BaseClass{
 
     public override void _init(){
         _object_spawn = new(_GCfg);
+        _handler = new();
         _handler.register();
     }
     

@@ -25,6 +25,7 @@ public class UISystem : BaseClass{
     public UIControl _UICtrl;
     public UISaveLoad _UISL;
     UIClass _UICls;
+    UICommandHandler _handler;
     // ---------- Status ----------
     public GameObject _foreground;
     public GameObject _background;
@@ -50,6 +51,8 @@ public class UISystem : BaseClass{
         _UICtrl = new();
         _UISL = new();
         _UICls = new();
+        _handler = new();
+        _handler.register();
     }
     
 

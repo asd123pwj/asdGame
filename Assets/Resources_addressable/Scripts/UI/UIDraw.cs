@@ -1,39 +1,31 @@
-using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using Cysharp.Threading.Tasks;
-using Unity.VectorGraphics;
-using UnityEngine.UIElements;
 using System;
 
 public class UIDraw: BaseClass{
-    // ---------- UI Tool ----------
-    // GameConfigs _GCfg;
-    // UISystem _UISys { get { return _GCfg._UISys; } }
-    
 
-    // public UIDraw(GameConfigs GCfg){
-    //     _GCfg = GCfg;
-    //     // draw_backpack();
-    //     // draw_container();
-    // }
-
-    public bool _open_or_close(string type, string name=""){
+    public bool _toggle(string type, string name="", Vector2? pos=null){
         UIInfo info = UIClass._set_default(type, name);
-        if (_open(type, info.name)) return true;
+        if (_open(type, info.name, pos)) return true;
         // else return _close(type, name);
         else return _close(info.name);
     }
 
-    public bool _open(string type, string name=""){
+    public bool _open(string type, string name="", Vector2? pos=null){
         UIInfo info = UIClass._set_default(type, name);
-        if (_draw(type, info)) return true;
-        else if (_UISys._UIMonitor._get_UI(info.name)._isAvailable) return false;
+        // if (pos != null) info.anchoredPosition = pos.Value;
+        UIBase ui = _draw(type, info);
+        if (ui != null) {
+            if (pos!=null) ui._set_pos(pos.Value).Forget();
+            return true;
+        }
+        else if (_UISys._UIMonitor._get_UI(info.name)._isAvailable) {
+            return false;
+        }
         else{
-            _UISys._UIMonitor._get_UI(info.name)._enable();
+            ui = _UISys._UIMonitor._get_UI(info.name);
+            ui._enable();
+            if (pos!=null) ui._set_pos(pos.Value).Forget();
             return true;
         }
     }
@@ -63,16 +55,16 @@ public class UIDraw: BaseClass{
         return interaction;
     }
 
-    public bool _draw(string type, UIInfo info=null) {
+    public UIBase _draw(string type, UIInfo info=null) {
         UIInfo info_ = UIClass._set_default(type, info);
         if (_UISys._UIMonitor._get_UI(info_.name) != null){
-            return false;
+            return null;
         }
         else{
             UIBase ui = _draw_UI(_UISys._foreground, type, info);
             // _UISys._UIMonitor._UIs[info_.name] = ui;
             // _UISys._UIMonitor._add_UI(info_.name, ui);
-            return true;
+            return ui;
         }
     }
 

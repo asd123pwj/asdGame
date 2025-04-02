@@ -20,5 +20,16 @@ public class UIClassImage{
                 "UISetTop",
             },
         });
+        
+    
+        UIClass._add("UIHighlight_a0.5_ScrollPass2Parent", new (){
+            type="UIHighlight_a0.5_ScrollPass2Parent",
+            background_key="p5_a0.5", 
+            sizeDelta = new(16, 16), 
+            interactions = new List<string>() {
+                "UISetTop",
+                "UIScrollPass2Parent",
+            },
+        });
     }
 }

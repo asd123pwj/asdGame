@@ -264,41 +264,25 @@ public class UIBase: BaseClass{
     }
 
 
-    public void _set_UIPos_Full() { 
-        _set_UIPosition(new(0, 0), new(1, 1), new(0.5f, 0.5f), new(0, 0)); 
-    }
-    public void _set_UIPos_LeftTop() { 
-        _set_UIPosition(new(0, 1), new(0, 1), new(0, 1), new(0, 0)); 
-    }
-    public void _set_UIPos_LeftMiddle() { 
-        _set_UIPosition(new(0, 0.5f), new(0, 0.5f), new(0, 0.5f), new(0, 0));
-    }
-    public void _set_UIPos_LeftBottom() { 
-        _set_UIPosition(new(0, 0), new(0, 0), new(0, 0), new(0, 0)); 
-    }
-    public void _set_UIPos_MiddleTop() { 
-        _set_UIPosition(new(0.5f, 1), new(0.5f, 1), new(0.5f, 1), new(0, 0)); 
-    }
-    public void _set_UIPos_MiddleMiddle() { 
-        _set_UIPosition(new(0.5f, 0.5f), new(0.5f, 0.5f), new(0.5f, 0.5f), new(0, 0)); 
-    }
-    public void _set_UIPos_MiddleBottom() { 
-        _set_UIPosition(new(0.5f, 0), new(0.5f, 0), new(0.5f, 0), new(0, 0)); 
-    }
-    public void _set_UIPos_RightTop() { 
-        _set_UIPosition(new(1, 1), new(1, 1), new(1, 1), new(0, 0)); 
-    }
-    public void _set_UIPos_RightMiddle() { 
-        _set_UIPosition(new(1, 0.5f), new(1, 0.5f), new(1, 0.5f), new(0, 0)); 
-    }
-    public void _set_UIPos_RightBottom() { 
-        _set_UIPosition(new(1, 0), new(1, 0), new(1, 0), new(0, 0)); 
-    }
-    public void _set_UIPosition(Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition){
-        _anchorMin = anchorMin; 
-        _anchorMax = anchorMax; 
-        _pivot = pivot; 
-        _anchoredPosition = anchoredPosition; 
+    public void _set_UIPos_Full()           => _set_UIPosition(new(0.0f, 0.0f), new(1.0f, 1.0f), new(0.5f, 0.5f), new(0.0f, 0.0f)); 
+    public void _set_UIPos_LeftTop()        => _set_UIPosition(new(0.0f, 1.0f), new(0.0f, 1.0f), new(0.0f, 1.0f), new(0.0f, 0.0f)); 
+    public void _set_UIPos_LeftMiddle()     => _set_UIPosition(new(0.0f, 0.5f), new(0.0f, 0.5f), new(0.0f, 0.5f), new(0.0f, 0.0f));
+    public void _set_UIPos_LeftBottom()     => _set_UIPosition(new(0.0f, 0.0f), new(0.0f, 0.0f), new(0.0f, 0.0f), new(0.0f, 0.0f)); 
+    public void _set_UIPos_MiddleTop()      => _set_UIPosition(new(0.5f, 1.0f), new(0.5f, 1.0f), new(0.5f, 1.0f), new(0.0f, 0.0f)); 
+    public void _set_UIPos_MiddleMiddle()   => _set_UIPosition(new(0.5f, 0.5f), new(0.5f, 0.5f), new(0.5f, 0.5f), new(0.0f, 0.0f)); 
+    public void _set_UIPos_MiddleBottom()   => _set_UIPosition(new(0.5f, 0.0f), new(0.5f, 0.0f), new(0.5f, 0.0f), new(0.0f, 0.0f)); 
+    public void _set_UIPos_RightTop()       => _set_UIPosition(new(1.0f, 1.0f), new(1.0f, 1.0f), new(1.0f, 1.0f), new(0.0f, 0.0f)); 
+    public void _set_UIPos_RightMiddle()    => _set_UIPosition(new(1.0f, 0.5f), new(1.0f, 0.5f), new(1.0f, 0.5f), new(0.0f, 0.0f)); 
+    public void _set_UIPos_RightBottom()    => _set_UIPosition(new(1.0f, 0.0f), new(1.0f, 0.0f), new(1.0f, 0.0f), new(0.0f, 0.0f)); 
+    public void _set_UIPosition(Vector2? anchorMin=null, Vector2? anchorMax=null, Vector2? pivot=null, Vector2? anchoredPosition=null){
+        if (anchorMin != null) _anchorMin = anchorMin.Value;
+        if (anchorMax != null) _anchorMax = anchorMax.Value;
+        if (pivot != null) _pivot = pivot.Value;
+        if (anchoredPosition != null) _anchoredPosition = anchoredPosition.Value;
+        // _anchorMin = anchorMin; 
+        // _anchorMax = anchorMax; 
+        // _pivot = pivot; 
+        // _anchoredPosition = anchoredPosition; 
     }
     public void _apply_UIPosition(){
         _rt_self.anchorMin = _anchorMin; 
@@ -312,5 +296,9 @@ public class UIBase: BaseClass{
         _rt_self.localScale = _localScale;
     }
 
+    public async UniTaskVoid _set_pos(Vector2 pos){
+        while (_rt_self == null) await UniTask.Yield();
+        _rt_self.position = pos;
+    }
 
 }

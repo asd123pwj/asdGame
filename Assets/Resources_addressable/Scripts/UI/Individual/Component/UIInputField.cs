@@ -40,7 +40,7 @@ public class UIInputField: UIBase{
         InputSystem._onEdit = false;
     }
     async UniTaskVoid remove_focus_and_return(){
-        await UniTask.Delay(1);
+        await UniTask.DelayFrame(1);
         inputField.interactable = false;  
         inputField.interactable = true;   
         EventSystem.current.SetSelectedGameObject(_self);

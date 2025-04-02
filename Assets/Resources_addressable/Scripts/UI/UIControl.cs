@@ -36,15 +36,15 @@ public class UIControl: BaseClass{
     // }
 
     public bool _open_o(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        return _UISys._UIDraw._open_or_close("UIKeyboardShortcut");
+        return _UISys._UIDraw._toggle("UIKeyboardShortcut");
     }
 
     public bool _open_menu1(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        return _UISys._UIDraw._open_or_close("UIBackpack", "back");
+        return _UISys._UIDraw._toggle("UIBackpack", "back");
     }
     
     public bool _open_menu2(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        return _UISys._UIDraw._open_or_close("UIContainer", "UIContainer");
+        return _UISys._UIDraw._toggle("UIContainer", "UIContainer");
     }
     
     public bool _open_menu3(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
@@ -54,7 +54,7 @@ public class UIControl: BaseClass{
         // Debug.Log(a.name);
 
         // return _UISys._UIDraw._open_or_close("UIScrollView");
-        return _UISys._UIDraw._open_or_close("UICommandWindow");
+        return _UISys._UIDraw._toggle("UICommandWindow");
         // return _UISys._UIDraw._open_or_close("UIInputField");
     }
 
