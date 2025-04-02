@@ -6,11 +6,12 @@ public class UIClassContainer{
         UIClass._add("UIContainer", new (){
         // readonly public static UIInfo UIContainer = new() {
             type = "UIContainer",
-            background_key = "Empty",
+            background_key = "",
             sizeDelta = new (800, 800),
             interactions = new List<string>() {
                 "UISetTop",
                 "UIDrop",
+                "UIScrollPass2Parent"
             },
         });
 

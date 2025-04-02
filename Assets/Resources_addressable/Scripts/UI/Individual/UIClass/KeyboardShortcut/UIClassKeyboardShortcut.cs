@@ -32,19 +32,19 @@ public class UIClassKeyboardShortcut{
                     },
                     items = new(){
                         new() {
-                            type = "UIHighlight_a0.5", sizeDelta = new (96, 32),
+                            type = "UIHighlight_a0.5_ScrollPass", sizeDelta = new (96, 32),
                         },
                         new() {
-                            type = "UIHighlight_a0.5", sizeDelta = new (96, 32),
+                            type = "UIHighlight_a0.5_ScrollPass", sizeDelta = new (96, 32),
                         },
                         new() {
-                            type = "UIHighlight_a0.5", sizeDelta = new (96, 32),
+                            type = "UIHighlight_a0.5_ScrollPass", sizeDelta = new (96, 32),
                         },
                         new() {
-                            type = "UIHighlight_a0.5", sizeDelta = new (96, 32),
+                            type = "UIHighlight_a0.5_ScrollPass", sizeDelta = new (96, 32),
                         },
                         new() {
-                            type = "UIHighlight_a0.5", sizeDelta = new (96, 32),
+                            type = "UIHighlight_a0.5_ScrollPass", sizeDelta = new (96, 32),
                         },
                     },
                     subUIs = new()
@@ -53,6 +53,15 @@ public class UIClassKeyboardShortcut{
         });
 
     
+        UIClass._add("UIHighlight_a0.5_ScrollPass", new (){
+            type="UIHighlight_a0.5_ScrollPass",
+            background_key="p5_a0.5", 
+            sizeDelta = new(16, 16), 
+            interactions = new List<string>() {
+                "UISetTop",
+                "UIScrollPass2Parent",
+            },
+        });
 
         UIClass._add("UIKeyShortcut", new (){
             type="UIKeyShortcut",
