@@ -35,6 +35,7 @@ public class UIBase: BaseClass{
     public Vector2 _localScale { get { return _info.localScale; } set { _info.localScale = value; } }
     // ---------- Component ----------
     public UIBase _RMenu;
+    public string _rightMenu_name { get { return _info.rightMenu_name; } set { _info.rightMenu_name = value; } }
     // ---------- Config ----------
     // ---------- Status ----------
     // public bool _isInit = true;
@@ -101,7 +102,7 @@ public class UIBase: BaseClass{
 
      async UniTaskVoid init_interactions(){
         if (_info.interactions == null) return;
-        while (!_initDone) await UniTask.Delay(100);
+        while (!_initDone) await UniTask.Delay(10);
         foreach (var interaction in _info.interactions){
             _InteractMgr._register_interaction(interaction);
             // _ui._register_interaction(interaction).Forget();
@@ -154,18 +155,11 @@ public class UIBase: BaseClass{
 
     // ---------- Background ----------
     async UniTaskVoid set_background(){
-        while (!_initDone) await UniTask.Delay(100);
+        while (!_initDone) await UniTask.Delay(10);
         while (!_MatSys._check_all_info_initDone()) {
             Debug.Log("waiting for Material System init.");
-            await UniTask.Delay(100);
+            await UniTask.Delay(10);
         }
-        // if (_MatSys._UISpr._check_exist(_background_key)){
-        //     while (!_MatSys._UISpr._check_loaded(_background_key)) {
-        //         Debug.Log("waiting for UI sprite loaded: " + _name + " - " + _background_key);
-        //         await UniTask.Delay(100);
-        //     }
-        //     img.sprite = _MatSys._UISpr._get_spr(_background_key);
-        // }
         if (_background_key == "") {
             Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
             img.color = new(0, 0, 0, 0);
@@ -175,7 +169,7 @@ public class UIBase: BaseClass{
             if (_MatSys._spr._check_exist(_background_key)){
                 while (!_MatSys._spr._check_loaded(_background_key)) {
                     Debug.Log("waiting for UI sprite loaded: " + _name + " - " + _background_key);
-                    await UniTask.Delay(100);
+                    await UniTask.Delay(10);
                 }
                 img.sprite = _MatSys._spr._get_sprite(_background_key);
             }
@@ -240,12 +234,12 @@ public class UIBase: BaseClass{
     async UniTaskVoid create_prefab(){
         while (!_MatSys._check_all_info_initDone()) {
             Debug.Log("waiting for Material System init.");
-            await UniTask.Delay(100);
+            await UniTask.Delay(10);
         }
         if (_MatSys._UIPfb._check_exist(_prefab_name)){
             while (!_MatSys._UIPfb._check_loaded(_prefab_name)) {
                 Debug.Log("waiting for UI prefab loaded: " + _name + " - " + _prefab_name);
-                await UniTask.Delay(100);
+                await UniTask.Delay(10);
             }
             GameObject obj = _MatSys._UIPfb._get_pfb(_prefab_name);
             _self = UnityEngine.Object.Instantiate(obj, _parent.transform);

@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 
 public class WaterTexture : BaseClass{
     public async UniTaskVoid _init_mesh(WaterBase water){
-        await UniTask.Delay(50);
+        await UniTask.Delay(10);
         // string mat_name = "Liquid_Water";
         string sprMat_name = "l1";
         string mesh_name = "Size1.5x1.5_Grid6x6_AxisXY";

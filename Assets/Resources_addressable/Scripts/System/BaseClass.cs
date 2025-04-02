@@ -42,7 +42,7 @@ public class BaseClass{
     async UniTaskVoid init(){
         while (true){
             if (!_check_allow_init()){
-                await UniTask.Delay(100);
+                await UniTask.Delay(10);
                 continue;
             }
             _init();

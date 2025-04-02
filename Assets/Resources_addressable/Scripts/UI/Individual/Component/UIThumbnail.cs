@@ -20,12 +20,12 @@ public class UIThumbnail: UIBase{
         Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
         while (!_MatSys._check_all_info_initDone()) {
             Debug.Log("waiting for Material System init.");
-            await UniTask.Delay(100);
+            await UniTask.Delay(10);
         }
         if (_MatSys._obj._check_exist(_background_key)){
             while (!_MatSys._obj._check_thumbnail_loaded(_background_key)) {
                 Debug.Log("waiting for object thumbnail loaded: " + _name + " - " + _background_key);
-                await UniTask.Delay(100);
+                await UniTask.Delay(10);
             }
             img.sprite = _MatSys._obj._get_thumbnail(_background_key);
         }

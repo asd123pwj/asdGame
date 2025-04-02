@@ -143,21 +143,18 @@ public class UIInfo{
     [JsonProperty("subUIs", NullValueHandling = NullValueHandling.Ignore)]
     private List<UIInfo> _subUIs; 
     [JsonIgnore] public List<UIInfo> subUIs { get => _subUIs; set => _subUIs = value; }
-    // [JsonProperty("containerUIs", NullValueHandling = NullValueHandling.Ignore)]
-    // private List<UIInfo> _containerUIInfos;
-    // [JsonIgnore] public List<UIInfo> containerUIInfos { get => _containerUIInfos; set => _containerUIInfos = value; }
-    // [JsonProperty("interactions", NullValueHandling = NullValueHandling.Ignore)]
-    // private List<string> _interactions;
-    // [JsonIgnore] public List<string> interactions { get => _interactions; set => _interactions = value; }
 
-    // [JsonProperty("subUIs", NullValueHandling = NullValueHandling.Ignore)]
-    // private Dictionary<string, List<UIInfo>> _subUIs; 
-    // [JsonIgnore] public Dictionary<string, List<UIInfo>> subUIs { get => _subUIs; set => _subUIs = value; }
-    
     [JsonProperty("interactions", NullValueHandling = NullValueHandling.Ignore)]
     private List<string> _interactions;
     [JsonIgnore] public List<string> interactions { get => _interactions; set => _interactions = value; }
 
+    [JsonProperty("rightMenu_name", NullValueHandling = NullValueHandling.Ignore)]
+    private string _rightMenu_name;
+    private string _rightMenu_name_default { get => "UIRightMenuInteractionManager"; }
+    [JsonIgnore] public string rightMenu_name {
+        get => _rightMenu_name ?? _rightMenu_name_default;
+        set => _rightMenu_name = value;
+    }
     
     // ---------- Tools ----------
     public UIInfo _prune(){

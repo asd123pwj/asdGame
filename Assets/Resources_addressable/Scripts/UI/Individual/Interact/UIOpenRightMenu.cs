@@ -23,15 +23,20 @@ public class UIOpenRightMenu: UIInteractBase{
     }
     
     void open_rightMenu(PointerEventData eventData) {
-        foreach (var subUI in _Base._subUIs){
-            if (subUI._name == "UIRightMenuInteractionManager"){
-                subUI._enable(_get_mousePosWorld(eventData));
-                return;
+        if (_Base._subUIs != null) {
+            foreach (var subUI in _Base._subUIs){
+                if (subUI._name == _Base._rightMenu_name){
+                    subUI._enable(_get_mousePosWorld(eventData));
+                    return;
+                }
             }
         }
-        UIInfo info = UIClass._UIInfos["UIRightMenuInteractionManager"];
+        else{
+            _Base._subUIs = new();
+        }
+        UIInfo info = UIClass._UIInfos[_Base._rightMenu_name];
         info.anchoredPosition = _get_mousePosLocal(eventData);
-        UIBase RMenu = UIDraw._draw_UI(_self, "UIRightMenuInteractionManager", info);
+        UIBase RMenu = UIDraw._draw_UI(_self, _Base._rightMenu_name, info);
         _Base._subUIs.Add(RMenu);
         // EventSystem.current.SetSelectedGameObject(RMenu._self);
         // if (_Base._RMenu == null) {

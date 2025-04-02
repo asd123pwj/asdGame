@@ -104,9 +104,9 @@ public class WaterBase : BaseClass{
     // }
 
     public async UniTaskVoid _update_mesh(){
-        await UniTask.Delay(50);
+        await UniTask.Delay(10);
         while (!_mesh_init_done){
-            await UniTask.Delay(50);
+            await UniTask.Delay(10);
         }
         _wave._wave(this);
         

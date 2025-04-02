@@ -35,7 +35,7 @@ public class TileTile : BaseClass{
     }
 
     public async UniTaskVoid _update_sprite(){
-        await UniTask.Delay(50);
+        await UniTask.Delay(10);
         Sprite spr = TMap.GetSprite(map_pos);
         if (spr != null){
             tile_ID = _MatSys._tile._get_ID(spr);

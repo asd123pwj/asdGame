@@ -4,13 +4,15 @@ using System.Collections;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Force.DeepCloner;
+using Cysharp.Threading.Tasks;
 
 public class UIScrollViewInfo: UIInfo{
     // private string _info_type_default { get => "UIScrollViewInfo"; }
 
     [JsonProperty("padding", NullValueHandling = NullValueHandling.Ignore)] 
     private RectOffset _padding;
-    private RectOffset _padding_default { get => new (10, 10, 10, 10); }
+    private RectOffset _padding_default { get => new (4, 4, 4, 4); }
     [JsonIgnore] public RectOffset padding {
         get => _padding ?? _padding_default;
         set => _padding = value;
@@ -103,8 +105,11 @@ public class UIScrollView: UIBase{
     }
 
     void set_grid(){
+        // await UniTask.Delay(1);
         if (_info is UIScrollViewInfo info){
             grid.padding = info.padding;
+            // grid.padding = new(info.padding.left, info.padding.top, info.padding.right, info.padding.bottom);
+            Debug.Log($"grid.padding: {grid.padding}");
             grid.cellSize = info.cellSize;
             grid.spacing = info.spacing;
             grid.constraint = info.constraint;

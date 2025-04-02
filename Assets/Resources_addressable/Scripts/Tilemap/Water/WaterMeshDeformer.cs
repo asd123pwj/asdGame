@@ -32,7 +32,7 @@ public class WaterMeshDeformer : MonoBehaviour{
         string mesh_name = "Size4x4_Grid4x4_AxisXY";
         while (!_check_allow_init(mat_name, mesh_name)){
             // Debug.Log("wait");
-            await UniTask.Delay(100);
+            await UniTask.Delay(10);
         }
 
         // ----- create MeshFilter, set mesh

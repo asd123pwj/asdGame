@@ -55,12 +55,16 @@
         "l1":{ "name": "水", "path": "sprite_l1", "sprites": ["__Full", "__Front", "__Side", "__Up"]},
 
         "ui_1":{ "name": "命令行窗口", "path": "UISpr_CommandWindow" },
-        "ui_2":{ "name": "圆形按钮", "path": "UISpr_CircleButtom" },
+        "ui_2":{ "name": "圆形背景", "path": "UISpr_CircleButtom" },
         "ui_3_32":{ "name": "关闭按钮", "path": "UISpr_CloseButtom_32" },
         "ui_3_16":{ "name": "关闭按钮", "path": "UISpr_CloseButtom_16" },
         "ui_4_32":{ "name": "缩放按钮", "path": "UISpr_ResizeButtom_32" },
         "ui_4_16":{ "name": "缩放按钮", "path": "UISpr_ResizeButtom_16" },
         "ui_5":{ "name": "键盘快捷键设置", "path": "UISpr_KeyboardShortcut" },
+        "ui_RoundedIcon_16":{ "name": "圆角矩形", "path": "UISpr_RoundedIcon_16" },
+        "ui_RoundedIcon_32":{ "name": "圆角矩形", "path": "UISpr_RoundedIcon_32" },
+
+        
 
         "p5":{ "name": "高亮占位符", "path": "sprite_highlight_placeholder" },
         "p5_a0.5":{ "name": "高亮占位符", "path": "sprite_highlight_placeholder_alpha0.5" }

@@ -68,7 +68,7 @@ public class SpriteMaterialPreprocessor: BaseClass{
         SpriteMaterialInfo info = _infos.items[ID];
         while (!check_resources_loaded(ID)){
             // Debug.Log("wait");
-            await UniTask.Delay(100);
+            await UniTask.Delay(10);
         }
         string[] subIDs = _sys._MatSys._spr._get_info(info.sprite).sprites;
         _ID_to_subID2SpriteMaterials.Add(ID, new());
