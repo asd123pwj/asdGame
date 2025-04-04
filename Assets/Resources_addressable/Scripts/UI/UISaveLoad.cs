@@ -39,10 +39,10 @@ public class UISaveLoad: BaseClass{
         _UISys._UIMonitor._clear_UIs();
         foreach (var UI in UIStorage.fg.Values){
             _UISys._UIDraw._draw(UI.type, UI);
-            _UISys._UIMonitor._get_UI(UI.name)._disable();
+            _UISys._UIMonitor._get_UI_fg(UI.name)._disable();
         }
         foreach (var UI in UIStorage.fg_Hier){
-            _UISys._UIMonitor._get_UI(UI)._enable();
+            _UISys._UIMonitor._get_UI_fg(UI)._enable();
         }
         return true;
     }

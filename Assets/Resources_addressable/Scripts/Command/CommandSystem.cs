@@ -4,13 +4,13 @@ using UnityEngine;
 using System.Globalization;
 using System.Linq;
 
+public static class argType{
+    public static float toFloat(object value) => value is int i ? (float)i : (float)value;
+}
+
 public class Command{
     public string name { get; set; }
     public Dictionary<string, object> args { get; set; } = new Dictionary<string, object>();
-}
-
-public static class argType{
-    public static float toFloat(object value) => value is int i ? (float)i : (float)value;
 }
 
 public class CommandParser{ // Thank Deepseek
@@ -26,17 +26,32 @@ public class CommandParser{ // Thank Deepseek
          select content)
         .Or(Parse.CharExcept(' ').Many().Text());
 
+    // static readonly Parser<object> NumberValue =
+    //     Parse.DecimalInvariant
+    //         .Select(s => s.Contains('.') 
+    //             ? (object)float.Parse(s, CultureInfo.InvariantCulture) 
+    //             : (object)int.Parse(s, CultureInfo.InvariantCulture));
     static readonly Parser<object> NumberValue =
-        Parse.DecimalInvariant
-            .Select(s => s.Contains('.') 
-                ? (object)float.Parse(s, CultureInfo.InvariantCulture) 
-                : (object)int.Parse(s, CultureInfo.InvariantCulture));
+        from sign in Parse.Char('-').Optional()
+        from num in Parse.DecimalInvariant
+        select ParseNumber(sign.IsDefined, num);
+
+    private static object ParseNumber(bool hasMinus, string numStr){
+        if (numStr.Contains('.')){
+            float value = float.Parse(numStr, CultureInfo.InvariantCulture);
+            return hasMinus ? -value : value;
+        }
+        else{
+            int value = int.Parse(numStr, CultureInfo.InvariantCulture);
+            return hasMinus ? -value : value;
+        }
+    }
 
     static readonly Parser<object> ParameterValue =
         NumberValue.Or(StringValue);
 
     static readonly Parser<KeyValuePair<string, object>> Parameter =
-        from dash in Parse.Char('-')
+        from dash in Parse.String("--")
         from name in Identifier
         from ws in Parse.WhiteSpace.AtLeastOnce()
         from value in ParameterValue

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine.EventSystems;
 using System;
+using Unity.VisualScripting;
 
 public class UIBase: BaseClass{
     // ---------- Sub Tools ----------
@@ -43,6 +44,7 @@ public class UIBase: BaseClass{
     public List<UIBase> _subUIs;
     public string _messageID { get { return _info.messageID; } set { _info.messageID = value; } }
     bool allow_init = false;
+    public int _runtimeID => _self.GetInstanceID();
     
 
     public UIBase(GameObject parent, UIInfo info=null){
@@ -52,8 +54,10 @@ public class UIBase: BaseClass{
         // _sys = GameObject.Find("System").GetComponent<SystemManager>();
         create_self();
         _set_parent();
+        add2UIs();
         allow_init = true;
         // _ui._Base = this;
+        
     }
     public override bool _check_allow_init(){
         return allow_init;
@@ -128,29 +132,26 @@ public class UIBase: BaseClass{
         _localScale = _self.transform.localScale;
     }
 
-    // public virtual void _register_message(){
-    //     if (_messageID == "") return;
-    //     // _Msg._init_message_node(_messageID);
-    //     // MessageBus._add_receiver(_messageID, _Event._action_message);
-    // }
     public virtual void _register_receiver(){}
 
     public void _set_parent(GameObject parent=null){
-        update_parent(parent);
-        update_UIMonitor();
+        update_parent(parent).Forget();
+        update_UIMonitor(parent);
     }
-    void update_parent(GameObject parent=null){
+    async UniTaskVoid update_parent(GameObject parent=null){
         if (parent != null) {
             _parent = parent;
+            while (_rt_self == null) await UniTask.Yield();
             _rt_self.SetParent(_rt_parent);
         }
     }
-    void update_UIMonitor(){
-        if (_parent != _UISys._foreground) _UISys._UIMonitor._remove_UI(_name);
-        else _UISys._UIMonitor._add_UI(_name, this);
+    void update_UIMonitor(GameObject parent){
+        if (parent != _UISys._foreground) _UISys._UIMonitor._remove_UI_fg(this);
+        else _UISys._UIMonitor._add_UI_fg(this);
     }
-
-    
+    void add2UIs(){
+        _UISys._UIMonitor._add_UI(this);
+    }
 
 
     // ---------- Background ----------
@@ -197,15 +198,16 @@ public class UIBase: BaseClass{
         _self.transform.SetAsLastSibling();
         if (_enableNavigation) 
             EventSystem.current.SetSelectedGameObject(_self);
-        _UISys._UIMonitor._show_UI(_name);
+        _UISys._UIMonitor._show_UI(this);
     }
     public virtual void _enable(Vector2 pos){
-        _self.GetComponent<RectTransform>().position = pos;
+        // _self.GetComponent<RectTransform>().position = pos;
+        _set_pos(pos).Forget();
         _enable();
     }
     public virtual void _disable(){ 
         _self.SetActive(false); 
-        _UISys._UIMonitor._hide_UI(_name);
+        _UISys._UIMonitor._hide_UI_fg(this);
     }
     public virtual void _destroy(){
         UnityEngine.Object.Destroy(_self);
@@ -227,9 +229,6 @@ public class UIBase: BaseClass{
     void create_gameObject(){ 
         _self = new(_name); 
         _self.transform.SetParent(_parent.transform, false);
-        _UISys._UIMonitor._UIObj2base.Add(_self, this);
-        // _ui = new(this);
-        // _ui = _self.AddComponent<UIIndividual>();
     }
     async UniTaskVoid create_prefab(){
         while (!_MatSys._check_all_info_initDone()) {
@@ -243,24 +242,11 @@ public class UIBase: BaseClass{
             }
             GameObject obj = _MatSys._UIPfb._get_pfb(_prefab_name);
             _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
-            // _self = UnityEngine.Object.Instantiate(obj);
             _self.name = _name;
-            _UISys._UIMonitor._UIObj2base.Add(_self, this);
-            // _ui = new(this);
-            // _ui = _self.AddComponent<UIIndividual>();
         }
         else {
             Debug.Log("UI prefab not exist: " + _background_key);
         }
-        // while (!_check_UIPrefab_loaded()) {
-        //     Debug.Log("waiting for UI prefab loaded: " + _name);
-        //     await UniTask.Delay(100);
-        // }
-        // GameObject obj = _MatSys._UIPfb._get_pfb(_prefab_name);
-        // _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
-        // // _self = UnityEngine.Object.Instantiate(obj);
-        // _self.name = _name;
-        // _ui = _self.AddComponent<UIIndividual>();
     }
 
 
@@ -297,8 +283,10 @@ public class UIBase: BaseClass{
     }
 
     public async UniTaskVoid _set_pos(Vector2 pos){
+        _disable(); // 应该能避免UI闪烁
         while (_rt_self == null) await UniTask.Yield();
         _rt_self.position = pos;
+        _enable();
     }
 
 }

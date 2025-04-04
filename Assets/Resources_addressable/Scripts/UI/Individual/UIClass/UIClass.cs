@@ -19,6 +19,8 @@ public class UIClass{
         new UIClassRightMenu();
         new UIClassContainer();
 
+        new UIClassAttributeManager();
+
         new UIClassBackpack();
         new UIClassCommandWindow();
         new UIClassKeyboardShortcut();

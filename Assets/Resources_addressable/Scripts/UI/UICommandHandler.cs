@@ -8,12 +8,12 @@ public class UICommandHandler: BaseClass{
 
     void toggleUI(Dictionary<string, object> args){
         /*
-         * toggleUI -x 99.9 -y 99 -type UIKeyboardShortcut -name CustomName
-         * toggleUI -type UIKeyboardShortcut
-         * toggleUI -auto mouse -type UIKeyboardShortcut
-         * toggleUI -auto mouse -x 99.9 -type UIKeyboardShortcut
+         * toggleUI --x 99.9 --y 99 --type UIKeyboardShortcut --name CustomName
+         * toggleUI --type UIKeyboardShortcut
+         * toggleUI --auto mouse --type UIKeyboardShortcut
+         * toggleUI --auto mouse --x 99.9 --type UIKeyboardShortcut
          
-         * toggleUI -auto mouse -type UIBackpack
+         * toggleUI --auto mouse --type UIBackpack --asItsChild xxxNoUseInManualxxx
          */
         Vector2 spawn_pos = Vector2.zero;
         if (args.ContainsKey("auto")){
@@ -30,6 +30,10 @@ public class UICommandHandler: BaseClass{
         if (args.ContainsKey("name")){
             name = (string)args["name"];
         }
-        _UISys._UIDraw._toggle(type, name, spawn_pos);
+        UIBase ui = _UISys._UIMonitor._get_UI((int)args["asItsChild"]);
+        // if (args.ContainsKey("asItsChild")){
+        //     _UISys._UIMonitor._get_UI((int)args["asItsChild"]);
+        // }
+        _UISys._UIDraw._toggle(type, name, spawn_pos, ui);
     }
 }

@@ -4,28 +4,30 @@ using System;
 
 public class UIDraw: BaseClass{
 
-    public bool _toggle(string type, string name="", Vector2? pos=null){
+    public bool _toggle(string type, string name="", Vector2? pos=null, UIBase parent=null){
         UIInfo info = UIClass._set_default(type, name);
-        if (_open(type, info.name, pos)) return true;
+        if (_open(type, info.name, pos, parent)) return true;
         // else return _close(type, name);
         else return _close(info.name);
     }
 
-    public bool _open(string type, string name="", Vector2? pos=null){
+    public bool _open(string type, string name="", Vector2? pos=null, UIBase parent=null){
         UIInfo info = UIClass._set_default(type, name);
         // if (pos != null) info.anchoredPosition = pos.Value;
         UIBase ui = _draw(type, info);
         if (ui != null) {
             if (pos!=null) ui._set_pos(pos.Value).Forget();
+            if (parent!=null) ui._set_parent(parent._self);
             return true;
         }
-        else if (_UISys._UIMonitor._get_UI(info.name)._isAvailable) {
+        else if (_UISys._UIMonitor._get_UI_fg(info.name)._isAvailable) {
             return false;
         }
         else{
-            ui = _UISys._UIMonitor._get_UI(info.name);
+            ui = _UISys._UIMonitor._get_UI_fg(info.name);
             ui._enable();
             if (pos!=null) ui._set_pos(pos.Value).Forget();
+            if (parent!=null) ui._set_parent(parent._self);
             return true;
         }
     }
@@ -33,9 +35,9 @@ public class UIDraw: BaseClass{
     public bool _close(string name=""){
         // UIInfo info = UIClass._set_default(type, name);
         // Debug.Log("close " + name);
-        if (!_UISys._UIMonitor._get_UI(name)._isAvailable) return false;
+        if (!_UISys._UIMonitor._get_UI_fg(name)._isAvailable) return false;
         else{
-            _UISys._UIMonitor._get_UI(name)._disable();
+            _UISys._UIMonitor._get_UI_fg(name)._disable();
             return true;
         }
     }
@@ -57,7 +59,7 @@ public class UIDraw: BaseClass{
 
     public UIBase _draw(string type, UIInfo info=null) {
         UIInfo info_ = UIClass._set_default(type, info);
-        if (_UISys._UIMonitor._get_UI(info_.name) != null){
+        if (_UISys._UIMonitor._get_UI_fg(info_.name) != null){
             return null;
         }
         else{
