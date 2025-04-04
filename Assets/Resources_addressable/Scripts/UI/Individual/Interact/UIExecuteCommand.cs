@@ -11,11 +11,12 @@ public class UIExecuteCommand: UIInteractBase{
         if (!_isAvailable(eventData)) return;
         execute_command(eventData);
     }
+
+    public virtual string _get_command() => "";
     
     void execute_command(BaseEventData eventData){
-        string cmd = _Base._Msg._get_message(_Base._messageID);
+        string cmd = _get_command();
         if (cmd == "") return;
-        cmd = $"{cmd} --asItsChild {_Base._runtimeID}";
         CommandSystem._execute(cmd);
     }
 }

@@ -24,8 +24,10 @@ public class UIControl: BaseClass{
         // _GCfg._InputSys._register_action("Menu 2", _open_menu2, "isFirstDown");
         _GCfg._InputSys._register_action("Menu 3", _open_menu3, "isFirstDown");
         _GCfg._InputSys._register_action("Menu Wheel", _close_menu, "isFirstDown");
-        _GCfg._InputSys._register_action("Save", _save_UI, "isFirstDown");
-        _GCfg._InputSys._register_action("Load", _load_UI, "isFirstDown");
+        // _GCfg._InputSys._register_action("Save", _save_UI, "isFirstDown");
+        // _GCfg._InputSys._register_action("Load", _load_UI, "isFirstDown");
+        _GCfg._InputSys._register_action("f5", _save_UI, "isFirstDown");
+        _GCfg._InputSys._register_action("f9", _load_UI, "isFirstDown");
         _GCfg._InputSys._register_action("o", _open_o, "isFirstDown");
 
         

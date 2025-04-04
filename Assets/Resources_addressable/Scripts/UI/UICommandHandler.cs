@@ -16,19 +16,19 @@ public class UICommandHandler: BaseClass{
          * --[asItsChild] (int)     the UI runtimeID of the parent UI, UIBase._runtimeID
          * 
          * Example:
-         *   toggleUI --x 99.9 --y 99 --type UIKeyboardShortcut --name CustomName
+         *   toggleUI --x 99.9 --y 99 --type UIKeyboardShortcut --name CustomName --asItsChild xxxNoUseInManualxxx
          *   toggleUI --type UIKeyboardShortcut
          *   toggleUI --useMousePos --type UIKeyboardShortcut
          *   toggleUI --useMousePos --x 99.9 --type UIKeyboardShortcut
          *
-         *   toggleUI --useMousePos --type UIBackpack --asItsChild xxxNoUseInManualxxx
+         *   toggleUI --useMousePos --type UIAttributeManager
          */
         string type = (string)args["type"];
         Vector2 spawn_pos = (bool)args["useMousePos"] ? _InputSys._keyPos.mouse_pos_world : Vector2.zero;
         spawn_pos.x = args.ContainsKey("x") ? argType.toFloat(args["x"]) : spawn_pos.x;
         spawn_pos.y = args.ContainsKey("y") ? argType.toFloat(args["y"]) : spawn_pos.y;
         string name = args.ContainsKey("name") ? (string)args["name"] : "";
-        UIBase ui = _UISys._UIMonitor._get_UI((int)args["asItsChild"]);
+        UIBase ui = args.ContainsKey("asItsChild") ? _UISys._UIMonitor._get_UI((int)args["asItsChild"]) : null;
         _UISys._UIDraw._toggle(type, name, spawn_pos, ui);
     }
 }

@@ -45,6 +45,7 @@ public class UIBase: BaseClass{
     public string _messageID { get { return _info.messageID; } set { _info.messageID = value; } }
     bool allow_init = false;
     public int _runtimeID => _self.GetInstanceID();
+    public Dictionary<string, DynamicValue> _attributes { get { return _info.attributes; } set { _info.attributes = value; } }
     
 
     public UIBase(GameObject parent, UIInfo info=null){
@@ -53,7 +54,7 @@ public class UIBase: BaseClass{
         // _info.Cfg = this;
         // _sys = GameObject.Find("System").GetComponent<SystemManager>();
         create_self();
-        _set_parent();
+        _set_parent(_parent);
         add2UIs();
         allow_init = true;
         // _ui._Base = this;
@@ -141,9 +142,11 @@ public class UIBase: BaseClass{
     async UniTaskVoid update_parent(GameObject parent=null){
         if (parent != null) {
             _parent = parent;
-            while (_rt_self == null) await UniTask.Yield();
+            while (_rt_self == null) await UniTask.Delay(10);
+            while (_rt_parent == null) await UniTask.Delay(10);
             _rt_self.SetParent(_rt_parent);
         }
+        // update_UIMonitor(parent);
     }
     void update_UIMonitor(GameObject parent){
         if (parent != _UISys._foreground) _UISys._UIMonitor._remove_UI_fg(this);

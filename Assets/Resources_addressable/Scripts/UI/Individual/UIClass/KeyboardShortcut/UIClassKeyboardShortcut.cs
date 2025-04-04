@@ -32,7 +32,7 @@ public class UIClassKeyboardShortcut{
                     },
                     items = new(){
                         new() {
-                            type = "UIExecuteCommand", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
+                            type = "UIExecuteCommandFromMessage", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
                         },
                         new() {
                             type = "UIInputField", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
@@ -44,7 +44,7 @@ public class UIClassKeyboardShortcut{
                             type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
                         },
                         new() {
-                            type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
+                            type = "UIExecuteCommandFromAttribute", sizeDelta = new (96, 32),
                         },
                     },
                     subUIs = new()
@@ -53,16 +53,29 @@ public class UIClassKeyboardShortcut{
         });
 
 
+        UIClass._add("UIExecuteCommandFromAttribute", new (){
+            type="UIExecuteCommandFromAttribute",
+            background_key="p5", 
+            attributes = new() {
+                {"command", "toggleUI --useMousePos --type UIAttributeManager" }
+            },
+            interactions = new List<string>() {
+                "UISetTop",
+                "UIExecuteCommandFromAttribute",
+                "UIScrollPass2Parent"
+            },
+            // messageID = "UIExecuteCommandFromAttribute"
+        });
 
-        UIClass._add("UIExecuteCommand", new (){
-            type="UIExecuteCommand",
+        UIClass._add("UIExecuteCommandFromMessage", new (){
+            type="UIExecuteCommandFromMessage",
             background_key="p5", 
             interactions = new List<string>() {
                 "UISetTop",
-                "UIExecuteCommand",
+                "UIExecuteCommandFromMessage",
                 "UIScrollPass2Parent"
             },
-            messageID = "UIExecuteCommand"
+            messageID = "UIExecuteCommandFromMessage"
         });
 
         UIClass._add("UIKeyShortcut", new (){
@@ -92,7 +105,10 @@ public class UIClassKeyboardShortcut{
             subUIs = new(){
                 new() { type = "UICloseButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, -7*2) },
                 new() { type = "UIResizeButtom", background_key="", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, 7*2) },
-                new() { type = "UIKeyShortcut", name="key_esc", anchoredPosition = new(11*2, -36*2) },
+                new() { type = "UIKeyShortcut", name="key_esc", anchoredPosition = new(11*2, -36*2),
+            attributes = new() {
+                {"command", "toggleUI --useMousePos --type UIAttributeManager" }
+            }, },
                 new() { type = "UIKeyShortcut", name="key_f1", anchoredPosition = new(83*2, -36*2) },
                 new() { type = "UIKeyShortcut", name="key_f2", anchoredPosition = new(119*2, -36*2) },
                 new() { type = "UIKeyShortcut", name="key_f3", anchoredPosition = new(155*2, -36*2) },

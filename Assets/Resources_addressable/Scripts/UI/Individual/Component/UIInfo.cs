@@ -49,10 +49,6 @@ public class UIInfo{
     private float _PixelsPerUnitMultiplier_default = 1;
     [JsonIgnore] public float PixelsPerUnitMultiplier { get => _PixelsPerUnitMultiplier ?? _PixelsPerUnitMultiplier_default; set => _PixelsPerUnitMultiplier = value; }
     [JsonIgnore] public bool check_PixelsPerUnitMultiplier { get => _PixelsPerUnitMultiplier != null; }
-    // [JsonProperty("image_type", NullValueHandling = NullValueHandling.Ignore)]
-    // private Image.Type? _image_type;
-    // private Image.Type _image_type_default { get => Image.Type.Simple; }
-    // [JsonIgnore] public Image.Type image_type { get => _image_type ?? _image_type_default; set => _image_type = value; }
 
     // ---------- Position ----------
     [JsonProperty("rotation", NullValueHandling = NullValueHandling.Ignore)] 
@@ -137,6 +133,14 @@ public class UIInfo{
     [JsonIgnore] public int item_index {
         get => _item_index ?? _item_index_default;
         set => _item_index = value;
+    }
+    
+    [JsonProperty("attribute", NullValueHandling = NullValueHandling.Ignore)]
+    private Dictionary<string, DynamicValue> _attribute;
+    private Dictionary<string, DynamicValue> _attribute_default { get => new(); }
+    [JsonIgnore] public Dictionary<string, DynamicValue> attributes {
+        get => _attribute ?? _attribute_default;
+        set => _attribute = value;
     }
 
     // ---------- UI ----------

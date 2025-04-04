@@ -14,10 +14,10 @@ public class UIDraw: BaseClass{
     public bool _open(string type, string name="", Vector2? pos=null, UIBase parent=null){
         UIInfo info = UIClass._set_default(type, name);
         // if (pos != null) info.anchoredPosition = pos.Value;
-        UIBase ui = _draw(type, info);
+        UIBase ui = _draw(type, info, parent);
         if (ui != null) {
             if (pos!=null) ui._set_pos(pos.Value).Forget();
-            if (parent!=null) ui._set_parent(parent._self);
+            // if (parent!=null) ui._set_parent(parent._self);
             return true;
         }
         else if (_UISys._UIMonitor._get_UI_fg(info.name)._isAvailable) {
@@ -27,7 +27,7 @@ public class UIDraw: BaseClass{
             ui = _UISys._UIMonitor._get_UI_fg(info.name);
             ui._enable();
             if (pos!=null) ui._set_pos(pos.Value).Forget();
-            if (parent!=null) ui._set_parent(parent._self);
+            // if (parent!=null) ui._set_parent(parent._self);
             return true;
         }
     }
@@ -57,17 +57,22 @@ public class UIDraw: BaseClass{
         return interaction;
     }
 
-    public UIBase _draw(string type, UIInfo info=null) {
+    public UIBase _draw(string type, UIInfo info=null, UIBase parent_base=null) {
         UIInfo info_ = UIClass._set_default(type, info);
         if (_UISys._UIMonitor._get_UI_fg(info_.name) != null){
             return null;
         }
-        else{
-            UIBase ui = _draw_UI(_UISys._foreground, type, info);
-            // _UISys._UIMonitor._UIs[info_.name] = ui;
-            // _UISys._UIMonitor._add_UI(info_.name, ui);
-            return ui;
-        }
+        GameObject parent = (parent_base == null) ? _UISys._foreground : parent_base._self;
+        UIBase ui = _draw_UI(parent, info_.base_type, info_);
+        return ui;
+
+        // if (parent == null) parent = _UISys._foreground;
+        // else{
+        //     UIBase ui = _draw_UI(_UISys._foreground, type, info);
+        //     // _UISys._UIMonitor._UIs[info_.name] = ui;
+        //     // _UISys._UIMonitor._add_UI(info_.name, ui);
+        //     return ui;
+        // }
     }
 
 }

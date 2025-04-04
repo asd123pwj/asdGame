@@ -47,17 +47,14 @@ public class CommandParser{ // Thank Deepseek
             .Or(Parse.String("disable").Return((object)false));
 
     static readonly Parser<object> ParameterValue =
-        // NumberValue.Or(StringValue).Optional();
         BooleanFlagValue
             .Or(NumberValue)
             .Or(StringValue)
-            .Or(Parse.Return((object)true)); // 如果没有值，默认为true
+            .Or(Parse.Return((object)true));
 
     static readonly Parser<KeyValuePair<string, object>> Parameter =
         from dash in Parse.String("--")
         from name in Identifier
-        // from ws in Parse.WhiteSpace.AtLeastOnce()
-        // from value in ParameterValue
         from value in 
             Parse.WhiteSpace.AtLeastOnce()
             .Then(_ => Parse.Not(Parse.String("--")).Then(_ => ParameterValue))

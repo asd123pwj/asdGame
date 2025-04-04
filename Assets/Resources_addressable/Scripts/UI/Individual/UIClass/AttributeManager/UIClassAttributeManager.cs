@@ -10,10 +10,11 @@ public class UIClassAttributeManager{
             // base_type = "UIRightMenuInteractionManager",
             background_key = "ui_RoundedIcon_32",
             enableNavigation = true,
-            sizeDelta = new (96*1 + 16 + 16 + 16, 32*3 + 4*2 + 16 + 16 + 16),
+            sizeDelta = new (100 + 96*1 + 16 + 16 + 16, 100 + 32*3 + 4*2 + 16 + 16 + 16),
             PixelsPerUnitMultiplier = 1,
             interactions = new List<string>() {
                 "UISetTop",
+                "UIDrag",
                 // "UIDeselectClose",
             },
             subUIs = new(){
@@ -32,10 +33,10 @@ public class UIClassAttributeManager{
                     },
                     items = new(){
                         new() {
-                            type = "UIExecuteCommand", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
+                            type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
                         },
                         new() {
-                            type = "UIInputField", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
+                            type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
                         },
                         new() {
                             type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
