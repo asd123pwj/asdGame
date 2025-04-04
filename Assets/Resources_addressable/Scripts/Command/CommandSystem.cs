@@ -26,11 +26,6 @@ public class CommandParser{ // Thank Deepseek
          select content)
         .Or(Parse.CharExcept(' ').Many().Text());
 
-    // static readonly Parser<object> NumberValue =
-    //     Parse.DecimalInvariant
-    //         .Select(s => s.Contains('.') 
-    //             ? (object)float.Parse(s, CultureInfo.InvariantCulture) 
-    //             : (object)int.Parse(s, CultureInfo.InvariantCulture));
     static readonly Parser<object> NumberValue =
         from sign in Parse.Char('-').Optional()
         from num in Parse.DecimalInvariant
@@ -47,14 +42,26 @@ public class CommandParser{ // Thank Deepseek
         }
     }
 
+    static readonly Parser<object> BooleanFlagValue =
+        Parse.String("enable").Return((object)true)
+            .Or(Parse.String("disable").Return((object)false));
+
     static readonly Parser<object> ParameterValue =
-        NumberValue.Or(StringValue);
+        // NumberValue.Or(StringValue).Optional();
+        BooleanFlagValue
+            .Or(NumberValue)
+            .Or(StringValue)
+            .Or(Parse.Return((object)true)); // 如果没有值，默认为true
 
     static readonly Parser<KeyValuePair<string, object>> Parameter =
         from dash in Parse.String("--")
         from name in Identifier
-        from ws in Parse.WhiteSpace.AtLeastOnce()
-        from value in ParameterValue
+        // from ws in Parse.WhiteSpace.AtLeastOnce()
+        // from value in ParameterValue
+        from value in 
+            Parse.WhiteSpace.AtLeastOnce()
+            .Then(_ => Parse.Not(Parse.String("--")).Then(_ => ParameterValue))
+            .Or(Parse.Return((object)true))
         select new KeyValuePair<string, object> ( name, value );
 
     public static readonly Parser<Command> Command =
