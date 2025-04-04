@@ -4,21 +4,17 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
+using Unity.VisualScripting;
+using Force.DeepCloner;
 
 
 public class UIOpenRightMenu: UIInteractBase{
     public UIOpenRightMenu(UIBase Base): base(Base){
         _set_trigger(1);
     }
-
-    // public override void _register_interaction(){
-    //     _Cfg._Event._event_PointerDown.Add(interaction_PointerDown);
-    // }
     
     public override void _PointerDown(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;
-        // if (eventData is PointerEventData)
-        //     open_rightMenu((PointerEventData)eventData);
         open_rightMenu((PointerEventData)eventData);
     }
     
@@ -34,19 +30,16 @@ public class UIOpenRightMenu: UIInteractBase{
         else{
             _Base._subUIs = new();
         }
-        UIInfo info = UIClass._UIInfos[_Base._rightMenu_name];
+        UIInfo info = UIClass._UIInfos[_Base._rightMenu_name].DeepClone();
         info.anchoredPosition = _get_mousePosLocal(eventData);
+        
+        info.attributes ??= new();
+        // if (info.attributes.ContainsKey("RIGHT_MENU_OWNER")) 
+        info.attributes["RIGHT_MENU_OWNER"] = _Base._runtimeID;
+        // else info.attributes.Add("RIGHT_MENU_OWNER", _Base._runtimeID);
+        Debug.Log(info.attributes["RIGHT_MENU_OWNER"]);
         UIBase RMenu = UIDraw._draw_UI(_self, _Base._rightMenu_name, info);
         _Base._subUIs.Add(RMenu);
-        // EventSystem.current.SetSelectedGameObject(RMenu._self);
-        // if (_Base._RMenu == null) {
-        //     // _Cfg._RMenu = new(_Cfg._self, _get_mousePosLocal(eventData));
-        //     UIInfo info = UIClass.UIRightMenu;
-        //     info.anchoredPosition = _get_mousePosLocal(eventData);
-        //     _Base._RMenu = (UIRightMenu)UIDraw._draw_UI(_self, "UIRightMenuInteractionManager", info);
-        // }
-        // else
-        //     _Base._RMenu._enable(_get_mousePosWorld(eventData)); 
     }
 
 

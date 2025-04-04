@@ -100,7 +100,13 @@ public class UIBase: BaseClass{
     void init_sub_UIs(){
         if (_info.subUIs == null) return;
         _subUIs = new();
-        foreach (var subUI in _info.subUIs){
+        
+        foreach (UIInfo subUI in _info.subUIs){
+            // ----- Mark item of right menu ----- //
+            if (_attributes !=null && _attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+                subUI.attributes ??= new();
+                subUI.attributes["RIGHT_MENU_OWNER"] = _attributes["RIGHT_MENU_OWNER"];
+            }
             _subUIs.Add(UIDraw._draw_UI(_self, subUI.type, subUI)); // TODO: subUI.type -> subUI
         }
     }
@@ -108,7 +114,7 @@ public class UIBase: BaseClass{
      async UniTaskVoid init_interactions(){
         if (_info.interactions == null) return;
         while (!_initDone) await UniTask.Delay(10);
-        foreach (var interaction in _info.interactions){
+        foreach (string interaction in _info.interactions){
             _InteractMgr._register_interaction(interaction);
             // _ui._register_interaction(interaction).Forget();
         }

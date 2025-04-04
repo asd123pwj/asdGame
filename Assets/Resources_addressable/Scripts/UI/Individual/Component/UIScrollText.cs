@@ -62,8 +62,8 @@ public class UIScrollText: UIBase{
         _Msg._add_receiver(_messageID, _update_text);
     }
 
-    public void _update_text(string text){
-        _text = _text + "\n" + text;
+    public void _update_text(DynamicValue text){
+        _text = _text + "\n" + text.get();
         move_buttom().Forget();
     }
 

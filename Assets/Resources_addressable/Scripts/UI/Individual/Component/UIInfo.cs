@@ -137,7 +137,7 @@ public class UIInfo{
     
     [JsonProperty("attribute", NullValueHandling = NullValueHandling.Ignore)]
     private Dictionary<string, DynamicValue> _attribute;
-    private Dictionary<string, DynamicValue> _attribute_default { get => new(); }
+    private Dictionary<string, DynamicValue> _attribute_default { get => null; }
     [JsonIgnore] public Dictionary<string, DynamicValue> attributes {
         get => _attribute ?? _attribute_default;
         set => _attribute = value;

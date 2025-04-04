@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 
-public delegate void MessageReceiver(string message);
+public delegate void MessageReceiver(DynamicValue message);
 
 
 public class MessageNode{
     public string ID;
     public List<MessageReceiver> receivers;
-    public string message;
+    public DynamicValue message;
 }
 
 public class MessageBus: BaseClass{
@@ -25,7 +25,7 @@ public class MessageBus: BaseClass{
         message_nodes[ID].receivers.Add(receiver);
     }
 
-    public void _send(string ID, string message){
+    public void _send(string ID, DynamicValue message){
         if (!message_nodes.ContainsKey(ID)) _init_message_node(ID);
         message_nodes[ID].message = message;
         foreach (var receiver in message_nodes[ID].receivers){
@@ -33,7 +33,7 @@ public class MessageBus: BaseClass{
         }
     }
 
-    public string _get_message(string ID){
+    public DynamicValue _get_message(string ID){
         if (!message_nodes.ContainsKey(ID)) return "";
         return message_nodes[ID].message;
     }

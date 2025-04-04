@@ -91,13 +91,6 @@ public class UIScrollView: UIBase{
 
     public override void _init_done(){
         
-        // var item = UIClass._set_default("UIThumbnail", "yang");
-        // item.item_index = 1;
-        // List<UIInfo> items = new(){
-        //     item
-        // };
-        // _update_slots(items);
-
         set_grid();
         _init_container();
         _init_item();
@@ -109,7 +102,7 @@ public class UIScrollView: UIBase{
         if (_info is UIScrollViewInfo info){
             grid.padding = info.padding;
             // grid.padding = new(info.padding.left, info.padding.top, info.padding.right, info.padding.bottom);
-            Debug.Log($"grid.padding: {grid.padding}");
+            // Debug.Log($"grid.padding: {grid.padding}");
             grid.cellSize = info.cellSize;
             grid.spacing = info.spacing;
             grid.constraint = info.constraint;
@@ -131,18 +124,28 @@ public class UIScrollView: UIBase{
                 items_without_itemIndex.Add(i);
                 continue;
             }
-            var item = _info.items[i];
-            var item_ = UIClass._set_default(item.type, item);
+            UIInfo item = _info.items[i];
+            UIInfo item_ = UIClass._set_default(item.type, item);
             resize_item_to_container(item_);
+            // ----- Mark item of right menu ----- //
+            if (_attributes != null && _attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+                item_.attributes ??= new();
+                item_.attributes["RIGHT_MENU_OWNER"] = _attributes["RIGHT_MENU_OWNER"];
+            }
             // ----- draw item
             UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
             items[item_.item_index] = UI;
         }
         foreach(int i in items_without_itemIndex){
             
-            var item = _info.items[i];
-            var item_ = UIClass._set_default(item.type, item);
+            UIInfo item = _info.items[i];
+            UIInfo item_ = UIClass._set_default(item.type, item);
             resize_item_to_container(item_);
+            // ----- Mark item of right menu ----- //
+            if (_attributes != null && _attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+                item_.attributes ??= new();
+                item_.attributes["RIGHT_MENU_OWNER"] = _attributes["RIGHT_MENU_OWNER"];
+            }
             // ----- draw item
             int container_index = items.FindIndex(item => item == null);
             item_.item_index = container_index;
@@ -203,7 +206,7 @@ public class UIScrollView: UIBase{
 
     void _init_container(){
         for (int i = 0; i < _info.items.Count; i++){
-            var container_base = expend();
+            UIBase container_base = expend();
             containers.Add(container_base);
             items.Add(null);
         }
@@ -217,7 +220,7 @@ public class UIScrollView: UIBase{
 
     public void _remove_item(UIBase item_base){
         // remove item from containerUIInfos
-        foreach (var info in _info.items){
+        foreach (UIInfo info in _info.items){
             if (info.item_index == item_base._info.item_index){
                 _info.items.Remove(info);
                 break;
@@ -228,7 +231,13 @@ public class UIScrollView: UIBase{
     UIBase expend(){
         string name = "UIContainer " + (containers.Count + 1);
         UIInfo info = UIClass._set_default("UIContainer", name);
-        var UI = UIDraw._draw_UI(Content, "UIContainer", info);
+        // ----- Mark item of right menu ----- //
+        if (_attributes != null && _attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+            info.attributes ??= new();
+            info.attributes["RIGHT_MENU_OWNER"] = _attributes["RIGHT_MENU_OWNER"];
+        }
+        // ----- Draw ----- //
+        UIBase UI = UIDraw._draw_UI(Content, "UIContainer", info);
         return UI;
     }
 

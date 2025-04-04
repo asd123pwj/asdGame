@@ -84,8 +84,8 @@ public class CommandSystem: BaseClass{
         _sys._Msg._add_receiver(GameConfigs._sysCfg.Msg_command, _execute);
     }
     
-    public static void _execute(string command){
-        Command cmd = CommandParser.parse(command);
+    public static void _execute(DynamicValue command){
+        Command cmd = CommandParser.parse(command.get<string>());
         if (handlers.ContainsKey(cmd.name)){
             handlers[cmd.name](cmd.args);
         }

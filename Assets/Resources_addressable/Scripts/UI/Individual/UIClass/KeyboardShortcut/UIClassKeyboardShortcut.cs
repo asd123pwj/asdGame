@@ -44,7 +44,7 @@ public class UIClassKeyboardShortcut{
                             type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
                         },
                         new() {
-                            type = "UIExecuteCommandFromAttribute", sizeDelta = new (96, 32),
+                            type = "UIOpenAttributeManager", sizeDelta = new (96, 32),
                         },
                     },
                     subUIs = new()
@@ -52,6 +52,21 @@ public class UIClassKeyboardShortcut{
             }
         });
 
+        UIClass._add("UIOpenAttributeManager", new (){
+            type="UIOpenAttributeManager",
+            // base_type="UIAttributeManager",
+            background_key="p5", 
+            // attributes = new() {
+            //     {"command", "toggleUI --useMousePos --type UIAttributeManager" }
+            // },
+            interactions = new List<string>() {
+                "UISetTop",
+                // "UIExecuteCommandFromAttribute",
+                "UIOpenAttributeManager",
+                "UIScrollPass2Parent"
+            },
+            // messageID = "UIExecuteCommandFromAttribute"
+        });
 
         UIClass._add("UIExecuteCommandFromAttribute", new (){
             type="UIExecuteCommandFromAttribute",
@@ -105,10 +120,7 @@ public class UIClassKeyboardShortcut{
             subUIs = new(){
                 new() { type = "UICloseButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, -7*2) },
                 new() { type = "UIResizeButtom", background_key="", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, 7*2) },
-                new() { type = "UIKeyShortcut", name="key_esc", anchoredPosition = new(11*2, -36*2),
-            attributes = new() {
-                {"command", "toggleUI --useMousePos --type UIAttributeManager" }
-            }, },
+                new() { type = "UIKeyShortcut", name="key_esc", anchoredPosition = new(11*2, -36*2) },
                 new() { type = "UIKeyShortcut", name="key_f1", anchoredPosition = new(83*2, -36*2) },
                 new() { type = "UIKeyShortcut", name="key_f2", anchoredPosition = new(119*2, -36*2) },
                 new() { type = "UIKeyShortcut", name="key_f3", anchoredPosition = new(155*2, -36*2) },
