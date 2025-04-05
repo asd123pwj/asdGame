@@ -4,7 +4,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 
 
-public class UIRightMenu: UIBase{
+public class UIRightMenu: UIScrollView{
     public UIRightMenu(GameObject parent, UIInfo info = null): base(parent, info){
     }
 

@@ -12,26 +12,20 @@ public class UIInfo{
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)] 
     private string _name;
     private string _name_default { get => type; }
-    [JsonIgnore] public string name {
-        get => _name ?? _name_default;
-        set => _name = value;
-    }
+    [JsonIgnore] public string name { get => _name ?? _name_default; set => _name = value; }
 
     [JsonProperty("type")] 
     private string _type_fixed;
     private string _type_default { get => base_type; }
-    [JsonIgnore] public string type {
-        get => _type_fixed ?? _type_default;
-        set => _type_fixed = value;
-    }
+    [JsonIgnore] public string type { get => _type_fixed ?? _type_default; set => _type_fixed = value; }
 
     [JsonProperty("base_type", NullValueHandling = NullValueHandling.Ignore)] 
     private string _base_type;
     private string _base_type_default { get => "UIBase"; }
     [JsonIgnore] public string base_type { get => _base_type ?? _base_type_default; set => _base_type = value; }
 
-    [JsonProperty("info_type")]
-    private string _info_type_fixed { get => GetType().Name; }
+    // [JsonProperty("info_type")]
+    // private string _info_type_fixed { get => GetType().Name; }
     // public string info_type => GetType().AssemblyQualifiedName;
     
     [JsonProperty("prefab_key", NullValueHandling = NullValueHandling.Ignore)] 
@@ -54,94 +48,61 @@ public class UIInfo{
     [JsonProperty("rotation", NullValueHandling = NullValueHandling.Ignore)] 
     private Quaternion? _rotation;
     private Quaternion _rotation_default { get => new(0, 0, 0, 1); }
-    [JsonIgnore] public Quaternion rotation {
-        get => _rotation ?? _rotation_default;
-        set => _rotation = value;
-    }
+    [JsonIgnore] public Quaternion rotation { get => _rotation ?? _rotation_default; set => _rotation = value; }
 
     [JsonProperty("localScale", NullValueHandling = NullValueHandling.Ignore)] 
     private Vector2? _localScale;
     private Vector2 _localScale_default { get => new(1, 1); }
-    [JsonIgnore] public Vector2 localScale {
-        get => _localScale ?? _localScale_default;
-        set => _localScale = value;
-    }
+    [JsonIgnore] public Vector2 localScale { get => _localScale ?? _localScale_default; set => _localScale = value; }
 
     [JsonProperty("anchorMin", NullValueHandling = NullValueHandling.Ignore)] 
     private Vector2? _anchorMin;
     private Vector2 _anchorMin_default { get => new(0, 1); }
-    [JsonIgnore] public Vector2 anchorMin {
-        get => _anchorMin ?? _anchorMin_default;
-        set => _anchorMin = value;
-    }
+    [JsonIgnore] public Vector2 anchorMin { get => _anchorMin ?? _anchorMin_default; set => _anchorMin = value; }
 
     [JsonProperty("anchorMax", NullValueHandling = NullValueHandling.Ignore)] 
     private Vector2? _anchorMax;
     private Vector2 _anchorMax_default { get => new(0, 1); }
-    [JsonIgnore] public Vector2 anchorMax {
-        get => _anchorMax ?? _anchorMax_default;
-        set => _anchorMax = value;
-    }
+    [JsonIgnore] public Vector2 anchorMax { get => _anchorMax ?? _anchorMax_default; set => _anchorMax = value; }
 
     [JsonProperty("pivot", NullValueHandling = NullValueHandling.Ignore)] 
     private Vector2? _pivot;
     private Vector2 _pivot_default { get => new(0, 1); }
-    [JsonIgnore] public Vector2 pivot {
-        get => _pivot ?? _pivot_default;
-        set => _pivot = value;
-    }
+    [JsonIgnore] public Vector2 pivot { get => _pivot ?? _pivot_default; set => _pivot = value; }
 
     [JsonProperty("anchoredPosition", NullValueHandling = NullValueHandling.Ignore)]
     private Vector2? _anchoredPosition;
     private Vector2 _anchoredPosition_default { get => new(0, 0); }
-    [JsonIgnore] public Vector2 anchoredPosition {
-        get => _anchoredPosition ?? _anchoredPosition_default;
-        set => _anchoredPosition = value;
-    }
+    [JsonIgnore] public Vector2 anchoredPosition { get => _anchoredPosition ?? _anchoredPosition_default; set => _anchoredPosition = value; }
 
     [JsonProperty("sizeDelta", NullValueHandling = NullValueHandling.Ignore)]
     private Vector2? _sizeDelta;
     private Vector2 _sizeDelta_default { get => new(50, 50); }
-    [JsonIgnore] public Vector2 sizeDelta {
-        get => _sizeDelta ?? _sizeDelta_default;
-        set => _sizeDelta = value;
-    }   
+    [JsonIgnore] public Vector2 sizeDelta { get => _sizeDelta ?? _sizeDelta_default; set => _sizeDelta = value; }   
 
 
     // ---------- Interaction ----------
     [JsonProperty("enableNavigation", NullValueHandling = NullValueHandling.Ignore)]
     private bool? _enableNavigation;
     private bool _enableNavigation_default { get => false; }
-    [JsonIgnore] public bool enableNavigation {
-        get => _enableNavigation ?? _enableNavigation_default;
-        set => _enableNavigation = value;
-    }
+    [JsonIgnore] public bool enableNavigation { get => _enableNavigation ?? _enableNavigation_default; set => _enableNavigation = value; }
 
     [JsonProperty("messageID", NullValueHandling = NullValueHandling.Ignore)]
     private string _messageID;
     private string _messageID_default { get => ""; }
-    [JsonIgnore] public string messageID {
-        get => _messageID ?? _messageID_default;
-        set => _messageID = value;
-    }
+    [JsonIgnore] public string messageID { get => _messageID ?? _messageID_default; set => _messageID = value; }
 
     // ---------- Status ----------
     [JsonIgnore] public bool isItem = false;
     [JsonProperty("item_index", NullValueHandling = NullValueHandling.Ignore)]
     private int? _item_index;
     private int _item_index_default { get => -1; }
-    [JsonIgnore] public int item_index {
-        get => _item_index ?? _item_index_default;
-        set => _item_index = value;
-    }
+    [JsonIgnore] public int item_index { get => _item_index ?? _item_index_default; set => _item_index = value; }
     
     [JsonProperty("attribute", NullValueHandling = NullValueHandling.Ignore)]
     private Dictionary<string, DynamicValue> _attribute;
     private Dictionary<string, DynamicValue> _attribute_default { get => null; }
-    [JsonIgnore] public Dictionary<string, DynamicValue> attributes {
-        get => _attribute ?? _attribute_default;
-        set => _attribute = value;
-    }
+    [JsonIgnore] public Dictionary<string, DynamicValue> attributes { get => _attribute ?? _attribute_default; set => _attribute = value; }
 
     // ---------- UI ----------
     [JsonProperty("subUIs", NullValueHandling = NullValueHandling.Ignore)]
@@ -155,10 +116,7 @@ public class UIInfo{
     [JsonProperty("rightMenu_name", NullValueHandling = NullValueHandling.Ignore)]
     private string _rightMenu_name;
     private string _rightMenu_name_default { get => "UIRightMenuInteractionManager"; }
-    [JsonIgnore] public string rightMenu_name {
-        get => _rightMenu_name ?? _rightMenu_name_default;
-        set => _rightMenu_name = value;
-    }
+    [JsonIgnore] public string rightMenu_name { get => _rightMenu_name ?? _rightMenu_name_default; set => _rightMenu_name = value; }
     
     // ---------- Tools ----------
     public UIInfo _prune(){

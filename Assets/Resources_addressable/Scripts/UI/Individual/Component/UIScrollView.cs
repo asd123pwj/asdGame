@@ -50,6 +50,21 @@ public class UIScrollViewInfo: UIInfo{
         set => _constraintCount = value;
     }
 
+    [JsonProperty("maxSize", NullValueHandling = NullValueHandling.Ignore)] 
+    private Vector2? _maxSize;
+    private Vector2 _maxSize_default { get => new (-1, -1); }
+    [JsonIgnore] public Vector2 maxSize {
+        get => _maxSize ?? _maxSize_default;
+        set => _maxSize = value;
+    }
+
+    [JsonProperty("minSize", NullValueHandling = NullValueHandling.Ignore)]
+    private Vector2? _minSize;
+    private Vector2 _minSize_default { get => new (64, 64); }
+    [JsonIgnore] public Vector2 minSize {
+        get => _minSize ?? _minSize_default;
+        set => _minSize = value;
+    }
     
     [JsonProperty("items", NullValueHandling = NullValueHandling.Ignore)]
     private List<UIInfo> _items; 
@@ -71,11 +86,13 @@ public class UIScrollView: UIBase{
     // GridLayoutGroup.Constraint grid_constraint { get { return grid.constraint; } set { grid.constraint = value; } }
     // int grid_constraintCount { get { return grid.constraintCount; } set { grid.constraintCount = value; } }
     // ---------- Status ----------
-    // int num_container = 5;
+    public override float _update_interval { get; set; } = 0.01f;
     List<UIBase> containers = new();
     List<UIBase> items = new();
+    bool withScrollbarHorizontal = false;
+    bool withScrollbarVertical = false; 
+    int  withItems = -1;
     // ---------- Key ----------
-    // public string _subUIKey_item { get => "Items"; }
 
 
     public UIScrollView(GameObject parent, UIInfo info): base(parent, info){
@@ -90,19 +107,47 @@ public class UIScrollView: UIBase{
     }
 
     public override void _init_done(){
-        
         set_grid();
         _init_container();
         _init_item();
+    }
 
+    public override void _update(){
+        adaptive_resize();
+    }
+
+    void adaptive_resize(){
+        // ----- resize condition----- //
+        if (_self.activeSelf == false) return;
+        if (withItems == items.Count
+            && withScrollbarHorizontal == Scrollbar_Horizontal.activeSelf
+            && withScrollbarVertical == Scrollbar_Vertical.activeSelf) return;
+
+        // ----- resize ----- //
+        Vector2 size = Vector2.zero;
+        if (grid.constraint != GridLayoutGroup.Constraint.FixedColumnCount) return;
+        size.x = grid.cellSize.x * grid.constraintCount 
+                + grid.spacing.x * (grid.constraintCount - 1) 
+                + grid.padding.left + grid.padding.right;
+        size.y = grid.cellSize.y * Mathf.CeilToInt((float)items.Count / grid.constraintCount) 
+                + grid.spacing.y * Mathf.CeilToInt((float)items.Count / grid.constraintCount - 1) 
+                + grid.padding.top + grid.padding.bottom;
+        if (Scrollbar_Horizontal.activeSelf) size.y += Scrollbar_Horizontal.GetComponent<RectTransform>().rect.height;
+        if (Scrollbar_Vertical.activeSelf) size.x += Scrollbar_Vertical.GetComponent<RectTransform>().rect.width;
+        size = Vector2.Max(size, _info.minSize);
+        if (_info.maxSize.x != -1) size.x = Mathf.Min(size.x, _info.maxSize.x);
+        if (_info.maxSize.y != -1) size.y = Mathf.Min(size.y, _info.maxSize.y);
+        _rt_self.sizeDelta = size;
+
+        // ----- update status ----- //
+        withItems = items.Count;
+        withScrollbarHorizontal = Scrollbar_Horizontal.activeSelf;
+        withScrollbarVertical = Scrollbar_Vertical.activeSelf;
     }
 
     void set_grid(){
-        // await UniTask.Delay(1);
         if (_info is UIScrollViewInfo info){
             grid.padding = info.padding;
-            // grid.padding = new(info.padding.left, info.padding.top, info.padding.right, info.padding.bottom);
-            // Debug.Log($"grid.padding: {grid.padding}");
             grid.cellSize = info.cellSize;
             grid.spacing = info.spacing;
             grid.constraint = info.constraint;
@@ -152,13 +197,6 @@ public class UIScrollView: UIBase{
             UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
             items[item_.item_index] = UI;
         }
-        // foreach(var item in _info.subUIs[_subUIKey_item]){
-        //     var item_ = UIClass._set_default(item.type, item);
-        //     resize_item_to_container(item_);
-        //     // ----- draw item
-        //     UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
-        //     items.Add(UI);
-        // }
         return true;
     }
 
