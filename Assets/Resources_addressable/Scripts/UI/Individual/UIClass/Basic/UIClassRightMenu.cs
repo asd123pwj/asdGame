@@ -8,11 +8,11 @@ public class UIClassRightMenu{
         // readonly public static UIInfo UIRightMenu = new() {
             type = "UIRightMenu",
             background_key = "RightMenu",
-            enableNavigation = true,
+            // enableNavigation = true,
             sizeDelta = new (300, 200),
             interactions = new List<string>() {
-                "UISetTop",
-                "UIDeselectClose",
+                // "UISetTop",
+                // "UIDeselectClose",
             },
         });
 
@@ -21,10 +21,10 @@ public class UIClassRightMenu{
             type = "UIRightMenuInteractionManager",
             base_type = "UIRightMenu",
             background_key = "RightMenu",
-            enableNavigation = true,
+            // enableNavigation = true,
             sizeDelta = new (190 + 40, 230 + 40),
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 // "UIDeselectClose",
             },
             subUIs = new(){
@@ -36,7 +36,7 @@ public class UIClassRightMenu{
                     constraintCount = 1,
                     anchoredPosition = new (20, -20),
                     interactions = new List<string>() {
-                        "UISetTop",
+                        // "UISetTop",
                     },
                     items = new(){
                         new() {

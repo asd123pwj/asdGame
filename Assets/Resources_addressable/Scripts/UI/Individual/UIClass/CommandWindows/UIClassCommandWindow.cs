@@ -6,7 +6,7 @@ public class UIClassCommandWindow{
             type = "UICommandWindow",
             background_key = "ui_1", sizeDelta = new(800, 400),
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UIDrag",
             },
             subUIs = new(){

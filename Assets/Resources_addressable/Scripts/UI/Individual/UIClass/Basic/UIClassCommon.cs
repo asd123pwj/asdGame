@@ -30,7 +30,7 @@ public class UIClassCommon{
             anchorMin = new(1, 0), anchorMax = new(1, 0), pivot = new (1, 0), 
             sizeDelta = new (16, 16),
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UIResizeScaleConstrait",
             },
         });
@@ -41,7 +41,7 @@ public class UIClassCommon{
             type = "UIThumbnail",
             base_type = "UIThumbnail",
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UIDragInstantiate",
             },
         });

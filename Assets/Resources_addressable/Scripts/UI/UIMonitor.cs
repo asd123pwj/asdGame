@@ -4,6 +4,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System;
+using Cysharp.Threading.Tasks;
 
 public struct UIs{
     public Dictionary<string, UIBase> fg;
@@ -15,7 +16,9 @@ public class UIMonitor: BaseClass{
     GameConfigs GCfg;
     // ---------- Status ----------
     UIs UIs;
-    public UIBase rightMenu_currentOpen;
+    public UIBase rightMenu_currentOpen = null;
+    UIBase UI_selected;
+    // public UIBase _UI_selected { get => UI_selected; set => try_toggle_rightMenu(value); }
     public Dictionary<GameObject, UIBase> _UIObj2base;
     Dictionary<int, UIBase> _runtimeID2base;
 
@@ -89,5 +92,15 @@ public class UIMonitor: BaseClass{
         return true;
     }
 
+    public async UniTaskVoid _set_UI_selected(UIBase ui){
+        UI_selected = ui;
+        if (rightMenu_currentOpen == UI_selected) return;
+        if (rightMenu_currentOpen == null) return;
+        while (UI_selected._rt_self == null) await UniTask.Delay(10);
+        while (rightMenu_currentOpen._rt_self == null) await UniTask.Delay(10);
+        if (!UI_selected._rt_self.IsChildOf(rightMenu_currentOpen._rt_self)){
+            rightMenu_currentOpen._disable();
+        }
+    }
 
 }

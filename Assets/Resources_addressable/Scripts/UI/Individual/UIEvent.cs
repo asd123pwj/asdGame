@@ -67,7 +67,7 @@ public class UIEvent {
         foreach (var UIInteraction in _event_UpdateSelected)
             UIInteraction(eventData, isBuildIn);
     }
-    public void _action_select(PointerEventData eventData, bool isBuildIn=true){
+    public void _action_select(BaseEventData eventData, bool isBuildIn=true){
         foreach (var UIInteraction in _event_Select)
             UIInteraction(eventData, isBuildIn);
     }

@@ -9,11 +9,11 @@ public class UIClassAttributeManager{
             type = "UIAttributeManager",
             // base_type = "UIRightMenuInteractionManager",
             background_key = "ui_RoundedIcon_32",
-            enableNavigation = true,
+            // enableNavigation = true,
             sizeDelta = new (100 + 96*1 + 16 + 16 + 16, 100 + 32*3 + 4*2 + 16 + 16 + 16),
             PixelsPerUnitMultiplier = 1,
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UIDrag",
                 // "UIDeselectClose",
             },
@@ -29,7 +29,7 @@ public class UIClassAttributeManager{
                     constraintCount = 1,
                     anchoredPosition = new (8, -8),
                     interactions = new List<string>() {
-                        "UISetTop",
+                        // "UISetTop",
                     },
                     items = new(){
                         new() {

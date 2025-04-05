@@ -9,7 +9,7 @@ public class UIClassContainer{
             background_key = "",
             sizeDelta = new (800, 800),
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UIDrop",
                 "UIScrollPass2Parent"
             },
@@ -39,7 +39,7 @@ public class UIClassContainer{
             //     } },
             // },
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UIDrag",
             },
         });

@@ -7,7 +7,7 @@ public class UIClassImage{
             type = "UIImage", //sizeDelta = new(0, 0),
             // anchorMin = new(0, 0), anchorMax = new(0, 1), pivot = new (0.5f, 0.5f), 
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
             },
         });
 
@@ -17,7 +17,7 @@ public class UIClassImage{
             background_key="p5_a0.5", 
             sizeDelta = new(16, 16), 
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
             },
         });
         
@@ -27,7 +27,7 @@ public class UIClassImage{
             background_key="p5_a0.5", 
             sizeDelta = new(16, 16), 
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UIScrollPass2Parent",
             },
         });

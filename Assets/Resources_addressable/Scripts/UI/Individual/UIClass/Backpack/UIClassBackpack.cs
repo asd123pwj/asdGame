@@ -13,10 +13,10 @@ public class UIClassBackpack{
                 new() { type = "UIResizeButtom" },
             },
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UIDrag",
                 "UIOpenRightMenu",
-                "UIClickCloseRightMenu",
+                // "UIClickCloseRightMenu",
             },
         });
         

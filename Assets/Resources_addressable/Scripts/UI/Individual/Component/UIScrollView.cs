@@ -147,7 +147,7 @@ public class UIScrollView: UIBase{
 
     void set_grid(){
         if (_info is UIScrollViewInfo info){
-            grid.padding = info.padding;
+            grid.padding = info.padding.DeepClone();
             grid.cellSize = info.cellSize;
             grid.spacing = info.spacing;
             grid.constraint = info.constraint;

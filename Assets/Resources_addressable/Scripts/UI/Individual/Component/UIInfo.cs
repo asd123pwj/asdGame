@@ -82,10 +82,10 @@ public class UIInfo{
 
 
     // ---------- Interaction ----------
-    [JsonProperty("enableNavigation", NullValueHandling = NullValueHandling.Ignore)]
-    private bool? _enableNavigation;
-    private bool _enableNavigation_default { get => false; }
-    [JsonIgnore] public bool enableNavigation { get => _enableNavigation ?? _enableNavigation_default; set => _enableNavigation = value; }
+    // [JsonProperty("enableNavigation", NullValueHandling = NullValueHandling.Ignore)]
+    // private bool? _enableNavigation;
+    // private bool _enableNavigation_default { get => false; }
+    // [JsonIgnore] public bool enableNavigation { get => _enableNavigation ?? _enableNavigation_default; set => _enableNavigation = value; }
 
     [JsonProperty("messageID", NullValueHandling = NullValueHandling.Ignore)]
     private string _messageID;

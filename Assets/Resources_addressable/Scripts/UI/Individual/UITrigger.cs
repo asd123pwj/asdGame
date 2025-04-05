@@ -76,7 +76,8 @@ public class UITrigger{
         }
         if (Base._Event._event_Select.Count > 0) { 
             entry = new() { eventID = EventTriggerType.Select }; 
-            entry.callback.AddListener((data) => Base._Event._action_select((PointerEventData)data)); 
+            // entry.callback.AddListener((data) => Base._Event._action_select((PointerEventData)data)); 
+            entry.callback.AddListener((data) => Base._Event._action_select(data)); 
             eventTrigger.triggers.Add(entry); 
         }
         if (Base._Event._event_Deselect.Count > 0) { 

@@ -11,9 +11,9 @@ public class UIClassOutput{
             background_key = "ui_2", PixelsPerUnitMultiplier=2,
             // sizeDelta = new(0, 0),
             // anchorMin = new(0.01f, 0.01f), anchorMax = new(0.99f, 0.99f), pivot = new (0.5f, 0.5f), 
-            enableNavigation = true,
+            // enableNavigation = true,
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
             },
         });
         

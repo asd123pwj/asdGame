@@ -64,7 +64,7 @@ public class UIClass{
         UIInfo info_ = info ?? _UIInfos[type];
         if (info == null){
             // info_ = UIInfos[type].Copy();
-            info_ = _UIInfos[type].DeepClone();
+            info_ = _UIInfos[type];
         }
         if (info != null){
             info_ = cover_default(info_);
@@ -74,7 +74,7 @@ public class UIClass{
             info_.name = info_.type;
         }
         
-        return info_;
+        return info_.DeepClone();
     }
     static UIInfo cover_default(UIInfo new_UIInfo){
         UIInfo base_UIInfo = _UIInfos[new_UIInfo.type];

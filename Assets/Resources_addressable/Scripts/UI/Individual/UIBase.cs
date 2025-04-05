@@ -26,7 +26,7 @@ public class UIBase: BaseClass{
     public float _PixelsPerUnitMultiplier { get { return _info.PixelsPerUnitMultiplier; } set { _info.PixelsPerUnitMultiplier = value; } }
     // ----- Position
     public bool _isButtom;
-    public bool _enableNavigation { get { return _info.enableNavigation; } set { _info.enableNavigation = value; } }
+    // public bool _enableNavigation { get { return _info.enableNavigation; } set { _info.enableNavigation = value; } }
     public Quaternion _rotation { get { return _info.rotation; } set { _info.rotation = value; } }
     public Vector2 _anchorMin { get { return _info.anchorMin; } set { _info.anchorMin = value; } }
     public Vector2 _anchorMax { get { return _info.anchorMax; } set { _info.anchorMax = value; } }
@@ -46,7 +46,8 @@ public class UIBase: BaseClass{
     bool allow_init = false;
     public int _runtimeID => _self.GetInstanceID();
     public Dictionary<string, DynamicValue> _attributes { get { return _info.attributes; } set { _info.attributes = value; } }
-    
+    List<string> essential_interactions = new() { "UISetTop" };
+
 
     public UIBase(GameObject parent, UIInfo info=null){
         _info = UIClass._set_default(GetType().Name, info);
@@ -111,12 +112,16 @@ public class UIBase: BaseClass{
         }
     }
 
-     async UniTaskVoid init_interactions(){
+    async UniTaskVoid init_interactions(){
+        // ----- Essential Interactions ----- //
+        foreach (string interaction in essential_interactions){
+            _InteractMgr._register_interaction(interaction);
+        }
+        // ----- Custom Interactions ----- //
         if (_info.interactions == null) return;
         while (!_initDone) await UniTask.Delay(10);
         foreach (string interaction in _info.interactions){
             _InteractMgr._register_interaction(interaction);
-            // _ui._register_interaction(interaction).Forget();
         }
     }
 
@@ -205,9 +210,10 @@ public class UIBase: BaseClass{
     public virtual void _enable(){ 
         _self.SetActive(true); 
         _self.transform.SetAsLastSibling();
-        if (_enableNavigation) 
-            EventSystem.current.SetSelectedGameObject(_self);
+        // if (_enableNavigation) 
+        //     EventSystem.current.SetSelectedGameObject(_self);
         _UISys._UIMonitor._show_UI(this);
+        _UISys._UIMonitor._set_UI_selected(this).Forget();
     }
     public virtual void _enable(Vector2 pos){
         // _self.GetComponent<RectTransform>().position = pos;
@@ -222,11 +228,11 @@ public class UIBase: BaseClass{
         UnityEngine.Object.Destroy(_self);
     }
 
-    void set_navigation(){
-        if (!_enableNavigation) return;
-        _self.AddComponent<Button>().transition = Selectable.Transition.None;
-        EventSystem.current.SetSelectedGameObject(_self);
-    } 
+    // void set_navigation(){
+    //     if (!_enableNavigation) return;
+    //     _self.AddComponent<Button>().transition = Selectable.Transition.None;
+    //     EventSystem.current.SetSelectedGameObject(_self);
+    // } 
     
     // ---------- GameObject Generate ----------
     void create_self(){ 

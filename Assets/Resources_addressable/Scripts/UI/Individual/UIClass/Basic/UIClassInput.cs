@@ -10,9 +10,9 @@ public class UIClassInput{
             prefab_key = "InputField",
             background_key = "ui_2", PixelsPerUnitMultiplier=8, 
             sizeDelta = new (400, 50),
-            enableNavigation = true,
+            // enableNavigation = true,
             interactions = new List<string>() {
-                "UISetTop",
+                // "UISetTop",
                 "UISubmit",
                 // "UIDrag",
             }
