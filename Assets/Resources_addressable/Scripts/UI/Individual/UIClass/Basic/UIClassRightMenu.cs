@@ -4,17 +4,17 @@ public class UIClassRightMenu{
     public UIClassRightMenu(){
 
         
-        UIClass._add("UIRightMenu", new (){
-        // readonly public static UIInfo UIRightMenu = new() {
-            type = "UIRightMenu",
-            background_key = "RightMenu",
-            // enableNavigation = true,
-            sizeDelta = new (300, 200),
-            interactions = new List<string>() {
-                // "UISetTop",
-                // "UIDeselectClose",
-            },
-        });
+        // UIClass._add("UIRightMenu", new (){
+        // // readonly public static UIInfo UIRightMenu = new() {
+        //     type = "UIRightMenu",
+        //     background_key = "RightMenu",
+        //     // enableNavigation = true,
+        //     sizeDelta = new (300, 200),
+        //     interactions = new List<string>() {
+        //         // "UISetTop",
+        //         // "UIDeselectClose",
+        //     },
+        // });
 
         UIClass._add("UIRightMenuInteractionManager", new (){
         // readonly public static UIInfo UIRightMenuInteractionManager = new() {

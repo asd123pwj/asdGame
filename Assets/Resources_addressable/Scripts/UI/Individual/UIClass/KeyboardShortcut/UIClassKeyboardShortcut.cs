@@ -1,57 +1,10 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public class UIClassKeyboardShortcut{
     public UIClassKeyboardShortcut(){
         
         
-        // UIClass._add("UIRightMenuInteractionManager_KeyShortcut", new (){
-        // // readonly public static UIInfo UIRightMenuInteractionManager = new() {
-        //     type = "UIRightMenuInteractionManager_KeyShortcut",
-        //     // base_type = "UIRightMenuInteractionManager",
-        //     background_key = "ui_RoundedIcon_32",
-        //     enableNavigation = true,
-        //     sizeDelta = new (96*1 + 16 + 16 + 16, 32*3 + 4*2 + 16 + 16 + 16),
-        //     PixelsPerUnitMultiplier = 1,
-        //     interactions = new List<string>() {
-        //         "UISetTop",
-        //         // "UIDeselectClose",
-        //     },
-        //     subUIs = new(){
-        //         new UIScrollViewInfo() {
-        //             type = "UIScrollView",
-        //             base_type = "UIScrollView",
-        //             background_key = "",
-        //             sizeDelta = new (96*1 + 16 + 16, 32*3 + 4*2 + 16 + 16),
-        //             padding = new (4, 4, 4, 4),
-        //             spacing = new (16, 16),
-        //             cellSize = new (96, 32),
-        //             constraintCount = 1,
-        //             anchoredPosition = new (8, -8),
-        //             interactions = new List<string>() {
-        //                 "UISetTop",
-        //             },
-        //             items = new(){
-        //                 new() {
-        //                     type = "UIExecuteCommandFromMessage", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
-        //                 },
-        //                 new() {
-        //                     type = "UIInputField", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
-        //                 },
-        //                 new() {
-        //                     type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
-        //                 },
-        //                 new() {
-        //                     type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
-        //                 },
-        //                 new() {
-        //                     type = "UIOpenAttributeManager", sizeDelta = new (96, 32),
-        //                 },
-        //             },
-        //             subUIs = new()
-        //         }
-        //     }
-        // });
-
 
         UIClass._add("UIRightMenuInteractionManager_KeyShortcut", new UIScrollViewInfo(){
             type = "UIRightMenuInteractionManager_KeyShortcut",
@@ -59,8 +12,9 @@ public class UIClassKeyboardShortcut{
             background_key = "ui_RoundedIcon_32",
             PixelsPerUnitMultiplier = 1,
             prefab_key = "ScrollView",
-            sizeDelta = new (96*1 + 16 + 16, 32*3 + 4*2 + 16 + 16),
-            padding = new (4, 4, 4, 4),
+            // sizeDelta = new (96*1 + 16 + 16, 32*3 + 4*2 + 16 + 16),
+            // padding = new RectOffset(16, 16, 16, 16),
+            paddingLeft = 16, paddingRight = 16, paddingTop = 16, paddingBottom = 16,
             spacing = new (16, 16),
             cellSize = new (96, 32),
             constraintCount = 1,
@@ -152,7 +106,7 @@ public class UIClassKeyboardShortcut{
             interactions = new List<string>() {
                 // "UISetTop",
                 "UIDrag",
-                "UIOpenRightMenu",
+                // "UIOpenRightMenu",
             },
             // rightMenu_name = "UIRightMenuInteractionManager_KeyboardShortcut",
             subUIs = new(){

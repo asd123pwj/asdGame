@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Linq;
 using System;
-using Force.DeepCloner;
+// using Force.DeepCloner;
 
 public class UIClass{
     public static Dictionary<string, UIInfo> _UIInfos = new();
@@ -74,7 +74,7 @@ public class UIClass{
             info_.name = info_.type;
         }
         
-        return info_.DeepClone();
+        return info_.Copy();
     }
     static UIInfo cover_default(UIInfo new_UIInfo){
         UIInfo base_UIInfo = _UIInfos[new_UIInfo.type];
@@ -96,8 +96,8 @@ public class UIClass{
             }
             type = type.BaseType;
         }
-        // return new_UIInfo.Copy();
-        return new_UIInfo.DeepClone();
+        return new_UIInfo.Copy();
+        // return new_UIInfo.DeepClone();
     }
 
     static UIInfo convert_baseClass_to_subClass(UIInfo base_UIInfo, UIInfo sub_UIInfo){

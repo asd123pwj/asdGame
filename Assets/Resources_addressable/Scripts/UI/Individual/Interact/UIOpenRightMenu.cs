@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
-using Force.DeepCloner;
+// using Force.DeepCloner;
+using System;
 
 
 public class UIOpenRightMenu: UIInteractBase{
@@ -30,7 +31,7 @@ public class UIOpenRightMenu: UIInteractBase{
         else{
             _Base._subUIs = new();
         }
-        UIInfo info = UIClass._UIInfos[_Base._rightMenu_name].DeepClone();
+        UIInfo info = UIClass._UIInfos[_Base._rightMenu_name].Copy();
         info.anchoredPosition = _get_mousePosLocal(eventData);
         
         info.attributes ??= new();
