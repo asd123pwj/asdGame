@@ -22,19 +22,19 @@ public class UIThumbnail: UIBase{
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(10);
         }
-        if (_MatSys._obj._check_exist(_background_key)){
-            while (!_MatSys._obj._check_thumbnail_loaded(_background_key)) {
-                Debug.Log("waiting for object thumbnail loaded: " + _name + " - " + _background_key);
+        if (_MatSys._obj._check_exist(_info.background_key)){
+            while (!_MatSys._obj._check_thumbnail_loaded(_info.background_key)) {
+                Debug.Log("waiting for object thumbnail loaded: " + _info.name + " - " + _info.background_key);
                 await UniTask.Delay(10);
             }
-            img.sprite = _MatSys._obj._get_thumbnail(_background_key);
+            img.sprite = _MatSys._obj._get_thumbnail(_info.background_key);
         }
         else{
-            Debug.Log("No thumbnail found: " + _name + " - " + _background_key);
+            Debug.Log("No thumbnail found: " + _info.name + " - " + _info.background_key);
         }
     }
 
     public void _instantiate(Vector2 pos){
-        _sys._ObjSys._object_spawn._instantiate(_name, pos);
+        _sys._ObjSys._object_spawn._instantiate(_info.name, pos);
     }
 }

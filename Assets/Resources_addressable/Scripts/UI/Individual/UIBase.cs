@@ -19,33 +19,33 @@ public class UIBase: BaseClass{
     public RectTransform _rt_parent { get { return _parent.GetComponent<RectTransform>(); } }
     // ---------- Config ----------
     public UIInfo _info;
-    public string _name { get { return _info.name; } set { _info.name = value; } }
-    public string _class_name { get { return _info.base_type; } set { _info.base_type = value; } }
-    public string _prefab_name { get { return _info.prefab_key; } set { _info.prefab_key = value; } }
-    public string _background_key { get { return _info.background_key; } set { _info.background_key = value; } }
-    public float _PixelsPerUnitMultiplier { get { return _info.PixelsPerUnitMultiplier; } set { _info.PixelsPerUnitMultiplier = value; } }
+    // public string _name { get { return _info.name; } set { _info.name = value; } }
+    // public string _class_name { get { return _info.base_type; } set { _info.base_type = value; } }
+    // public string _prefab_name { get { return _info.prefab_key; } set { _info.prefab_key = value; } }
+    // public string _background_key { get { return _info.background_key; } set { _info.background_key = value; } }
+    // public float _PixelsPerUnitMultiplier { get { return _info.PixelsPerUnitMultiplier; } set { _info.PixelsPerUnitMultiplier = value; } }
     // ----- Position
     public bool _isButtom;
     // public bool _enableNavigation { get { return _info.enableNavigation; } set { _info.enableNavigation = value; } }
-    public Quaternion _rotation { get { return _info.rotation; } set { _info.rotation = value; } }
-    public Vector2 _anchorMin { get { return _info.anchorMin; } set { _info.anchorMin = value; } }
-    public Vector2 _anchorMax { get { return _info.anchorMax; } set { _info.anchorMax = value; } }
-    public Vector2 _pivot { get { return _info.pivot; } set { _info.pivot = value; } }
-    public Vector2 _anchoredPosition { get { return _info.anchoredPosition; } set { _info.anchoredPosition = value; } }
-    public Vector2 _sizeDelta { get { return _info.sizeDelta; } set { _info.sizeDelta = value; } }
-    public Vector2 _localScale { get { return _info.localScale; } set { _info.localScale = value; } }
+    // public Quaternion _rotation { get { return _info.rotation; } set { _info.rotation = value; } }
+    // public Vector2 _anchorMin { get { return _info.anchorMin; } set { _info.anchorMin = value; } }
+    // public Vector2 _anchorMax { get { return _info.anchorMax; } set { _info.anchorMax = value; } }
+    // public Vector2 _pivot { get { return _info.pivot; } set { _info.pivot = value; } }
+    // public Vector2 _anchoredPosition { get { return _info.anchoredPosition; } set { _info.anchoredPosition = value; } }
+    // public Vector2 _sizeDelta { get { return _info.sizeDelta; } set { _info.sizeDelta = value; } }
+    // public Vector2 _localScale { get { return _info.localScale; } set { _info.localScale = value; } }
     // ---------- Component ----------
     public UIBase _RMenu;
-    public string _rightMenu_name { get { return _info.rightMenu_name; } set { _info.rightMenu_name = value; } }
+    // public string _rightMenu_name { get { return _info.rightMenu_name; } set { _info.rightMenu_name = value; } }
     // ---------- Config ----------
     // ---------- Status ----------
     // public bool _isInit = true;
     public bool _isAvailable { get{ return _self.activeSelf; }}
     public List<UIBase> _subUIs;
-    public string _messageID { get { return _info.messageID; } set { _info.messageID = value; } }
+    // public string _messageID { get { return _info.messageID; } set { _info.messageID = value; } }
     bool allow_init = false;
     public int _runtimeID => _self.GetInstanceID();
-    public Dictionary<string, DynamicValue> _attributes { get { return _info.attributes; } set { _info.attributes = value; } }
+    // public Dictionary<string, DynamicValue> _attributes { get { return _info.attributes; } set { _info.attributes = value; } }
     List<string> essential_interactions = new() { "UISetTop" };
 
 
@@ -73,17 +73,12 @@ public class UIBase: BaseClass{
         _init_begin();
         // ----- Background
         set_background().Forget();
-        // ----- Position 
-        // set_navigation();
         // ----- Sub
         init_sub_script();
         init_sub_UIs();
         init_interactions().Forget();
-        // _register_message();
         _register_receiver();
-        // _EXTRA_init_subUIs();
         // ----- Activate
-        
         _enable();
         // ----- Done
         _init_done();
@@ -92,8 +87,6 @@ public class UIBase: BaseClass{
     void init_sub_script(){
         _Event = new(this);
         _Trigger = new(this);
-        // _Interact = new(this);
-        // _Ctrl = new(this);
         _Tag = new(this);
         _InteractMgr = new(this);
     }
@@ -104,9 +97,9 @@ public class UIBase: BaseClass{
         
         foreach (UIInfo subUI in _info.subUIs){
             // ----- Mark item of right menu ----- //
-            if (_attributes !=null && _attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+            if (_info.attributes !=null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
                 subUI.attributes ??= new();
-                subUI.attributes["RIGHT_MENU_OWNER"] = _attributes["RIGHT_MENU_OWNER"];
+                subUI.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
             }
             _subUIs.Add(UIDraw._draw_UI(_self, subUI.type, subUI)); // TODO: subUI.type -> subUI
         }
@@ -135,20 +128,20 @@ public class UIBase: BaseClass{
 
     // ---------- Status ----------
     public virtual void _update_info(){
-        _rotation = _self.transform.rotation;
-        _anchorMin = _rt_self.anchorMin;
-        _anchorMax = _rt_self.anchorMax;
-        _pivot = _rt_self.pivot;
-        _anchoredPosition = _rt_self.anchoredPosition;
-        _sizeDelta = _rt_self.sizeDelta;
-        _localScale = _self.transform.localScale;
+        _info.rotation = _self.transform.rotation;
+        _info.anchorMin = _rt_self.anchorMin;
+        _info.anchorMax = _rt_self.anchorMax;
+        _info.pivot = _rt_self.pivot;
+        _info.anchoredPosition = _rt_self.anchoredPosition;
+        _info.sizeDelta = _rt_self.sizeDelta;
+        _info.localScale = _self.transform.localScale;
     }
 
     public virtual void _register_receiver(){}
 
     public void _set_parent(GameObject parent=null){
         update_parent(parent).Forget();
-        update_UIMonitor(parent);
+        _update_UIMonitor(parent);
     }
     async UniTaskVoid update_parent(GameObject parent=null){
         if (parent != null) {
@@ -159,7 +152,7 @@ public class UIBase: BaseClass{
         }
         // update_UIMonitor(parent);
     }
-    void update_UIMonitor(GameObject parent){
+    public virtual void _update_UIMonitor(GameObject parent){
         if (parent != _UISys._foreground) _UISys._UIMonitor._remove_UI_fg(this);
         else _UISys._UIMonitor._add_UI_fg(this);
     }
@@ -175,25 +168,25 @@ public class UIBase: BaseClass{
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(10);
         }
-        if (_background_key == "") {
+        if (_info.background_key == "") {
             Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
             img.color = new(0, 0, 0, 0);
         }
         else {
             Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
-            if (_MatSys._spr._check_exist(_background_key)){
-                while (!_MatSys._spr._check_loaded(_background_key)) {
-                    Debug.Log("waiting for UI sprite loaded: " + _name + " - " + _background_key);
+            if (_MatSys._spr._check_exist(_info.background_key)){
+                while (!_MatSys._spr._check_loaded(_info.background_key)) {
+                    Debug.Log("waiting for UI sprite loaded: " + _info.name + " - " + _info.background_key);
                     await UniTask.Delay(10);
                 }
-                img.sprite = _MatSys._spr._get_sprite(_background_key);
+                img.sprite = _MatSys._spr._get_sprite(_info.background_key);
             }
             else{
                 img.color = new(1, 1, 1, 1);
             }
             if (_info.check_PixelsPerUnitMultiplier){
                 img.type = Image.Type.Sliced;
-                img.pixelsPerUnitMultiplier = _PixelsPerUnitMultiplier;
+                img.pixelsPerUnitMultiplier = _info.PixelsPerUnitMultiplier;
             }
         }
         _apply_UIPosition();
@@ -224,7 +217,10 @@ public class UIBase: BaseClass{
         _self.SetActive(false); 
         _UISys._UIMonitor._hide_UI_fg(this);
     }
-    public virtual void _destroy(){
+    public override void _destroy(){
+        base._destroy();
+        _UISys._UIMonitor._remove_UI_fg(this);
+        _UISys._UIMonitor._remove_UI(this);
         UnityEngine.Object.Destroy(_self);
     }
 
@@ -236,13 +232,13 @@ public class UIBase: BaseClass{
     
     // ---------- GameObject Generate ----------
     void create_self(){ 
-        if (_prefab_name == "" || _prefab_name == null) 
+        if (_info.prefab_key == "" || _info.prefab_key == null) 
             create_gameObject(); 
         else 
             create_prefab().Forget(); 
     }
     void create_gameObject(){ 
-        _self = new(_name); 
+        _self = new(_info.name); 
         _self.transform.SetParent(_parent.transform, false);
     }
     async UniTaskVoid create_prefab(){
@@ -250,17 +246,17 @@ public class UIBase: BaseClass{
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(10);
         }
-        if (_MatSys._UIPfb._check_exist(_prefab_name)){
-            while (!_MatSys._UIPfb._check_loaded(_prefab_name)) {
-                Debug.Log("waiting for UI prefab loaded: " + _name + " - " + _prefab_name);
+        if (_MatSys._UIPfb._check_exist(_info.prefab_key)){
+            while (!_MatSys._UIPfb._check_loaded(_info.prefab_key)) {
+                Debug.Log("waiting for UI prefab loaded: " + _info.name + " - " + _info.prefab_key);
                 await UniTask.Delay(10);
             }
-            GameObject obj = _MatSys._UIPfb._get_pfb(_prefab_name);
+            GameObject obj = _MatSys._UIPfb._get_pfb(_info.prefab_key);
             _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
-            _self.name = _name;
+            _self.name = _info.name;
         }
         else {
-            Debug.Log("UI prefab not exist: " + _background_key);
+            Debug.Log("UI prefab not exist: " + _info.prefab_key);
         }
     }
 
@@ -276,25 +272,25 @@ public class UIBase: BaseClass{
     public void _set_UIPos_RightMiddle()    => _set_UIPosition(new(1.0f, 0.5f), new(1.0f, 0.5f), new(1.0f, 0.5f), new(0.0f, 0.0f)); 
     public void _set_UIPos_RightBottom()    => _set_UIPosition(new(1.0f, 0.0f), new(1.0f, 0.0f), new(1.0f, 0.0f), new(0.0f, 0.0f)); 
     public void _set_UIPosition(Vector2? anchorMin=null, Vector2? anchorMax=null, Vector2? pivot=null, Vector2? anchoredPosition=null){
-        if (anchorMin != null) _anchorMin = anchorMin.Value;
-        if (anchorMax != null) _anchorMax = anchorMax.Value;
-        if (pivot != null) _pivot = pivot.Value;
-        if (anchoredPosition != null) _anchoredPosition = anchoredPosition.Value;
+        if (anchorMin != null) _info.anchorMin = anchorMin.Value;
+        if (anchorMax != null) _info.anchorMax = anchorMax.Value;
+        if (pivot != null) _info.pivot = pivot.Value;
+        if (anchoredPosition != null) _info.anchoredPosition = anchoredPosition.Value;
         // _anchorMin = anchorMin; 
         // _anchorMax = anchorMax; 
         // _pivot = pivot; 
         // _anchoredPosition = anchoredPosition; 
     }
     public void _apply_UIPosition(){
-        _rt_self.anchorMin = _anchorMin; 
-        _rt_self.anchorMax = _anchorMax; 
-        _rt_self.pivot = _pivot; 
-        _rt_self.anchoredPosition = _anchoredPosition; 
+        _rt_self.anchorMin = _info.anchorMin; 
+        _rt_self.anchorMax = _info.anchorMax; 
+        _rt_self.pivot = _info.pivot; 
+        _rt_self.anchoredPosition = _info.anchoredPosition; 
     }
     public void _apply_UIShape(){
-        _rt_self.sizeDelta = _sizeDelta;
-        _self.transform.rotation = _rotation;
-        _rt_self.localScale = _localScale;
+        _rt_self.sizeDelta = _info.sizeDelta;
+        _self.transform.rotation = _info.rotation;
+        _rt_self.localScale = _info.localScale;
     }
 
     public async UniTaskVoid _set_pos(Vector2 pos){

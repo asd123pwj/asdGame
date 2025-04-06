@@ -19,7 +19,7 @@ public class UIOpenAttributeManager: UIInteractBase{
     void open_AttributeManager(PointerEventData eventData) {
         if (_Base._subUIs != null) {
             foreach (var subUI in _Base._subUIs){
-                if (subUI._name == "UIAttributeManager"){
+                if (subUI._info.name == "UIAttributeManager"){
                     subUI._enable(_get_mousePosWorld(eventData));
                     return;
                 }
@@ -32,9 +32,9 @@ public class UIOpenAttributeManager: UIInteractBase{
         info.anchoredPosition = _get_mousePosLocal(eventData);
 
         // ----- Mark item of right menu ----- //
-        if (_Base._attributes !=null && _Base._attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+        if (_Base._info.attributes !=null && _Base._info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
             info.attributes ??= new();
-            info.attributes["RIGHT_MENU_OWNER"] = _Base._attributes["RIGHT_MENU_OWNER"];
+            info.attributes["RIGHT_MENU_OWNER"] = _Base._info.attributes["RIGHT_MENU_OWNER"];
         }
         UIBase attributeManager = UIDraw._draw_UI(_Base._UISys._foreground, "UIAttributeManager", info);
         _Base._subUIs.Add(attributeManager);

@@ -65,7 +65,7 @@ public class UIMonitor: BaseClass{
     }
 
     public void _add_UI_fg(UIBase ui){
-        UIs.fg.Add(ui._name, ui);
+        UIs.fg.Add(ui._info.name, ui);
     }
     public void _add_UI(UIBase ui){
         _runtimeID2base.Add(ui._runtimeID, ui);
@@ -73,22 +73,28 @@ public class UIMonitor: BaseClass{
     }
 
     public bool _hide_UI_fg(UIBase ui){
-        if (!UIs.fg.ContainsKey(ui._name)) return false;
-        UIs.fg_Hier.Remove(ui._name);
+        if (!UIs.fg.ContainsKey(ui._info.name)) return false;
+        UIs.fg_Hier.Remove(ui._info.name);
         return true;
     }
 
     public bool _show_UI(UIBase ui){
-        if (!UIs.fg.ContainsKey(ui._name)) return false;
-        UIs.fg_Hier.Remove(ui._name);
-        UIs.fg_Hier.Add(ui._name);
+        if (!UIs.fg.ContainsKey(ui._info.name)) return false;
+        UIs.fg_Hier.Remove(ui._info.name);
+        UIs.fg_Hier.Add(ui._info.name);
         return true;
     }
 
     public bool _remove_UI_fg(UIBase ui){
-        if (!UIs.fg.ContainsKey(ui._name)) return false;
-        UIs.fg_Hier.Remove(ui._name);
-        UIs.fg.Remove(ui._name); 
+        if (!UIs.fg.ContainsKey(ui._info.name)) return false;
+        UIs.fg_Hier.Remove(ui._info.name);
+        UIs.fg.Remove(ui._info.name); 
+        return true;
+    }
+    
+    public bool _remove_UI(UIBase ui){
+        _runtimeID2base.Remove(ui._runtimeID);
+        _UIObj2base.Remove(ui._self);
         return true;
     }
 

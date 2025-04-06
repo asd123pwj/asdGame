@@ -193,9 +193,9 @@ public class UIScrollView: UIBase{
             UIInfo item_ = UIClass._set_default(item.type, item);
             resize_item_to_container(item_);
             // ----- Mark item of right menu ----- //
-            if (_attributes != null && _attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+            if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
                 item_.attributes ??= new();
-                item_.attributes["RIGHT_MENU_OWNER"] = _attributes["RIGHT_MENU_OWNER"];
+                item_.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
             }
             // ----- draw item
             UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
@@ -207,9 +207,9 @@ public class UIScrollView: UIBase{
             UIInfo item_ = UIClass._set_default(item.type, item);
             resize_item_to_container(item_);
             // ----- Mark item of right menu ----- //
-            if (_attributes != null && _attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+            if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
                 item_.attributes ??= new();
-                item_.attributes["RIGHT_MENU_OWNER"] = _attributes["RIGHT_MENU_OWNER"];
+                item_.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
             }
             // ----- draw item
             int container_index = items.FindIndex(item => item == null);
@@ -294,9 +294,9 @@ public class UIScrollView: UIBase{
         string name = "UIContainer " + (containers.Count + 1);
         UIInfo info = UIClass._set_default("UIContainer", name);
         // ----- Mark item of right menu ----- //
-        if (_attributes != null && _attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+        if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
             info.attributes ??= new();
-            info.attributes["RIGHT_MENU_OWNER"] = _attributes["RIGHT_MENU_OWNER"];
+            info.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
         }
         // ----- Draw ----- //
         UIBase UI = UIDraw._draw_UI(Content, "UIContainer", info);

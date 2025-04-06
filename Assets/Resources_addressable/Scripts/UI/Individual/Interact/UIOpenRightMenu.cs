@@ -22,7 +22,7 @@ public class UIOpenRightMenu: UIInteractBase{
     void open_rightMenu(PointerEventData eventData) {
         if (_Base._subUIs != null) {
             foreach (var subUI in _Base._subUIs){
-                if (subUI._name == _Base._rightMenu_name){
+                if (subUI._info.name == _Base._info.rightMenu_name){
                     subUI._enable(_get_mousePosWorld(eventData));
                     return;
                 }
@@ -31,7 +31,7 @@ public class UIOpenRightMenu: UIInteractBase{
         else{
             _Base._subUIs = new();
         }
-        UIInfo info = UIClass._UIInfos[_Base._rightMenu_name].Copy();
+        UIInfo info = UIClass._UIInfos[_Base._info.rightMenu_name].Copy();
         info.anchoredPosition = _get_mousePosLocal(eventData);
         
         info.attributes ??= new();
@@ -39,7 +39,7 @@ public class UIOpenRightMenu: UIInteractBase{
         info.attributes["RIGHT_MENU_OWNER"] = _Base._runtimeID;
         // else info.attributes.Add("RIGHT_MENU_OWNER", _Base._runtimeID);
         Debug.Log(info.attributes["RIGHT_MENU_OWNER"]);
-        UIBase RMenu = UIDraw._draw_UI(_self, _Base._rightMenu_name, info);
+        UIBase RMenu = UIDraw._draw_UI(_self, _Base._info.rightMenu_name, info);
         _Base._subUIs.Add(RMenu);
     }
 

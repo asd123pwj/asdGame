@@ -60,6 +60,17 @@ public class BaseClass{
             _UpdateSys._add_updater(_update, _update_interval);
         }
     }
+    void unregister_update(){
+        MethodInfo method = GetType().GetMethod("_update");
+        bool is_overridden = method.DeclaringType != typeof(BaseClass);
+        if (is_overridden){
+            _UpdateSys._remove_updater(_update);
+        }
+    }
+
+    public virtual void _destroy(){
+        unregister_update();
+    }
 
     // void re_register_update(){
     //     MethodInfo method = GetType().GetMethod("_update");

@@ -26,7 +26,7 @@ public class UIToggle: UIInteractBase{
         if (target_type != 0) return;
         // foreach (var subUI in target_obj.GetComponent<UIIndividual>()._Base._subUIs){
         foreach (var subUI in _Base._UISys._UIMonitor._UIObj2base[target_obj]._subUIs){
-            if (subUI._name == target){
+            if (subUI._info.name == target){
                 subUI._toggle();
             }
         }
@@ -48,16 +48,16 @@ public class UIToggle: UIInteractBase{
         target_obj = target_obj.transform.parent.gameObject;
 
         // ----- Find target interaction or subUI
-        if (_Base._name.StartsWith("UIToggleSubUI-")){
-            target = _Base._name[14..];
+        if (_Base._info.name.StartsWith("UIToggleSubUI-")){
+            target = _Base._info.name[14..];
             target_type = 0;
         }
-        else if (_Base._name.StartsWith("UIToggleInteraction-")){
-            target = _Base._name[20..];
+        else if (_Base._info.name.StartsWith("UIToggleInteraction-")){
+            target = _Base._info.name[20..];
             target_type = 1;
         }
         else{
-            Debug.LogError("Can't parse of targetType of UIName: " + _Base._name);
+            Debug.LogError("Can't parse of targetType of UIName: " + _Base._info.name);
         }
     }
 }
