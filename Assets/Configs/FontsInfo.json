@@ -1,0 +1,9 @@
+{
+    "version": "0.0.1",
+    "items":{
+        "fusion_pixel":{
+            "font": "Font_fusion-pixel-10px-monospaced-zh_hans",
+            "fontTMP": "Font_fusion-pixel-10px-monospaced-zh_hans_SDF"
+        }
+    }
+}

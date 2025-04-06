@@ -85,7 +85,8 @@ public class GameConfigs{
     public string __TerrainsInfo_path { get { return Path.Combine(__root_dir, "TerrainsInfo.json"); } }
     public string __SpritesInfo_path { get { return Path.Combine(__root_dir, "SpritesInfo.json"); } }
     public string __SpriteMaterialsInfo_path { get { return Path.Combine(__root_dir, "SpriteMaterialsInfo.json"); } }
-    
+    public string __FontsInfo_path { get { return Path.Combine(__root_dir, "FontsInfo.json"); } }
+
 
     // ---------- tilemap config ----------
     public string _empty_tile => "0";

@@ -31,6 +31,7 @@ public class UIInputField: UIBase{
         inputField.onSubmit.AddListener(onSubmit);
         inputField.onEndEdit.AddListener(onEditEnd);
         inputField.onSelect.AddListener(onSelect);
+        inputField.textComponent.font = _MatSys._font._get_fontTMP("fusion_pixel");
     }
 
     void onSelect(string _){

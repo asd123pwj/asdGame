@@ -163,7 +163,7 @@ public class UIScrollView: UIBase{
         // if (_info is UIScrollViewInfo info){
             // grid.padding = _info.padding;
             grid.padding = new(_info.paddingLeft, _info.paddingRight, _info.paddingTop, _info.paddingBottom);
-            Debug.Log(grid.padding);
+            // Debug.Log(grid.padding);
             // grid.padding.left = _info.padding.left;
             // grid.padding.right = _info.padding.right;
             // grid.padding.top = _info.padding.top;

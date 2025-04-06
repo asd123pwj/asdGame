@@ -43,6 +43,7 @@ public class UIScrollText: UIBase{
         Scrollbar_Vertical = _self.transform.Find("Scrollbar Vertical").gameObject;
         Text = Content.transform.Find("Text").gameObject;
         TMP_Text = Text.GetComponent<TextMeshProUGUI>();
+        TMP_Text.font = _MatSys._font._get_fontTMP("fusion_pixel");
         ScrollRect = _self.GetComponent<ScrollRect>();
         // Text = _self.GetComponent<TextMeshProUGUI>() ?? _self.AddComponent<TextMeshProUGUI>();
         // if (_info is UIScrollTextInfo info){
