@@ -32,8 +32,8 @@ public class UIClassRightMenu{
                     type = "UIScrollView",
                     base_type = "UIScrollView",
                     sizeDelta = new (150*1 + 20*0 + 20 + 20, 50*3 + 20*2 + 20 + 20),
-                    cellSize = new (150, 50),
-                    constraintCount = 1,
+                    // cellSize = new (150, 50),
+                    // constraintCount = 1,
                     anchoredPosition = new (20, -20),
                     interactions = new List<string>() {
                         // "UISetTop",

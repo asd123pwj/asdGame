@@ -27,7 +27,7 @@ public class UIClassContainer{
             background_key = "Empty",
             // anchorMin = new(0, 1), anchorMax = new(0, 1), pivot = new(0, 1), localScale = new(1, 1), rotation = new(0, 0, 0, 1),
             sizeDelta = new(620, 240),
-            constraintCount = 3,
+            // constraintCount = 3,
             subUIs = new(){
                 new() { type = "UICloseButtom" },
                 new() { type = "UIResizeButtom" },

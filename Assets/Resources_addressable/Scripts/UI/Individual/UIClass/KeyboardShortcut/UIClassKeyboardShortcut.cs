@@ -15,29 +15,30 @@ public class UIClassKeyboardShortcut{
             // sizeDelta = new (96*1 + 16 + 16, 32*3 + 4*2 + 16 + 16),
             // padding = new RectOffset(16, 16, 16, 16),
             paddingLeft = 16, paddingRight = 16, paddingTop = 16, paddingBottom = 16,
-            spacing = new (16, 16),
-            cellSize = new (96, 32),
-            constraintCount = 1,
+            spacing = new (8, 8),
+            // cellSize = new (96, 32),
+            maxSize = new (300, 300),
+            // constraintCount = 1,
             anchoredPosition = new (8, -8),
             interactions = new List<string>() {
-                // "UISetTop",
+                "UIDrag",
                 // "UIDeselectClose"
             },
             items = new(){
                 new() {
-                    type = "UIExecuteCommandFromMessage", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
+                    type = "UIExecuteCommandFromMessage", sizeDelta = new (196, 32), messageID = "UIExecuteCommand"
                 },
                 new() {
                     type = "UIInputField", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
                 },
                 new() {
-                    type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
+                    type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 62),
                 },
                 new() {
                     type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
                 },
                 new() {
-                    type = "UIOpenAttributeManager", sizeDelta = new (96, 32),
+                    type = "UIOpenAttributeManager", sizeDelta = new (196, 32),
                 },
             },
             subUIs = new()

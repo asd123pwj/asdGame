@@ -39,25 +39,25 @@ public class UIScrollViewInfo: UIInfo{
     [JsonIgnore] public int paddingRight { get => _paddingRight ?? _paddingRight_default; set => _paddingRight = value; }
 
 
-    [JsonProperty("cellSize", NullValueHandling = NullValueHandling.Ignore)] 
-    private Vector2? _cellSize;
-    private Vector2 _cellSize_default { get => new (64, 64); }
-    [JsonIgnore] public Vector2 cellSize { get => _cellSize ?? _cellSize_default; set => _cellSize = value; }
+    // [JsonProperty("cellSize", NullValueHandling = NullValueHandling.Ignore)] 
+    // private Vector2? _cellSize;
+    // private Vector2 _cellSize_default { get => new (64, 64); }
+    // [JsonIgnore] public Vector2 cellSize { get => _cellSize ?? _cellSize_default; set => _cellSize = value; }
 
     [JsonProperty("spacing", NullValueHandling = NullValueHandling.Ignore)] 
     private Vector2? _spacing;
     private Vector2 _spacing_default { get => new (16, 16); }
     [JsonIgnore] public Vector2 spacing { get => _spacing ?? _spacing_default; set => _spacing = value; }
     
-    [JsonProperty("constraintType", NullValueHandling = NullValueHandling.Ignore)] 
-    private GridLayoutGroup.Constraint? _constraintType;
-    private GridLayoutGroup.Constraint _constraintType_default { get => GridLayoutGroup.Constraint.FixedColumnCount; }
-    [JsonIgnore] public GridLayoutGroup.Constraint constraintType { get => _constraintType ?? _constraintType_default; set => _constraintType = value; }
+    // [JsonProperty("constraintType", NullValueHandling = NullValueHandling.Ignore)] 
+    // private GridLayoutGroup.Constraint? _constraintType;
+    // private GridLayoutGroup.Constraint _constraintType_default { get => GridLayoutGroup.Constraint.FixedColumnCount; }
+    // [JsonIgnore] public GridLayoutGroup.Constraint constraintType { get => _constraintType ?? _constraintType_default; set => _constraintType = value; }
 
-    [JsonProperty("constraintCount", NullValueHandling = NullValueHandling.Ignore)] 
-    private int? _constraintCount;
-    private int _constraintCount_default { get => 5; }
-    [JsonIgnore] public int constraintCount { get => _constraintCount ?? _constraintCount_default; set => _constraintCount = value; }
+    // [JsonProperty("constraintCount", NullValueHandling = NullValueHandling.Ignore)] 
+    // private int? _constraintCount;
+    // private int _constraintCount_default { get => 5; }
+    // [JsonIgnore] public int constraintCount { get => _constraintCount ?? _constraintCount_default; set => _constraintCount = value; }
 
     [JsonProperty("maxSize", NullValueHandling = NullValueHandling.Ignore)] 
     private Vector2? _maxSize;
@@ -80,17 +80,21 @@ public class UIScrollView: UIBase{
     GameObject Content;
     GameObject Scrollbar_Horizontal;
     GameObject Scrollbar_Vertical;
+    RectTransform content_rt;
     // ---------- Config ----------
-    GridLayoutGroup grid;
+    // GridLayoutGroup grid;
     public new UIScrollViewInfo _info {get => (UIScrollViewInfo)base._info; set => base._info = value; }
     // ---------- Status ----------
     public override float _update_interval { get; set; } = 0.1f;
-    int resize_pass_count = 0;
-    List<UIBase> containers = new();
+    // int resize_pass_count = 0;
+    // List<UIBase> containers = new();
     List<UIBase> items = new();
-    bool withScrollbarHorizontal = false;
-    bool withScrollbarVertical = false; 
-    int  withItems = -1;
+    // bool withScrollbarHorizontal = false;
+    // bool withScrollbarVertical = false; 
+    // int  withItems = -1;
+
+    // float Scrollbar_Horizontal_height = 20;
+    float Scrollbar_Vertical_width = 20;
     // ---------- Key ----------
 
 
@@ -102,72 +106,67 @@ public class UIScrollView: UIBase{
         Content = Viewport.transform.Find("Content").gameObject;
         Scrollbar_Horizontal = _self.transform.Find("Scrollbar Horizontal").gameObject;
         Scrollbar_Vertical = _self.transform.Find("Scrollbar Vertical").gameObject;
-        grid = Content.GetComponent<GridLayoutGroup>();
+        // grid = Content.GetComponent<GridLayoutGroup>();
+        content_rt = Content.GetComponent<RectTransform>();
     }
 
     public override void _init_done(){
-        set_grid();
+        // set_grid();
         _init_container();
         _init_item();
+        place_items().Forget();
     }
 
-    public override void _update(){
-        adaptive_resize();
-    }
+    // public override void _update(){
+    //     // adaptive_resize();
+    //     // place_items();
+    // }
 
-    void adaptive_resize(){
-        // ----- resize condition----- //
-        resize_pass_count++;
-        if (_rt_self.sizeDelta == _info.minSize) resize_pass_count += 2;
-        if (resize_pass_count % 10 != 0) {
-            if (_self.activeSelf == false) return;
-            if (withItems == items.Count
-                && withScrollbarHorizontal == Scrollbar_Horizontal.activeSelf
-                && withScrollbarVertical == Scrollbar_Vertical.activeSelf) return;
-        }
-        else{
-            resize_pass_count = 0;
-        }
-        // update_layout();
-        // return;
+    // void adaptive_resize(){
+    //     // ----- resize condition----- //
+    //     resize_pass_count++;
+    //     if (_rt_self.sizeDelta == _info.minSize) resize_pass_count += 2;
+    //     if (resize_pass_count % 10 != 0) {
+    //         if (_self.activeSelf == false) return;
+    //         if (withItems == items.Count
+    //             && withScrollbarHorizontal == Scrollbar_Horizontal.activeSelf
+    //             && withScrollbarVertical == Scrollbar_Vertical.activeSelf) return;
+    //     }
+    //     else{
+    //         resize_pass_count = 0;
+    //     }
+    //     // update_layout();
+    //     // return;
 
-        // ----- resize ----- //
-        Vector2 size = Vector2.zero;
-        if (_info.constraintType != GridLayoutGroup.Constraint.FixedColumnCount) return;
-        size.x = _info.cellSize.x * _info.constraintCount 
-                + _info.spacing.x * (_info.constraintCount - 1) 
-                + _info.paddingLeft + _info.paddingRight;
-        size.y = _info.cellSize.y * Mathf.CeilToInt((float)items.Count / _info.constraintCount) 
-                + _info.spacing.y * Mathf.CeilToInt((float)items.Count / _info.constraintCount - 1) 
-                + _info.paddingTop + _info.paddingBottom;
-        if (Scrollbar_Horizontal.activeSelf) size.y += Scrollbar_Horizontal.GetComponent<RectTransform>().rect.height;
-        if (Scrollbar_Vertical.activeSelf) size.x += Scrollbar_Vertical.GetComponent<RectTransform>().rect.width;
-        size = Vector2.Max(size, _info.minSize);
-        if (_info.maxSize.x != -1) size.x = Mathf.Min(size.x, _info.maxSize.x);
-        if (_info.maxSize.y != -1) size.y = Mathf.Min(size.y, _info.maxSize.y);
-        _rt_self.sizeDelta = size;
+    //     // ----- resize ----- //
+    //     Vector2 size = Vector2.zero;
+    //     if (_info.constraintType != GridLayoutGroup.Constraint.FixedColumnCount) return;
+    //     size.x = _info.cellSize.x * _info.constraintCount 
+    //             + _info.spacing.x * (_info.constraintCount - 1) 
+    //             + _info.paddingLeft + _info.paddingRight;
+    //     size.y = _info.cellSize.y * Mathf.CeilToInt((float)items.Count / _info.constraintCount) 
+    //             + _info.spacing.y * Mathf.CeilToInt((float)items.Count / _info.constraintCount - 1) 
+    //             + _info.paddingTop + _info.paddingBottom;
+    //     if (Scrollbar_Horizontal.activeSelf) size.y += Scrollbar_Horizontal.GetComponent<RectTransform>().rect.height;
+    //     if (Scrollbar_Vertical.activeSelf) size.x += Scrollbar_Vertical.GetComponent<RectTransform>().rect.width;
+    //     size = Vector2.Max(size, _info.minSize);
+    //     if (_info.maxSize.x != -1) size.x = Mathf.Min(size.x, _info.maxSize.x);
+    //     if (_info.maxSize.y != -1) size.y = Mathf.Min(size.y, _info.maxSize.y);
+    //     _rt_self.sizeDelta = size;
 
-        // ----- update status ----- //
-        withItems = items.Count;
-        withScrollbarHorizontal = Scrollbar_Horizontal.activeSelf;
-        withScrollbarVertical = Scrollbar_Vertical.activeSelf;
-    }
+    //     // ----- update status ----- //
+    //     withItems = items.Count;
+    //     withScrollbarHorizontal = Scrollbar_Horizontal.activeSelf;
+    //     withScrollbarVertical = Scrollbar_Vertical.activeSelf;
+    // }
 
-    void set_grid(){
-        // if (_info is UIScrollViewInfo info){
-            // grid.padding = _info.padding;
-            grid.padding = new(_info.paddingLeft, _info.paddingRight, _info.paddingTop, _info.paddingBottom);
-            // Debug.Log(grid.padding);
-            // grid.padding.left = _info.padding.left;
-            // grid.padding.right = _info.padding.right;
-            // grid.padding.top = _info.padding.top;
-            // grid.padding.bottom = _info.padding.bottom;
-            grid.cellSize = _info.cellSize;
-            grid.spacing = _info.spacing;
-            grid.constraint = _info.constraintType;
-            grid.constraintCount = _info.constraintCount;
-        // }
-    }
+    // void set_grid(){
+    //         // grid.padding = new(_info.paddingLeft, _info.paddingRight, _info.paddingTop, _info.paddingBottom);
+    //         // grid.cellSize = _info.cellSize;
+    //         // grid.spacing = _info.spacing;
+    //         // grid.constraint = _info.constraintType;
+    //         // grid.constraintCount = _info.constraintCount;
+    // }
 
     bool _init_item(){
         // ----- No item
@@ -176,7 +175,7 @@ public class UIScrollView: UIBase{
             _info.items = new();
             return true;
         }
-        // ----- init item to container by item_index
+        // ---------- init item to container by item_index ---------- //
         List<int> items_without_itemIndex = new();
         for (int i = 0; i < _info.items.Count; i++){
             if (_info.items[i].item_index == -1){
@@ -185,21 +184,22 @@ public class UIScrollView: UIBase{
             }
             UIInfo item = _info.items[i];
             UIInfo item_ = UIClass._set_default(item.type, item);
-            resize_item_to_container(item_);
+            // resize_item_to_container(item_);
             // ----- Mark item of right menu ----- //
             if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
                 item_.attributes ??= new();
                 item_.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
             }
             // ----- draw item
-            UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
+            // UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
+            UIBase UI = UIDraw._draw_UI(Content, item_.type, item_);
             items[item_.item_index] = UI;
         }
         foreach(int i in items_without_itemIndex){
             
             UIInfo item = _info.items[i];
             UIInfo item_ = UIClass._set_default(item.type, item);
-            resize_item_to_container(item_);
+            // resize_item_to_container(item_);
             // ----- Mark item of right menu ----- //
             if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
                 item_.attributes ??= new();
@@ -208,10 +208,67 @@ public class UIScrollView: UIBase{
             // ----- draw item
             int container_index = items.FindIndex(item => item == null);
             item_.item_index = container_index;
-            UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
+            // UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
+            UIBase UI = UIDraw._draw_UI(Content, item_.type, item_);
             items[item_.item_index] = UI;
         }
         return true;
+    }
+
+    async UniTaskVoid place_items(){
+        // ---------- Init ---------- //
+        // ----- original position ----- //
+        float x_ori = _info.paddingLeft;
+        float y_ori = _info.paddingTop;
+        // ----- current item position ----- //
+        float x_current = x_ori;
+        float y_current = y_ori;
+        // ----- allowed width ----- //
+        float contentWidth = _info.maxSize.x - _info.paddingLeft - _info.paddingRight - Scrollbar_Vertical_width;
+        // ----- current item position ----- //
+        float h_rowMax = 0;
+        float w_max = 0;
+
+        // ---------- place items ---------- //
+        for (int i = 0; i < items.Count; i++){
+            // ----- Get Item ----- //
+            UIBase item = items[i];
+            while (item._rt_self == null) await UniTask.Delay(10);
+            // ----- Place in this row ----- //
+            if (x_current + item._rt_self.sizeDelta.x <= _info.maxSize.x - _info.paddingRight){
+                item._rt_self.anchoredPosition = new Vector2(x_current, -y_current);
+            }
+            // ----- Place in next row ----- //
+            else{
+                // ----- Update Status ----- //
+                w_max = Mathf.Max(w_max, x_current - _info.spacing.x);
+                // ----- Place ----- //
+                x_current = x_ori; 
+                y_current += h_rowMax + _info.spacing.y; 
+                item._rt_self.anchoredPosition = new Vector2(x_current, -y_current);
+                // ----- Update Status ----- //
+                h_rowMax = 0;
+            }
+            // ----- Update Status ----- //
+            h_rowMax = Mathf.Max(h_rowMax, item._rt_self.sizeDelta.y);
+            x_current += item._rt_self.sizeDelta.x + _info.spacing.x;
+        }
+        // ----- Update Status ----- //
+        w_max = Mathf.Max(w_max, x_current - _info.spacing.x);
+
+        // ----- Update Content Size ----- //
+        float h_sum = y_current + _info.paddingBottom + h_rowMax;
+        float w_sum = w_max + _info.paddingRight;
+        content_rt.sizeDelta = new (content_rt.sizeDelta.x, h_sum);
+        
+        // ----- ScrollBar enabling, add its width ----- //
+        if (h_sum > _info.maxSize.y) w_sum += Scrollbar_Vertical_width;
+
+        // ----- Update ScrollView Size ----- //
+        _rt_self.sizeDelta = new (
+            Mathf.Clamp(w_sum, _info.minSize.x, _info.maxSize.x), 
+            Mathf.Clamp(h_sum, _info.minSize.y, _info.maxSize.y)
+        );
     }
 
     public void _update_slots(List<UIInfo> items){
@@ -230,40 +287,37 @@ public class UIScrollView: UIBase{
 
 
 
-    public override void _update_info(){
-        base._update_info();
-        // if (_info is UIScrollViewInfo info){
-            // _info.padding = grid.padding;
-            _info.paddingLeft = grid.padding.left;
-            _info.paddingRight = grid.padding.right;
-            _info.paddingTop = grid.padding.top;
-            _info.paddingBottom = grid.padding.bottom;
-            _info.cellSize = grid.cellSize;
-            _info.spacing = grid.spacing;
-            _info.constraintType = grid.constraint;
-            _info.constraintCount = grid.constraintCount;
-        // }
-    }
+    // public override void _update_info(){
+    //     base._update_info();
+        // _info.paddingLeft = grid.padding.left;
+        // _info.paddingRight = grid.padding.right;
+        // _info.paddingTop = grid.padding.top;
+        // _info.paddingBottom = grid.padding.bottom;
+        // _info.cellSize = grid.cellSize;
+        // _info.spacing = grid.spacing;
+        // _info.constraintType = grid.constraint;
+        // _info.constraintCount = grid.constraintCount;
+    // }
 
 
 
-    UIInfo resize_item_to_container(UIInfo item){
-        item.isItem = true;
+    // UIInfo resize_item_to_container(UIInfo item){
+    //     item.isItem = true;
 
-        Vector2 new_size = _info.cellSize * 0.8f;
-        Vector2 new_scale = new_size / item.sizeDelta;
-        float maxScale = Mathf.Min(new_scale.x, new_scale.y);
-        item.localScale = new Vector2(maxScale, maxScale);;
-        item.anchorMin = new Vector2(0.5f, 0.5f);
-        item.anchorMax = new Vector2(0.5f, 0.5f);
-        item.pivot = new Vector2(0.5f, 0.5f);
-        return item;
-    }
+    //     Vector2 new_size = _info.cellSize * 0.8f;
+    //     Vector2 new_scale = new_size / item.sizeDelta;
+    //     float maxScale = Mathf.Min(new_scale.x, new_scale.y);
+    //     item.localScale = new Vector2(maxScale, maxScale);;
+    //     item.anchorMin = new Vector2(0.5f, 0.5f);
+    //     item.anchorMax = new Vector2(0.5f, 0.5f);
+    //     item.pivot = new Vector2(0.5f, 0.5f);
+    //     return item;
+    // }
 
     void _init_container(){
         for (int i = 0; i < _info.items.Count; i++){
-            UIBase container_base = expend();
-            containers.Add(container_base);
+            // UIBase container_base = expend();
+            // containers.Add(container_base);
             items.Add(null);
         }
     }
@@ -284,17 +338,17 @@ public class UIScrollView: UIBase{
         }
     }
 
-    UIBase expend(){
-        string name = "UIContainer " + (containers.Count + 1);
-        UIInfo info = UIClass._set_default("UIContainer", name);
-        // ----- Mark item of right menu ----- //
-        if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
-            info.attributes ??= new();
-            info.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
-        }
-        // ----- Draw ----- //
-        UIBase UI = UIDraw._draw_UI(Content, "UIContainer", info);
-        return UI;
-    }
+    // UIBase expend(){
+    //     string name = "UIContainer " + (containers.Count + 1);
+    //     UIInfo info = UIClass._set_default("UIContainer", name);
+    //     // ----- Mark item of right menu ----- //
+    //     if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+    //         info.attributes ??= new();
+    //         info.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
+    //     }
+    //     // ----- Draw ----- //
+    //     UIBase UI = UIDraw._draw_UI(Content, "UIContainer", info);
+    //     return UI;
+    // }
 
 }
