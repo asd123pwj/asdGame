@@ -10,10 +10,17 @@ public class UIScrollTextInfo: UIInfo{
     [JsonProperty("color", NullValueHandling = NullValueHandling.Ignore)] 
     private Color? _color;
     private Color _color_default { get => Color.black; }
-    [JsonIgnore] public Color color {
-        get => _color ?? _color_default;
-        set => _color = value;
-    }
+    [JsonIgnore] public Color color { get => _color ?? _color_default; set => _color = value; }
+    
+    [JsonProperty("maxSize", NullValueHandling = NullValueHandling.Ignore)] 
+    private Vector2? _maxSize;
+    private Vector2 _maxSize_default { get => new (640, 640); }
+    [JsonIgnore] public Vector2 maxSize { get => _maxSize ?? _maxSize_default; set => _maxSize = value; }
+
+    [JsonProperty("minSize", NullValueHandling = NullValueHandling.Ignore)]
+    private Vector2? _minSize;
+    private Vector2 _minSize_default { get => new (64, 64); }
+    [JsonIgnore] public Vector2 minSize { get => _minSize ?? _minSize_default; set => _minSize = value; }
 }
 
 public class UIScrollText: UIBase{
@@ -45,17 +52,20 @@ public class UIScrollText: UIBase{
         TMP_Text = Text.GetComponent<TextMeshProUGUI>();
         TMP_Text.font = _MatSys._font._get_fontTMP("fusion_pixel");
         ScrollRect = _self.GetComponent<ScrollRect>();
-        // Text = _self.GetComponent<TextMeshProUGUI>() ?? _self.AddComponent<TextMeshProUGUI>();
-        // if (_info is UIScrollTextInfo info){
-        //     TMP_Text.color = info.color;
-        // }
         
     }
 
     public override void _init_done(){
-        if (_info is UIScrollTextInfo info){
-            TMP_Text.color = info.color;
-        }
+        TMP_Text.color = _info.color;
+        adaptive_resize();
+    }
+
+    void adaptive_resize(){
+        float text_width = Mathf.Max(_info.minSize.x, TMP_Text.preferredWidth);
+        float text_height = Mathf.Max(_info.minSize.y, TMP_Text.preferredHeight);
+        text_width = Mathf.Min(_info.maxSize.x, text_width);
+        text_height = Mathf.Min(_info.maxSize.y, text_height);
+        _rt_self.sizeDelta = new Vector2(text_width, text_height);
     }
 
     public override void _register_receiver(){
@@ -65,19 +75,12 @@ public class UIScrollText: UIBase{
 
     public void _update_text(DynamicValue text){
         _text = _text + "\n" + text.get();
-        move_buttom().Forget();
+        adaptive_resize();
+        move_to_bottom().Forget();
     }
 
-    async UniTaskVoid move_buttom(){
+    async UniTaskVoid move_to_bottom(){
         await UniTask.Delay(10);
         ScrollRect.normalizedPosition = Vector2.zero;
-    }
-
-    // void onSubmit(string _) => _Event._action_submit(new(EventSystem.current), false);
-
-    public override void _update_info(){
-        base._update_info();
-        if (_info is UIScrollTextInfo info){
-        }
     }
 }

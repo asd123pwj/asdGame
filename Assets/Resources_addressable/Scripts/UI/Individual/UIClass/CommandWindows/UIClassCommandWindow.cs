@@ -18,8 +18,9 @@ public class UIClassCommandWindow{
                         messageID = "COMMAND",
                 },
                 new UIScrollTextInfo() { type = "UIScrollText", 
-                    sizeDelta = new(800-25, 400-25*2-12.5f*2), anchoredPosition = new(12.5f, -(25+12.5f)),
-                    messageID = "COMMAND",
+                    // sizeDelta = new(800-25, 400-25*2-12.5f*2), 
+                    anchoredPosition = new(12.5f, -(25+12.5f)),
+                    messageID = "COMMAND", background_key = "p5_a0.5",
                 },
             },
         });

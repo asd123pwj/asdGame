@@ -82,13 +82,7 @@ public class UIScrollView: UIBase{
     GameObject Scrollbar_Vertical;
     // ---------- Config ----------
     GridLayoutGroup grid;
-    // RectOffset padding
     public new UIScrollViewInfo _info {get => (UIScrollViewInfo)base._info; set => base._info = value; }
-    // RectOffset grid_padding { get { return grid.padding; } set { grid.padding = value; } }
-    // Vector2 grid_cellSize { get { return grid.cellSize; } set { grid.cellSize = value; } }
-    // Vector2 grid_spacing { get { return grid.spacing; } set { grid.spacing = value; } }
-    // GridLayoutGroup.Constraint grid_constraint { get { return grid.constraint; } set { grid.constraint = value; } }
-    // int grid_constraintCount { get { return grid.constraintCount; } set { grid.constraintCount = value; } }
     // ---------- Status ----------
     public override float _update_interval { get; set; } = 0.1f;
     int resize_pass_count = 0;
