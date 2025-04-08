@@ -15,9 +15,10 @@ public class UIClassAttributeManager{
             // padding = new RectOffset(16, 16, 16, 16),
             paddingLeft = 16, paddingRight = 16, paddingTop = 16 + 8*2 + 16*2, paddingBottom = 16 + 8*2 + 16*2,
             spacing = new (16, 16),
+            minSize = new (192, 192),
             // cellSize = new (192, 64),
             // constraintCount = 1,
-            anchoredPosition = new (8, -8),
+            // anchoredPosition = new (8, -8),
             interactions = new List<string>() {
                 "UIDrag",
             },
@@ -40,8 +41,12 @@ public class UIClassAttributeManager{
             },
             subUIs = new(){
                 new() { type = "UICloseButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-8*2, -8*2) },
-                new() { type = "UIResizeButtom", background_key="", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-8*2, 8*2) },
-
+                new() { type = "UIResizeButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-8*2, 8*2) },
+                new UIScrollTextInfo() { 
+                    type = "UIScrollText", 
+                    minSize = new(192-32, 32), anchoredPosition = new(16, -16) ,
+                    text = "Attribute Manager"
+                },
             }
         });
         

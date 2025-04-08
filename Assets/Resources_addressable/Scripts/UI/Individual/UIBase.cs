@@ -174,6 +174,7 @@ public class UIBase: BaseClass{
         }
         else {
             Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
+            img.color = _info.color;
             if (_MatSys._spr._check_exist(_info.background_key)){
                 while (!_MatSys._spr._check_loaded(_info.background_key)) {
                     Debug.Log("waiting for UI sprite loaded: " + _info.name + " - " + _info.background_key);
@@ -181,13 +182,13 @@ public class UIBase: BaseClass{
                 }
                 img.sprite = _MatSys._spr._get_sprite(_info.background_key);
             }
-            else{
-                img.color = new(1, 1, 1, 1);
-            }
+            // else{
+            // }
             if (_info.check_PixelsPerUnitMultiplier){
                 img.type = Image.Type.Sliced;
                 img.pixelsPerUnitMultiplier = _info.PixelsPerUnitMultiplier;
             }
+            Debug.Log(img.color);
         }
         _apply_UIPosition();
         _apply_UIShape();
@@ -281,13 +282,13 @@ public class UIBase: BaseClass{
         // _pivot = pivot; 
         // _anchoredPosition = anchoredPosition; 
     }
-    public void _apply_UIPosition(){
+    public virtual void _apply_UIPosition(){
         _rt_self.anchorMin = _info.anchorMin; 
         _rt_self.anchorMax = _info.anchorMax; 
         _rt_self.pivot = _info.pivot; 
         _rt_self.anchoredPosition = _info.anchoredPosition; 
     }
-    public void _apply_UIShape(){
+    public virtual void _apply_UIShape(){
         _rt_self.sizeDelta = _info.sizeDelta;
         _self.transform.rotation = _info.rotation;
         _rt_self.localScale = _info.localScale;

@@ -4,9 +4,10 @@ using TMPro;
 using Newtonsoft.Json;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 
 // public class UIAttributeManagerInfo: UIScrollViewInfo{
-    
+
 // }
 
 public class UIAttributeManager: UIScrollView{
@@ -17,9 +18,16 @@ public class UIAttributeManager: UIScrollView{
     public UIAttributeManager(GameObject parent, UIInfo info): base(parent, info){
     }
 
-    // public override void _init_begin(){
-    //     base._init_begin();
-    // }
+    public override void _init_done(){
+        base._init_done();
+        get_editor_info();
+    }
+
+    List<UIInfo> get_editor_info(){
+        UIBase owner = _UISys._UIMonitor._get_UI(_info.attributes["RIGHT_MENU_OWNER"].get<int>());
+        Debug.Log(owner._info.name);
+        return null;
+    }
 
     public override void _update_UIMonitor(GameObject parent){
         remove_old_attributeManager();

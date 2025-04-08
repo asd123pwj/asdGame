@@ -44,6 +44,11 @@ public class UIInfo{
     [JsonIgnore] public float PixelsPerUnitMultiplier { get => _PixelsPerUnitMultiplier ?? _PixelsPerUnitMultiplier_default; set => _PixelsPerUnitMultiplier = value; }
     [JsonIgnore] public bool check_PixelsPerUnitMultiplier { get => _PixelsPerUnitMultiplier != null; }
 
+    [JsonProperty("color", NullValueHandling = NullValueHandling.Ignore)] 
+    private Color? _color;
+    private Color _color_default { get => Color.white; }
+    [JsonIgnore] public Color color { get => _color ?? _color_default; set => _color = value; }
+    
     // ---------- Position ----------
     [JsonProperty("rotation", NullValueHandling = NullValueHandling.Ignore)] 
     private Quaternion? _rotation;
