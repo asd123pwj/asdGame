@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 // using Force.DeepCloner;
 using Cysharp.Threading.Tasks;
+using System.Linq;
 
 public class UIScrollViewInfo: UIInfo{
     // private string _info_type_default { get => "UIScrollViewInfo"; }
@@ -85,10 +86,11 @@ public class UIScrollView: UIBase{
     // GridLayoutGroup grid;
     public new UIScrollViewInfo _info {get => (UIScrollViewInfo)base._info; set => base._info = value; }
     // ---------- Status ----------
-    public override float _update_interval { get; set; } = 0.1f;
+    // public override float _update_interval { get; set; } = 0.1f;
     // int resize_pass_count = 0;
     // List<UIBase> containers = new();
     List<UIBase> items = new();
+    Dictionary<UIBase, UIInfo> base2info = new();
     // bool withScrollbarHorizontal = false;
     // bool withScrollbarVertical = false; 
     // int  withItems = -1;
@@ -99,6 +101,7 @@ public class UIScrollView: UIBase{
 
 
     public UIScrollView(GameObject parent, UIInfo info): base(parent, info){
+        _update_interval = 0.2f;
     }
 
     public override void _init_begin(){
@@ -112,107 +115,77 @@ public class UIScrollView: UIBase{
 
     public override void _init_done(){
         // set_grid();
-        _init_container();
+        // _init_container();
         _init_item();
+        // place_items().Forget();
+    }
+
+    public override void _apply_UIShape(){
+        base._apply_UIShape();
         place_items().Forget();
     }
 
-    // public override void _update(){
-    //     // adaptive_resize();
-    //     // place_items();
-    // }
-
-    // void adaptive_resize(){
-    //     // ----- resize condition----- //
-    //     resize_pass_count++;
-    //     if (_rt_self.sizeDelta == _info.minSize) resize_pass_count += 2;
-    //     if (resize_pass_count % 10 != 0) {
-    //         if (_self.activeSelf == false) return;
-    //         if (withItems == items.Count
-    //             && withScrollbarHorizontal == Scrollbar_Horizontal.activeSelf
-    //             && withScrollbarVertical == Scrollbar_Vertical.activeSelf) return;
-    //     }
-    //     else{
-    //         resize_pass_count = 0;
-    //     }
-    //     // update_layout();
-    //     // return;
-
-    //     // ----- resize ----- //
-    //     Vector2 size = Vector2.zero;
-    //     if (_info.constraintType != GridLayoutGroup.Constraint.FixedColumnCount) return;
-    //     size.x = _info.cellSize.x * _info.constraintCount 
-    //             + _info.spacing.x * (_info.constraintCount - 1) 
-    //             + _info.paddingLeft + _info.paddingRight;
-    //     size.y = _info.cellSize.y * Mathf.CeilToInt((float)items.Count / _info.constraintCount) 
-    //             + _info.spacing.y * Mathf.CeilToInt((float)items.Count / _info.constraintCount - 1) 
-    //             + _info.paddingTop + _info.paddingBottom;
-    //     if (Scrollbar_Horizontal.activeSelf) size.y += Scrollbar_Horizontal.GetComponent<RectTransform>().rect.height;
-    //     if (Scrollbar_Vertical.activeSelf) size.x += Scrollbar_Vertical.GetComponent<RectTransform>().rect.width;
-    //     size = Vector2.Max(size, _info.minSize);
-    //     if (_info.maxSize.x != -1) size.x = Mathf.Min(size.x, _info.maxSize.x);
-    //     if (_info.maxSize.y != -1) size.y = Mathf.Min(size.y, _info.maxSize.y);
-    //     _rt_self.sizeDelta = size;
-
-    //     // ----- update status ----- //
-    //     withItems = items.Count;
-    //     withScrollbarHorizontal = Scrollbar_Horizontal.activeSelf;
-    //     withScrollbarVertical = Scrollbar_Vertical.activeSelf;
-    // }
-
-    // void set_grid(){
-    //         // grid.padding = new(_info.paddingLeft, _info.paddingRight, _info.paddingTop, _info.paddingBottom);
-    //         // grid.cellSize = _info.cellSize;
-    //         // grid.spacing = _info.spacing;
-    //         // grid.constraint = _info.constraintType;
-    //         // grid.constraintCount = _info.constraintCount;
-    // }
+    public override void _update(){
+        place_items().Forget();
+    }
 
     bool _init_item(){
         // ----- No item
-        // if (!_info.subUIs.ContainsKey(_subUIKey_item)) return true;
         if (_info.items == null) {
             _info.items = new();
             return true;
         }
         // ---------- init item to container by item_index ---------- //
-        List<int> items_without_itemIndex = new();
+        order_items();
         for (int i = 0; i < _info.items.Count; i++){
-            if (_info.items[i].item_index == -1){
-                items_without_itemIndex.Add(i);
-                continue;
-            }
             UIInfo item = _info.items[i];
             UIInfo item_ = UIClass._set_default(item.type, item);
-            // resize_item_to_container(item_);
-            // ----- Mark item of right menu ----- //
-            if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
-                item_.attributes ??= new();
-                item_.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
-            }
-            // ----- draw item
-            // UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
-            UIBase UI = UIDraw._draw_UI(Content, item_.type, item_);
-            items[item_.item_index] = UI;
+            _append_and_draw_item(item_);
         }
-        foreach(int i in items_without_itemIndex){
-            
-            UIInfo item = _info.items[i];
-            UIInfo item_ = UIClass._set_default(item.type, item);
-            // resize_item_to_container(item_);
-            // ----- Mark item of right menu ----- //
-            if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
-                item_.attributes ??= new();
-                item_.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
-            }
-            // ----- draw item
-            int container_index = items.FindIndex(item => item == null);
-            item_.item_index = container_index;
-            // UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
-            UIBase UI = UIDraw._draw_UI(Content, item_.type, item_);
-            items[item_.item_index] = UI;
-        }
+        place_items().Forget();
         return true;
+    }
+
+    void order_items(){
+        // ----- give item index ----- //
+        HashSet<int> usedIndices = new();
+        foreach (var item in _info.items){
+            if (item.item_index != -1) usedIndices.Add(item.item_index);
+        }
+        int nextIndex = 0;
+        foreach (var item in _info.items){
+            if (item.item_index == -1){
+                while (usedIndices.Contains(nextIndex)) nextIndex++;
+                item.item_index = nextIndex;
+                usedIndices.Add(nextIndex);
+                nextIndex++;
+            }
+        }
+        // ----- order items ----- //
+        _info.items = _info.items.OrderBy(item => item.item_index).ToList();
+    }
+
+    public void _append_item(UIBase item_base, bool needPlace=false){
+        // if (!_info.subUIs.ContainsKey(_subUIKey_item)) 
+        //     _info.subUIs.Add(_subUIKey_item, new());
+        _info.items.Add(item_base._info);
+        items.Add(item_base);
+        base2info.Add(item_base, item_base._info);
+        if (needPlace) place_items().Forget();
+    }
+    public void _append_and_draw_item(UIInfo item, bool needPlace=false){
+        // resize_item_to_container(item_);
+        // ----- Mark item of right menu ----- //
+        if (_info.attributes != null && _info.attributes.ContainsKey("MENU_OWNER")) {
+            item.attributes ??= new();
+            item.attributes["MENU_OWNER"] = _info.attributes["MENU_OWNER"];
+        }
+        // ----- draw item
+        // UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
+        UIBase UI = UIDraw._draw_UI(Content, item.type, item);
+        items.Add(UI);
+        base2info.Add(UI, item);
+        if (needPlace) place_items().Forget();
     }
 
     async UniTaskVoid place_items(){
@@ -224,8 +197,8 @@ public class UIScrollView: UIBase{
         float x_current = x_ori;
         float y_current = y_ori;
         // ----- allowed width ----- //
-        float contentWidth = _info.maxSize.x - _info.paddingLeft - _info.paddingRight - Scrollbar_Vertical_width;
-        // ----- current item position ----- //
+        // float contentWidth = _info.maxSize.x - _info.paddingLeft - _info.paddingRight - Scrollbar_Vertical_width;
+        // ----- boundery size ----- //
         float h_rowMax = 0;
         float w_max = 0;
 
@@ -314,37 +287,33 @@ public class UIScrollView: UIBase{
     //     return item;
     // }
 
-    void _init_container(){
-        for (int i = 0; i < _info.items.Count; i++){
-            // UIBase container_base = expend();
-            // containers.Add(container_base);
-            items.Add(null);
-        }
-    }
+    // void _init_container(){
+    //     for (int i = 0; i < _info.items.Count; i++){
+    //         // UIBase container_base = expend();
+    //         // containers.Add(container_base);
+    //         items.Add(null);
+    //     }
+    // }
 
-    public void _add_item(UIBase item_base){
-        // if (!_info.subUIs.ContainsKey(_subUIKey_item)) 
-        //     _info.subUIs.Add(_subUIKey_item, new());
-        _info.items.Add(item_base._info);
-    }
 
     public void _remove_item(UIBase item_base){
         // remove item from containerUIInfos
-        foreach (UIInfo info in _info.items){
-            if (info.item_index == item_base._info.item_index){
-                _info.items.Remove(info);
-                break;
-            }
-        }
+        _info.items.Remove(base2info[item_base]);
+        // foreach (UIInfo info in _info.items){
+        //     if (info.item_index == item_base._info.item_index){
+        //         _info.items.Remove(info);
+        //         break;
+        //     }
+        // }
     }
 
     // UIBase expend(){
     //     string name = "UIContainer " + (containers.Count + 1);
     //     UIInfo info = UIClass._set_default("UIContainer", name);
     //     // ----- Mark item of right menu ----- //
-    //     if (_info.attributes != null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+    //     if (_info.attributes != null && _info.attributes.ContainsKey("MENU_OWNER")) {
     //         info.attributes ??= new();
-    //         info.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
+    //         info.attributes["MENU_OWNER"] = _info.attributes["MENU_OWNER"];
     //     }
     //     // ----- Draw ----- //
     //     UIBase UI = UIDraw._draw_UI(Content, "UIContainer", info);

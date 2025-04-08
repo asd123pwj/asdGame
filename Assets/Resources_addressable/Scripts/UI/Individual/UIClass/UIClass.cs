@@ -31,25 +31,6 @@ public class UIClass{
         _UIInfos[name] = info;
     }
 
-    // static Dictionary<string, UIInfo> get_all_UIInfo(){
-    //     FieldInfo[] fields = typeof(UIClass).GetFields(BindingFlags.Static | BindingFlags.Public);
-    //     Dictionary<string, UIInfo> UIInfos = new();
-
-    //     foreach (var field in fields){
-    //         if (field.FieldType != typeof(UIInfo)) continue;
-    //         UIInfo info = (UIInfo)field.GetValue(null);
-    //         if (info == null) continue;
-    //         UIInfo info_ = (UIInfo)field.GetValue(null);
-    //         UIInfos[info_.type] = info_;
-    //     }
-    //     foreach (string name in _UIInfos.Keys){
-    //         UIInfos[name] = _UIInfos[name];
-    //     }
-    //     return UIInfos;
-    // }
-
-    
-
     public static UIInfo _set_default(string type, string name){
         UIInfo info = _set_default(type);
         if (name != ""){
@@ -63,13 +44,11 @@ public class UIClass{
     public static UIInfo _set_default(string type, UIInfo info=null){
         UIInfo info_ = info ?? _UIInfos[type];
         if (info == null){
-            // info_ = UIInfos[type].Copy();
             info_ = _UIInfos[type];
-        }
-        if (info != null){
+        } 
+        else {
             info_ = cover_default(info_);
         }
-        // info_ = info_.Copy();
         if (info_.name == ""){
             info_.name = info_.type;
         }
@@ -79,7 +58,6 @@ public class UIClass{
     static UIInfo cover_default(UIInfo new_UIInfo){
         UIInfo base_UIInfo = _UIInfos[new_UIInfo.type];
         UIInfo cover_UIInfo =  inherit(base_UIInfo, new_UIInfo);
-        // UIInfo subClass_UIInfo = convert_baseClass_to_subClass(cover_UIInfo, base_UIInfo);
         return cover_UIInfo;
     }
 
@@ -96,8 +74,7 @@ public class UIClass{
             }
             type = type.BaseType;
         }
-        return new_UIInfo.Copy();
-        // return new_UIInfo.DeepClone();
+        return new_UIInfo;
     }
 
     static UIInfo convert_baseClass_to_subClass(UIInfo base_UIInfo, UIInfo sub_UIInfo){

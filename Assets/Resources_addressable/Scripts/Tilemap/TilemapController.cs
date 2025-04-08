@@ -32,11 +32,11 @@ public class TilemapController: BaseClass{
     // private bool _tilemapBlockChange = true;
     public Vector3Int _query_point;
     public Vector3Int _query_point_prev = new(-999999999, -999999999, -999999999);
-    public override float _update_interval { get; set; } = 0.5f;
+    // public override float _update_interval { get; set; } = 0.5f;
 
 
     public TilemapController(){
-        // _update_interval = 0.5f;
+        _update_interval = 0.5f;
     }
 
 

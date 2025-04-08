@@ -62,7 +62,7 @@ public class UIDrop: UIInteractBase{
         // UIBase item_base = _Base._UISys._UIMonitor._UIObj2base[item];
         // if (get_parent_ScrollView().GetComponent<UIIndividual>()._Base is UIScrollView SV_base) {
         if (_Base._UISys._UIMonitor._UIObj2base[get_parent_ScrollView()] is UIScrollView SV_base) {
-            SV_base._add_item(item_base);
+            SV_base._append_item(item_base);
         }
     }
 

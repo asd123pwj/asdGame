@@ -17,7 +17,8 @@ public class BaseClass{
     public CameraManager _CamMgr  => _sys._CamMgr; 
     public MessageBus _Msg => _sys._Msg;
     // ---------- Config ----------
-    public virtual float _update_interval { get; set; } = 0;
+    // public virtual float _update_interval { get; set; } = 0;
+    public float _update_interval = 0;
     // public virtual int a  = 1;
     
     // public float _update_interval {get=> update_interval; set { update_interval = value; re_register_update(); } }
@@ -57,14 +58,16 @@ public class BaseClass{
         MethodInfo method = GetType().GetMethod("_update");
         bool is_overridden = method.DeclaringType != typeof(BaseClass);
         if (is_overridden){
-            _UpdateSys._add_updater(_update, _update_interval);
+            // _UpdateSys._add_updater(_update, _update_interval);
+            _UpdateSys._add_updater(this);
         }
     }
     void unregister_update(){
         MethodInfo method = GetType().GetMethod("_update");
         bool is_overridden = method.DeclaringType != typeof(BaseClass);
         if (is_overridden){
-            _UpdateSys._remove_updater(_update);
+            // _UpdateSys._remove_updater(_update);
+            _UpdateSys._remove_updater(this);
         }
     }
 

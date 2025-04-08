@@ -11,6 +11,11 @@ public class UIClassImage{
             },
         });
 
+        UIClass._add("UISeparator", new (){
+            type = "UISeparator", 
+            PixelsPerUnitMultiplier = 1,
+            background_key="ui_RoundedIcon_16",
+        });
         
         UIClass._add("UIHighlight_a0.5", new (){
             type="UIHighlight_a0.5",

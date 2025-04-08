@@ -18,11 +18,13 @@ public class UIClassKeyboardShortcut{
             spacing = new (8, 8),
             // cellSize = new (96, 32),
             maxSize = new (300, 300),
+            rightMenu_name = "UIRightMenuInteractionManager_KeyShortcut",
             // constraintCount = 1,
             anchoredPosition = new (8, -8),
             interactions = new List<string>() {
                 "UIDrag",
                 // "UIDeselectClose"
+                "UIOpenRightMenu",
             },
             items = new(){
                 new() {
@@ -65,7 +67,7 @@ public class UIClassKeyboardShortcut{
             type="UIExecuteCommandFromAttribute",
             background_key="p5", 
             attributes = new() {
-                {"command", "toggleUI --useMousePos --type UIAttributeManager" }
+                {"COMMAND", "toggleUI --useMousePos --type UIAttributeManager" }
             },
             interactions = new List<string>() {
                 // "UISetTop",
@@ -92,9 +94,13 @@ public class UIClassKeyboardShortcut{
             background_key="p5_a0.5", 
             sizeDelta = new(32*2, 32*2), 
             rightMenu_name = "UIRightMenuInteractionManager_KeyShortcut",
+            attributes = new() {
+                {"COMMAND", "toggleUI --useMousePos --type UIAttributeManager" }
+            },
             interactions = new List<string>() {
                 // "UISetTop",
                 "UIOpenRightMenu",
+                "UIExecuteCommandFromAttribute",
             },
         });
 

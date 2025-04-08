@@ -32,9 +32,9 @@ public class UIOpenAttributeManager: UIInteractBase{
         info.anchoredPosition = _get_mousePosLocal(eventData);
 
         // ----- Mark item of right menu ----- //
-        if (_Base._info.attributes !=null && _Base._info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+        if (_Base._info.attributes !=null && _Base._info.attributes.ContainsKey("MENU_OWNER")) {
             info.attributes ??= new();
-            info.attributes["RIGHT_MENU_OWNER"] = _Base._info.attributes["RIGHT_MENU_OWNER"];
+            info.attributes["MENU_OWNER"] = _Base._info.attributes["MENU_OWNER"];
         }
         UIBase attributeManager = UIDraw._draw_UI(_Base._UISys._foreground, "UIAttributeManager", info);
         _Base._subUIs.Add(attributeManager);

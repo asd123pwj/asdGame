@@ -97,9 +97,9 @@ public class UIBase: BaseClass{
         
         foreach (UIInfo subUI in _info.subUIs){
             // ----- Mark item of right menu ----- //
-            if (_info.attributes !=null && _info.attributes.ContainsKey("RIGHT_MENU_OWNER")) {
+            if (_info.attributes !=null && _info.attributes.ContainsKey("MENU_OWNER")) {
                 subUI.attributes ??= new();
-                subUI.attributes["RIGHT_MENU_OWNER"] = _info.attributes["RIGHT_MENU_OWNER"];
+                subUI.attributes["MENU_OWNER"] = _info.attributes["MENU_OWNER"];
             }
             _subUIs.Add(UIDraw._draw_UI(_self, subUI.type, subUI)); // TODO: subUI.type -> subUI
         }
@@ -182,13 +182,10 @@ public class UIBase: BaseClass{
                 }
                 img.sprite = _MatSys._spr._get_sprite(_info.background_key);
             }
-            // else{
-            // }
             if (_info.check_PixelsPerUnitMultiplier){
                 img.type = Image.Type.Sliced;
                 img.pixelsPerUnitMultiplier = _info.PixelsPerUnitMultiplier;
             }
-            Debug.Log(img.color);
         }
         _apply_UIPosition();
         _apply_UIShape();
