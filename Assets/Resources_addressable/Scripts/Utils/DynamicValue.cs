@@ -8,7 +8,6 @@ public class DynamicValue{ // Thank Deepseek
     [JsonProperty("value", NullValueHandling = NullValueHandling.Ignore)] 
     private object value; 
 
-    // 支持的公共类型（可根据需要扩展）
     public enum ValueType { Bool, Int, Float, String, Vector2, Vector3, Color }
 
     // 构造函数
@@ -24,7 +23,6 @@ public class DynamicValue{ // Thank Deepseek
         set(value);
     }
 
-    // 设置值并自动检测类型
     public void set(object value){
         if (value == null){
             type = ValueType.String.ToString();
@@ -36,8 +34,9 @@ public class DynamicValue{ // Thank Deepseek
         type = value switch{
             bool _ => ValueType.Bool.ToString(),
             int _ => ValueType.Int.ToString(),
-            float _ => ValueType.Float.ToString(),
-            double _ => ValueType.Float.ToString(), // 自动转为float
+            long _ => ValueType.Int.ToString(),     // long => int
+            float _ => ValueType.Float.ToString(),  
+            double _ => ValueType.Float.ToString(), // double => float
             string _ => ValueType.String.ToString(),
             Vector2 _ => ValueType.Vector2.ToString(),
             Vector3 _ => ValueType.Vector3.ToString(),
@@ -46,16 +45,13 @@ public class DynamicValue{ // Thank Deepseek
         };
     }
 
-    // 获取原始object值
     public object get() => value;
 
-    // 类型安全获取方法
     public T get<T>(){
         try{
             if (value is T typedValue)
                 return typedValue;
 
-            // 特殊处理：数字类型转换
             if (typeof(T) == typeof(float) && value is int intVal)
                 return (T)(object)Convert.ToSingle(intVal);
 
@@ -69,7 +65,6 @@ public class DynamicValue{ // Thank Deepseek
         }
     }
 
-    // 安全尝试获取值
     public bool tryGet<T>(out T result){
         try{
             result = get<T>();
@@ -81,7 +76,6 @@ public class DynamicValue{ // Thank Deepseek
         }
     }
 
-    // 编辑器友好显示
     public override string ToString(){
         return $"[{type}] {value}";
     }

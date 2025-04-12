@@ -28,6 +28,7 @@ public class BaseClass{
     public bool _initDone = false;
     static int nextRuntimeID = 0;
     public int _runtimeID { get; }
+    public bool _isDestroyed = false;
 
 
     public BaseClass(){
@@ -76,6 +77,7 @@ public class BaseClass{
     }
 
     public virtual void _destroy(){
+        _isDestroyed = true;
         unregister_update();
     }
 

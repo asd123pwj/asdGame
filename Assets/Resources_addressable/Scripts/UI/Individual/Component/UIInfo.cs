@@ -24,8 +24,8 @@ public class UIInfo{
     private string _base_type_default { get => "UIBase"; }
     [JsonIgnore] public string base_type { get => _base_type ?? _base_type_default; set => _base_type = value; }
 
-    // [JsonProperty("info_type")]
-    // private string _info_type_fixed { get => GetType().Name; }
+    [JsonProperty("info_type")]
+    private string _info_type_fixed { get => GetType().Name; }
     // public string info_type => GetType().AssemblyQualifiedName;
     
     [JsonProperty("prefab_key", NullValueHandling = NullValueHandling.Ignore)] 

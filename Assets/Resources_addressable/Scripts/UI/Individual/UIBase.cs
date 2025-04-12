@@ -15,57 +15,30 @@ public class UIBase: BaseClass{
     public UITag _Tag;
     // ---------- Unity ----------
     public GameObject _self, _parent;
-    public RectTransform _rt_self { get { return _self.GetComponent<RectTransform>(); } }
-    public RectTransform _rt_parent { get { return _parent.GetComponent<RectTransform>(); } }
+    public RectTransform _rt_self { get { return _self != null ? _self.GetComponent<RectTransform>() : null; } }
+    public RectTransform _rt_parent { get { return _parent != null ? _parent.GetComponent<RectTransform>() : null; } }
     // ---------- Config ----------
     public UIInfo _info;
-    // public string _name { get { return _info.name; } set { _info.name = value; } }
-    // public string _class_name { get { return _info.base_type; } set { _info.base_type = value; } }
-    // public string _prefab_name { get { return _info.prefab_key; } set { _info.prefab_key = value; } }
-    // public string _background_key { get { return _info.background_key; } set { _info.background_key = value; } }
-    // public float _PixelsPerUnitMultiplier { get { return _info.PixelsPerUnitMultiplier; } set { _info.PixelsPerUnitMultiplier = value; } }
-    // ----- Position
-    public bool _isButtom;
-    // public bool _enableNavigation { get { return _info.enableNavigation; } set { _info.enableNavigation = value; } }
-    // public Quaternion _rotation { get { return _info.rotation; } set { _info.rotation = value; } }
-    // public Vector2 _anchorMin { get { return _info.anchorMin; } set { _info.anchorMin = value; } }
-    // public Vector2 _anchorMax { get { return _info.anchorMax; } set { _info.anchorMax = value; } }
-    // public Vector2 _pivot { get { return _info.pivot; } set { _info.pivot = value; } }
-    // public Vector2 _anchoredPosition { get { return _info.anchoredPosition; } set { _info.anchoredPosition = value; } }
-    // public Vector2 _sizeDelta { get { return _info.sizeDelta; } set { _info.sizeDelta = value; } }
-    // public Vector2 _localScale { get { return _info.localScale; } set { _info.localScale = value; } }
     // ---------- Component ----------
     public UIBase _RMenu;
-    // public string _rightMenu_name { get { return _info.rightMenu_name; } set { _info.rightMenu_name = value; } }
-    // ---------- Config ----------
     // ---------- Status ----------
-    // public bool _isInit = true;
     public bool _isAvailable { get{ return _self.activeSelf; }}
     public List<UIBase> _subUIs;
-    // public string _messageID { get { return _info.messageID; } set { _info.messageID = value; } }
     bool allow_init = false;
-    // public int _runtimeID => _self.GetInstanceID();
-    // public Dictionary<string, DynamicValue> _attributes { get { return _info.attributes; } set { _info.attributes = value; } }
     List<string> essential_interactions = new() { "UISetTop" };
 
 
     public UIBase(GameObject parent, UIInfo info=null){
         _info = UIClass._set_default(GetType().Name, info);
         _parent = parent;
-        // _info.Cfg = this;
-        // _sys = GameObject.Find("System").GetComponent<SystemManager>();
         create_self();
         _set_parent(_parent);
         add2UIs();
         allow_init = true;
-        // _ui._Base = this;
-        
     }
     public override bool _check_allow_init(){
         return allow_init;
     }
-    // public void _update(){
-    // }
 
     // ---------- Initialization ----------
     public override void _init(){
@@ -117,10 +90,6 @@ public class UIBase: BaseClass{
             _InteractMgr._register_interaction(interaction);
         }
     }
-
-    // public void _destroy(){
-    //     GameObject.Destroy(_self);
-    // }
 
     // ---------- Extra functions for children class ----------
     public virtual void _init_begin(){} 

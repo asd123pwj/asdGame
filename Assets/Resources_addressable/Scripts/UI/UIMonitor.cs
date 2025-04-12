@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System;
 using Cysharp.Threading.Tasks;
+using System.Linq;
 
 public struct UIs{
     public Dictionary<string, UIBase> fg;
@@ -41,10 +42,14 @@ public class UIMonitor: BaseClass{
     }
 
     public void _clear_UIs(){
-        foreach (var UI in UIs.fg.Values){
-            // UI._ui._destroy();
-            UI._destroy();
+        List<string> keys = UIs.fg.Keys.ToList();
+        foreach (var key in keys){
+            UIs.fg[key]._destroy();
         }
+        // foreach (var UI in UIs.fg.Values){
+        //     // UI._ui._destroy();
+        //     UI._destroy();
+        // }
         UIs.fg.Clear();
     }
 

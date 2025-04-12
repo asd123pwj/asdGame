@@ -206,7 +206,7 @@ public class UIScrollView: UIBase{
         for (int i = 0; i < items.Count; i++){
             // ----- Get Item ----- //
             UIBase item = items[i];
-            while (item._rt_self == null) await UniTask.Delay(10);
+            while (item._rt_self == null) { if (_isDestroyed) return; await UniTask.Delay(10); }
             // ----- Place in this row ----- //
             if (x_current + item._rt_self.sizeDelta.x <= _info.maxSize.x - _info.paddingRight){
                 item._rt_self.anchoredPosition = new Vector2(x_current, -y_current);

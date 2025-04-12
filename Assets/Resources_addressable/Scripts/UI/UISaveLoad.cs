@@ -25,6 +25,11 @@ public class UISaveLoad: BaseClass{
         UIs UIs = _UISys._UIMonitor._get_UIs();
         storage.fg_Hier = UIs.fg_Hier;
         foreach (var UI in UIs.fg.Values){
+            if (UI is UIAttributeManager
+             || UI is UIRightMenu) {
+                storage.fg_Hier.Remove(UI._info.name);
+                continue;    // skip right menu
+            }
             UI._update_info();
             UIInfo info_clear = UI._info._prune();
             storage.fg.Add(info_clear.name, info_clear);
