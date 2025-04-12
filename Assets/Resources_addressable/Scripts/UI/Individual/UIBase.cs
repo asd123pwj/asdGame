@@ -68,13 +68,16 @@ public class UIBase: BaseClass{
         if (_info.subUIs == null) return;
         _subUIs = new();
         
-        foreach (UIInfo subUI in _info.subUIs){
+        for(int i = 0; i < _info.subUIs.Count; i++){
+            UIInfo info = _info.subUIs[i];
             // ----- Mark item of right menu ----- //
             if (_info.attributes !=null && _info.attributes.ContainsKey("OWNER")) {
-                subUI.attributes ??= new();
-                subUI.attributes["OWNER"] = _info.attributes["OWNER"];
+                info.attributes ??= new();
+                info.attributes["OWNER"] = _info.attributes["OWNER"];
             }
-            _subUIs.Add(UIDraw._draw_UI(_self, subUI.type, subUI)); // TODO: subUI.type -> subUI
+            UIBase ui = UIDraw._draw_UI(_self, info.type, info); // TODO: subUI.type -> subUI
+            _subUIs.Add(ui); 
+            _info.subUIs[i] = ui._info; // For saving
         }
     }
 
