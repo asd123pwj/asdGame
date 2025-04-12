@@ -36,10 +36,10 @@ public class UIOpenRightMenu: UIInteractBase{
         info.anchoredPosition = _get_mousePosLocal(eventData);
         
         info.attributes ??= new();
-        // if (info.attributes.ContainsKey("MENU_OWNER")) 
-        info.attributes["MENU_OWNER"] = _Base._runtimeID;
-        // else info.attributes.Add("MENU_OWNER", _Base._runtimeID);
-        Debug.Log(info.attributes["MENU_OWNER"]);
+        // if (info.attributes.ContainsKey("OWNER")) 
+        info.attributes["OWNER"] = _Base._runtimeID;
+        // else info.attributes.Add("OWNER", _Base._runtimeID);
+        // Debug.Log(info.attributes["OWNER"]);
         UIBase RMenu = UIDraw._draw_UI(_self, _Base._info.rightMenu_name, info);
         _Base._subUIs.Add(RMenu);
     }

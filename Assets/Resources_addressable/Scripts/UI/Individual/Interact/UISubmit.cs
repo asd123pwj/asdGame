@@ -11,7 +11,7 @@ public class UISubmit: UIInteractBase{
         submit(eventData);
     }
     
-    void submit(BaseEventData eventData){
+    public virtual void submit(BaseEventData eventData){
         if (_Base is UIInputField inputField){
             _Base._Msg._send(_Base._info.messageID, inputField._text);
         }

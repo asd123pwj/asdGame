@@ -104,10 +104,10 @@ public class UIInfo{
     private int _item_index_default { get => -1; }
     [JsonIgnore] public int item_index { get => _item_index ?? _item_index_default; set => _item_index = value; }
     
-    [JsonProperty("attribute", NullValueHandling = NullValueHandling.Ignore)]
-    private Dictionary<string, DynamicValue> _attribute;
-    private Dictionary<string, DynamicValue> _attribute_default { get => null; }
-    [JsonIgnore] public Dictionary<string, DynamicValue> attributes { get => _attribute ?? _attribute_default; set => _attribute = value; }
+    [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
+    private Dictionary<string, DynamicValue> _attributes;
+    private Dictionary<string, DynamicValue> _attributes_default { get => null; }
+    [JsonIgnore] public Dictionary<string, DynamicValue> attributes { get => _attributes ?? _attributes_default; set => _attributes = value; }
 
     // ---------- UI ----------
     [JsonProperty("subUIs", NullValueHandling = NullValueHandling.Ignore)]

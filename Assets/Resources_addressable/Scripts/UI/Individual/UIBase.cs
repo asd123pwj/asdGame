@@ -44,7 +44,7 @@ public class UIBase: BaseClass{
     public List<UIBase> _subUIs;
     // public string _messageID { get { return _info.messageID; } set { _info.messageID = value; } }
     bool allow_init = false;
-    public int _runtimeID => _self.GetInstanceID();
+    // public int _runtimeID => _self.GetInstanceID();
     // public Dictionary<string, DynamicValue> _attributes { get { return _info.attributes; } set { _info.attributes = value; } }
     List<string> essential_interactions = new() { "UISetTop" };
 
@@ -97,9 +97,9 @@ public class UIBase: BaseClass{
         
         foreach (UIInfo subUI in _info.subUIs){
             // ----- Mark item of right menu ----- //
-            if (_info.attributes !=null && _info.attributes.ContainsKey("MENU_OWNER")) {
+            if (_info.attributes !=null && _info.attributes.ContainsKey("OWNER")) {
                 subUI.attributes ??= new();
-                subUI.attributes["MENU_OWNER"] = _info.attributes["MENU_OWNER"];
+                subUI.attributes["OWNER"] = _info.attributes["OWNER"];
             }
             _subUIs.Add(UIDraw._draw_UI(_self, subUI.type, subUI)); // TODO: subUI.type -> subUI
         }

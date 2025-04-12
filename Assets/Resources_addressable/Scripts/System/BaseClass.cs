@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using System.Reflection;
+using System.Threading;
 
 
 public class BaseClass{
@@ -25,9 +26,12 @@ public class BaseClass{
     // int update_order = 0;
     // ---------- Status ----------
     public bool _initDone = false;
+    static int nextRuntimeID = 0;
+    public int _runtimeID { get; }
 
 
     public BaseClass(){
+        _runtimeID = Interlocked.Increment(ref nextRuntimeID);
         init().Forget();
     }
 
@@ -75,23 +79,11 @@ public class BaseClass{
         unregister_update();
     }
 
-    // void re_register_update(){
-    //     MethodInfo method = GetType().GetMethod("_update");
-    //     bool is_overridden = method.DeclaringType != typeof(BaseClass);
-    //     if (is_overridden){
-    //         _UpdateSys._update_updater(update_order, _update, _update_interval);
-    //     }
-    // }
-
     void run_loop(){
         MethodInfo method = GetType().GetMethod("_loop");
         bool is_overridden = method.DeclaringType != typeof(BaseClass);
         if (is_overridden){
-            // _loop().Forget();
-            // while (true){
-                _loop().Forget();
-                // await UniTask.DelayFrame(loop_interval);
-            // }
+            _loop().Forget();
         }
     }
 }

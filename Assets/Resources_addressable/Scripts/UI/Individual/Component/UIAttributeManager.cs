@@ -20,7 +20,7 @@ public class UIAttributeManagerInfo: UIScrollViewInfo{
 public class UIAttributeManager: UIScrollView{
     // ---------- Config ---------- //
     public new UIAttributeManagerInfo _info {get => (UIAttributeManagerInfo)base._info; set => base._info = value; }
-
+    UIBase owner;
 
     public UIAttributeManager(GameObject parent, UIInfo info): base(parent, info){
     }
@@ -31,13 +31,13 @@ public class UIAttributeManager: UIScrollView{
     }
 
     void draw_editors(){
-        UIBase owner = _UISys._UIMonitor._get_UI(_info.attributes["MENU_OWNER"].get<int>());
+        owner = _UISys._UIMonitor._get_UI(_info.attributes["OWNER"].get<int>());
         List<UIInfo> editors_infos = new List<UIInfo>();
         List<UIInfo> editor_infos = new();
         foreach (string key in owner._info.attributes.Keys){
             Type type = owner._info.attributes[key].get().GetType();
 
-            if (type == typeof(string)) editor_infos = _get_editorString(owner, key);
+            if (type == typeof(string)) editor_infos = _get_editorString(key);
             else Debug.Log("UIAttributeManager not support type: " + key + " " + type);
 
             editors_infos.Add(_get_editor_title(key));
@@ -64,7 +64,7 @@ public class UIAttributeManager: UIScrollView{
         return info;
     }
 
-    List<UIInfo> _get_editorString(UIBase owner, string key){
+    List<UIInfo> _get_editorString(string key){
         List<UIInfo> infos = new List<UIInfo>();
         string UI_type;
 
@@ -72,14 +72,14 @@ public class UIAttributeManager: UIScrollView{
         UIScrollTextInfo info_text = (UIScrollTextInfo)UIClass._set_default(UI_type);
         info_text.minSize = _info.textSize;
         info_text.maxSize = _info.textSize;
-        info_text.messageID = _runtimeID.ToString();
-        info_text.text = owner._info.attributes[key].get<string>();
+        info_text.messageID = $"OWNER_{owner._runtimeID}_{key}";
+        info_text.source = key;
         infos.Add(info_text);
         
         UI_type = "UIInputField";
         UIInfo info_input = UIClass._set_default(UI_type);
         info_input.sizeDelta = _info.textSize;
-        info_input.messageID = _runtimeID.ToString();
+        info_input.messageID = $"OWNER_{owner._runtimeID}_{key}";
         infos.Add(info_input);
 
         return infos;
