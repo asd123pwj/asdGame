@@ -8,7 +8,7 @@ public class UIClassInput{
             type = "UIInputField",
             base_type = "UIInputField",
             prefab_key = "InputField",
-            background_key = "ui_2", PixelsPerUnitMultiplier=8, 
+            background_key = "ui_RoundedIcon_16", PixelsPerUnitMultiplier=1, 
             sizeDelta = new (400, 50),
             // enableNavigation = true,
             interactions = new List<string>() {

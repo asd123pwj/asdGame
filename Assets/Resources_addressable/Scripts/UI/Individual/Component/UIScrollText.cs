@@ -27,6 +27,38 @@ public class UIScrollTextInfo: UIInfo{
     private string _text_default => "";
     [JsonIgnore] public string text { get => _text ?? _text_default; set => _text = value; }
     
+
+    [JsonProperty("marginTop", NullValueHandling = NullValueHandling.Ignore)] 
+    private int? _marginTop;
+    private int _marginTop_default => 4;
+    [JsonIgnore] public int marginTop { get => _marginTop ?? _marginTop_default; set => _marginTop = value; }
+
+    [JsonProperty("marginBottom", NullValueHandling = NullValueHandling.Ignore)]
+    private int? _marginBottom;
+    private int _marginBottom_default => 4;
+    [JsonIgnore] public int marginBottom { get => _marginBottom ?? _marginBottom_default; set => _marginBottom = value; }
+
+    [JsonProperty("marginLeft", NullValueHandling = NullValueHandling.Ignore)]
+    private int? _marginLeft;
+    private int _marginLeft_default => 16;
+    [JsonIgnore] public int marginLeft { get => _marginLeft ?? _marginLeft_default; set => _marginLeft = value; }
+
+    [JsonProperty("marginRight", NullValueHandling = NullValueHandling.Ignore)]
+    private int? _marginRight;
+    private int _marginRight_default => 16;
+    [JsonIgnore] public int marginRight { get => _marginRight ?? _marginRight_default; set => _marginRight = value; }
+
+
+    [JsonProperty("fontSize", NullValueHandling = NullValueHandling.Ignore)]
+    private int? _fontSize;
+    private int _fontSize_default => 20;
+    [JsonIgnore] public int fontSize { get => _fontSize ?? _fontSize_default; set => _fontSize = value; }
+    
+    [JsonProperty("font", NullValueHandling = NullValueHandling.Ignore)]
+    private string _font;
+    private string _font_default => "fusion_pixel";
+    [JsonIgnore] public string font { get => _font ?? _font_default; set => _font = value; }
+    
     [JsonProperty("isAppend", NullValueHandling = NullValueHandling.Ignore)]
     private bool? _isAppend;
     private bool _isAppend_default => false;
@@ -59,13 +91,7 @@ public class UIScrollText: UIBase{
     }
 
     public override void _init_begin(){
-        Viewport = _self.transform.Find("Viewport").gameObject;
-        Content = Viewport.transform.Find("Content").gameObject;
-        Scrollbar_Horizontal = _self.transform.Find("Scrollbar Horizontal").gameObject;
-        Scrollbar_Vertical = _self.transform.Find("Scrollbar Vertical").gameObject;
-        Text = Content.transform.Find("Text").gameObject;
-        TMP_Text = Text.GetComponent<TextMeshProUGUI>();
-        ScrollRect = _self.GetComponent<ScrollRect>();
+        init_child();
         init_owner();
         init_TMPText();
     }
@@ -78,15 +104,22 @@ public class UIScrollText: UIBase{
         adaptive_resize();
     }
 
+    void init_child(){
+        Viewport = _self.transform.Find("Viewport").gameObject;
+        Content = Viewport.transform.Find("Content").gameObject;
+        Scrollbar_Horizontal = _self.transform.Find("Scrollbar Horizontal").gameObject;
+        Scrollbar_Vertical = _self.transform.Find("Scrollbar Vertical").gameObject;
+        Text = Content.transform.Find("Text").gameObject;
+        TMP_Text = Text.GetComponent<TextMeshProUGUI>();
+        ScrollRect = _self.GetComponent<ScrollRect>();
+    }
+
     void init_TMPText(){
-        TMP_Text.font = _MatSys._font._get_fontTMP("fusion_pixel");
-        if (_info.source == "") {
-            TMP_Text.text = _info.text;
-        }
-        else{
-            TMP_Text.text = owner._info.attributes[_info.source].get<string>();
-        }
+        TMP_Text.font = _MatSys._font._get_fontTMP(_info.font);
+        TMP_Text.text = _info.source == "" ? _info.text : owner._info.attributes[_info.source].get<string>();
+        TMP_Text.fontSize = _info.fontSize;
         TMP_Text.color = _info.textColor;
+        TMP_Text.margin = new(_info.marginLeft, _info.marginTop, _info.marginRight, _info.marginBottom);
     }
 
     void init_owner(){

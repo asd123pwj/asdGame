@@ -63,6 +63,7 @@
         "ui_5":{ "name": "键盘快捷键设置", "path": "UISpr_KeyboardShortcut" },
         "ui_RoundedIcon_16":{ "name": "圆角矩形", "path": "UISpr_RoundedIcon_16" },
         "ui_RoundedIcon_32":{ "name": "圆角矩形", "path": "UISpr_RoundedIcon_32" },
+        "ui_AccentLine_Left":{ "name": "左侧圆角矩形", "path": "UISpr_AccentLine_Left" },
         "ui_TitleBg":{ "name": "带标题窗口背景", "path": "UISpr_TitleWindowBackground" },
 
         
