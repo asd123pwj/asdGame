@@ -6,7 +6,7 @@ public class UIClassOutput{
             type = "UIScrollText",
             base_type = "UIScrollText",
             prefab_key = "ScrollText",
-            background_key = "ui_RoundedIcon_16", PixelsPerUnitMultiplier=1,
+            background_key = "ui_RoundedIcon_8", PixelsPerUnitMultiplier=1,
         });
 
         UIClass._add("UITitleText", new UIScrollTextInfo(){

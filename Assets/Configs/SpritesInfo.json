@@ -61,9 +61,12 @@
         "ui_4_32":{ "name": "缩放按钮", "path": "UISpr_ResizeButtom_32" },
         "ui_4_16":{ "name": "缩放按钮", "path": "UISpr_ResizeButtom_16" },
         "ui_5":{ "name": "键盘快捷键设置", "path": "UISpr_KeyboardShortcut" },
+        "ui_RoundedIcon_8":{ "name": "圆角矩形", "path": "UISpr_RoundedIcon_8" },
+        "ui_RoundedIcon_8_Gray":{ "name": "圆角矩形", "path": "UISpr_RoundedIcon_8_Gray" },
         "ui_RoundedIcon_16":{ "name": "圆角矩形", "path": "UISpr_RoundedIcon_16" },
         "ui_RoundedIcon_32":{ "name": "圆角矩形", "path": "UISpr_RoundedIcon_32" },
         "ui_AccentLine_Left":{ "name": "左侧圆角矩形", "path": "UISpr_AccentLine_Left" },
+        "ui_Separator_Horizontal": { "name": "水平分隔线", "path": "UISpr_Separator_Horizontal" },
         "ui_TitleBg":{ "name": "带标题窗口背景", "path": "UISpr_TitleWindowBackground" },
 
         

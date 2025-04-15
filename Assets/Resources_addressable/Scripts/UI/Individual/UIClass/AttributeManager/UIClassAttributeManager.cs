@@ -40,8 +40,9 @@ public class UIClassAttributeManager{
             //     },
             // },
             subUIs = new(){
-                new() { type = "UICloseButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-8*2, -8*2) },
-                new() { type = "UIResizeButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-8*2, 8*2) },
+                new() { type = "UICloseButtom", sizeDelta = new(24, 24), anchoredPosition = new(-16, -16) },
+                new() { type = "UIResizeButtom", sizeDelta = new(24, 24), anchoredPosition = new(-16, 16) },
+                new() { type = "UITitleSeparator", anchoredPosition = new(0, -(16+32)) },
                 new UIScrollTextInfo() { 
                     type = "UIScrollText", name = "Title",
                     minSize = new(512-32, 32), anchoredPosition = new(16, -16) ,

@@ -30,22 +30,22 @@ public class UIScrollTextInfo: UIInfo{
 
     [JsonProperty("marginTop", NullValueHandling = NullValueHandling.Ignore)] 
     private int? _marginTop;
-    private int _marginTop_default => 4;
+    private int _marginTop_default => 6;
     [JsonIgnore] public int marginTop { get => _marginTop ?? _marginTop_default; set => _marginTop = value; }
 
     [JsonProperty("marginBottom", NullValueHandling = NullValueHandling.Ignore)]
     private int? _marginBottom;
-    private int _marginBottom_default => 4;
+    private int _marginBottom_default => 6;
     [JsonIgnore] public int marginBottom { get => _marginBottom ?? _marginBottom_default; set => _marginBottom = value; }
 
     [JsonProperty("marginLeft", NullValueHandling = NullValueHandling.Ignore)]
     private int? _marginLeft;
-    private int _marginLeft_default => 16;
+    private int _marginLeft_default => 12;
     [JsonIgnore] public int marginLeft { get => _marginLeft ?? _marginLeft_default; set => _marginLeft = value; }
 
     [JsonProperty("marginRight", NullValueHandling = NullValueHandling.Ignore)]
     private int? _marginRight;
-    private int _marginRight_default => 16;
+    private int _marginRight_default => 12;
     [JsonIgnore] public int marginRight { get => _marginRight ?? _marginRight_default; set => _marginRight = value; }
 
 
@@ -56,7 +56,7 @@ public class UIScrollTextInfo: UIInfo{
     
     [JsonProperty("font", NullValueHandling = NullValueHandling.Ignore)]
     private string _font;
-    private string _font_default => "fusion_pixel";
+    private string _font_default => "fusion_pixel_12px_zh_hans";
     [JsonIgnore] public string font { get => _font ?? _font_default; set => _font = value; }
     
     [JsonProperty("isAppend", NullValueHandling = NullValueHandling.Ignore)]
@@ -68,6 +68,18 @@ public class UIScrollTextInfo: UIInfo{
     private string _source;
     private string _source_default => "";
     [JsonIgnore] public string source { get => _source ?? _source_default; set => _source = value; }
+
+    [JsonProperty("scrollbarHandleBackground", NullValueHandling = NullValueHandling.Ignore)]
+    private string _scrollbarHandleBackground;
+    private string _scrollbarHandleBackground_default => "ui_RoundedIcon_8_Gray";
+    [JsonIgnore] public string scrollbarHandleBackground { get => _scrollbarHandleBackground ?? _scrollbarHandleBackground_default; set => _scrollbarHandleBackground = value; }
+
+    [JsonProperty("scrollbarBackground", NullValueHandling = NullValueHandling.Ignore)]
+    private string _scrollbarBackground;
+    private string _scrollbarBackground_default => "ui_RoundedIcon_8";
+    [JsonIgnore] public string scrollbarBackground { get => _scrollbarBackground ?? _scrollbarBackground_default; set => _scrollbarBackground = value; }
+
+
 }
 
 public class UIScrollText: UIBase{
@@ -107,11 +119,18 @@ public class UIScrollText: UIBase{
     void init_child(){
         Viewport = _self.transform.Find("Viewport").gameObject;
         Content = Viewport.transform.Find("Content").gameObject;
+
         Scrollbar_Horizontal = _self.transform.Find("Scrollbar Horizontal").gameObject;
         Scrollbar_Vertical = _self.transform.Find("Scrollbar Vertical").gameObject;
+        Scrollbar_Horizontal.GetComponent<Image>().sprite = _MatSys._spr._get_sprite(_info.scrollbarBackground);
+        Scrollbar_Horizontal.transform.Find("Sliding Area/Handle").GetComponent<Image>().sprite = _MatSys._spr._get_sprite(_info.scrollbarHandleBackground);
+        Scrollbar_Vertical.GetComponent<Image>().sprite = _MatSys._spr._get_sprite(_info.scrollbarBackground);
+        Scrollbar_Vertical.transform.Find("Sliding Area/Handle").GetComponent<Image>().sprite = _MatSys._spr._get_sprite(_info.scrollbarHandleBackground);
+    
         Text = Content.transform.Find("Text").gameObject;
         TMP_Text = Text.GetComponent<TextMeshProUGUI>();
         ScrollRect = _self.GetComponent<ScrollRect>();
+        
     }
 
     void init_TMPText(){
@@ -133,6 +152,7 @@ public class UIScrollText: UIBase{
             Mathf.Clamp(TMP_Text.preferredWidth, _info.minSize.x, _info.maxSize.x),
             Mathf.Clamp(TMP_Text.preferredHeight, _info.minSize.y, _info.maxSize.y)
         );
+        Debug.Log("TMP_Text.preferredHeight: " + TMP_Text.preferredHeight);
     }
 
     public override void _register_receiver(){

@@ -28,7 +28,7 @@ public class UIControl: BaseClass{
         // _GCfg._InputSys._register_action("Load", _load_UI, "isFirstDown");
         _GCfg._InputSys._register_action("f5", _save_UI, "isFirstDown");
         _GCfg._InputSys._register_action("f9", _load_UI, "isFirstDown");
-        _GCfg._InputSys._register_action("o", _open_o, "isFirstDown");
+        // _GCfg._InputSys._register_action("o", _open_o, "isFirstDown");
 
         
     }

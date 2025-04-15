@@ -199,7 +199,10 @@ public class UIClassKeyboardShortcut{
                 new() { type = "UIKeyShortcut", name="key_numpad 6", anchoredPosition = new(721*2, -148*2) },
 
                 new() { type = "UIKeyShortcut", name="key_left shift", sizeDelta = new(86*2, 32*2), anchoredPosition = new(11*2, -184*2) },
-                new() { type = "UIKeyShortcut", name="key_z", anchoredPosition = new(101*2, -184*2) },
+                new() { type = "UIKeyShortcut", name="key_z", anchoredPosition = new(101*2, -184*2), 
+                    attributes = new() {
+                        {"COMMAND", "spawn --auto mouse --xname asd" },
+                    }, },
                 new() { type = "UIKeyShortcut", name="key_x", anchoredPosition = new(137*2, -184*2) },
                 new() { type = "UIKeyShortcut", name="key_c", anchoredPosition = new(173*2, -184*2) },
                 new() { type = "UIKeyShortcut", name="key_v", anchoredPosition = new(209*2, -184*2) },

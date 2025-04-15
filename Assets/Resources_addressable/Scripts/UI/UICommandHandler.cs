@@ -24,11 +24,16 @@ public class UICommandHandler: BaseClass{
          *   toggleUI --useMousePos --type UIAttributeManager
          */
         string type = (string)args["type"];
-        Vector2 spawn_pos = (bool)args["useMousePos"] ? _InputSys._keyPos.mouse_pos_world : Vector2.zero;
-        spawn_pos.x = args.ContainsKey("x") ? argType.toFloat(args["x"]) : spawn_pos.x;
-        spawn_pos.y = args.ContainsKey("y") ? argType.toFloat(args["y"]) : spawn_pos.y;
         string name = args.ContainsKey("name") ? (string)args["name"] : "";
         UIBase ui = args.ContainsKey("asItsChild") ? _UISys._UIMonitor._get_UI((int)args["asItsChild"]) : null;
-        _UISys._UIDraw._toggle(type, name, spawn_pos, ui);
+        if (args.ContainsKey("useMousePos") || args.ContainsKey("x") || args.ContainsKey("y")){
+            Vector2 spawn_pos = args.ContainsKey("useMousePos") ? _InputSys._keyPos.mouse_pos_world : Camera.main.ScreenToWorldPoint(Vector2.zero);
+            spawn_pos.x = args.ContainsKey("x") ? argType.toFloat(args["x"]) : spawn_pos.x;
+            spawn_pos.y = args.ContainsKey("y") ? argType.toFloat(args["y"]) : spawn_pos.y;
+            _UISys._UIDraw._toggle(type, name, spawn_pos, ui);
+        }
+        else{
+            _UISys._UIDraw._toggle(type, name, parent:ui);
+        }
     }
 }

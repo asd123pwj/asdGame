@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public struct KeyPos{
     public Vector2 mouse_pos_world;
@@ -17,59 +15,34 @@ public struct KeyPos{
 public delegate bool _input_action(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus);
 
 public class InputSystem : BaseClass{
-    // ---------- System Tool ----------
-    // SystemManager _sys;
-    // ControlSystem _CtrlSys { get { return _sys._CtrlSys; } }
-    // GameConfigs _GCfg { get { return _sys._GCfg; } }
     // ---------- Sub Script ----------
-    InputSingle _InputSingle;
-    InputCombo _InputCombo;
-    // InputUI _InputUI;
-    InputStatus _InputStatus;
+    InputSingle InputSingle;
+    InputCombo InputCombo;
+    InputStatus InputStatus;
+    InputCommandRegister inputCommandRegister;
     // ---------- Status ----------
     public KeyPos _keyPos = new();
     public static bool _onEdit = false;
     public Dictionary<string, KeyInfo> _keyStatus = new();
 
-    // void Start(){
-    //     _sys = GameObject.Find("System").GetComponent<SystemManager>();
-    //     // _GCfg = _HierSearch._searchInit<GameConfigs>("System");
-    //     _sys._InputSys = this;
-    //     // _CtrlSys = _hierarchy_search._searchInit<ControlSystem>("System");
-
-    // }
-
     public override void _update(){
-        // if (_onEdit) Debug.Log("InputSystem is on edit.");
         update_keyPos();
-        _InputStatus._update();
-        _InputSingle._update(_keyPos, _InputStatus._keyStatus);
-        _InputCombo._update(_keyPos, _InputStatus._keyStatus);
-        // _InputUI._update(_keyPos, _InputStatus._keyStatus);
+        InputStatus._update();
+        InputSingle._update(_keyPos, InputStatus._keyStatus);
+        InputCombo._update(_keyPos, InputStatus._keyStatus);
 
-        // if (_InputStatus._keyStatus["Fire1"].isFirstDown){
-        //     Debug.Log("AAAAAAAAAAAA - " + Input.GetButtonDown("Fire1"));
-        // }
-        
-
-        // if (_InputStatus._keyStatus["Fire2"].isFirstDown){
-        //     _sys._ObjSys._down_fire2(_keyPos.mouse_pos_world);
-        //     // _sys._searchInit<ObjectSystem>("Object")._down_fire2(_keyPos.mouse_pos_world);
-        // }
-        
-        if (_InputStatus._keyStatus["Fire3"].isFirstDown){
+        if (InputStatus._keyStatus["Fire3"].isFirstDown){
             _sys._ObjSys._down_fire3(_keyPos.mouse_pos_world);
             // _sys._searchInit<ObjectSystem>("Object")._down_fire3(_keyPos.mouse_pos_world);
         }
     }
 
-    // void FixedUpdate(){
-    // }
 
     public override void _init(){
-        _InputSingle = new();
-        _InputCombo = new();
-        _InputStatus = new();
+        InputSingle = new();
+        InputCombo = new();
+        InputStatus = new();
+        inputCommandRegister = new();
         // _InputUI = new();
     }
 
@@ -85,13 +58,11 @@ public class InputSystem : BaseClass{
     }
 
     public void _register_action(string input_type, _input_action action, string trigger="isDown"){ 
-        _InputSingle._register_action(input_type, action, trigger); 
+        InputSingle._register_action(input_type, action, trigger); 
     }
     public void _register_action(List<string> input_type, _input_action action){ 
-        _InputCombo._register_action(input_type, action); 
+        InputCombo._register_action(input_type, action); 
     }
-    // public void _register_UI(string input_type, _input_action action, bool isNew=false){ _InputUI._register_UI(input_type, action, isNew); }
-
 
     public Vector3 get_mouse_pos(int type=1){
         switch (type){

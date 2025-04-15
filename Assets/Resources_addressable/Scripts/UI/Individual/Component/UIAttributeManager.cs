@@ -22,7 +22,7 @@ public class UIAttributeManagerInfo: UIScrollViewInfo{
 
     [JsonProperty("separatorSize", NullValueHandling = NullValueHandling.Ignore)] 
     private Vector2? _separatorSize;
-    private Vector2 _separatorSize_default { get => new(512, 8); }
+    private Vector2 _separatorSize_default { get => new(512, 4); }
     [JsonIgnore] public Vector2 separatorSize { get => _separatorSize ?? _separatorSize_default; set => _separatorSize = value; }
 
 }

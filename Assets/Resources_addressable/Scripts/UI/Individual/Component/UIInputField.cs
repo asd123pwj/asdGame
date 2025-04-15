@@ -12,7 +12,7 @@ public class UIInputFieldInfo: UIInfo{
 
     [JsonProperty("font", NullValueHandling = NullValueHandling.Ignore)]
     private string _font;
-    private string _font_default => "fusion_pixel";
+    private string _font_default => "fusion_pixel_12px_zh_hans";
     [JsonIgnore] public string font { get => _font ?? _font_default; set => _font = value; }
     
     [JsonProperty("placeholder", NullValueHandling = NullValueHandling.Ignore)]
@@ -22,22 +22,22 @@ public class UIInputFieldInfo: UIInfo{
     
     [JsonProperty("marginTop", NullValueHandling = NullValueHandling.Ignore)] 
     private int? _marginTop;
-    private int _marginTop_default => 4;
+    private int _marginTop_default => 6;
     [JsonIgnore] public int marginTop { get => _marginTop ?? _marginTop_default; set => _marginTop = value; }
 
     [JsonProperty("marginBottom", NullValueHandling = NullValueHandling.Ignore)]
     private int? _marginBottom;
-    private int _marginBottom_default => 4;
+    private int _marginBottom_default => 6;
     [JsonIgnore] public int marginBottom { get => _marginBottom ?? _marginBottom_default; set => _marginBottom = value; }
 
     [JsonProperty("marginLeft", NullValueHandling = NullValueHandling.Ignore)]
     private int? _marginLeft;
-    private int _marginLeft_default => 16;
+    private int _marginLeft_default => 12;
     [JsonIgnore] public int marginLeft { get => _marginLeft ?? _marginLeft_default; set => _marginLeft = value; }
 
     [JsonProperty("marginRight", NullValueHandling = NullValueHandling.Ignore)]
     private int? _marginRight;
-    private int _marginRight_default => 16;
+    private int _marginRight_default => 12;
     [JsonIgnore] public int marginRight { get => _marginRight ?? _marginRight_default; set => _marginRight = value; }
 
 }

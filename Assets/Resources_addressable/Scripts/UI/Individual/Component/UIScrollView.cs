@@ -73,6 +73,18 @@ public class UIScrollViewInfo: UIInfo{
     [JsonProperty("items", NullValueHandling = NullValueHandling.Ignore)]
     private List<UIInfo> _items; 
     [JsonIgnore] public List<UIInfo> items { get => _items; set => _items = value; }
+
+    
+    [JsonProperty("scrollbarHandleBackground", NullValueHandling = NullValueHandling.Ignore)]
+    private string _scrollbarHandleBackground;
+    private string _scrollbarHandleBackground_default => "ui_RoundedIcon_8_Gray";
+    [JsonIgnore] public string scrollbarHandleBackground { get => _scrollbarHandleBackground ?? _scrollbarHandleBackground_default; set => _scrollbarHandleBackground = value; }
+
+    [JsonProperty("scrollbarBackground", NullValueHandling = NullValueHandling.Ignore)]
+    private string _scrollbarBackground;
+    private string _scrollbarBackground_default => "ui_RoundedIcon_8";
+    [JsonIgnore] public string scrollbarBackground { get => _scrollbarBackground ?? _scrollbarBackground_default; set => _scrollbarBackground = value; }
+
 }
 
 public class UIScrollView: UIBase{
@@ -105,12 +117,7 @@ public class UIScrollView: UIBase{
     }
 
     public override void _init_begin(){
-        Viewport = _self.transform.Find("Viewport").gameObject;
-        Content = Viewport.transform.Find("Content").gameObject;
-        Scrollbar_Horizontal = _self.transform.Find("Scrollbar Horizontal").gameObject;
-        Scrollbar_Vertical = _self.transform.Find("Scrollbar Vertical").gameObject;
-        // grid = Content.GetComponent<GridLayoutGroup>();
-        content_rt = Content.GetComponent<RectTransform>();
+        _init_Child();
     }
 
     public override void _init_done(){
@@ -127,6 +134,21 @@ public class UIScrollView: UIBase{
 
     public override void _update(){
         place_items().Forget();
+    }
+
+    void _init_Child(){
+        Viewport = _self.transform.Find("Viewport").gameObject;
+        Content = Viewport.transform.Find("Content").gameObject;
+
+        Scrollbar_Horizontal = _self.transform.Find("Scrollbar Horizontal").gameObject;
+        Scrollbar_Vertical = _self.transform.Find("Scrollbar Vertical").gameObject;
+        Scrollbar_Horizontal.GetComponent<Image>().sprite = _MatSys._spr._get_sprite(_info.scrollbarBackground);
+        Scrollbar_Horizontal.transform.Find("Sliding Area/Handle").GetComponent<Image>().sprite = _MatSys._spr._get_sprite(_info.scrollbarHandleBackground);
+        Scrollbar_Vertical.GetComponent<Image>().sprite = _MatSys._spr._get_sprite(_info.scrollbarBackground);
+        Scrollbar_Vertical.transform.Find("Sliding Area/Handle").GetComponent<Image>().sprite = _MatSys._spr._get_sprite(_info.scrollbarHandleBackground);
+
+        // grid = Content.GetComponent<GridLayoutGroup>();
+        content_rt = Content.GetComponent<RectTransform>();
     }
 
     bool _init_item(){

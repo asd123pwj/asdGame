@@ -1,9 +1,13 @@
 {
     "version": "0.0.1",
     "items":{
-        "fusion_pixel":{
+        "fusion_pixel_10px_zh_hans":{
             "font": "Font_fusion-pixel-10px-monospaced-zh_hans",
             "fontTMP": "Font_fusion-pixel-10px-monospaced-zh_hans_SDF"
+        },
+        "fusion_pixel_12px_zh_hans":{
+            "font": "Font_fusion-pixel-12px-monospaced-zh_hans",
+            "fontTMP": "Font_fusion-pixel-12px-monospaced-zh_hans_SDF"
         }
     }
 }
