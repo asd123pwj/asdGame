@@ -75,7 +75,7 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("w", "");
         keyName2Command.Add("x", "UIToggle --type UIKeyboardShortcut");
         keyName2Command.Add("y", "");
-        keyName2Command.Add("z", "");
+        keyName2Command.Add("z", "spawn --useMousePos --type asd");
 
         keyName2Command.Add("`", "UIToggle --type UICommandWindow");
         keyName2Command.Add("-", "");

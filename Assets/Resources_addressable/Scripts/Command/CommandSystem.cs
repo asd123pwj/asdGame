@@ -63,14 +63,20 @@ public class CommandParser{ // Thank Deepseek
 
     public static readonly Parser<Command> Command =
         from name in Identifier
-        from ws in Parse.WhiteSpace.AtLeastOnce()
-        from parameters in Parameter.DelimitedBy(Parse.WhiteSpace.AtLeastOnce())
+        // from ws in Parse.WhiteSpace.AtLeastOnce()
+        // from parameters in Parameter.DelimitedBy(Parse.WhiteSpace.AtLeastOnce())
+        from parameters in 
+            Parse.WhiteSpace.AtLeastOnce()  
+                .Then(_ => Parameter.DelimitedBy(Parse.WhiteSpace.AtLeastOnce()))
+            .Optional()                     
+            .Select(opt => opt.IsDefined ? opt.Get() : Enumerable.Empty<KeyValuePair<string, object>>())
         select new Command { 
             name = name, 
             args = parameters.ToDictionary(p => p.Key, p => p.Value) 
         };
 
     public static Command parse(string input){
+        if (input == "") return parse("NOCOMMAND");
         return Command.Parse(input);
     }
 }

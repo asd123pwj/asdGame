@@ -4,8 +4,8 @@ using UnityEngine;
 public class UICommandHandler: BaseClass{
     public void register(){
         CommandSystem._add("UIToggle", UIToggle);
-        CommandSystem._add("saveUI", saveUI);
-        CommandSystem._add("loadUI", loadUI);
+        CommandSystem._add("UISave", saveUI);
+        CommandSystem._add("UILoad", loadUI);
     }
 
     void UIToggle(Dictionary<string, object> args){

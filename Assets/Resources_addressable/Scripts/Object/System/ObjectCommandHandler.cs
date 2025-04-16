@@ -7,12 +7,17 @@ public class ObjectCommandHandler: BaseClass{
     }
 
     void spawn(Dictionary<string, object> args){
-        /*
-         * spawn -x 9.9 -y 9 -name asd
-         * spawn -auto mouse -name asd
+        /* spawn
+         * --type (string)          the type of object
+         * --[useMousePos] (flag)   use the mouse position 
+         * --[x] (float)            
+         * --[y] (float)            
+         * 
+         * spawn --x 9.9 --y 9 -type asd
+         * spawn --useMousePos -type asd
          */
         Vector2 spawn_pos;
-        if (args.ContainsKey("auto")){
+        if (args.ContainsKey("useMousePos")){
             spawn_pos = _InputSys._keyPos.mouse_pos_world;
         }
         else{
@@ -20,6 +25,6 @@ public class ObjectCommandHandler: BaseClass{
             float y = argType.toFloat(args["y"]);
             spawn_pos = new(x, y);
         }
-        _ObjSys._object_spawn._instantiate((string)args["name"], spawn_pos);
+        _ObjSys._object_spawn._instantiate((string)args["type"], spawn_pos);
     }
 }
