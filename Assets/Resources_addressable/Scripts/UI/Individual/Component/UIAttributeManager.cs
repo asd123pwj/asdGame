@@ -79,7 +79,8 @@ public class UIAttributeManager: UIScrollView{
         List<UIInfo> infos = new List<UIInfo>();
         string UI_type;
 
-        UI_type = "UIScrollText";
+        if (key == "COMMAND") UI_type = "UIScrollTextCommand";
+        else UI_type = "UIScrollText";
         UIScrollTextInfo info_text = (UIScrollTextInfo)UIClass._set_default(UI_type);
         info_text.minSize = _info.textMinSize;
         info_text.maxSize = _info.textMaxSize;

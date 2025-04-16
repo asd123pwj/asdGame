@@ -203,7 +203,9 @@ public class UIClassKeyboardShortcut{
                     attributes = new() {
                         {"COMMAND", "spawn --auto mouse --xname asd" },
                     }, },
-                new() { type = "UIKeyShortcut", name="key_x", anchoredPosition = new(137*2, -184*2) },
+                new() { type = "UIKeyShortcut", name="key_x", anchoredPosition = new(137*2, -184*2),                    attributes = new() {
+                        {"COMMAND", "FROM_INPUT --key x" },
+                    }, },
                 new() { type = "UIKeyShortcut", name="key_c", anchoredPosition = new(173*2, -184*2) },
                 new() { type = "UIKeyShortcut", name="key_v", anchoredPosition = new(209*2, -184*2) },
                 new() { type = "UIKeyShortcut", name="key_b", anchoredPosition = new(245*2, -184*2) },

@@ -94,7 +94,7 @@ public class UIScrollText: UIBase{
     GameObject Scrollbar_Vertical;
     GameObject Text;
     // ---------- Status ---------- //
-    UIBase owner;
+    public UIBase owner;
     // ---------- Config ---------- //
     public new UIScrollTextInfo _info {get => (UIScrollTextInfo)base._info; set => base._info = value; }
 
@@ -105,10 +105,10 @@ public class UIScrollText: UIBase{
     public override void _init_begin(){
         init_child();
         init_owner();
-        init_TMPText();
     }
 
     public override void _init_done(){
+        init_TMPText();
     }
 
     public override void _apply_UIShape(){
@@ -135,16 +135,20 @@ public class UIScrollText: UIBase{
 
     void init_TMPText(){
         TMP_Text.font = _MatSys._font._get_fontTMP(_info.font);
-        TMP_Text.text = _info.source == "" ? _info.text : owner._info.attributes[_info.source].get<string>();
         TMP_Text.fontSize = _info.fontSize;
         TMP_Text.color = _info.textColor;
         TMP_Text.margin = new(_info.marginLeft, _info.marginTop, _info.marginRight, _info.marginBottom);
+        get_text();
     }
 
     void init_owner(){
         if (!_info.messageID.StartsWith("OWNER_")) return;
         int owner_id = int.Parse(_info.messageID.Split('_')[1]);
         owner = _UISys._UIMonitor._get_UI(owner_id);
+    }
+
+    public virtual void get_text(){
+        TMP_Text.text = _info.source == "" ? _info.text : owner._info.attributes[_info.source].get<string>();
     }
 
     void adaptive_resize(){
@@ -172,7 +176,7 @@ public class UIScrollText: UIBase{
         else TMP_Text.text = text;
     }
 
-    void sync_with_source(DynamicValue value){
+    public virtual void sync_with_source(DynamicValue value){
         if (_info.source == "") return;
         owner._info.attributes[_info.source] = value;
         Debug.Log(owner._info.attributes[_info.source]);

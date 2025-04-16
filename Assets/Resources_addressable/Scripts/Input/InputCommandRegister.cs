@@ -15,13 +15,19 @@ public class InputCommandRegister : BaseClass{
 
     void init_key2Command(){
         keyName2Command.Add("o", "toggleUI --type UIKeyboardShortcut");
+        keyName2Command.Add("x", "toggleUI --type UIKeyboardShortcut");
     }
     void init_keyAction(){
         _GCfg._InputSys._register_action("o", _open_o, "isFirstDown");
+        _GCfg._InputSys._register_action("x", _open_x, "isFirstDown");
     }
 
     public bool _open_o(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
         _Msg._send(GameConfigs._sysCfg.Msg_command, keyName2Command["o"]);
+        return true;
+    }
+    public bool _open_x(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+        _Msg._send(GameConfigs._sysCfg.Msg_command, keyName2Command["x"]);
         return true;
     }
 

@@ -16,7 +16,7 @@ public class Command{
 public class CommandParser{ // Thank Deepseek
     static readonly Parser<string> Identifier =
         from first in Parse.Letter.Once()
-        from rest in Parse.LetterOrDigit.Many()
+        from rest in Parse.LetterOrDigit.Or(Parse.Char('_')).Many() // 0.22.3, support '_' in "FROM_INPUT"
         select new string(first.Concat(rest).ToArray());
 
     static readonly Parser<string> StringValue =

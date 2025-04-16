@@ -19,7 +19,8 @@ public class InputSystem : BaseClass{
     InputSingle InputSingle;
     InputCombo InputCombo;
     InputStatus InputStatus;
-    InputCommandRegister inputCommandRegister;
+    InputCommandRegister InputCmdReg;
+    InputCommandHandler handler;
     // ---------- Status ----------
     public KeyPos _keyPos = new();
     public static bool _onEdit = false;
@@ -42,7 +43,9 @@ public class InputSystem : BaseClass{
         InputSingle = new();
         InputCombo = new();
         InputStatus = new();
-        inputCommandRegister = new();
+        InputCmdReg = new();
+        handler = new();
+        handler.register();
         // _InputUI = new();
     }
 
