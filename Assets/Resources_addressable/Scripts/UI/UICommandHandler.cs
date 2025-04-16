@@ -4,6 +4,8 @@ using UnityEngine;
 public class UICommandHandler: BaseClass{
     public void register(){
         CommandSystem._add("toggleUI", toggleUI);
+        CommandSystem._add("saveUI", saveUI);
+        CommandSystem._add("loadUI", loadUI);
     }
 
     void toggleUI(Dictionary<string, object> args){
@@ -36,4 +38,14 @@ public class UICommandHandler: BaseClass{
             _UISys._UIDraw._toggle(type, name, parent:ui);
         }
     }
+
+    void saveUI(Dictionary<string, object> args){
+        _UISys._UISL._save_UI();
+    }
+
+    void loadUI(Dictionary<string, object> args){
+        _UISys._UISL._load_UIs();
+    }
+
+    
 }
