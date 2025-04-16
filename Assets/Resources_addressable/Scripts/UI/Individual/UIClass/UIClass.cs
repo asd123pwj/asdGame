@@ -18,6 +18,7 @@ public class UIClass{
         new UIClassImage();
         new UIClassRightMenu();
         new UIClassContainer();
+        new UIClassInteract();
 
         new UIClassAttributeManager();
 

@@ -28,9 +28,12 @@ public class UIClassImage{
             type="UIHighlight_a0.5",
             background_key="p5_a0.5", 
             sizeDelta = new(16, 16), 
-            interactions = new List<string>() {
-                // "UISetTop",
-            },
+        });
+        
+        UIClass._add("UIOpenChangeTriggerMenu", new (){
+            type="UIHighlight_a0.5",
+            background_key="ui_RoundedIcon_8", PixelsPerUnitMultiplier=1, 
+
         });
         
     

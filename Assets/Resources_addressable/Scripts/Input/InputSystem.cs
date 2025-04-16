@@ -60,8 +60,8 @@ public class InputSystem : BaseClass{
         _keyPos.y_dir = Input.GetAxisRaw("Vertical");
     }
 
-    public void _register_action(string input_type, _input_action action, string trigger="isDown"){ 
-        InputSingle._register_action(input_type, action, trigger); 
+    public void _register_action(string input_type, _input_action action, string trigger="isDown", bool isReplaceTrigger=false){ 
+        InputSingle._register_action(input_type, action, trigger, isReplaceTrigger); 
     }
     public void _register_action(List<string> input_type, _input_action action){ 
         InputCombo._register_action(input_type, action); 

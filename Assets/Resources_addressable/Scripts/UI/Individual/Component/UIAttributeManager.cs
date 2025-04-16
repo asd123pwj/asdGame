@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 public class UIAttributeManagerInfo: UIScrollViewInfo{
     
@@ -19,6 +20,11 @@ public class UIAttributeManagerInfo: UIScrollViewInfo{
     private Vector2? _inputTextSize;
     private Vector2 _inputTextSize_default { get => new(512, 32); }
     [JsonIgnore] public Vector2 inputTextSize { get => _inputTextSize ?? _inputTextSize_default; set => _inputTextSize = value; }
+
+    [JsonProperty("ButtonSize", NullValueHandling = NullValueHandling.Ignore)] 
+    private Vector2? _buttonSize;
+    private Vector2 _buttonSize_default { get => new(128, 32); }
+    [JsonIgnore] public Vector2 buttonSize { get => _buttonSize ?? _buttonSize_default; set => _buttonSize = value; }
 
     [JsonProperty("separatorSize", NullValueHandling = NullValueHandling.Ignore)] 
     private Vector2? _separatorSize;
@@ -47,7 +53,8 @@ public class UIAttributeManager: UIScrollView{
         foreach (string key in owner._info.attributes.Keys){
             Type type = owner._info.attributes[key].get().GetType();
 
-            if (type == typeof(string)) editor_infos = _get_editorString(key);
+            if (key == "COMMAND") editor_infos = _get_editorCOMMAND(key);
+            else if (type == typeof(string)) editor_infos = _get_editorString(key);
             else Debug.Log("UIAttributeManager not support type: " + key + " " + type);
 
             editors_infos.Add(_get_editor_title(key));
@@ -79,8 +86,7 @@ public class UIAttributeManager: UIScrollView{
         List<UIInfo> infos = new List<UIInfo>();
         string UI_type;
 
-        if (key == "COMMAND") UI_type = "UIScrollTextCommand";
-        else UI_type = "UIScrollText";
+        UI_type = "UIScrollText";
         UIScrollTextInfo info_text = (UIScrollTextInfo)UIClass._set_default(UI_type);
         info_text.minSize = _info.textMinSize;
         info_text.maxSize = _info.textMaxSize;
@@ -97,6 +103,57 @@ public class UIAttributeManager: UIScrollView{
         return infos;
     }
 
+    List<UIInfo> _get_editorCOMMAND(string key){
+        List<UIInfo> infos = new List<UIInfo>();
+        string UI_type;
+
+        string command = owner._info.attributes[key].get<string>();
+        bool isFromInputSystem = command.StartsWith("FROM_INPUT");
+
+        if (isFromInputSystem){
+            infos.Add(_get_editor_title(key + "-command"));
+        }
+
+        UI_type = "UIScrollTextCommand";
+        UIScrollTextInfo info_text = (UIScrollTextInfo)UIClass._set_default(UI_type);
+        info_text.minSize = _info.textMinSize;
+        info_text.maxSize = _info.textMaxSize;
+        info_text.messageID = $"OWNER_{owner._runtimeID}_{key}";
+        info_text.source = key;
+        infos.Add(info_text);
+        
+        UI_type = "UIInputField";
+        UIInputFieldInfo info_input = (UIInputFieldInfo)UIClass._set_default(UI_type);
+        info_input.sizeDelta = _info.inputTextSize;
+        info_input.messageID = $"OWNER_{owner._runtimeID}_{key}";
+        infos.Add(info_input);
+
+        if (isFromInputSystem){
+            string keyName = Regex.Match(command, @"--key\s+(\S+)").Groups[1].Value;
+            infos.Add(_get_editor_title(key + "-trigger"));
+            UI_type = "UIExecuteCommandFromAttribute";
+            UIScrollTextInfo info_buttom = (UIScrollTextInfo)UIClass._set_default(UI_type);
+            info_buttom.minSize = info_buttom.maxSize = _info.buttonSize;
+            info_buttom.text = "isDown";
+            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key {keyName} --trigger isDown" } };
+            infos.Add(info_buttom.Copy());
+            
+            info_buttom.text = "isUp";
+            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key {keyName} --trigger isUp" } };
+            infos.Add(info_buttom.Copy());
+
+            info_buttom.text = "isFirstDown";
+            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key {keyName} --trigger isFirstDown" } };
+            infos.Add(info_buttom.Copy());
+
+            info_buttom.text = "isFirstUp";
+            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key {keyName} --trigger isFirstUp" } };
+            infos.Add(info_buttom.Copy());
+
+        }
+
+        return infos;
+    }
 
     public override void _update_UIMonitor(GameObject parent){
         remove_old_attributeManager();

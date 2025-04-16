@@ -52,7 +52,7 @@ public class UIClassKeyboardShortcut{
             // base_type="UIAttributeManager",
             background_key="p5", 
             // attributes = new() {
-            //     {"command", "toggleUI --useMousePos --type UIAttributeManager" }
+            //     {"command", "UIToggle --useMousePos --type UIAttributeManager" }
             // },
             interactions = new List<string>() {
                 // "UISetTop",
@@ -63,19 +63,20 @@ public class UIClassKeyboardShortcut{
             // messageID = "UIExecuteCommandFromAttribute"
         });
 
-        UIClass._add("UIExecuteCommandFromAttribute", new (){
-            type="UIExecuteCommandFromAttribute",
-            background_key="p5", 
-            attributes = new() {
-                {"COMMAND", "toggleUI --useMousePos --type UIAttributeManager" },
-            },
-            interactions = new List<string>() {
-                // "UISetTop",
-                "UIExecuteCommandFromAttribute",
-                "UIScrollPass2Parent"
-            },
-            // messageID = "UIExecuteCommandFromAttribute"
-        });
+        // UIClass._add("UIExecuteCommandFromAttribute", new (){
+        //     type="UIExecuteCommandFromAttribute",
+        //     background_key="p5", 
+        //     attributes = new() {
+        //         {"COMMAND", "UIToggle --useMousePos --type UIAttributeManager" },
+        //     },
+        //     interactions = new List<string>() {
+        //         // "UISetTop",
+        //         "UIExecuteCommandFromAttribute",
+        //         "UIScrollPass2Parent"
+        //     },
+        //     // messageID = "UIExecuteCommandFromAttribute"
+        // });
+
 
         UIClass._add("UIExecuteCommandFromMessage", new (){
             type="UIExecuteCommandFromMessage",
@@ -95,7 +96,7 @@ public class UIClassKeyboardShortcut{
             sizeDelta = new(32*2, 32*2), 
             rightMenu_name = "UIRightMenuInteractionManager_KeyShortcut",
             attributes = new() {
-                {"COMMAND", "toggleUI --useMousePos --type UIAttributeManager" },
+                {"COMMAND", "UIToggle --useMousePos --type UIAttributeManager" },
                 {"Test一下多个mingling能不can正常place以及分隔符有没有正常显示", "命令名称 --参数名称 参数值 --命令名称能放多长呢 想多长就多长 --test一下长文本 这有13579个字 --123那有七个字的命令啊 abcdefghijklmn" }
             },
             interactions = new List<string>() {

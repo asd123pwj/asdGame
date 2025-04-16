@@ -3,13 +3,13 @@ using UnityEngine;
 
 public class UICommandHandler: BaseClass{
     public void register(){
-        CommandSystem._add("toggleUI", toggleUI);
+        CommandSystem._add("UIToggle", UIToggle);
         CommandSystem._add("saveUI", saveUI);
         CommandSystem._add("loadUI", loadUI);
     }
 
-    void toggleUI(Dictionary<string, object> args){
-        /* toggleUI                 open a closed UI or close an opened UI
+    void UIToggle(Dictionary<string, object> args){
+        /* UIToggle                 open a closed UI or close an opened UI
          * --type (string)          the UIClass.type of UI
          * --[useMousePos] (flag)   use the mouse position as the UI position
          * --[x] (float)            the x position of the UI, world space
@@ -18,12 +18,12 @@ public class UICommandHandler: BaseClass{
          * --[asItsChild] (int)     the UI runtimeID of the parent UI, UIBase._runtimeID
          * 
          * Example:
-         *   toggleUI --x 99.9 --y 99 --type UIKeyboardShortcut --name CustomName --asItsChild xxxNoUseInManualxxx
-         *   toggleUI --type UIKeyboardShortcut
-         *   toggleUI --useMousePos --type UIKeyboardShortcut
-         *   toggleUI --useMousePos --x 99.9 --type UIKeyboardShortcut
+         *   UIToggle --x 99.9 --y 99 --type UIKeyboardShortcut --name CustomName --asItsChild xxxNoUseInManualxxx
+         *   UIToggle --type UIKeyboardShortcut
+         *   UIToggle --useMousePos --type UIKeyboardShortcut
+         *   UIToggle --useMousePos --x 99.9 --type UIKeyboardShortcut
          *
-         *   toggleUI --useMousePos --type UIAttributeManager
+         *   UIToggle --useMousePos --type UIAttributeManager
          */
         string type = (string)args["type"];
         string name = args.ContainsKey("name") ? (string)args["name"] : "";

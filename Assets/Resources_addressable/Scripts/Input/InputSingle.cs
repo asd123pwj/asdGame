@@ -44,10 +44,14 @@ public class InputSingle{
         }
     }
 
-    public void _register_action(string input_type, _input_action action, string trigger){
-        if (!singleActions.ContainsKey(input_type)) 
-            singleActions.Add(input_type, new(input_type, action, trigger));
-        else 
-            singleActions[input_type] = new(input_type, action, trigger);
+    public void _register_action(string keyName, _input_action action, string trigger, bool isReplaceTrigger = false){
+        if (!singleActions.ContainsKey(keyName)) 
+            singleActions.Add(keyName, new(keyName, action, trigger));
+        else {
+            if (isReplaceTrigger) 
+                singleActions[keyName]._trigger = trigger;
+            else 
+                singleActions[keyName] = new(keyName, action, trigger);
+        }
     }
 }

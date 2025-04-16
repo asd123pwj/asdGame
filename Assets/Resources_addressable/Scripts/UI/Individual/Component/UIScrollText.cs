@@ -35,7 +35,7 @@ public class UIScrollTextInfo: UIInfo{
 
     [JsonProperty("marginBottom", NullValueHandling = NullValueHandling.Ignore)]
     private int? _marginBottom;
-    private int _marginBottom_default => 6;
+    private int _marginBottom_default => 4;
     [JsonIgnore] public int marginBottom { get => _marginBottom ?? _marginBottom_default; set => _marginBottom = value; }
 
     [JsonProperty("marginLeft", NullValueHandling = NullValueHandling.Ignore)]
