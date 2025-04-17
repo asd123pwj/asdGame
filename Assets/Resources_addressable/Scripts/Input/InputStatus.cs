@@ -12,7 +12,7 @@ public struct KeyInfo{
 
 public class InputStatus{
     // ---------- Status ----------
-    public Dictionary<string, KeyInfo> _keyStatus = new();
+    public static Dictionary<string, KeyInfo> _keyStatus = new();
     // ---------- Config ----------
     List<string> _input_key = new() { 
         "Fire1", "Fire2", "Fire3", "Jump", "Shift",
@@ -27,10 +27,11 @@ public class InputStatus{
         "Numpad /", "Numpad *", "Numpad -", "Numpad +", 
         "left shift", "right shift", "left ctrl", "right ctrl", "left alt", "right alt",
         "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12",
-        "escape", "tab", "caps lock", "print screen", "scroll lock", "pause", "insert", "delete", "home", "end", "page up", "page down"
+        "escape", "tab", "caps lock", "print screen", "scroll lock", "pause", "insert", "delete", "home", "end", "page up", "page down",
+        "up", "down", "left", "right",
     };
     
-    List<string> _input_key_availableOnEdit = new() { 
+    public static List<string> _input_key_availableOnEdit = new() { 
         "Save", "Load",
         "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12",
         "escape"
@@ -68,7 +69,6 @@ public class InputStatus{
 
     void update_keyStatus(){
         foreach (string key in _input_key){
-            if (InputSystem._onEdit && !_input_key_availableOnEdit.Contains(key)) continue;
             if (key == "Up") set_keyStatus(key, Input.GetAxisRaw("Vertical") > 0); 
             else if (key == "Down") set_keyStatus(key, Input.GetAxisRaw("Vertical") < 0); 
             else if (key == "Left") set_keyStatus(key, Input.GetAxisRaw("Horizontal") < 0); 

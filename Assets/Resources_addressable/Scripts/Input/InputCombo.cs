@@ -26,6 +26,12 @@ class ComboAction{
     string get_next_key(){ return combo_sequence[combo_passed]; }
 
     public bool _act(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+        if (InputSystem._onEdit){
+            for (int i = 0; i < combo_sequence.Count; i++){
+                if (!InputStatus._input_key_availableOnEdit.Contains(combo_sequence[i])) return false;
+            }
+        }
+
         if (check_combo(keyStatus)) return action(keyPos, keyStatus); 
         else return false;
     }

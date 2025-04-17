@@ -9,6 +9,9 @@
         },
         "ScrollText":{
             "path": "UIPfb_ScrollText"
+        },
+        "ScrollInput":{
+            "path": "UIPfb_ScrollInput"
         }
 
         

@@ -17,6 +17,7 @@ class SingleAction{
     }
 
     public bool _act(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+        if (InputSystem._onEdit && !InputStatus._input_key_availableOnEdit.Contains(_single_key)) return false;
         if (check_key(keyStatus)) return _action(keyPos, keyStatus);
         else return false;
     }

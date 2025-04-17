@@ -18,7 +18,7 @@ public class ObjectCommandHandler: BaseClass{
          */
         Vector2 spawn_pos;
         if (args.ContainsKey("useMousePos")){
-            spawn_pos = _InputSys._keyPos.mouse_pos_world;
+            spawn_pos = InputSystem._keyPos.mouse_pos_world;
         }
         else{
             float x = argType.toFloat(args["x"]);

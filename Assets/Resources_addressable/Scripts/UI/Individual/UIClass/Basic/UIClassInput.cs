@@ -18,6 +18,20 @@ public class UIClassInput{
             }
         });
 
+        // UIClass._add("UIScrollInput", new UIScrollInputInfo(){
+        // // readonly public static UIInputFieldInfo UIInputField = new() {
+        //     type = "UIScrollInput",
+        //     base_type = "UIScrollInput",
+        //     prefab_key = "ScrollInput",
+        //     background_key = "ui_RoundedIcon_8", PixelsPerUnitMultiplier=1, 
+        //     sizeDelta = new (400, 50),
+        //     // enableNavigation = true,
+        //     interactions = new List<string>() {
+        //         // "UISetTop",
+        //         "UISubmit",
+        //         // "UIDrag",
+        //     }
+        // });
         
     }
 }

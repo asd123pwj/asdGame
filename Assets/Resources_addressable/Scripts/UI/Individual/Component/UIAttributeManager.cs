@@ -95,8 +95,12 @@ public class UIAttributeManager: UIScrollView{
         infos.Add(info_text);
         
         UI_type = "UIInputField";
+        // UI_type = "UIScrollInput";
         UIInputFieldInfo info_input = (UIInputFieldInfo)UIClass._set_default(UI_type);
-        info_input.sizeDelta = _info.inputTextSize;
+        // UIScrollInputInfo info_input = (UIScrollInputInfo)UIClass._set_default(UI_type);
+        info_input.minSize = _info.textMinSize;
+        info_input.maxSize = _info.textMaxSize;
+        // info_input.sizeDelta = _info.inputTextSize;
         info_input.messageID = $"OWNER_{owner._runtimeID}_{key}";
         infos.Add(info_input);
 
@@ -123,8 +127,12 @@ public class UIAttributeManager: UIScrollView{
         infos.Add(info_text);
         
         UI_type = "UIInputField";
+        // UI_type = "UIScrollInput";
         UIInputFieldInfo info_input = (UIInputFieldInfo)UIClass._set_default(UI_type);
-        info_input.sizeDelta = _info.inputTextSize;
+        // UIScrollInputInfo info_input = (UIScrollInputInfo)UIClass._set_default(UI_type);
+        info_input.minSize = _info.textMinSize;
+        info_input.maxSize = _info.textMaxSize;
+        // info_input.sizeDelta = _info.inputTextSize;
         info_input.messageID = $"OWNER_{owner._runtimeID}_{key}";
         infos.Add(info_input);
 

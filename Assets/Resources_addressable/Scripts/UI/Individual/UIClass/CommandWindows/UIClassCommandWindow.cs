@@ -12,7 +12,8 @@ public class UIClassCommandWindow{
             subUIs = new(){
                 new() { type = "UICloseButtom", sizeDelta = new(25, 25)},
                 new() { type = "UIResizeButtom", sizeDelta = new(25, 25)},
-                new UIInputFieldInfo() { type = "UIInputField", sizeDelta = new(800-25-2*2, 25-2*2),
+                new UIInputFieldInfo() { type = "UIInputField", //sizeDelta = new(800-25-2*2, 25-2*2),
+                        minSize = new(800-25-2*2, 25-2*2), maxSize = new(800-25-2*2, 25-2*2+60), 
                         pivot = new(0, 0), anchorMin = new(0, 0), anchorMax = new(0, 0),
                         anchoredPosition = new(2, 2), PixelsPerUnitMultiplier=4,
                         messageID = "SYSTEM_COMMAND",

@@ -156,7 +156,6 @@ public class UIScrollText: UIBase{
             Mathf.Clamp(TMP_Text.preferredWidth, _info.minSize.x, _info.maxSize.x),
             Mathf.Clamp(TMP_Text.preferredHeight, _info.minSize.y, _info.maxSize.y)
         );
-        Debug.Log("TMP_Text.preferredHeight: " + TMP_Text.preferredHeight);
     }
 
     public override void _register_receiver(){

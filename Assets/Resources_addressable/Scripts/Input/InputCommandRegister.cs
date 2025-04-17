@@ -104,7 +104,7 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("right alt", "");
 
         keyName2Command.Add("escape", "");
-        keyName2Command.Add("tab", "");
+        keyName2Command.Add("tab", "UIClose");
         keyName2Command.Add("caps lock", "");
         keyName2Command.Add("print screen", "");
         keyName2Command.Add("scroll lock", "");
@@ -115,6 +115,11 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("end", "");
         keyName2Command.Add("page up", "");
         keyName2Command.Add("page down", "");
+        
+        keyName2Command.Add("up", "");
+        keyName2Command.Add("down", "");
+        keyName2Command.Add("left", "");
+        keyName2Command.Add("right", "");
 
 
 

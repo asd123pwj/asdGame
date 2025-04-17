@@ -22,7 +22,7 @@ public class UIInputFieldInfo: UIInfo{
     
     [JsonProperty("marginTop", NullValueHandling = NullValueHandling.Ignore)] 
     private int? _marginTop;
-    private int _marginTop_default => 6;
+    private int _marginTop_default => 4;
     [JsonIgnore] public int marginTop { get => _marginTop ?? _marginTop_default; set => _marginTop = value; }
 
     [JsonProperty("marginBottom", NullValueHandling = NullValueHandling.Ignore)]
@@ -39,6 +39,16 @@ public class UIInputFieldInfo: UIInfo{
     private int? _marginRight;
     private int _marginRight_default => 12;
     [JsonIgnore] public int marginRight { get => _marginRight ?? _marginRight_default; set => _marginRight = value; }
+
+    [JsonProperty("maxSize", NullValueHandling = NullValueHandling.Ignore)] 
+    private Vector2? _maxSize;
+    private Vector2 _maxSize_default { get => new (640, 640); }
+    [JsonIgnore] public Vector2 maxSize { get => _maxSize ?? _maxSize_default; set => _maxSize = value; }
+
+    [JsonProperty("minSize", NullValueHandling = NullValueHandling.Ignore)]
+    private Vector2? _minSize;
+    private Vector2 _minSize_default { get => new (64, 64); }
+    [JsonIgnore] public Vector2 minSize { get => _minSize ?? _minSize_default; set => _minSize = value; }
 
 }
 
@@ -66,6 +76,18 @@ public class UIInputField: UIBase{
         init_TMPText();
     }
 
+    public override void _apply_UIShape(){
+        base._apply_UIShape();
+        adaptive_resize();
+    }
+    
+    void adaptive_resize(){
+        _rt_self.sizeDelta = new Vector2(
+            Mathf.Clamp(inputField.preferredWidth, _info.minSize.x, _info.maxSize.x),
+            Mathf.Clamp(inputField.preferredHeight, _info.minSize.y, _info.maxSize.y)
+        );
+    }
+
     void init_child(){
         TextArea = _self.transform.Find("Text Area").gameObject;
         Placeholder = TextArea.transform.Find("Placeholder").gameObject;
@@ -78,6 +100,7 @@ public class UIInputField: UIBase{
         inputField.onSubmit.AddListener(onSubmit);
         inputField.onEndEdit.AddListener(onEditEnd);
         inputField.onSelect.AddListener(onSelect);
+        inputField.onValueChanged.AddListener(onValueChange);
     }
 
     void init_TMPText(){
@@ -88,12 +111,18 @@ public class UIInputField: UIBase{
         TMPText_placeholder.fontSize = _info.fontSize;
         TMPText_placeholder.margin = new(_info.marginLeft, _info.marginTop, _info.marginRight, _info.marginBottom);
         TMPText_placeholder.text = _info.placeholder;
+        adaptive_resize();
     }
 
+
+    void onValueChange(string _){
+        adaptive_resize();
+    }
     void onSelect(string _){
         InputSystem._onEdit = true;
     }
     void onEditEnd(string _){
+        Debug.Log("onEditEnd");
         InputSystem._onEdit = false;
     }
     async UniTaskVoid remove_focus_and_return(){
@@ -102,9 +131,25 @@ public class UIInputField: UIBase{
         inputField.interactable = true;   
         EventSystem.current.SetSelectedGameObject(_self);
     }
-    void onSubmit(string _) {
+    async UniTaskVoid newline(){
+        int caretPos = inputField.caretPosition;
+        string before = inputField.text[..caretPos];
+        string after = inputField.text[caretPos..];
+        inputField.text = before + "\n" + after;
+        await UniTask.DelayFrame(1);
+        inputField.caretPosition++;
+        inputField.selectionAnchorPosition++;
+        inputField.selectionFocusPosition++;
         remove_focus_and_return().Forget();
-        _Event._action_submit(new(EventSystem.current), false);
+    }
+    void onSubmit(string _) {
+        if (InputSystem._keyStatus["left shift"].isDown || InputSystem._keyStatus["right shift"].isDown){
+            newline().Forget();
+        }
+        else{
+            remove_focus_and_return().Forget();
+            _Event._action_submit(new(EventSystem.current), false);
+        }
     }
 
 

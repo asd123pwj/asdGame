@@ -22,9 +22,10 @@ public class InputSystem : BaseClass{
     InputCommandRegister InputCmdReg;
     InputCommandHandler handler;
     // ---------- Status ----------
-    public KeyPos _keyPos = new();
+    public static KeyPos _keyPos = new();
+    public static Dictionary<string, KeyInfo> _keyStatus => InputStatus._keyStatus;
     public static bool _onEdit = false;
-    public Dictionary<string, KeyInfo> _keyStatus = new();
+    // public Dictionary<string, KeyInfo> _keyStatus = new();
 
     public override void _update(){
         update_keyPos();
