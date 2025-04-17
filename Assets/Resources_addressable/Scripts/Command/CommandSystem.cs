@@ -91,7 +91,19 @@ public class CommandSystem: BaseClass{
     }
     
     public static void _execute(DynamicValue command){
-        Command cmd = CommandParser.parse(command.get<string>());
+        string commands = command.get<string>();
+        if (commands.StartsWith("FROM_INPUT")) {
+            _execute_single(commands);
+        }
+        else {
+            foreach (string cmd in commands.Split('\v')){
+                _execute_single(cmd);
+            }
+        }
+    }
+
+    static void _execute_single(string command){
+        Command cmd = CommandParser.parse(command);
         if (handlers.ContainsKey(cmd.name)){
             handlers[cmd.name](cmd.args);
         }

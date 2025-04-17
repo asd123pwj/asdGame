@@ -131,25 +131,12 @@ public class UIInputField: UIBase{
         inputField.interactable = true;   
         EventSystem.current.SetSelectedGameObject(_self);
     }
-    async UniTaskVoid newline(){
-        int caretPos = inputField.caretPosition;
-        string before = inputField.text[..caretPos];
-        string after = inputField.text[caretPos..];
-        inputField.text = before + "\n" + after;
-        await UniTask.DelayFrame(1);
-        inputField.caretPosition++;
-        inputField.selectionAnchorPosition++;
-        inputField.selectionFocusPosition++;
-        remove_focus_and_return().Forget();
-    }
     void onSubmit(string _) {
         if (InputSystem._keyStatus["left shift"].isDown || InputSystem._keyStatus["right shift"].isDown){
-            newline().Forget();
+            return;
         }
-        else{
-            remove_focus_and_return().Forget();
-            _Event._action_submit(new(EventSystem.current), false);
-        }
+        remove_focus_and_return().Forget();
+        _Event._action_submit(new(EventSystem.current), false);
     }
 
 
