@@ -16,6 +16,7 @@ public class ObjectAbilMoveJump: ObjectAbilMoveBase{
 
 
     protected override void _act_move(KeyPos input) { 
-        _act_force(new(0, input.y_dir * _Config._move_force.y), true);
+        // _act_force(new(0, input.y_dir * _Config._move_force.y), true);
+        _act_force(new(0, input.y * _Config._move_force.y), true);
     }
 }

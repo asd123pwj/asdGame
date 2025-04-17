@@ -37,4 +37,5 @@ public class InputCommandHandler: BaseClass{
             _Msg._send(GameConfigs._sysCfg.Msg_command, InputCommandRegister.keyName2Command[key]);
         }
     }
+    
 }

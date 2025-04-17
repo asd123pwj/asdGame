@@ -8,8 +8,8 @@ public struct KeyPos{
     public Vector2 mouse_pos_screen_change;
     public float x;
     public float y;
-    public float x_dir;
-    public float y_dir;
+    // public float x_dir;
+    // public float y_dir;
 }
 
 public delegate bool _input_action(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus);
@@ -33,14 +33,11 @@ public class InputSystem : BaseClass{
         InputSingle._update(_keyPos, InputStatus._keyStatus);
         InputCombo._update(_keyPos, InputStatus._keyStatus);
 
-        if (InputStatus._keyStatus["Fire3"].isFirstDown){
-            _sys._ObjSys._down_fire3(_keyPos.mouse_pos_world);
-            // _sys._searchInit<ObjectSystem>("Object")._down_fire3(_keyPos.mouse_pos_world);
-        }
     }
 
 
     public override void _init(){
+        priority = 0;
         InputSingle = new();
         InputCombo = new();
         InputStatus = new();
@@ -55,10 +52,14 @@ public class InputSystem : BaseClass{
         _keyPos.mouse_pos_screen_change = get_mouse_pos_2d(0) - _keyPos.mouse_pos_screen;
         _keyPos.mouse_pos_world = get_mouse_pos_2d();
         _keyPos.mouse_pos_screen = get_mouse_pos_2d(0);
-        _keyPos.x = Input.GetAxis("Horizontal");
-        _keyPos.y = Input.GetAxis("Vertical");
-        _keyPos.x_dir = Input.GetAxisRaw("Horizontal");
-        _keyPos.y_dir = Input.GetAxisRaw("Vertical");
+        _keyPos.x = 0;
+        _keyPos.y = 0;
+        // _keyPos.x_dir = 0;
+        // _keyPos.y_dir = 0;
+        // _keyPos.x = Input.GetAxis("Horizontal");
+        // _keyPos.y = Input.GetAxis("Vertical");
+        // _keyPos.x_dir = Input.GetAxisRaw("Horizontal");
+        // _keyPos.y_dir = Input.GetAxisRaw("Vertical");
     }
 
     public void _register_action(string input_type, _input_action action, string trigger="isDown", bool isReplaceTrigger=false){ 

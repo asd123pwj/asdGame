@@ -20,6 +20,7 @@ public class ObjectAbilMoveJumpWall: ObjectAbilMoveBase{
     }
 
     protected override void _act_move(KeyPos input) { 
-        _act_force(new(- input.x_dir * _Config._move_force.x, input.y_dir * _Config._move_force.y), true);
+        // _act_force(new(- input.x_dir * _Config._move_force.x, input.y_dir * _Config._move_force.y), true);
+        _act_force(new(- input.x * _Config._move_force.x, input.y * _Config._move_force.y), true);
     }
 }

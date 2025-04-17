@@ -25,6 +25,7 @@ public class ObjectSpawn{
         ObjectConfig Base = new(obj, MatSys._obj._get_info(name));
         GCfg._ObjSys._obj2base.Add(obj, Base);
         // obj.GetComponent<ObjectIndividual>()._info = MatSys._obj._get_info(name);
+        GCfg._ObjSys.player = Base;
     }
 
 }

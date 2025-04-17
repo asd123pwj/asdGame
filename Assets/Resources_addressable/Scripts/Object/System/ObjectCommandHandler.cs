@@ -27,4 +27,23 @@ public class ObjectCommandHandler: BaseClass{
         }
         _ObjSys._object_spawn._instantiate((string)args["type"], spawn_pos);
     }
+
+    void move(Dictionary<string, object> args){
+        /* move
+         */
+        KeyPos key_pos = InputSystem._keyPos;
+        if (args.ContainsKey("right")){
+            key_pos.x = 1;
+        }
+        else if (args.ContainsKey("left")){
+            key_pos.x = -1;
+        }
+        if (args.ContainsKey("up")){
+            key_pos.y = 1;
+        }
+        else if (args.ContainsKey("down")){
+            key_pos.y = -1;
+        }
+        // _ObjSys.player._move(key_pos);
+    }
 }

@@ -24,6 +24,7 @@ public class ObjectSystem: BaseClass{
     public ObjectSpawn _object_spawn;
     // ---------- Status ---------- //
     public Dictionary<GameObject, ObjectConfig> _obj2base = new();
+    public ObjectConfig player;
 
 
     public override void _init(){
@@ -32,9 +33,9 @@ public class ObjectSystem: BaseClass{
         _handler.register();
     }
     
-    public void _down_fire3(Vector2 mouse_pos){
-        _object_spawn._instantiate("asd", mouse_pos);
-    }
+    // public void _down_fire3(Vector2 mouse_pos){
+    //     _object_spawn._instantiate("asd", mouse_pos);
+    // }
 
     // public void _down_fire2(Vector2 mouse_pos){
     //     _object_spawn._instantiate("test ammo", mouse_pos);

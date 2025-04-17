@@ -20,6 +20,7 @@ public class BaseClass{
     // ---------- Config ----------
     // public virtual float _update_interval { get; set; } = 0;
     public float _update_interval = 0;
+    public int priority = 1;
     // public virtual int a  = 1;
     
     // public float _update_interval {get=> update_interval; set { update_interval = value; re_register_update(); } }
