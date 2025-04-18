@@ -124,6 +124,8 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("end", "");
         keyName2Command.Add("page up", "");
         keyName2Command.Add("page down", "");
+        // keyName2Command.Add("windows", "");
+        keyName2Command.Add("menu", "");
         
         keyName2Command.Add("up", "");
         keyName2Command.Add("down", "");
