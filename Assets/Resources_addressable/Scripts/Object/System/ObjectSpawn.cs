@@ -23,7 +23,8 @@ public class ObjectSpawn{
         obj = UnityEngine.Object.Instantiate(obj, position, Quaternion.identity);
         // obj.GetComponent<ObjectIndividual>()._info = _object_list._objects_info.objects[name];
         ObjectConfig Base = new(obj, MatSys._obj._get_info(name));
-        GCfg._ObjSys._obj2base.Add(obj, Base);
+        // GCfg._ObjSys._obj2base.Add(obj, Base);
+        // GCfg._ObjSys._runtimeID2base.Add(Base._runtimeID, Base);
         // obj.GetComponent<ObjectIndividual>()._info = MatSys._obj._get_info(name);
         GCfg._ObjSys.player = Base;
     }

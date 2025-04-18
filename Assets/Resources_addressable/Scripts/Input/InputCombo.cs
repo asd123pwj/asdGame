@@ -23,7 +23,25 @@ class ComboAction{
     void clear_input() { combo_passed = 0; last_input_time = 0;}
     bool check_full(){ return combo_passed == combo_sequence.Count; }
     bool check_deadline(){ return Time.time - last_input_time > interval; }
+    bool check_checkWithFirstDown() { 
+        if (combo_passed == 0) {
+            if (combo_sequence.Count == 1) 
+                return false; // single key
+            return combo_sequence[combo_passed] == combo_sequence[combo_passed + 1]; // avoid same key
+        }
+        else {
+            return combo_sequence[combo_passed] == combo_sequence[combo_passed - 1]; // avoid same key
+        }
+    }
     string get_next_key(){ return combo_sequence[combo_passed]; }
+    bool check_nextKeyDown(Dictionary<string, KeyInfo> keyStatus){
+        if (check_checkWithFirstDown()){
+            return keyStatus[get_next_key()].isFirstDown;
+        }
+        else{
+            return keyStatus[get_next_key()].isDown;
+        }
+    }
 
     public bool _act(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
         if (InputSystem._onEdit){
@@ -37,11 +55,10 @@ class ComboAction{
     }
 
     bool check_combo(Dictionary<string, KeyInfo> keyStatus){
-        if (keyStatus[get_next_key()].isFirstDown){
+        if (check_nextKeyDown(keyStatus)){
             if (check_deadline()) {
                 clear_input();
-                if (keyStatus[get_next_key()].isFirstDown) add_input();
-                return false;
+                if (check_nextKeyDown(keyStatus)) add_input();
             }
             else add_input();
             if (check_full()){

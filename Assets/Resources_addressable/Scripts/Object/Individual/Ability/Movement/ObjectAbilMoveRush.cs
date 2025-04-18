@@ -17,6 +17,6 @@ public class ObjectAbilMoveRush: ObjectAbilMoveBase{
 
     protected override void _act_move(KeyPos input) { 
         // _act_force(new(input.x_dir * _Config._move_force.x * 20, input.y_dir * _Config._move_force.y * 20), true);
-        _act_force(new(input.x * _Config._move_force.x * 20, input.y * _Config._move_force.y * 20), true);
+        _act_force(new(input.x * _Config._move_force.x * 20, input.y * _Config._move_force.y * 1), true);
     }
 }

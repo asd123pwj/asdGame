@@ -3,7 +3,9 @@ using UnityEngine;
 
 public class ObjectCommandHandler: BaseClass{
     public void register(){
-        CommandSystem._add("spawn", spawn);
+        CommandSystem._add(nameof(spawn), spawn);
+        CommandSystem._add(nameof(move), move);
+        CommandSystem._add(nameof(rush), rush);
     }
 
     void spawn(Dictionary<string, object> args){
@@ -32,18 +34,25 @@ public class ObjectCommandHandler: BaseClass{
         /* move
          */
         KeyPos key_pos = InputSystem._keyPos;
-        if (args.ContainsKey("right")){
-            key_pos.x = 1;
-        }
-        else if (args.ContainsKey("left")){
-            key_pos.x = -1;
-        }
-        if (args.ContainsKey("up")){
-            key_pos.y = 1;
-        }
-        else if (args.ContainsKey("down")){
-            key_pos.y = -1;
-        }
-        // _ObjSys.player._move(key_pos);
+        if (args.ContainsKey("right")) key_pos.x = 1;
+        else if (args.ContainsKey("left")) key_pos.x = -1;
+        else key_pos.x = 0;
+        if (args.ContainsKey("up")) key_pos.y = 1;
+        else if (args.ContainsKey("down")) key_pos.y = -1;
+        else key_pos.y = 0;
+        _ObjSys.player._Move._walk(key_pos);
+    }
+    
+    void rush(Dictionary<string, object> args){
+        /* move
+         */
+        KeyPos key_pos = InputSystem._keyPos;
+        if (args.ContainsKey("right")) key_pos.x = 1;
+        else if (args.ContainsKey("left")) key_pos.x = -1;
+        else key_pos.x = 0;
+        if (args.ContainsKey("up")) key_pos.y = 1;
+        else if (args.ContainsKey("down")) key_pos.y = -1;
+        else key_pos.y = 0;
+        _ObjSys.player._Move._rush(key_pos);
     }
 }

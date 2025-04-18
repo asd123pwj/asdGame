@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class InputCommandRegister : BaseClass{
     public static Dictionary<string, string> keyName2Command = new();
+    public static Dictionary<List<string>, string> comboKey2Command = new();
 
     public override bool _check_allow_init(){
         return _GCfg._InputSys != null;
@@ -11,7 +12,15 @@ public class InputCommandRegister : BaseClass{
 
     public override void _init(){
         init_key2Command();
+        init_comboKey2Command();
         init_keyAction();
+    }
+
+    void init_comboKey2Command(){
+        comboKey2Command.Add(new List<string>() {"d", "d" }, "rush --right");
+        comboKey2Command.Add(new List<string>() {"w", "w" }, "rush --up");
+        comboKey2Command.Add(new List<string>() {"up"}, "rush --up");
+        comboKey2Command.Add(new List<string>() {"left shift", "w" }, "rush --up");
     }
 
     void init_key2Command(){
@@ -50,10 +59,10 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("Numpad 8", "");
         keyName2Command.Add("Numpad 9", "");
 
-        keyName2Command.Add("a", "");
+        keyName2Command.Add("a", "move --left");
         keyName2Command.Add("b", "");
         keyName2Command.Add("c", "");
-        keyName2Command.Add("d", "");
+        keyName2Command.Add("d", "move --right");
         keyName2Command.Add("e", "");
         keyName2Command.Add("f", "");
         keyName2Command.Add("g", "");
@@ -68,11 +77,11 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("p", "");
         keyName2Command.Add("q", "");
         keyName2Command.Add("r", "");
-        keyName2Command.Add("s", "");
+        keyName2Command.Add("s", "move --down");
         keyName2Command.Add("t", "");
         keyName2Command.Add("u", "");
         keyName2Command.Add("v", "");
-        keyName2Command.Add("w", "");
+        keyName2Command.Add("w", "move --up");
         keyName2Command.Add("x", "UIToggle --type UIKeyboardShortcut");
         keyName2Command.Add("y", "");
         keyName2Command.Add("z", "spawn --useMousePos --type asd");
@@ -128,13 +137,28 @@ public class InputCommandRegister : BaseClass{
     }
     void init_keyAction(){
         foreach(string keyName in keyName2Command.Keys){
-            _GCfg._InputSys._register_action(keyName, create_delegate(keyName), "isFirstDown");
+            if(keyName.Equals("a") || keyName.Equals("d") || keyName.Equals("w") || keyName.Equals("s")){
+                _GCfg._InputSys._register_action(keyName, create_delegate(keyName), "isDown");
+            }
+            else{
+                _GCfg._InputSys._register_action(keyName, create_delegate(keyName), "isFirstDown");
+            }
+        }
+        foreach(List<string> comboKey in comboKey2Command.Keys){
+            _GCfg._InputSys._register_action(comboKey, create_delegate(comboKey));
         }
     }
 
     public _input_action create_delegate(string key){
         return new _input_action((keyPos, keyStatus) => {
             _Msg._send(GameConfigs._sysCfg.Msg_command, keyName2Command[key]);
+            return true;
+        });
+    }
+    
+    public _input_action create_delegate(List<string> key){
+        return new _input_action((keyPos, keyStatus) => {
+            _Msg._send(GameConfigs._sysCfg.Msg_command, comboKey2Command[key]);
             return true;
         });
     }

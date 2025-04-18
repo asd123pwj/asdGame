@@ -24,6 +24,7 @@ public class ObjectSystem: BaseClass{
     public ObjectSpawn _object_spawn;
     // ---------- Status ---------- //
     public Dictionary<GameObject, ObjectConfig> _obj2base = new();
+    public Dictionary<int, ObjectConfig> _runtimeID2base = new();
     public ObjectConfig player;
 
 
@@ -33,6 +34,12 @@ public class ObjectSystem: BaseClass{
         _handler.register();
     }
     
+    public override void _update(){
+        foreach (int runtimeID in _runtimeID2base.Keys){
+            _runtimeID2base[runtimeID]._onUpdate();
+        }
+    }
+
     // public void _down_fire3(Vector2 mouse_pos){
     //     _object_spawn._instantiate("asd", mouse_pos);
     // }

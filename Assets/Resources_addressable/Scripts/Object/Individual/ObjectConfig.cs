@@ -48,7 +48,7 @@ public class ObjectConfig: BaseClass{
         // init_sub_script();
     }
 
-    public override void _update(){
+    public void _onUpdate(){
         _Contact._onUpdate();
         // _AttrMoveFloat._onUpdate();
     }
@@ -75,6 +75,9 @@ public class ObjectConfig: BaseClass{
         _StatusMove = new(this);
         // ---------- Sub Script - Attribute ----------
         _AttrMoveFloat = new(this);
+        
+        _ObjSys._obj2base.Add(_self, this);
+        _ObjSys._runtimeID2base.Add(_runtimeID, this);
     }
 
 }
