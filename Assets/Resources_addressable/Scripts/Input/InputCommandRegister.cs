@@ -17,10 +17,12 @@ public class InputCommandRegister : BaseClass{
     }
 
     void init_comboKey2Command(){
-        comboKey2Command.Add(new List<string>() {"d", "d" }, "rush --right");
         comboKey2Command.Add(new List<string>() {"w", "w" }, "rush --up");
-        comboKey2Command.Add(new List<string>() {"up"}, "rush --up");
+        comboKey2Command.Add(new List<string>() {"d", "d" }, "rush --right");
+        comboKey2Command.Add(new List<string>() {"a", "a" }, "rush --left");
         comboKey2Command.Add(new List<string>() {"left shift", "w" }, "rush --up");
+        comboKey2Command.Add(new List<string>() {"left shift", "a" }, "rush --left");
+        comboKey2Command.Add(new List<string>() {"left shift", "d" }, "rush --right");
     }
 
     void init_key2Command(){
@@ -38,7 +40,7 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("f12", "");
 
         keyName2Command.Add("Number 0", "");
-        keyName2Command.Add("Number 1", "");
+        keyName2Command.Add("Number 1", "TMapGen --useMousePos");
         keyName2Command.Add("Number 2", "");
         keyName2Command.Add("Number 3", "");
         keyName2Command.Add("Number 4", "");
@@ -87,8 +89,8 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("z", "spawn --useMousePos --type asd");
 
         keyName2Command.Add("`", "UIToggle --type UICommandWindow");
-        keyName2Command.Add("-", "");
-        keyName2Command.Add("=", "");
+        keyName2Command.Add("-", "CamZoom --in");
+        keyName2Command.Add("=", "CamZoom --out");
         keyName2Command.Add("backspace", "");
         keyName2Command.Add("[", "");
         keyName2Command.Add("]", "");
@@ -153,14 +155,14 @@ public class InputCommandRegister : BaseClass{
 
     public _input_action create_delegate(string key){
         return new _input_action((keyPos, keyStatus) => {
-            _Msg._send(GameConfigs._sysCfg.Msg_command, keyName2Command[key]);
+            _Msg._send2COMMAND(keyName2Command[key]);
             return true;
         });
     }
     
     public _input_action create_delegate(List<string> key){
         return new _input_action((keyPos, keyStatus) => {
-            _Msg._send(GameConfigs._sysCfg.Msg_command, comboKey2Command[key]);
+            _Msg._send2COMMAND(comboKey2Command[key]);
             return true;
         });
     }

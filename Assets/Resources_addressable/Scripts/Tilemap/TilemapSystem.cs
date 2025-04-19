@@ -34,6 +34,7 @@ public class TilemapSystem : BaseClass{
     // public TileMonitor _P3DMon;
     public TilemapTerrainGenerator _TerrGen;
     public WaterGenerator _waterGen;
+    public TilemapCommandHandler _handler;
     // ---------- status ----------
 
     public override void _init(){
@@ -51,6 +52,8 @@ public class TilemapSystem : BaseClass{
         // _P3DMon = new();
         _TerrGen = new();
         _waterGen = new();
+        _handler = new();
+        _handler.register();
     }
 
     

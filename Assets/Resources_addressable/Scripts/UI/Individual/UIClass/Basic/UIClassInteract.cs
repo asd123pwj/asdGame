@@ -10,7 +10,7 @@ public class UIClassInteract{
             },
             interactions = new List<string>() {
                 "UIExecuteCommandFromAttribute",
-                "UIScrollPass2Parent"
+                "UIPassScroll2Parent"
             },
         });
     }

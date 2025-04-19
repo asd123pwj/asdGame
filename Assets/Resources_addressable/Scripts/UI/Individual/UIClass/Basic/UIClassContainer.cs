@@ -11,7 +11,7 @@ public class UIClassContainer{
             interactions = new List<string>() {
                 // "UISetTop",
                 "UIDrop",
-                "UIScrollPass2Parent"
+                "UIPassScroll2Parent"
             },
         });
 

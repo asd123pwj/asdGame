@@ -42,6 +42,12 @@ public class TilemapDraw: BaseClass{
             Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(kvp.Key, block.layer).TMap;
             await _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true);
         }
+
+        
+        ShadowGenerator._generate_shadow_from_compCollider(
+            _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).obj,
+            _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).compositeCollider
+        );
         // return true;
     }
     

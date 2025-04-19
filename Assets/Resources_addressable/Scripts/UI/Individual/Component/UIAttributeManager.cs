@@ -137,25 +137,25 @@ public class UIAttributeManager: UIScrollView{
         infos.Add(info_input);
 
         if (isFromInputSystem){
-            string keyName = Regex.Match(command, @"--key\s+(\S+)").Groups[1].Value;
+            string keyName = Regex.Match(command, @"--key\s+(?:""([^""]*)""|(\S+))").Groups[1].Value;
             infos.Add(_get_editor_title(key + "-trigger"));
             UI_type = "UIExecuteCommandFromAttribute";
             UIScrollTextInfo info_buttom = (UIScrollTextInfo)UIClass._set_default(UI_type);
             info_buttom.minSize = info_buttom.maxSize = _info.buttonSize;
             info_buttom.text = "isDown";
-            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key {keyName} --trigger isDown" } };
+            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key \"{keyName}\" --trigger isDown" } };
             infos.Add(info_buttom.Copy());
             
             info_buttom.text = "isUp";
-            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key {keyName} --trigger isUp" } };
+            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key \"{keyName}\" --trigger isUp" } };
             infos.Add(info_buttom.Copy());
 
             info_buttom.text = "isFirstDown";
-            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key {keyName} --trigger isFirstDown" } };
+            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key \"{keyName}\" --trigger isFirstDown" } };
             infos.Add(info_buttom.Copy());
 
             info_buttom.text = "isFirstUp";
-            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key {keyName} --trigger isFirstUp" } };
+            info_buttom.attributes = new(){ { "COMMAND", $"FROM_INPUT --key \"{keyName}\" --trigger isFirstUp" } };
             infos.Add(info_buttom.Copy());
 
         }

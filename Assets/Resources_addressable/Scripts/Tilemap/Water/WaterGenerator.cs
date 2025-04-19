@@ -20,7 +20,7 @@ public class WaterGenerator: BaseClass{
             obj.transform.SetParent(_sys._grid.transform);
         }
 
-        _sys._InputSys._register_action("Number 2", tmp_draw, "isFirstDown");
+        // _sys._InputSys._register_action("Number 2", tmp_draw, "isFirstDown");
     }
 
     public override void _update(){

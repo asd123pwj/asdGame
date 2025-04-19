@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class InputCommandHandler: BaseClass{
     public void register(){
-        CommandSystem._add("FROM_INPUT", FROM_INPUT);
+        CommandSystem._add(nameof(FROM_INPUT), FROM_INPUT);
     }
 
     void FROM_INPUT(Dictionary<string, object> args){
@@ -34,7 +34,7 @@ public class InputCommandHandler: BaseClass{
             _InputSys._register_action(key, null, (string)args["trigger"], true);
         }
         else {
-            _Msg._send(GameConfigs._sysCfg.Msg_command, InputCommandRegister.keyName2Command[key]);
+            _Msg._send2COMMAND(InputCommandRegister.keyName2Command[key]);
         }
     }
     

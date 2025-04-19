@@ -18,7 +18,7 @@ public class PlantMonitor: BaseClass{
             obj.transform.SetParent(_sys._grid.transform);
         }
 
-        _sys._InputSys._register_action("Number 1", tmp_draw, "isFirstDown");
+        // _sys._InputSys._register_action("Number 1", tmp_draw, "isFirstDown");
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){

@@ -7,8 +7,7 @@ public class UIScrollTextCommand: UIScrollText{
 
     public override void get_text(){
         if (owner._info.attributes[_info.source].get<string>().StartsWith("FROM_INPUT")){
-            _Msg._send(
-                GameConfigs._sysCfg.Msg_command,
+            _Msg._send2COMMAND(
                 owner._info.attributes[_info.source].get<string>() + " --read " + _info.messageID
             );
         }
@@ -20,8 +19,7 @@ public class UIScrollTextCommand: UIScrollText{
     public override void sync_with_source(DynamicValue value){
         if (_info.source == "") return;
         if (owner._info.attributes[_info.source].get<string>().StartsWith("FROM_INPUT")){
-            _Msg._send(
-                GameConfigs._sysCfg.Msg_command,
+            _Msg._send2COMMAND(
                 owner._info.attributes[_info.source].get<string>() + " --write \"" + value.get<string>() + "\""
             );
         }

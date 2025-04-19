@@ -3,9 +3,9 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 
-public class UIScrollPass2Parent: UIInteractBase{
+public class UIPassScroll2Parent: UIInteractBase{
     ScrollRect scrollRect;
-    public UIScrollPass2Parent(UIBase Base): base(Base){}
+    public UIPassScroll2Parent(UIBase Base): base(Base){}
 
     public override void _Scroll(BaseEventData eventData, bool isBuildIn=true){
         if (!_isAvailable(eventData)) return;

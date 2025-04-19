@@ -33,6 +33,10 @@ public class MessageBus: BaseClass{
         }
     }
 
+    public void _send2COMMAND(DynamicValue message){
+        _send(GameConfigs._sysCfg.Msg_command, message);
+    }
+
     public DynamicValue _get_message(string ID){
         if (!message_nodes.ContainsKey(ID)) return "";
         return message_nodes[ID].message;

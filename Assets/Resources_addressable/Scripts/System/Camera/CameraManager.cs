@@ -15,6 +15,7 @@ public class CameraManager: BaseClass{
     float orthographic_size { get => camera_width / (2f * Camera.main.aspect); }
     Camera cam_main;
     CinemachineVirtualCamera cam_player;
+    CameraCommandHandler handler;
 
     public CameraManager(){
     }
@@ -27,26 +28,41 @@ public class CameraManager: BaseClass{
 
     public override void _init(){
         // register actions
-        _InputSys._register_action("Zoom In", zoomIn, "isDown");
-        _InputSys._register_action("Zoom Out", zoomOut, "isDown");
+        // _InputSys._register_action("Zoom In", zoomIn, "isDown");
+        // _InputSys._register_action("Zoom Out", zoomOut, "isDown");
         // Get camera
         cam_main = Camera.main;
         cam_player = _sys._searchInit<CinemachineVirtualCamera>("Camera", "Player Camera");
         // Set default camera
         rowTiles_in_camera = GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_default;
         cam_player.m_Lens.OrthographicSize = orthographic_size;
+        handler = new CameraCommandHandler();
+        handler.register();
     }
 
-    public bool zoomIn(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        if (rowTiles_in_camera < GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_max){
+    // public bool zoomIn(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+    //     if (rowTiles_in_camera < GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_max){
+    //         rowTiles_in_camera += 1f;
+    //         cam_player.m_Lens.OrthographicSize = orthographic_size;
+    //     }
+    //     return true;
+    // }
+
+    // public bool zoomOut(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
+    //     if (rowTiles_in_camera > GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_min){
+    //         rowTiles_in_camera -= 1f;
+    //         cam_player.m_Lens.OrthographicSize = orthographic_size;
+    //     }
+    //     return true;
+    // }
+
+    
+    public bool _zoom(bool isZoomIn){
+        if (isZoomIn && rowTiles_in_camera < GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_max){
             rowTiles_in_camera += 1f;
             cam_player.m_Lens.OrthographicSize = orthographic_size;
         }
-        return true;
-    }
-
-    public bool zoomOut(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        if (rowTiles_in_camera > GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_min){
+        else if (!isZoomIn && rowTiles_in_camera > GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_min){
             rowTiles_in_camera -= 1f;
             cam_player.m_Lens.OrthographicSize = orthographic_size;
         }
