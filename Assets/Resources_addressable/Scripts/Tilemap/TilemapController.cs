@@ -23,7 +23,7 @@ public class TilemapController: BaseClass{
     // Tilemap TMap_modify { get => _TMapSys._tilemap_modify; }
     // ---------- sub script ----------
     // TilemapBlockGenerator TMapGen { get => _TMapSys._TMapGen; }
-    TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
+    // TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
     TilemapAxis TMapCfg { get => _TMapSys._TMapAxis; }
     TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
     // ---------- status ---------- // 
@@ -88,61 +88,63 @@ public class TilemapController: BaseClass{
     }
 
 
-    public bool _task_prepare_gameObject(){
-        Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-        for (int x = -prepare_r.x; x <= prepare_r.x; x++){
-            for (int y = -prepare_r.y; y <= prepare_r.y; y++){
-                _TMapSys._TMapMon._get_blkObj(_query_point + new Vector3Int(x, y), new LayerType());
-            }
-        }
-        return true;
-    }
+    // public bool _task_prepare_gameObject(){
+    //     Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+    //     for (int x = -prepare_r.x; x <= prepare_r.x; x++){
+    //         for (int y = -prepare_r.y; y <= prepare_r.y; y++){
+    //             _TMapSys._TMapMon._get_blkObj(_query_point + new Vector3Int(x, y), new LayerType());
+    //         }
+    //     }
+    //     return true;
+    // }
 
-    public bool _task_prepare_tilemap(){
-        // while (true) ;
-        Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-        for (int x = -prepare_r.x; x <= prepare_r.x; x++){
-            for (int y = -prepare_r.y; y <= prepare_r.y; y++){
-                _TMapSys._TMapZoneGen._prepare_block(_query_point + new Vector3Int(x, y), new());
-            }
-        }
-        return true;
-    }
+    // public bool _task_prepare_tilemap(){
+    //     // while (true) ;
+    //     Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+    //     for (int x = -prepare_r.x; x <= prepare_r.x; x++){
+    //         for (int y = -prepare_r.y; y <= prepare_r.y; y++){
+    //             _TMapSys._TMapZoneGen._prepare_block(_query_point + new Vector3Int(x, y), new());
+    //         }
+    //     }
+    //     return true;
+    // }
 
-    public async UniTask _task_draw_tilemap(){
-        Vector3Int draw_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-        for (int x = -draw_r.x; x <= draw_r.x; x++){
-            for (int y = -draw_r.y; y <= draw_r.y; y++){
-                if (!_TMapSys._TMapMon._check_block_load(_query_point + new Vector3Int(x, y), new LayerType())) continue;
-                TilemapBlock block = _TMapSys._TMapMon._get_block(_query_point + new Vector3Int(x, y), new LayerType());
-                // TilemapBlock block = TMapGen._generate_block(_query_point + new Vector3Int(x, y));
-                await TMapDraw._draw_block(block);
+    // public async UniTask _task_draw_tilemap(){
+    //     Vector3Int draw_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+    //     for (int x = -draw_r.x; x <= draw_r.x; x++){
+    //         for (int y = -draw_r.y; y <= draw_r.y; y++){
+    //             if (!_TMapSys._TMapMon._check_block_load(_query_point + new Vector3Int(x, y), new LayerType())) continue;
+    //             TilemapBlock block = _TMapSys._TMapMon._get_block(_query_point + new Vector3Int(x, y), new LayerType());
+    //             // TilemapBlock block = TMapGen._generate_block(_query_point + new Vector3Int(x, y));
+    //             await TMapDraw._draw_block(block);
                 
-                // ShadowGenerator._generate_shadow_from_compCollider(
-                //     _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).obj,
-                //     _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).compositeCollider
-                // );
-            }
-        }
-    }
+    //             // ShadowGenerator._generate_shadow_from_compCollider(
+    //             //     _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).obj,
+    //             //     _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).compositeCollider
+    //             // );
+    //         }
+    //     }
+    // }
 
     public async UniTaskVoid _draw_block_complete(Vector3Int block_offsets, LayerType layer_type){
-        if (!_TMapsHaveDraw.ContainsKey(layer_type.ToString())) {
-            _TMapsHaveDraw.Add(layer_type.ToString(), new());
-        }
-        if (_TMapsHaveDraw[layer_type.ToString()].Contains(block_offsets)) {
-            return;
-        }
-        else{
-            _TMapsHaveDraw[layer_type.ToString()].Add(block_offsets);
-        }
+        TilemapBlock block = TilemapBlock._get(block_offsets, layer_type);
+        await block._draw._draw_me();
+        // if (!_TMapsHaveDraw.ContainsKey(layer_type.ToString())) {
+        //     _TMapsHaveDraw.Add(layer_type.ToString(), new());
+        // }
+        // if (_TMapsHaveDraw[layer_type.ToString()].Contains(block_offsets)) {
+        //     return;
+        // }
+        // else{
+        //     _TMapsHaveDraw[layer_type.ToString()].Add(block_offsets);
+        // }
         
-        _TMapSys._TMapMon._get_blkObj(block_offsets, layer_type);
-        await UniTask.RunOnThreadPool(() => _TMapSys._TMapZoneGen._prepare_block(block_offsets, layer_type));
-        if (!_TMapSys._TMapMon._check_block_load(block_offsets, layer_type)) return;
-        TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, layer_type);
-        // TilemapBlock block = TMapGen._generate_block(_query_point + new Vector3Int(x, y));
-        TMapDraw._draw_block(block).Forget();
+        // _TMapSys._TMapMon._get_blkObj(block_offsets, layer_type);
+        // await UniTask.RunOnThreadPool(() => _TMapSys._TMapZoneGen._prepare_block(block_offsets, layer_type));
+        // if (!_TMapSys._TMapMon._check_block_load(block_offsets, layer_type)) return;
+        // TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, layer_type);
+        // // TilemapBlock block = TMapGen._generate_block(_query_point + new Vector3Int(x, y));
+        // TMapDraw._draw_block(block).Forget();
     }
 
     // public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){

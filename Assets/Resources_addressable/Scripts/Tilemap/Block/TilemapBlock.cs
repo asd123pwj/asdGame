@@ -9,7 +9,8 @@ using System;
 public class TilemapBlock: BaseClass{
     // - Dictionary<layer, Dictionary<block_offsets, block>>
     public static Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> our = new();
-    public TilemapBlockGameObject obj => _TMapSys._TMapMon._get_blkObj(offsets, layer);
+    // public TilemapBlockGameObject obj => _TMapSys._TMapMon._get_blkObj(offsets, layer);
+    public TilemapBlockGameObject obj;
     public string terrain_ID;
     public string[] terrain_tags;
     public Vector3Int offsets;
@@ -31,6 +32,7 @@ public class TilemapBlock: BaseClass{
     public bool isExist;
     public TilemapBlockAround around => new(this);
     public TilemapBlockMapStatus status;
+    public TilemapBlockDraw _draw;
 
     public int initStage;
 
@@ -39,10 +41,26 @@ public class TilemapBlock: BaseClass{
         this.offsets = offsets;
         this.layer = layer;
         isExist = true;
+        if(!our.ContainsKey(layer.ToString())){
+            our.Add(layer.ToString(), new());
+        }
         our[layer.ToString()].Add(offsets, this);
         map = new(this);
         status = new(map);
+        _draw = new(this);
+        obj = new(this);
+        _TMapSys._TerrGen._generate_block(this);
         // _TMapSys._TMapObjGen._init_tilemap_gameObject(offsets, layer);
+    }
+
+    // public override void _init(){
+    // }
+
+    public static TilemapBlock _get(Vector3Int offsets, LayerType layer){
+        if (!(our.ContainsKey(layer.ToString()) && our[layer.ToString()].ContainsKey(offsets))){
+            TilemapBlock block = new(offsets, layer);
+        }
+        return our[layer.ToString()][offsets];
     }
 
 

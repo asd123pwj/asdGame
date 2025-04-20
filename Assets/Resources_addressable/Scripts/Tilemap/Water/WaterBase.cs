@@ -61,7 +61,8 @@ public class WaterBase : BaseClass{
         _our[layer.ToString()].Add(map_pos, this);
         this._map_pos = map_pos;
         _block_offsets = _TMapSys._TMapAxis._mapping_mapPos_to_blockOffsets(map_pos);
-        TMap = _TMapSys._TMapMon._get_blkObj(_block_offsets, layer).TMap;
+        // TMap = _TMapSys._TMapMon._get_blkObj(_block_offsets, layer).TMap;
+        TMap = TilemapBlock._get(_block_offsets, layer).obj.TMap;
         _self.transform.position = _TMapSys._TMapAxis._mapping_mapPos_to_worldPos(map_pos, layer);
         _layer = layer;
         meshRenderer.sortingLayerID = _layer.sortingLayerID;

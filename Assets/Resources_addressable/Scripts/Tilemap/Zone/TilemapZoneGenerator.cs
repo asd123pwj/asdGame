@@ -32,16 +32,16 @@ public class TilemapZoneGenerator: BaseClass{
     }
 
 
-    public bool _prepare_block(Vector3Int block_offsets, LayerType layer_type){
-        if (block_prepare_status.ContainsKey(block_offsets)) return false;
-        block_prepare_status[block_offsets] = PrepareStatus.inQueue;
+    // public bool _prepare_block(Vector3Int block_offsets, LayerType layer_type){
+    //     if (block_prepare_status.ContainsKey(block_offsets)) return false;
+    //     block_prepare_status[block_offsets] = PrepareStatus.inQueue;
         
 
-        TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, layer_type);
+    //     TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, layer_type);
 
-        block_prepare_status[block_offsets] = PrepareStatus.Done;
-        return true;
-    }
+    //     block_prepare_status[block_offsets] = PrepareStatus.Done;
+    //     return true;
+    // }
 
 
 

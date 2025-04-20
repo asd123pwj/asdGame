@@ -6,8 +6,8 @@ using YamlDotNet.Core.Events;
 
 
 public class TilemapTerrainGenerator: BaseClass{
-    TilemapTerrainSurface surface;
-    TilemapTerrainMineral mineral;
+    public static TilemapTerrainSurface surface;
+    public static TilemapTerrainMineral mineral;
 
     public TilemapTerrainGenerator(){
         surface = new();
@@ -15,14 +15,21 @@ public class TilemapTerrainGenerator: BaseClass{
     }
 
 
-    public TilemapBlock _generate_block(Vector3Int block_offsets,
-                                        LayerType layer_type){
+    // public TilemapBlock _generate_block(Vector3Int block_offsets,
+    //                                     LayerType layer_type){
 
-        TilemapBlock block = 
-            _TMapSys._TMapMon._check_block_load(block_offsets, layer_type)
-            ? _TMapSys._TMapMon._get_block(block_offsets, layer_type)
-            : new(block_offsets, layer_type){};
+    //     TilemapBlock block = 
+    //         _TMapSys._TMapMon._check_block_load(block_offsets, layer_type)
+    //         ? _TMapSys._TMapMon._get_block(block_offsets, layer_type)
+    //         : new(block_offsets, layer_type){};
         
+    public TilemapBlock _generate_block(TilemapBlock block){
+
+        // TilemapBlock block = 
+        //     _TMapSys._TMapMon._check_block_load(block_offsets, layer_type)
+        //     ? _TMapSys._TMapMon._get_block(block_offsets, layer_type)
+        //     : new(block_offsets, layer_type){};
+
         _generate_terrain(block);
 
         return block;
