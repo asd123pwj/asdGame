@@ -52,7 +52,6 @@ public class UISystem : BaseClass{
         _UISL = new();
         _UICls = new();
         _handler = new();
-        _handler.register();
     }
     
 

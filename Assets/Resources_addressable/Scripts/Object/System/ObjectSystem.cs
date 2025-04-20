@@ -31,7 +31,6 @@ public class ObjectSystem: BaseClass{
     public override void _init(){
         _object_spawn = new(_GCfg);
         _handler = new();
-        _handler.register();
     }
     
     public override void _update(){

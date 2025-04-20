@@ -53,7 +53,6 @@ public class TilemapSystem : BaseClass{
         _TerrGen = new();
         _waterGen = new();
         _handler = new();
-        _handler.register();
     }
 
     

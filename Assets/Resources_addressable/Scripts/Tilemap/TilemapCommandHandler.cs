@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TilemapCommandHandler: BaseClass{
-    public void register(){
+public class TilemapCommandHandler: CommandHandlerBase{
+    public override void register(){
         CommandSystem._add(nameof(TMapGen), TMapGen);
     }
 

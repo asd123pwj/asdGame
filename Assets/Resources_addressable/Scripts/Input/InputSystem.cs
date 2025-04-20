@@ -43,7 +43,6 @@ public class InputSystem : BaseClass{
         InputStatus = new();
         InputCmdReg = new();
         handler = new();
-        handler.register();
         // _InputUI = new();
     }
 

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
 
-public class CameraCommandHandler: BaseClass{
-    public void register(){
+public class CameraCommandHandler: CommandHandlerBase{
+    public override void register(){
         CommandSystem._add(nameof(CamZoom), CamZoom);
     }
 

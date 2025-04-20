@@ -46,7 +46,7 @@ public class TilemapController: BaseClass{
     }
 
     public override async UniTask _loop(){
-        return;
+        // return;
         while(true){
             _task_update_queryPoint();
             if (_query_point_prev == _query_point) {
@@ -54,7 +54,7 @@ public class TilemapController: BaseClass{
                 continue;
             }
             _query_point_prev = _query_point;
-            draw_by_cmd();
+            draw_by_cmd().Forget();
             // _task_prepare_tilemap();
             // var task = 
             // _task_prepare_gameObject();
@@ -65,12 +65,14 @@ public class TilemapController: BaseClass{
         }
     }
 
-    void draw_by_cmd(){
+    async UniTaskVoid draw_by_cmd(){
         
         Vector3Int draw_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
         for (int x = -draw_r.x; x <= draw_r.x; x++){
             for (int y = -draw_r.y; y <= draw_r.y; y++){
                 _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}");
+        
+                await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
             }
         }
     }

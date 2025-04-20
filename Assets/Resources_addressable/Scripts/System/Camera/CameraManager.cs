@@ -37,7 +37,6 @@ public class CameraManager: BaseClass{
         rowTiles_in_camera = GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_default;
         cam_player.m_Lens.OrthographicSize = orthographic_size;
         handler = new CameraCommandHandler();
-        handler.register();
     }
 
     // public bool zoomIn(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){

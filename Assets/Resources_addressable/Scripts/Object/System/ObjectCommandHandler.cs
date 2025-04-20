@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ObjectCommandHandler: BaseClass{
-    public void register(){
+public class ObjectCommandHandler: CommandHandlerBase{
+    public override void register(){
         CommandSystem._add(nameof(spawn), spawn);
         CommandSystem._add(nameof(move), move);
         CommandSystem._add(nameof(rush), rush);

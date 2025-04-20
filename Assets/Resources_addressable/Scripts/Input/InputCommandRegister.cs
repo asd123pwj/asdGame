@@ -140,8 +140,11 @@ public class InputCommandRegister : BaseClass{
 
     }
     void init_keyAction(){
+        List<string> tmp_key_isDown = new(){
+            "a", "d", "w", "s", "-", "=", "Number 1", "Number 2", "Number 3"
+        };
         foreach(string keyName in keyName2Command.Keys){
-            if(keyName.Equals("a") || keyName.Equals("d") || keyName.Equals("w") || keyName.Equals("s")){
+            if(tmp_key_isDown.Contains(keyName)){
                 _GCfg._InputSys._register_action(keyName, create_delegate(keyName), "isDown");
             }
             else{

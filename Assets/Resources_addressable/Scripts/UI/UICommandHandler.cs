@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UICommandHandler: BaseClass{
-    public void register(){
+public class UICommandHandler: CommandHandlerBase{
+    public override void register(){
         CommandSystem._add(nameof(UIToggle), UIToggle);
         CommandSystem._add(nameof(UISave), UISave);
         CommandSystem._add(nameof(UILoad), UILoad);

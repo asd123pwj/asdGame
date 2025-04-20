@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
 
-public class InputCommandHandler: BaseClass{
-    public void register(){
+public class InputCommandHandler: CommandHandlerBase{
+    public override void register(){
         CommandSystem._add(nameof(FROM_INPUT), FROM_INPUT);
     }
 
