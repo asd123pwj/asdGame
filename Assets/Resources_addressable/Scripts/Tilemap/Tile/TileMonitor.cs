@@ -78,13 +78,13 @@
 //     }
 
 //     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-//         Vector3Int block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerType());
+//         Vector3Int block_offsets = TilemapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerType());
 //         TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, new LayerType());
 //         block.status._update_status_typeMap("TileP3D");
 //         Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block_offsets, new LayerType()).TMap;
 //         foreach (var pos in block.status.positions["TileP3D"]){
-//             // Vector2 world_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_worldPos(pos, block_offsets, new LayerTTT());
-//             Vector3Int map_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_mapPos(pos, block_offsets);
+//             // Vector2 world_pos = TilemapAxis._mapping_inBlockPos_to_worldPos(pos, block_offsets, new LayerTTT());
+//             Vector3Int map_pos = TilemapAxis._mapping_inBlockPos_to_mapPos(pos, block_offsets);
 //             // string tile_subID = TMap.GetSprite(map_pos).name;
 //             // new TileP3D(world_pos, _TMapBD_containers["TileP3D"], block.map._get(pos), tile_subID);
 //             new TileP3D(map_pos, new LayerType());

@@ -13,17 +13,17 @@ public class TilemapBlockGameObject: BaseClass{
     public GameObject tile_container;
     public GameObject P3D_container;
     public GameObject Decoration_container;
-    public TilemapBlock _me;
+    public TilemapBlock block;
 
 
     public TilemapBlockGameObject(TilemapBlock block){
-        _me = block;
+        this.block = block;
         obj = new GameObject();
-        obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[_me.layer.ToString()]);
+        obj.transform.SetParent(_TMapSys._TMapMon._TMap_containers[this.block.layer.ToString()]);
         // obj.obj.transform.SetParent();
 
-        
-        obj.name = _me.offsets.x + "_" + _me.offsets.y;
+
+        obj.name = this.block.offsets.x + "_" + this.block.offsets.y;
         // obj.obj.layer = LayerMask.NameToLayer(layer_type);
 
         // ----- Container ----- //
@@ -53,7 +53,7 @@ public class TilemapBlockGameObject: BaseClass{
 
 
         TMap_status = obj.AddComponent<TilemapBlockStatus>();
-        TMap_status.sortingOrder = _me.layer.sortingOrder;
+        TMap_status.sortingOrder = this.block.layer.sortingOrder;
         // obj.TMap_renderer.material = _MatSys._mat._get_mat("TransparentSprite");
         // obj.TMap_renderer.sortingLayerID = layer_type.sortingLayerID;
         // obj.TMap_renderer.sortingOrder = layer_type.sortingOrder;

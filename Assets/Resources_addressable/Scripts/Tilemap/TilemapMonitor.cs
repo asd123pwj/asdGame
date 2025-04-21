@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 public class TilemapMonitor: BaseClass{
     // ---------- Config ---------- //
     // ---------- Sub Scripts ---------- //
-    // TilemapAxis TMapCfg { get => _sys._TMapSys._TMapAxis; }
+    // TilemapAxis TMapCfg { get => _sys.TilemapAxis; }
     // ---------- Tilemap Status ---------- //
     // ----- Blocks ----- //
     // public Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> _TMap_blocks => TilemapBlock.our;

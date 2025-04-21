@@ -24,7 +24,7 @@ public class TilemapController: BaseClass{
     // ---------- sub script ----------
     // TilemapBlockGenerator TMapGen { get => _TMapSys._TMapGen; }
     // TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
-    TilemapAxis TMapCfg { get => _TMapSys._TMapAxis; }
+    // TilemapAxis TMapCfg { get => _TMapSys._TMapAxis; }
     TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
     // ---------- status ---------- // 
     // private Vector3Int _tilemapBlock_offsets;
@@ -83,7 +83,7 @@ public class TilemapController: BaseClass{
         }
         else{
             Vector3 player_pos = _CtrlSys._player.transform.position;
-            _query_point = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, MapLayerType.Middle));
+            _query_point = TilemapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, MapLayerType.Middle));
         }
     }
 
@@ -127,8 +127,8 @@ public class TilemapController: BaseClass{
     // }
 
     public async UniTaskVoid _draw_block_complete(Vector3Int block_offsets, LayerType layer_type){
-        TilemapBlock block = TilemapBlock._get(block_offsets, layer_type);
-        await block._draw._draw_me();
+        TilemapBlock block = await TilemapBlock._get_async(block_offsets, layer_type);
+        await block._draw_me();
         // if (!_TMapsHaveDraw.ContainsKey(layer_type.ToString())) {
         //     _TMapsHaveDraw.Add(layer_type.ToString(), new());
         // }

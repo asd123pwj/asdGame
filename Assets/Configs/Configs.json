@@ -27,6 +27,8 @@
         "Back": {"x": 0.5, "y": 0.5, "z": 0}
     },
     "TMap_fullTile_subID": "__Full",
+    "TMap_empty_tile": "0",
+    "TMap_notLoaded_tile": "0",
 
     "BuildGen_MatchKernelSize_RadiusMinusOne_max": {"x": 3, "y": 1, "z": 1},
 

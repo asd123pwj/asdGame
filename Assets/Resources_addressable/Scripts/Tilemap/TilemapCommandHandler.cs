@@ -20,7 +20,7 @@ public class TilemapCommandHandler: CommandHandlerBase{
         Vector3Int block_offsets;
         if(args.ContainsKey("useMousePos")){
             Vector2 mousePos = InputSystem._keyPos.mouse_pos_world;
-            block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(mousePos, layer_type);
+            block_offsets = TilemapAxis._mapping_worldPos_to_blockOffsets(mousePos, layer_type);
         }
         else{
             block_offsets = new Vector3Int((int)args["x_block"], (int)args["y_block"], 0);

@@ -88,7 +88,8 @@ public class UIBase: BaseClass{
         }
         // ----- Custom Interactions ----- //
         if (_info.interactions == null) return;
-        while (!_initDone) await UniTask.Delay(10);
+        // while (!_initDone) await UniTask.Delay(10);
+        await _wait_init_done();
         foreach (string interaction in _info.interactions){
             _InteractMgr._register_interaction(interaction);
         }

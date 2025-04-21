@@ -21,28 +21,28 @@ public class TilemapBlockMap: BaseClass{
     public TilemapTile _get(int x, int y) {
         if (x < block.size.x && y < block.size.y && x >= 0 && y >= 0){
             if (map[x, y] == null) {
-                Vector3Int map_pos = _TMapSys._TMapAxis._mapping_inBlockPos_to_mapPos(new(x, y), block.offsets);
+                Vector3Int map_pos = TilemapAxis._mapping_inBlockPos_to_mapPos(new(x, y), block.offsets);
                 map[x, y] = new(block, map_pos);
             }
             return map[x, y];
         }
         else if (x >= block.size.x){
             TilemapBlock block_right = block.around.right;
-            return block_right.isExist ? block_right.map._get(x - block.size.x, y) : new() { tile = _GCfg._NotLoaded_tile };
+            return block_right.isExist ? block_right.map._get(x - block.size.x, y) : new() { tile = GameConfigs._sysCfg.TMap_notLoaded_tile };
         }
         else if (y >= block.size.y){
             TilemapBlock block_up = block.around.up;
-            return block_up.isExist ? block_up.map._get(x, y - block.size.y) : new() { tile = _GCfg._NotLoaded_tile };
+            return block_up.isExist ? block_up.map._get(x, y - block.size.y) : new() { tile = GameConfigs._sysCfg.TMap_notLoaded_tile };
         }
         else if (x < 0){
             TilemapBlock block_left = block.around.left;
-            return block_left.isExist ? block_left.map._get(x + block.size.x, y) : new() { tile = _GCfg._NotLoaded_tile };
+            return block_left.isExist ? block_left.map._get(x + block.size.x, y) : new() { tile = GameConfigs._sysCfg.TMap_notLoaded_tile };
         }
         else if (y < 0){
             TilemapBlock block_down = block.around.down;
-            return block_down.isExist ? block_down.map._get(x, y - block.size.y) : new() { tile = _GCfg._NotLoaded_tile };
+            return block_down.isExist ? block_down.map._get(x, y - block.size.y) : new() { tile = GameConfigs._sysCfg.TMap_notLoaded_tile };
         }
-        return new() { tile = _GCfg._NotLoaded_tile };
+        return new() { tile = GameConfigs._sysCfg.TMap_notLoaded_tile };
     }
 
     public void _set_tile(Dictionary<Vector3Int, string> map){

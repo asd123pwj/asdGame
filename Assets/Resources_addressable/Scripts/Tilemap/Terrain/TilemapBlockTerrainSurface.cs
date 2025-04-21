@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 
-public class TilemapTerrainSurface: BaseClass{
+public class TilemapBlockTerrainSurface: BaseClass{
     public bool _check_underground(Vector3Int map_pos, TerrainHier1 hier1){
         // int surface_h = _GCfg._noise._get_heights(new(map_pos.x, 0), hier1.surface);
         int surface_h = GameConfigs._noise._get_int(map_pos, hier1.surface);

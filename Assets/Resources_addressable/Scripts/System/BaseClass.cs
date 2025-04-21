@@ -41,11 +41,14 @@ public class BaseClass{
 
     public virtual async UniTask _loop(){await UniTask.Delay(0); /* just placeholder */}
 
-    public virtual bool _check_allow_init(){
-        return true;
+    public virtual bool _check_allow_init() => true;
+
+    public async UniTask _wait_init_done(){
+        while (!_initDone){ await UniTask.Delay(10); }
     }
 
     public virtual void _init(){}
+    public virtual async UniTask _init_async(){await UniTask.Delay(0); /* just placeholder */}
     async UniTaskVoid init(){
         while (true){
             if (!_check_allow_init()){
@@ -53,8 +56,9 @@ public class BaseClass{
                 continue;
             }
             _init();
+            await _init_async();
             register_update();
-            run_loop();
+            _loop().Forget();
             _initDone = true;
             break;
         }
@@ -82,11 +86,11 @@ public class BaseClass{
         unregister_update();
     }
 
-    void run_loop(){
-        MethodInfo method = GetType().GetMethod("_loop");
-        bool is_overridden = method.DeclaringType != typeof(BaseClass);
-        if (is_overridden){
-            _loop().Forget();
-        }
-    }
+    // void run_loop(){
+    //     MethodInfo method = GetType().GetMethod("_loop");
+    //     bool is_overridden = method.DeclaringType != typeof(BaseClass);
+    //     if (is_overridden){
+    //         _loop().Forget();
+    //     }
+    // }
 }

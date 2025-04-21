@@ -5,15 +5,16 @@ using System;
 
 public class TilemapBlockMapStatus: BaseClass{
     Vector3Int size => GameConfigs._sysCfg.TMap_tiles_per_block;
-    TilemapBlockMap map;
+    TilemapBlockMap map => block.map;
+    TilemapBlock block;
     public static Dictionary<string, Dictionary<Vector3Int, Func<string, bool>>> rules = new() { 
         {"Ground", new ()  {{Vector3Int.up, (tile) => tile == "0" }, {Vector3Int.zero, (tile) => tile != "0" }}},
         {"TileP3D", new ()  {{Vector3Int.zero, (tile) => tile != "0" }}}
     };
     public Dictionary<string, List<Vector3Int>> positions = new();
 
-    public TilemapBlockMapStatus(TilemapBlockMap map){
-        this.map = map;
+    public TilemapBlockMapStatus(TilemapBlock block){
+        this.block = block;
         foreach (string status in rules.Keys){
             positions[status] = new();
         }

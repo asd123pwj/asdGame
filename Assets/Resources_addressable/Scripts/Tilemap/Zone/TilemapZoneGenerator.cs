@@ -46,7 +46,7 @@ public class TilemapZoneGenerator: BaseClass{
 
 
     // public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-    //     Vector3Int block_offsets = _TMapSys._TMapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerType());
+    //     Vector3Int block_offsets = TilemapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerType());
     //     _prepare_zone_in_blockOffsets(block_offsets);
     //     return true;
     // }
@@ -61,7 +61,7 @@ public class TilemapZoneGenerator: BaseClass{
 
     //     TilemapBlock block = _TMapSys._TerrGen._generate_block(block_offsets, new LayerType());
 
-    //     // Vector3Int zone_offsets = _TMapSys._TMapAxis._mapping_blockOffsets_to_zoneOffsets(block_offsets);
+    //     // Vector3Int zone_offsets = TilemapAxis._mapping_blockOffsets_to_zoneOffsets(block_offsets);
     //     // BlockTypeInZone block_type = _check_block_type_in_zone(block_offsets);
     //     // // Debug.Log(block_offsets + " - " + zone_offsets + " - " + block_type.ToString());
     //     // switch (block_type){
@@ -119,7 +119,7 @@ public class TilemapZoneGenerator: BaseClass{
      *  └------------┘
      */
     // public BlockTypeInZone _check_block_type_in_zone(Vector3Int block_offsets){
-    //     Vector3Int in_zone = _TMapSys._TMapAxis._mapping_blockOffsets_to_blockOffsetsInZone(block_offsets);
+    //     Vector3Int in_zone = TilemapAxis._mapping_blockOffsets_to_blockOffsetsInZone(block_offsets);
     //     // Vector3Int zone_size = _GCfg._sysCfg.TMap_blocks_per_zone;
     //     if (in_zone.x == 0 && in_zone.y >= connected_size.y) return BlockTypeInZone.UpperLeft;
     //     if (in_zone.y == zone_size.y - 1 && in_zone.x < connected_size.x) return BlockTypeInZone.UpperLeft;

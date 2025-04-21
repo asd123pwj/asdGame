@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 
 
 
-public class TilemapTerrainMineral: BaseClass{
+public class TilemapBlockTerrainMineral: BaseClass{
 
     public string _get_mineral(Vector3Int map_pos, List<MineralInfo> minerals){
         for (int i = 0; i < minerals.Count; i++){

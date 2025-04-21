@@ -29,6 +29,8 @@ public struct SystemConfig{
 
     // ----- Tilemap gameObject
     public Dictionary<string, Vector3> TMap_tilemap_obj_origin_offset;
+    public string TMap_empty_tile;
+    public string TMap_notLoaded_tile;
 
     // ----- Water ----- //
     public int water_full_amount;                   // when amount == this, water is full
@@ -89,8 +91,8 @@ public class GameConfigs{
 
 
     // ---------- tilemap config ----------
-    public string _empty_tile => "0";
-    public string _NotLoaded_tile => "0";
+    // public string _empty_tile => "0";
+    // public string _NotLoaded_tile => "0";
     // public Vector3Int __block_size { get {return new Vector3Int(32, 32, 1); } }
     // public Vector3Int _TMap_tiles_per_block { get { return _sysCfg.TMap_tiles_per_block; } }
     // public int _TMap_tiles_per_loading { get { return _sysCfg.TMap_tiles_per_loading; } }
