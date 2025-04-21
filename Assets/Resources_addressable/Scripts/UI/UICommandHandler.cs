@@ -3,10 +3,10 @@ using UnityEngine;
 
 public class UICommandHandler: CommandHandlerBase{
     public override void register(){
-        CommandSystem._add(nameof(UIToggle), UIToggle);
-        CommandSystem._add(nameof(UISave), UISave);
-        CommandSystem._add(nameof(UILoad), UILoad);
-        CommandSystem._add(nameof(UIClose), UIClose);
+        CommandSystem._add(UIToggle);
+        CommandSystem._add(UISave);
+        CommandSystem._add(UILoad);
+        CommandSystem._add(UIClose);
     }
 
     void UIToggle(Dictionary<string, object> args){

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class TilemapCommandHandler: CommandHandlerBase{
     public override void register(){
-        CommandSystem._add(nameof(TMapGen), TMapGen);
+        CommandSystem._add(TMapGen);
     }
 
     public void TMapGen(Dictionary<string, object> args){

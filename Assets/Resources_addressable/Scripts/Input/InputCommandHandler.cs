@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 
 public class InputCommandHandler: CommandHandlerBase{
     public override void register(){
-        CommandSystem._add(nameof(FROM_INPUT), FROM_INPUT);
+        CommandSystem._add(FROM_INPUT);
+        CommandSystem._add(print_mouse_hover_time);
     }
 
     void FROM_INPUT(Dictionary<string, object> args){
@@ -36,6 +38,12 @@ public class InputCommandHandler: CommandHandlerBase{
         else {
             _Msg._send2COMMAND(InputCommandRegister.keyName2Command[key]);
         }
+    }
+    
+    void print_mouse_hover_time(Dictionary<string, object> args){
+        /* FROM_INPUT               Use command from INPUT system
+         */
+        Debug.Log(InputSystem._keyPos.mouse_hover_time);
     }
     
 }

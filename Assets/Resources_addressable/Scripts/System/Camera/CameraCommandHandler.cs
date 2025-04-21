@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class CameraCommandHandler: CommandHandlerBase{
     public override void register(){
-        CommandSystem._add(nameof(CamZoom), CamZoom);
+        CommandSystem._add(CamZoom);
     }
 
     void CamZoom(Dictionary<string, object> args){

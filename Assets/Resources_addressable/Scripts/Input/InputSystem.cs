@@ -8,6 +8,7 @@ public struct KeyPos{
     public Vector2 mouse_pos_screen_change;
     public float x;
     public float y;
+    public float mouse_hover_time;
     // public float x_dir;
     // public float y_dir;
 }
@@ -53,12 +54,7 @@ public class InputSystem : BaseClass{
         _keyPos.mouse_pos_screen = get_mouse_pos_2d(0);
         _keyPos.x = 0;
         _keyPos.y = 0;
-        // _keyPos.x_dir = 0;
-        // _keyPos.y_dir = 0;
-        // _keyPos.x = Input.GetAxis("Horizontal");
-        // _keyPos.y = Input.GetAxis("Vertical");
-        // _keyPos.x_dir = Input.GetAxisRaw("Horizontal");
-        // _keyPos.y_dir = Input.GetAxisRaw("Vertical");
+        update_mouse_hover_time();
     }
 
     public void _register_action(string input_type, _input_action action, string trigger="isDown", bool isReplaceTrigger=false){ 
@@ -87,5 +83,13 @@ public class InputSystem : BaseClass{
         return new(pos_3d.x, pos_3d.y);
     }
 
+    public void update_mouse_hover_time(){
+        if (_keyPos.mouse_pos_world_change == Vector2.zero){
+            _keyPos.mouse_hover_time += Time.deltaTime;
+        }
+        else{
+            _keyPos.mouse_hover_time = 0;
+        }
+    }
     
 }

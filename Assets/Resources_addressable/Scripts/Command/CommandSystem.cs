@@ -3,6 +3,7 @@ using Sprache;
 using UnityEngine;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 public static class argType{
     public static float toFloat(object value) => value is int i ? (float)i : (float)value;
@@ -114,5 +115,9 @@ public class CommandSystem: BaseClass{
 
     public static void _add(string name, CommandHandler handler){
         handlers.Add(name, handler);
+    }
+    
+    public static void _add(CommandHandler handler){
+        handlers.Add(handler.Method.Name, handler);
     }
 }

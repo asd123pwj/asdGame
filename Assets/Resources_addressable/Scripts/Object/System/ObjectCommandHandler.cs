@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class ObjectCommandHandler: CommandHandlerBase{
     public override void register(){
-        CommandSystem._add(nameof(spawn), spawn);
-        CommandSystem._add(nameof(move), move);
-        CommandSystem._add(nameof(rush), rush);
+        CommandSystem._add(spawn);
+        CommandSystem._add(move);
+        CommandSystem._add(rush);
     }
 
     void spawn(Dictionary<string, object> args){
