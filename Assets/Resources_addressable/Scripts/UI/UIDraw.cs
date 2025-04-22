@@ -25,8 +25,8 @@ public class UIDraw: BaseClass{
         }
         else{
             ui = _UISys._UIMonitor._get_UI_fg(info.name);
-            ui._enable();
-            if (pos!=null) ui._set_pos(pos.Value).Forget();
+            if (pos==null)ui._enable();
+            else ui._set_pos(pos.Value).Forget();
             // if (parent!=null) ui._set_parent(parent._self);
             return true;
         }

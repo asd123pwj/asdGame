@@ -18,6 +18,7 @@ public class UIMonitor: BaseClass{
     // ---------- Status ----------
     UIs UIs;
     public UIBase rightMenu_currentOpen = null;
+    public UIBase ui_currentPointerEnter = null;
     UIBase UI_selected;
     // public UIBase _UI_selected { get => UI_selected; set => try_toggle_rightMenu(value); }
     public Dictionary<GameObject, UIBase> _UIObj2base;

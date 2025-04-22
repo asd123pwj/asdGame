@@ -25,7 +25,7 @@ public class UIBase: BaseClass{
     public bool _isAvailable { get{ return _self.activeSelf; }}
     public List<UIBase> _subUIs;
     bool allow_init = false;
-    List<string> essential_interactions = new() { "UISetTop" };
+    List<string> essential_interactions = new() { nameof(UISetTop), nameof(UILogPointerOverUI) };
 
 
     public UIBase(GameObject parent, UIInfo info=null){
@@ -265,7 +265,7 @@ public class UIBase: BaseClass{
     }
 
     public async UniTaskVoid _set_pos(Vector2 pos){
-        _disable(); // 应该能避免UI闪烁
+        // _disable(); // 应该能避免UI闪烁
         while (_rt_self == null) await UniTask.Yield();
         _rt_self.position = pos;
         _enable();
