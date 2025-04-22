@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using Cysharp.Threading.Tasks;
 
 public class UIAttributeManagerInfo: UIScrollViewInfo{
     
@@ -43,10 +44,10 @@ public class UIAttributeManager: UIScrollView{
 
     public override void _init_done(){
         base._init_done();
-        draw_editors();
+        draw_editors().Forget();
     }
 
-    void draw_editors(){
+    async UniTask draw_editors(){
         owner = _UISys._UIMonitor._get_UI(_info.attributes["OWNER"].get<int>());
         List<UIInfo> editors_infos = new List<UIInfo>();
         List<UIInfo> editor_infos = new();
@@ -57,18 +58,18 @@ public class UIAttributeManager: UIScrollView{
             else if (type == typeof(string)) editor_infos = _get_editorString(key);
             else Debug.Log("UIAttributeManager not support type: " + key + " " + type);
 
-            editors_infos.Add(_get_editor_title(key));
+            editors_infos.Add(get_title(key));
             editors_infos.AddRange(editor_infos);
-            editors_infos.Add(_get_editor_separator());
+            editors_infos.Add(get_separator());
         }
         editors_infos.RemoveAt(editors_infos.Count - 1);
         for(int i = 0; i < editors_infos.Count; i++){
-            _append_and_draw_item(editors_infos[i], needPlace:(i == editors_infos.Count - 1));
+            await _append_and_draw_item(editors_infos[i], needPlace:(i == editors_infos.Count - 1));
         }
         // return infos;
     }
 
-    UIInfo _get_editor_title(string key){
+    UIInfo get_title(string key){
         UIScrollTextInfo info = (UIScrollTextInfo)UIClass._set_default("UITitleText");
         info.minSize = _info.textMinSize;
         info.maxSize = _info.textMaxSize;
@@ -76,7 +77,7 @@ public class UIAttributeManager: UIScrollView{
         return info;
     }
     
-    UIInfo _get_editor_separator(){
+    UIInfo get_separator(){
         UIInfo info = UIClass._set_default("UISeparator");
         info.sizeDelta = _info.separatorSize;
         return info;
@@ -115,7 +116,7 @@ public class UIAttributeManager: UIScrollView{
         bool isFromInputSystem = command.StartsWith("FROM_INPUT");
 
         if (isFromInputSystem){
-            infos.Add(_get_editor_title(key + "-command"));
+            infos.Add(get_title(key + "-command"));
         }
 
         UI_type = "UIScrollTextCommand";
@@ -138,7 +139,7 @@ public class UIAttributeManager: UIScrollView{
 
         if (isFromInputSystem){
             string keyName = Regex.Match(command, @"--key\s+(?:""([^""]*)""|(\S+))").Groups[1].Value;
-            infos.Add(_get_editor_title(key + "-trigger"));
+            infos.Add(get_title(key + "-trigger"));
             UI_type = "UIExecuteCommandFromAttribute";
             UIScrollTextInfo info_buttom = (UIScrollTextInfo)UIClass._set_default(UI_type);
             info_buttom.minSize = info_buttom.maxSize = _info.buttonSize;

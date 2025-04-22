@@ -3,7 +3,7 @@ using System.Collections.Generic;
 public class UIClassFloatPanel{
     public UIClassFloatPanel(){
 
-        UIClass._add("UIFloatPanel", new UIScrollViewInfo(){
+        UIClass._add("UIFloatPanel", new UIFloatPanelInfo(){
             class_type = "UIFloatPanel",
             base_type = "UIFloatPanel",
             background_key = "ui_RoundedIcon_32",
@@ -22,7 +22,7 @@ public class UIClassFloatPanel{
                 new UIScrollTextInfo() { 
                     class_type = "UIScrollText", name = "Title",
                     minSize = new(512-32, 32), anchoredPosition = new(16, -16) ,
-                    text = "Attribute Manager", background_key=""
+                    text = "Float Panel", background_key=""
                 },
             }
         });

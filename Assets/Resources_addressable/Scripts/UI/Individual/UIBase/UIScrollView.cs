@@ -123,7 +123,7 @@ public class UIScrollView: UIBase{
     public override void _init_done(){
         // set_grid();
         // _init_container();
-        _init_item();
+        _init_item().Forget();
         // place_items().Forget();
     }
 
@@ -151,21 +151,21 @@ public class UIScrollView: UIBase{
         content_rt = Content.GetComponent<RectTransform>();
     }
 
-    bool _init_item(){
+    async UniTask _init_item(){
         // ----- No item
         if (_info.items == null) {
             _info.items = new();
-            return true;
+            return;
         }
         // ---------- init item to container by item_index ---------- //
         order_items();
         for (int i = 0; i < _info.items.Count; i++){
             UIInfo item = _info.items[i];
             UIInfo item_ = UIClass._set_default(item.class_type, item);
-            _append_and_draw_item(item_);
+            await _append_and_draw_item(item_);
         }
         place_items().Forget();
-        return true;
+        return;
     }
 
     void order_items(){
@@ -195,7 +195,7 @@ public class UIScrollView: UIBase{
         base2info.Add(item_base, item_base._info);
         if (needPlace) place_items().Forget();
     }
-    public void _append_and_draw_item(UIInfo item, bool needPlace=false){
+    public async UniTask _append_and_draw_item(UIInfo item, bool needPlace=false){
         // resize_item_to_container(item_);
         // ----- Mark item of right menu ----- //
         if (_info.attributes != null && _info.attributes.ContainsKey("OWNER")) {
@@ -207,10 +207,10 @@ public class UIScrollView: UIBase{
         UIBase UI = UIDraw._draw_UI(Content, item.class_type, item);
         items.Add(UI);
         base2info.Add(UI, item);
-        if (needPlace) place_items().Forget();
+        if (needPlace) await place_items();
     }
 
-    async UniTaskVoid place_items(){
+    async UniTask place_items(){
         // ---------- Init ---------- //
         // ----- original position ----- //
         float x_ori = _info.paddingLeft;
@@ -273,9 +273,13 @@ public class UIScrollView: UIBase{
         _info.items = items;
     }
 
-    public void _empty(){
-        foreach(var item in items){
-            item._destroy();
+    public void _clear(){
+        for (int i = items.Count - 1; i >= 0; i--){
+            items[i]._destroy();
+            items.RemoveAt(i);
+            // _remove_item(item);
+            // item._destroy();
+            
         }
     }
 

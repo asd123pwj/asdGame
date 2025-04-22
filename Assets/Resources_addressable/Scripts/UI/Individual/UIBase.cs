@@ -268,7 +268,7 @@ public class UIBase: BaseClass{
         // _disable(); // 应该能避免UI闪烁
         while (_rt_self == null) await UniTask.Yield();
         _rt_self.position = pos;
-        _enable();
+        // _enable();
     }
 
 }
