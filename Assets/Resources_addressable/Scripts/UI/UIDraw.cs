@@ -11,7 +11,7 @@ public class UIDraw: BaseClass{
         else return _close(info.name);
     }
 
-    public bool _open(string type, string name="", Vector2? pos=null, UIBase parent=null){
+    public bool _open(string type, string name="", Vector2? pos=null, UIBase parent=null, bool isForceOpen=false){
         UIInfo info = UIClass._set_default(type, name);
         // if (pos != null) info.anchoredPosition = pos.Value;
         UIBase ui = _draw(type, info, parent);
@@ -20,7 +20,7 @@ public class UIDraw: BaseClass{
             // if (parent!=null) ui._set_parent(parent._self);
             return true;
         }
-        else if (_UISys._UIMonitor._get_UI_fg(info.name)._isAvailable) {
+        else if (!isForceOpen && _UISys._UIMonitor._get_UI_fg(info.name)._isAvailable) {
             return false;
         }
         else{

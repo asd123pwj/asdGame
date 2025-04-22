@@ -43,7 +43,7 @@ public class InputCommandHandler: CommandHandlerBase{
     void print_mouse_hover_time(Dictionary<string, object> args){
         /* FROM_INPUT               Use command from INPUT system
          */
-        Debug.Log(InputSystem._keyPos.mouse_hover_time);
+        Debug.Log(InputSystem._keyPos.mouse_hover_deltaTime);
     }
     
 }

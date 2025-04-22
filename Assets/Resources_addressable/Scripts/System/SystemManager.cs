@@ -31,6 +31,7 @@ public class SystemManager : MonoBehaviour{
         BaseClass._sys = this;
         Pseudo3DRuleTile._sys = this;
         _UpdateSys = new();
+        _Msg = new();
         _CtrlSys = new(this);
         _GCfg = new(this);
         _InputSys = new();
@@ -40,7 +41,6 @@ public class SystemManager : MonoBehaviour{
         _MatSys = new();
         _CamMgr = new();
         _VisSys = new();
-        _Msg = new();
         _Cmd = new();
         _initDone = true;
         // _input = GameObject.Find("Input");

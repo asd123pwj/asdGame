@@ -15,9 +15,9 @@ public class UIInfo{
     [JsonIgnore] public string name { get => _name ?? _name_default; set => _name = value; }
 
     [JsonProperty("class_type")] 
-    private string _class_type_fixed;
+    private string _class_type;
     private string _class_type_default { get => base_type; }
-    [JsonIgnore] public string class_type { get => _class_type_fixed ?? _class_type_default; set => _class_type_fixed = value; }
+    [JsonIgnore] public string class_type { get => _class_type ?? _class_type_default; set => _class_type = value; }
 
     [JsonProperty("base_type", NullValueHandling = NullValueHandling.Ignore)] 
     private string _base_type;

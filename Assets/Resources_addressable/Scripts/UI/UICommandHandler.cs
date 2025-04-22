@@ -17,6 +17,7 @@ public class UICommandHandler: CommandHandlerBase{
          * --[y] (float)            the y position of the UI, world space
          * --[name] (string)        the name of the UI
          * --[asItsChild] (int)     the UI runtimeID of the parent UI, UIBase._runtimeID
+         * --[open] (flag)          open the UI 
          * 
          * Example:
          *   UIToggle --x 99.9 --y 99 --type UIKeyboardShortcut --name CustomName --asItsChild xxxNoUseInManualxxx
@@ -33,10 +34,23 @@ public class UICommandHandler: CommandHandlerBase{
             Vector2 spawn_pos = args.ContainsKey("useMousePos") ? InputSystem._keyPos.mouse_pos_world : Camera.main.ScreenToWorldPoint(Vector2.zero);
             spawn_pos.x = args.ContainsKey("x") ? argType.toFloat(args["x"]) : spawn_pos.x;
             spawn_pos.y = args.ContainsKey("y") ? argType.toFloat(args["y"]) : spawn_pos.y;
-            _UISys._UIDraw._toggle(type, name, spawn_pos, ui);
+            if (args.ContainsKey("open")){
+                _UISys._UIDraw._open(type, name, spawn_pos, ui, true);
+            }
+            else{
+                _UISys._UIDraw._toggle(type, name, spawn_pos, ui);
+            }
         }
         else{
-            _UISys._UIDraw._toggle(type, name, parent:ui);
+            if (args.ContainsKey("open")){
+                // _UISys._UIDraw._reopen(type, name, spawn_pos, ui);
+                _UISys._UIDraw._open(type, name, parent:ui, isForceOpen:true);
+            }
+            else{
+                // _UISys._UIDraw._toggle(type, name, spawn_pos, ui);
+                _UISys._UIDraw._toggle(type, name, parent:ui);
+            }
+            // _UISys._UIDraw._toggle(type, name, parent:ui);
         }
     }
 

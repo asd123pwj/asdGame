@@ -20,6 +20,7 @@ public class UIClass{
         new UIClassContainer();
         new UIClassInteract();
 
+        new UIClassFloatPanel();
         new UIClassAttributeManager();
 
         new UIClassBackpack();

@@ -8,9 +8,20 @@ public struct KeyPos{
     public Vector2 mouse_pos_screen_change;
     public float x;
     public float y;
-    public float mouse_hover_time;
+    public float mouse_hover_deltaTime;
     // public float x_dir;
     // public float y_dir;
+}
+
+public class MouseHoverTrigger{
+    public float time;
+    public bool isTrigger;
+    public string messageID;
+    public MouseHoverTrigger(float time, string messageID){
+        this.time = time;
+        this.isTrigger = false;
+        this.messageID = messageID;
+    }
 }
 
 public delegate bool _input_action(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus);
@@ -26,6 +37,9 @@ public class InputSystem : BaseClass{
     public static KeyPos _keyPos = new();
     public static Dictionary<string, KeyInfo> _keyStatus => InputStatus._keyStatus;
     public static bool _onEdit = false;
+    List<MouseHoverTrigger> _mouse_hover_trigger = new(){
+        new(0.5f, "MOUSE_HOVER_0.5")
+    };  
     // public Dictionary<string, KeyInfo> _keyStatus = new();
 
     public override void _update(){
@@ -85,11 +99,19 @@ public class InputSystem : BaseClass{
 
     public void update_mouse_hover_time(){
         if (_keyPos.mouse_pos_world_change == Vector2.zero){
-            _keyPos.mouse_hover_time += Time.deltaTime;
+            _keyPos.mouse_hover_deltaTime += Time.deltaTime;
+            foreach (MouseHoverTrigger trigger in _mouse_hover_trigger){
+                if (_keyPos.mouse_hover_deltaTime >= trigger.time && !trigger.isTrigger){
+                    trigger.isTrigger = true;
+                    _sys._Msg._send(trigger.messageID, null);
+                }
+            }
         }
         else{
-            _keyPos.mouse_hover_time = 0;
+            _keyPos.mouse_hover_deltaTime = 0;
+            foreach (MouseHoverTrigger trigger in _mouse_hover_trigger){
+                trigger.isTrigger = false;
+            }
         }
     }
-    
 }

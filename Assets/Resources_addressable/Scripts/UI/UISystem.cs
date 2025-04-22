@@ -52,6 +52,11 @@ public class UISystem : BaseClass{
         _UISL = new();
         _UICls = new();
         _handler = new();
+        _Msg._add_receiver("MOUSE_HOVER_0.5", open_floatPanel);
+    }
+
+    public void open_floatPanel(DynamicValue _){
+        _Msg._send2COMMAND("UIToggle --useMousePos --type UIFloatPanel --open");
     }
     
 
