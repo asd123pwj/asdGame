@@ -25,6 +25,9 @@ public class TilemapBlockTerrainSurface: BaseClass{
     public TerrainHier1 _get_hier1(Vector3Int map_pos, TerrainHierBase hier_base){
         float type_value = _get_type_value(map_pos, hier_base);
         int type_ID = RandomGenerator._random_by_prob(_MatSys._terrain._hier1s_prob, type_value);
+        if ( type_ID == 1){
+            Debug.Log("a");
+        }
         TerrainHier1 hier1 = _MatSys._terrain._hier1s[type_ID];
         return hier1;
     }

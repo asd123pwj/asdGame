@@ -2,6 +2,7 @@
 
 
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class NoiseCfg{
@@ -17,12 +18,17 @@ public class NoiseCfg{
 
 public class Noise{
     public int seed;
-    FastNoiseLite _noise_generator;
+    private ThreadLocal<FastNoiseLite> threadNoise;
+    FastNoiseLite _noise_generator => threadNoise.Value;
 
     public Noise(int seed=-1){
         if (seed == -1) seed = System.DateTime.Now.Millisecond;
         this.seed = seed;
-        _noise_generator = new(seed);
+        threadNoise = new ThreadLocal<FastNoiseLite>(() => {
+            var noise = new FastNoiseLite();
+            noise.SetSeed(seed);
+            return noise;
+        });
     }
 
     public float _get(float x, float y, float frequnency, bool norm=true){
