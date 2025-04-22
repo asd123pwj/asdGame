@@ -17,13 +17,13 @@ public class UIClassRightMenu{
         // });
 
         UIClass._add("UIRightMenuInteractionManager", new (){
-            type = "UIRightMenuInteractionManager",
+            class_type = "UIRightMenuInteractionManager",
             base_type = "UIRightMenu",
             background_key = "RightMenu",
             sizeDelta = new (190 + 40, 230 + 40),
             subUIs = new(){
                 new UIScrollViewInfo() {
-                    type = "UIScrollView",
+                    class_type = "UIScrollView",
                     base_type = "UIScrollView",
                     sizeDelta = new (150*1 + 20*0 + 20 + 20, 50*3 + 20*2 + 20 + 20),
                     anchoredPosition = new (20, -20),
@@ -32,7 +32,7 @@ public class UIClassRightMenu{
                     items = new(){
                         new() {
                             name = "UIImage",
-                            type = "UIImage",
+                            class_type = "UIImage",
                         },
                     },
                     subUIs = new()

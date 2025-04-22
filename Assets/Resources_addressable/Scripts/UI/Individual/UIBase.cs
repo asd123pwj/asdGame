@@ -75,7 +75,7 @@ public class UIBase: BaseClass{
                 info.attributes ??= new();
                 info.attributes["OWNER"] = _info.attributes["OWNER"];
             }
-            UIBase ui = UIDraw._draw_UI(_self, info.type, info); // TODO: subUI.type -> subUI
+            UIBase ui = UIDraw._draw_UI(_self, info.class_type, info); // TODO: subUI.type -> subUI
             _subUIs.Add(ui); 
             _info.subUIs[i] = ui._info; // For saving
         }

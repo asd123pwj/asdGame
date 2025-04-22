@@ -4,7 +4,7 @@ public class UIClassImage{
     public UIClassImage(){
 
         UIClass._add("UIImage", new (){
-            type = "UIImage", //sizeDelta = new(0, 0),
+            class_type = "UIImage", //sizeDelta = new(0, 0),
             // anchorMin = new(0, 0), anchorMax = new(0, 1), pivot = new (0.5f, 0.5f), 
             interactions = new List<string>() {
                 // "UISetTop",
@@ -12,33 +12,33 @@ public class UIClassImage{
         });
 
         UIClass._add("UISeparator", new (){
-            type = "UISeparator", 
+            class_type = "UISeparator", 
             PixelsPerUnitMultiplier = 1,
             background_key="ui_Separator_Horizontal",
         });
         
         UIClass._add("UITitleSeparator", new (){
-            type = "UITitleSeparator", 
+            class_type = "UITitleSeparator", 
             PixelsPerUnitMultiplier = 1,
             anchorMin = new(0, 1f), anchorMax = new(1, 1f), sizeDelta = new(0, 8),
             background_key="ui_Separator_Horizontal",
         });
         
         UIClass._add("UIHighlight_a0.5", new (){
-            type="UIHighlight_a0.5",
+            class_type="UIHighlight_a0.5",
             background_key="p5_a0.5", 
             sizeDelta = new(16, 16), 
         });
         
         UIClass._add("UIOpenChangeTriggerMenu", new (){
-            type="UIHighlight_a0.5",
+            class_type="UIHighlight_a0.5",
             background_key="ui_RoundedIcon_8", PixelsPerUnitMultiplier=1, 
 
         });
         
     
         UIClass._add("UIHighlight_a0.5_ScrollPass2Parent", new (){
-            type="UIHighlight_a0.5_ScrollPass2Parent",
+            class_type="UIHighlight_a0.5_ScrollPass2Parent",
             background_key="p5_a0.5", 
             sizeDelta = new(16, 16), 
             interactions = new List<string>() {

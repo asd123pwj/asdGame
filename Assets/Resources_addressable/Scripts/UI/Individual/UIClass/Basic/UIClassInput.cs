@@ -5,7 +5,7 @@ public class UIClassInput{
         
         UIClass._add("UIInputField", new UIInputFieldInfo(){
         // readonly public static UIInputFieldInfo UIInputField = new() {
-            type = "UIInputField",
+            class_type = "UIInputField",
             base_type = "UIInputField",
             prefab_key = "InputField",
             background_key = "ui_RoundedIcon_8", PixelsPerUnitMultiplier=1, 

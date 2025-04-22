@@ -11,13 +11,13 @@ public class UIInfo{
     // ---------- Name ----------
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)] 
     private string _name;
-    private string _name_default { get => type; }
+    private string _name_default { get => class_type; }
     [JsonIgnore] public string name { get => _name ?? _name_default; set => _name = value; }
 
-    [JsonProperty("type")] 
-    private string _type_fixed;
-    private string _type_default { get => base_type; }
-    [JsonIgnore] public string type { get => _type_fixed ?? _type_default; set => _type_fixed = value; }
+    [JsonProperty("class_type")] 
+    private string _class_type_fixed;
+    private string _class_type_default { get => base_type; }
+    [JsonIgnore] public string class_type { get => _class_type_fixed ?? _class_type_default; set => _class_type_fixed = value; }
 
     [JsonProperty("base_type", NullValueHandling = NullValueHandling.Ignore)] 
     private string _base_type;
@@ -125,7 +125,7 @@ public class UIInfo{
     
     // ---------- Tools ----------
     public UIInfo _prune(){
-        UIInfo base_info = UIClass._set_default(type);
+        UIInfo base_info = UIClass._set_default(class_type);
         prune_as_item();
 
         // loop for prune baseClass

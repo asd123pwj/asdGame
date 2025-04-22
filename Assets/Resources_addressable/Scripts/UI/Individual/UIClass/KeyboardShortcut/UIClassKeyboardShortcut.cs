@@ -25,8 +25,8 @@ public class UIClassKeyboardShortcut{
         
         
 
-        UIClass._add("UIRightMenuInteractionManager_KeyShortcut", new UIScrollViewInfo(){
-            type = "UIRightMenuInteractionManager_KeyShortcut",
+        UIClass._add("UIRightMenuInteractionManager_UIKey", new UIScrollViewInfo(){
+            class_type = "UIRightMenuInteractionManager_UIKey",
             base_type = "UIRightMenu",
             background_key = "ui_RoundedIcon_32",
             PixelsPerUnitMultiplier = 1,
@@ -37,7 +37,7 @@ public class UIClassKeyboardShortcut{
             spacing = new (8, 8),
             // cellSize = new (96, 32),
             maxSize = new (300, 300),
-            rightMenu_name = "UIRightMenuInteractionManager_KeyShortcut",
+            rightMenu_name = "UIRightMenuInteractionManager_UIKey",
             // constraintCount = 1,
             anchoredPosition = new (8, -8),
             interactions = new List<string>() {
@@ -46,37 +46,37 @@ public class UIClassKeyboardShortcut{
                 "UIOpenRightMenu",
             },
             items = new(){
-                new() {
-                    type = "UIExecuteCommandFromMessage", sizeDelta = new (196, 32), messageID = "UIExecuteCommand"
-                },
-                new UIInputFieldInfo() {
-                    type = "UIInputField", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
-                },
-                new() {
-                    type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 62),
-                },
-                new() {
-                    type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
-                },
-                new() {
-                    type = "UIOpenAttributeManager", sizeDelta = new (196, 32),
+                // new() {
+                //     type = "UIExecuteCommandFromMessage", sizeDelta = new (196, 32), messageID = "UIExecuteCommand"
+                // },
+                // new UIInputFieldInfo() {
+                //     type = "UIInputField", sizeDelta = new (96, 32), messageID = "UIExecuteCommand"
+                // },
+                // new() {
+                //     type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 62),
+                // },
+                // new() {
+                //     type = "UIHighlight_a0.5_ScrollPass2Parent", sizeDelta = new (96, 32),
+                // },
+                new UIScrollTextInfo() {
+                    class_type = "UIOpenAttributeManager", minSize = new (196, 32), maxSize = new (196, 32),
                 },
             },
             subUIs = new()
         });
 
 
-        UIClass._add("UIOpenAttributeManager", new (){
-            type="UIOpenAttributeManager",
-            background_key="p5", 
-            interactions = new List<string>() {
-                "UIOpenAttributeManager",
-                "UIPassScroll2Parent"
-            },
-        });
+        // UIClass._add("UIOpenAttributeManager", new (){
+        //     type="UIOpenAttributeManager",
+        //     background_key="p5", 
+        //     interactions = new List<string>() {
+        //         "UIOpenAttributeManager",
+        //         "UIPassScroll2Parent"
+        //     },
+        // });
 
         UIClass._add("UIExecuteCommandFromMessage", new (){
-            type="UIExecuteCommandFromMessage",
+            class_type="UIExecuteCommandFromMessage",
             background_key="p5", 
             interactions = new List<string>() {
                 // "UISetTop",
@@ -106,8 +106,8 @@ public class UIClassKeyboardShortcut{
         
 
         UIClass._add("UIKey", new (){
-            type="UIKey", background_key="ui_RoundedIcon_16", PixelsPerUnitMultiplier=1,
-            rightMenu_name = "UIRightMenuInteractionManager_KeyShortcut",
+            class_type="UIKey", background_key="ui_RoundedIcon_16", PixelsPerUnitMultiplier=1,
+            rightMenu_name = "UIRightMenuInteractionManager_UIKey",
             interactions = new () {
                 "UIOpenRightMenu", 
                 "UIExecuteCommandFromAttribute",
@@ -117,13 +117,13 @@ public class UIClassKeyboardShortcut{
                 "UIPassPointerDown2Parent",
             },
             subUIs = new(){
-                new UIScrollTextInfo(){ type = "UIKeyName", text = "Esc", },
-                new UIScrollTextInfo(){ type = "UIKeyDescription", text = "占位符", },
+                new UIScrollTextInfo(){ class_type = "UIKeyName", text = "Esc", },
+                new UIScrollTextInfo(){ class_type = "UIKeyDescription", text = "占位符", },
             }
         });
 
         UIClass._add("UIKeyName", new UIScrollTextInfo(){
-            type = "UIKeyName", base_type = "UIScrollText",
+            class_type = "UIKeyName", base_type = "UIScrollText",
             fontSize = 16, marginTop=0, marginBottom=0, marginLeft=4, marginRight=0, 
             minSize = new(24, 24), maxSize = new(128, 24), anchoredPosition= new(6, -8), 
             prefab_key = "ScrollText", background_key = "",
@@ -136,7 +136,7 @@ public class UIClassKeyboardShortcut{
         });
         
         UIClass._add("UIKeyDescription", new UIScrollTextInfo(){
-            type = "UIKeyDescription", base_type = "UIScrollText",
+            class_type = "UIKeyDescription", base_type = "UIScrollText",
             fontSize = 16, marginTop=0, marginBottom=0, marginLeft=4, marginRight=0, 
             minSize = new(32, 24), maxSize = new(60, 24), anchoredPosition= new(6, -32), 
             prefab_key = "ScrollText", background_key = "",
@@ -274,8 +274,8 @@ public class UIClassKeyboardShortcut{
         };
 
         List<UIInfo> subUIs = new(){
-            new() { type = "UICloseButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, -7*2)},
-            new() { type = "UIResizeButtom", background_key="", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, 7*2)},
+            new() { class_type = "UICloseButtom", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, -7*2)},
+            new() { class_type = "UIResizeButtom", background_key="", sizeDelta = new(16*2, 16*2), anchoredPosition = new(-7*2, 7*2)},
         };
 
 
@@ -287,8 +287,8 @@ public class UIClassKeyboardShortcut{
             info.sizeDelta = keyInfo.size;
             info.attributes = new() { { "COMMAND", $"FROM_INPUT --key \"{keyInfo.cmdName}\"" }, };
             info.subUIs = new(){
-                new UIScrollTextInfo(){ type = "UIKeyName", text = keyInfo.shortName, },
-                new UIScrollTextInfo(){ type = "UIKeyDescription", text = "占位符", },
+                new UIScrollTextInfo(){ class_type = "UIKeyName", text = keyInfo.shortName, },
+                new UIScrollTextInfo(){ class_type = "UIKeyDescription", text = "占位符", },
             };
             UIClass._add($"UIKey_{info.name}", info);
             subUIs.Add(UIClass._UIInfos[$"UIKey_{info.name}"]);
@@ -296,7 +296,7 @@ public class UIClassKeyboardShortcut{
 
 
         UIClass._add("UIKeyboardShortcut", new (){
-            type = "UIKeyboardShortcut",
+            class_type = "UIKeyboardShortcut",
             background_key = "ui_5", 
             // background_key = "ui_TitleBg",
             PixelsPerUnitMultiplier = 1f,

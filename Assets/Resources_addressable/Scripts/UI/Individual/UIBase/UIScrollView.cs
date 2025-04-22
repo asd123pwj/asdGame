@@ -161,7 +161,7 @@ public class UIScrollView: UIBase{
         order_items();
         for (int i = 0; i < _info.items.Count; i++){
             UIInfo item = _info.items[i];
-            UIInfo item_ = UIClass._set_default(item.type, item);
+            UIInfo item_ = UIClass._set_default(item.class_type, item);
             _append_and_draw_item(item_);
         }
         place_items().Forget();
@@ -204,7 +204,7 @@ public class UIScrollView: UIBase{
         }
         // ----- draw item
         // UIBase UI = UIDraw._draw_UI(containers[item_.item_index]._self, item_.type, item_);
-        UIBase UI = UIDraw._draw_UI(Content, item.type, item);
+        UIBase UI = UIDraw._draw_UI(Content, item.class_type, item);
         items.Add(UI);
         base2info.Add(UI, item);
         if (needPlace) place_items().Forget();

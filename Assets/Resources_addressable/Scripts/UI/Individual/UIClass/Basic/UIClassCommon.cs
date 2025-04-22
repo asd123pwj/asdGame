@@ -4,7 +4,7 @@ public class UIClassCommon{
     public UIClassCommon(){
 
         UIClass._add("UICloseButtom", new(){
-            type = "UICloseButtom",
+            class_type = "UICloseButtom",
             background_key = "ui_3_16",
             anchorMin = new(1, 1), anchorMax = new(1, 1), pivot = new (1, 1), 
             sizeDelta = new(16, 16),
@@ -15,7 +15,7 @@ public class UIClassCommon{
 
         
         UIClass._add("UIToggleButtom", new(){
-            type = "UIToggleButtom",
+            class_type = "UIToggleButtom",
             background_key = "Empty",
             sizeDelta = new (120, 40),
             interactions = new List<string>() {
@@ -25,7 +25,7 @@ public class UIClassCommon{
 
         
         UIClass._add("UIResizeButtom", new(){
-            type = "UIResizeButtom",
+            class_type = "UIResizeButtom",
             background_key = "ui_4_16",
             anchorMin = new(1, 0), anchorMax = new(1, 0), pivot = new (1, 0), 
             sizeDelta = new (16, 16),
@@ -38,7 +38,7 @@ public class UIClassCommon{
         
         UIClass._add("UIThumbnail", new (){
         // readonly public static UIInfo UIThumbnail = new() {
-            type = "UIThumbnail",
+            class_type = "UIThumbnail",
             base_type = "UIThumbnail",
             interactions = new List<string>() {
                 // "UISetTop",

@@ -51,13 +51,13 @@ public class UIClass{
             info_ = cover_default(info_);
         }
         if (info_.name == ""){
-            info_.name = info_.type;
+            info_.name = info_.class_type;
         }
         
         return info_.Copy();
     }
     static UIInfo cover_default(UIInfo new_UIInfo){
-        UIInfo base_UIInfo = _UIInfos[new_UIInfo.type];
+        UIInfo base_UIInfo = _UIInfos[new_UIInfo.class_type];
         UIInfo cover_UIInfo =  inherit(base_UIInfo, new_UIInfo);
         return cover_UIInfo;
     }

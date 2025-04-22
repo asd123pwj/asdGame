@@ -5,7 +5,7 @@ public class UIClassContainer{
         
         UIClass._add("UIContainer", new (){
         // readonly public static UIInfo UIContainer = new() {
-            type = "UIContainer",
+            class_type = "UIContainer",
             background_key = "",
             sizeDelta = new (800, 800),
             interactions = new List<string>() {
@@ -21,7 +21,7 @@ public class UIClassContainer{
         
         UIClass._add("UIScrollView", new UIScrollViewInfo(){
         // readonly public static UIScrollViewInfo UIScrollView = new() {
-            type = "UIScrollView",
+            class_type = "UIScrollView",
             base_type = "UIScrollView",
             prefab_key = "ScrollView",
             background_key = "Empty",
@@ -29,8 +29,8 @@ public class UIClassContainer{
             sizeDelta = new(620, 240),
             // constraintCount = 3,
             subUIs = new(){
-                new() { type = "UICloseButtom" },
-                new() { type = "UIResizeButtom" },
+                new() { class_type = "UICloseButtom" },
+                new() { class_type = "UIResizeButtom" },
             },
             // subUIs = new Dictionary<string, List<UIInfo>>(){
             //     { "ControlUIs", new (){

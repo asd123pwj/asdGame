@@ -43,7 +43,7 @@ public class UISaveLoad: BaseClass{
         var UIStorage = load_UIStorage(_GCfg.__UI_path);
         _UISys._UIMonitor._clear_UIs();
         foreach (var UI in UIStorage.fg.Values){
-            _UISys._UIDraw._draw(UI.type, UI);
+            _UISys._UIDraw._draw(UI.class_type, UI);
             _UISys._UIMonitor._get_UI_fg(UI.name)._disable();
         }
         foreach (var UI in UIStorage.fg_Hier){
