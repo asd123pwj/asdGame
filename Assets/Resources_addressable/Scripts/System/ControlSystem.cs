@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class ControlSystem{
     SystemManager sys;
-    public GameObject _player;
+    // public GameObject _player;
+    public ObjectConfig _player;
 
     public ControlSystem(SystemManager sys){
         this.sys = sys;
@@ -13,8 +14,8 @@ public class ControlSystem{
     }
 
     
-    public void _set_player(GameObject player){
+    public void _set_player(ObjectConfig player){
         _player = player;
-        sys._searchInit<CinemachineVirtualCamera>("Camera", "Player Camera").Follow = _player.transform;
+        sys._searchInit<CinemachineVirtualCamera>("Camera", "Player Camera").Follow = _player._self.transform;
     }
 }

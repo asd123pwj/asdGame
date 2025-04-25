@@ -17,6 +17,7 @@ public class TilemapTile: BaseClass{
 
     public string _tile_ID => tileTile.tile_ID;
     public string _tile_subID => tileTile.tile_subID;
+    public string _actual_subID => tileTile.actual_subID;
     // string mineral_subID = "__Full";
     // Sprite decoration_sprite;
 

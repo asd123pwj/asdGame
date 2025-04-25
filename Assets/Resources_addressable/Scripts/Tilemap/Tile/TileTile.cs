@@ -16,6 +16,7 @@ public class TileTile : BaseClass{
     // ---------- Status ---------- //
     public string tile_ID = "";
     public string tile_subID = "";
+    public string actual_subID => get_subID();
 
     public TileTile(Vector3Int map_pos, LayerType layer, Transform container){
         this.map_pos = map_pos;
@@ -47,7 +48,14 @@ public class TileTile : BaseClass{
             // _renderer.material = _MatSys._mat._get_mat("TilemapLitMaterial");
             _renderer.material = _MatSys._mat._get_mat(mat_ID);//TilemapLitMaterial
         }
+    }
 
+    string get_subID(){
+        Sprite spr = TMap.GetSprite(map_pos);
+        if (spr != null){
+            return spr.name;
+        }
+        return "";
     }
 
     void init_gameObject(){

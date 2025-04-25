@@ -82,7 +82,7 @@ public class TilemapController: BaseClass{
             _query_point = Vector3Int.zero;
         }
         else{
-            Vector3 player_pos = _CtrlSys._player.transform.position;
+            Vector3 player_pos = _CtrlSys._player._self.transform.position;
             _query_point = TilemapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, MapLayerType.Middle));
         }
     }

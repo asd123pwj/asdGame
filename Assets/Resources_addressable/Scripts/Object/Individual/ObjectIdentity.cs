@@ -33,7 +33,7 @@ public class ObjectIdentity{
 
     void action_player(){
         // ControlSystem con = _config._sys._searchInit<ControlSystem>("System");
-        BaseClass._sys._CtrlSys._set_player(_config._self);
+        BaseClass._sys._CtrlSys._set_player(_config);
     }
     
 }

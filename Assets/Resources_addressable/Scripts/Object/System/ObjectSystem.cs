@@ -25,7 +25,7 @@ public class ObjectSystem: BaseClass{
     // ---------- Status ---------- //
     public Dictionary<GameObject, ObjectConfig> _obj2base = new();
     public Dictionary<int, ObjectConfig> _runtimeID2base = new();
-    public ObjectConfig player;
+    // public ObjectConfig player;
 
 
     public override void _init(){

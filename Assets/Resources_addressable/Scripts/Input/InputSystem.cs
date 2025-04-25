@@ -98,7 +98,7 @@ public class InputSystem : BaseClass{
     }
 
     public void update_mouse_hover_time(){
-        if (_keyPos.mouse_pos_world_change == Vector2.zero){
+        if (_keyPos.mouse_pos_screen_change == Vector2.zero){
             _keyPos.mouse_hover_deltaTime += Time.deltaTime;
             foreach (MouseHoverTrigger trigger in _mouse_hover_trigger){
                 if (_keyPos.mouse_hover_deltaTime >= trigger.time && !trigger.isTrigger){

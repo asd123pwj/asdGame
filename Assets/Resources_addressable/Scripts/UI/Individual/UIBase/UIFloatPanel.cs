@@ -98,6 +98,10 @@ public class UIFloatPanel: UIScrollView{
         infos.Add(get_separator());
         if (tile != null){
             infos.Add(get_title($"ID: {tile.tile}"));
+            infos.Add(get_title($"show ID: {tile._tile_ID}"));
+            infos.Add(get_title($"show sub_ID: {tile._tile_subID}"));
+            infos.Add(get_title($"actual sub_ID: {tile._actual_subID}"));
+            
         }
         else{
             infos.Add(get_title("No Tile"));

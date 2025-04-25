@@ -40,7 +40,7 @@ public class ObjectCommandHandler: CommandHandlerBase{
         if (args.ContainsKey("up")) key_pos.y = 1;
         else if (args.ContainsKey("down")) key_pos.y = -1;
         else key_pos.y = 0;
-        _ObjSys.player._Move._walk(key_pos);
+        _CtrlSys._player._Move._walk(key_pos);
     }
     
     void rush(Dictionary<string, object> args){
@@ -53,6 +53,6 @@ public class ObjectCommandHandler: CommandHandlerBase{
         if (args.ContainsKey("up")) key_pos.y = 1;
         else if (args.ContainsKey("down")) key_pos.y = -1;
         else key_pos.y = 0;
-        _ObjSys.player._Move._rush(key_pos);
+        _CtrlSys._player._Move._rush(key_pos);
     }
 }

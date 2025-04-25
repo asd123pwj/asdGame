@@ -27,29 +27,9 @@ public class TilemapBlockDraw: BaseClass{
         me = block;
     }
 
-    // public async UniTask _draw_me(){
-
-    // // }
-
-    // // public async UniTaskVoid _draw_block_complete(Vector3Int block_offsets, LayerType layer_type){
-    //     if (!isDrawed) {
-    //         isDrawed = true;
-    //     }
-    //     else{
-    //         return;
-    //     }
-    //     await _draw_block(me);
-    // }
-
 
 
     public async UniTask _draw_block(TilemapBlock block){
-        // if (done_block_offsets.Contains(block.offsets)) return;
-        // done_block_offsets.Add(block.offsets);
-        // if (block.offsets.x == 2 && block.offsets.y == -9) {
-        //     int a = 1;
-        // }
-        // Tilemap TMap = _TMapSys._TMapMon._get_blkObj(block.offsets, block.layer).TMap;
         Tilemap TMap = block.obj.TMap;
         Region4DrawTilemapBlock region_block = _get_draw_region(block);
         await _draw_region(TMap, region_block);
@@ -62,16 +42,10 @@ public class TilemapBlockDraw: BaseClass{
             await _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true);
         }
 
-        
-        // ShadowGenerator._generate_shadow_from_compCollider(
-        //     _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).obj,
-        //     _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).compositeCollider
-        // );
         ShadowGenerator._generate_shadow_from_compCollider(
             block.obj.obj,
             block.obj.compositeCollider
         );
-        // return true;
     }
     
 
