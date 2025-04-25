@@ -67,7 +67,7 @@ public class TilemapBlock: BaseClass{
             return;
         }
         await _wait_init_done();
-        await _draw._draw_block(this);
+        await _draw._draw_block();
     }
 
     public static TilemapBlock _get(Vector3Int offsets, LayerType layer){

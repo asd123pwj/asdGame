@@ -20,16 +20,16 @@ public class Region4DrawTilemapBlock{
 }
 
 public class TilemapBlockDraw: BaseClass{
-    public TilemapBlock me;
+    public TilemapBlock block;
     public bool isDrawed = false;
 
     public TilemapBlockDraw(TilemapBlock block){
-        me = block;
+        this.block = block;
     }
 
 
 
-    public async UniTask _draw_block(TilemapBlock block){
+    public async UniTask _draw_block(){
         Tilemap TMap = block.obj.TMap;
         Region4DrawTilemapBlock region_block = _get_draw_region(block);
         await _draw_region(TMap, region_block);
@@ -48,18 +48,35 @@ public class TilemapBlockDraw: BaseClass{
         );
     }
     
+    public async UniTask _draw_tile(TilemapBlock block, Vector2 map_pos){
+        Tilemap TMap = block.obj.TMap;
 
+        Region4DrawTilemapBlock region_block = _get_draw_region(block);
+        await _draw_region(TMap, region_block);
+        
+        Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = _get_draw_regions_placeholder(block);
+
+        foreach (var kvp in regions_placeholder){
+            // Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(kvp.Key, block.layer).TMap;
+            Tilemap TMap_placeholder = (await TilemapBlock._get_async(kvp.Key, block.layer)).obj.TMap;
+            await _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true);
+        }
+
+        ShadowGenerator._generate_shadow_from_compCollider(
+            block.obj.obj,
+            block.obj.compositeCollider
+        );
+    }
 
     public Region4DrawTilemapBlock _get_draw_region(TilemapBlock block){
         Vector3Int block_origin_pos = block.offsets * block.size;
-        // Dictionary<Vector3Int, TileBase> pos_tile_kvp = new();
         Region4DrawTilemapBlock region = new();
-        // List<TileBase> __tiles = new();
-        // List<Vector3Int> __positions = new();
         for (int x = 0; x < block.size.x; x++){
             for (int y = 0; y < block.size.y; y++){
-                if (block.map._get_tile(x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = _MatSys._tile._get_tile(block.map._get_tile(x, y));
+                TileBase tile = null;
+                if (block.map._get_tile(x, y) != GameConfigs._sysCfg.TMap_empty_tile) {
+                    tile = _MatSys._tile._get_tile(block.map._get_tile(x, y));
+                }
                 region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
             }
         }

@@ -41,7 +41,7 @@ public class InputCommandRegister : BaseClass{
 
         keyName2Command.Add("Number 0", "");
         keyName2Command.Add("Number 1", "TMapGen --useMousePos");
-        keyName2Command.Add("Number 2", "print_mouse_hover_time");
+        keyName2Command.Add("Number 2", "TMapMatch --useMousePos");
         keyName2Command.Add("Number 3", "");
         keyName2Command.Add("Number 4", "");
         keyName2Command.Add("Number 5", "");

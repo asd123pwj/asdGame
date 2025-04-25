@@ -3,21 +3,22 @@ using UnityEngine;
 
 public class TilemapTile: BaseClass{
     public static Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _our = new();
-    TilemapBlock block;
-    Vector3Int map_pos;
-    TileP3D P3D;
-    TileTile tileTile;
+    public TilemapBlock block;
+    public Vector3Int map_pos;
+    public TileP3D P3D;
+    public TileTile tileTile;
     
-    DecorationBase decoration;
-    public string tile;
+    public DecorationBase decoration;
+    public string tile_ID;
+    public string tile_subID;
     bool enable_tile = true;
     bool enable_P3D = true;
     bool enable_decoration = true;
     string mineral_ID;
 
-    public string _tile_ID => tileTile.tile_ID;
-    public string _tile_subID => tileTile.tile_subID;
-    public string _actual_subID => tileTile.actual_subID;
+    public string __tile_ID => tileTile.tile_ID;
+    public string __tile_subID => tileTile.tile_subID;
+    public string __actual_subID => tileTile.actual_subID;
     // string mineral_subID = "__Full";
     // Sprite decoration_sprite;
 
@@ -30,9 +31,10 @@ public class TilemapTile: BaseClass{
         _our[block.layer.ToString()].Add(map_pos, this);
     }
 
-    public void _set_tile(string tile) { this.tile = tile; }
+    public void _set_tile(string tile) { this.tile_ID = tile; }
+    public void _set_subID(string tile_subID) { this.tile_subID = tile_subID; }
 
-    public string _get_tile() => tile;
+    public string _get_tile() => tile_ID;
     public static TilemapTile _get(LayerType layer, Vector3Int map_pos){
         if (!_our.ContainsKey(layer.ToString())) return null;
         if (!_our[layer.ToString()].ContainsKey(map_pos)) return null;
@@ -46,20 +48,21 @@ public class TilemapTile: BaseClass{
             return false; // 20250303: I think this can not happen, it happen only in block no load
         }
         var tile = tiles_in_layer[map_pos];
-        if (tile.tile == "0"){
+        if (tile.tile_ID == "0"){
             return false; // "0" is empty tile
         }
         return true;
     } 
     public static bool _check_fullTile(LayerType layer, Vector3Int map_pos) {        
-        if (_check_tile(layer, map_pos) && _get(layer, map_pos)._tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
+        if (_check_tile(layer, map_pos) && _get(layer, map_pos).__tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
         return false;
     }
     
     public void _update_tile(){
         if (enable_tile){
             if (tileTile == null){
-                tileTile = new(map_pos, block.layer, block.obj.tile_container.transform);
+                // tileTile = new(map_pos, block.layer, block.obj.tile_container.transform);
+                tileTile = new(this);
             }
             else{
                 tileTile._update_sprite().Forget();
