@@ -40,7 +40,7 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("f12", "");
 
         keyName2Command.Add("Number 0", "");
-        keyName2Command.Add("Number 1", "TMapGen --useMousePos --tmp");
+        keyName2Command.Add("Number 1", "TMapGen --useMousePos");
         keyName2Command.Add("Number 2", "TMapMatch --useMousePos");
         keyName2Command.Add("Number 3", "");
         keyName2Command.Add("Number 4", "");

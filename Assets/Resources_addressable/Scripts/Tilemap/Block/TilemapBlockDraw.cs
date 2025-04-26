@@ -30,7 +30,7 @@ public class TilemapBlockDraw: BaseClass{
     public async UniTask _draw_block_mine(){
         foreach (TilemapTile tile in block.map.map){
             // TileMatchRule.match(tile.map_pos, block.layer);
-            tile._update_tile();
+            await tile._update_tile();
         }
     }
 

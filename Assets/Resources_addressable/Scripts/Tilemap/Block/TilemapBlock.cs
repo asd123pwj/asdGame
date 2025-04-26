@@ -69,6 +69,7 @@ public class TilemapBlock: BaseClass{
         await _wait_init_done();
         // await _draw._draw_block();
         await _draw._draw_block_mine();
+        // _draw._draw_block_mine().Forget();
     }
 
     public static TilemapBlock _get_force(Vector3Int offsets, LayerType layer){

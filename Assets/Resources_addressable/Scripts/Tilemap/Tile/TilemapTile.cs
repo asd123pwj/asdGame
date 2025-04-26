@@ -85,6 +85,7 @@ public class TilemapTile: BaseClass{
 
 
     public static bool _check_tile_loaded(LayerType layer, Vector3Int map_pos) {
+        if (!_our.ContainsKey(layer.ToString())) return false;
         return _our[layer.ToString()].ContainsKey(map_pos);
     } 
     public static bool _check_tile_empty(LayerType layer, Vector3Int map_pos) {
@@ -101,15 +102,11 @@ public class TilemapTile: BaseClass{
         return false;
     }
     
-    public void _update_tile(){
+    public async UniTask _update_tile(){
         if (enable_tile){
-            if (tileTile == null){
-                // tileTile = new(map_pos, block.layer, block.obj.tile_container.transform);
-                tileTile = new(this);
-            }
-            else{
-                tileTile._update_sprite().Forget();
-            }
+            tileTile ??= new(this);
+            // await tileTile._update_sprite();
+            tileTile._update_sprite().Forget();
         }
         else{
             // TODO: delete P3D
