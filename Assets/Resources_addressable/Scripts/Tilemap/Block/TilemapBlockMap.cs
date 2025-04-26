@@ -3,7 +3,7 @@ using UnityEngine;
 
 
 public class TilemapBlockMap: BaseClass{
-    TilemapTile[,] map;
+    public TilemapTile[,] map;
     TilemapBlock block;
     
     // public Vector3Int size => _GCfg._sysCfg.TMap_tiles_per_block;
@@ -54,9 +54,10 @@ public class TilemapBlockMap: BaseClass{
         _set_tile(pos.x, pos.y, tile_ID);
     } 
     public void _set_tile(int x, int y, string tile_ID){
-        _get(x, y)._set_tile(tile_ID);
+        _get(x, y)._set_ID(tile_ID);
     } 
 
+    // public void _update_
 
 
 }

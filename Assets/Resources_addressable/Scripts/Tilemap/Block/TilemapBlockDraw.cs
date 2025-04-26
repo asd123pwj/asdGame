@@ -27,46 +27,51 @@ public class TilemapBlockDraw: BaseClass{
         this.block = block;
     }
 
-
-
-    public async UniTask _draw_block(){
-        Tilemap TMap = block.obj.TMap;
-        Region4DrawTilemapBlock region_block = _get_draw_region(block);
-        await _draw_region(TMap, region_block);
-        
-        Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = _get_draw_regions_placeholder(block);
-
-        foreach (var kvp in regions_placeholder){
-            // Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(kvp.Key, block.layer).TMap;
-            Tilemap TMap_placeholder = (await TilemapBlock._get_async(kvp.Key, block.layer)).obj.TMap;
-            await _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true);
+    public async UniTask _draw_block_mine(){
+        foreach (TilemapTile tile in block.map.map){
+            // TileMatchRule.match(tile.map_pos, block.layer);
+            tile._update_tile();
         }
-
-        ShadowGenerator._generate_shadow_from_compCollider(
-            block.obj.obj,
-            block.obj.compositeCollider
-        );
     }
+
+    // public async UniTask _draw_block(){
+    //     Tilemap TMap = block.obj.TMap;
+    //     Region4DrawTilemapBlock region_block = _get_draw_region(block);
+    //     await _draw_region(TMap, region_block);
+        
+    //     Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = _get_draw_regions_placeholder(block);
+
+    //     foreach (var kvp in regions_placeholder){
+    //         // Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(kvp.Key, block.layer).TMap;
+    //         Tilemap TMap_placeholder = (await TilemapBlock._get_force_async(kvp.Key, block.layer)).obj.TMap;
+    //         await _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true);
+    //     }
+
+    //     ShadowGenerator._generate_shadow_from_compCollider(
+    //         block.obj.obj,
+    //         block.obj.compositeCollider
+    //     );
+    // }
     
-    public async UniTask _draw_tile(TilemapBlock block, Vector2 map_pos){
-        Tilemap TMap = block.obj.TMap;
+    // public async UniTask _draw_tile(TilemapBlock block, Vector2 map_pos){
+    //     Tilemap TMap = block.obj.TMap;
 
-        Region4DrawTilemapBlock region_block = _get_draw_region(block);
-        await _draw_region(TMap, region_block);
+    //     Region4DrawTilemapBlock region_block = _get_draw_region(block);
+    //     await _draw_region(TMap, region_block);
         
-        Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = _get_draw_regions_placeholder(block);
+    //     Dictionary<Vector3Int, Region4DrawTilemapBlock> regions_placeholder = _get_draw_regions_placeholder(block);
 
-        foreach (var kvp in regions_placeholder){
-            // Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(kvp.Key, block.layer).TMap;
-            Tilemap TMap_placeholder = (await TilemapBlock._get_async(kvp.Key, block.layer)).obj.TMap;
-            await _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true);
-        }
+    //     foreach (var kvp in regions_placeholder){
+    //         // Tilemap TMap_placeholder = _TMapSys._TMapMon._get_blkObj(kvp.Key, block.layer).TMap;
+    //         Tilemap TMap_placeholder = (await TilemapBlock._get_async(kvp.Key, block.layer)).obj.TMap;
+    //         await _draw_region(TMap_placeholder, kvp.Value, isPlaceholder:true);
+    //     }
 
-        ShadowGenerator._generate_shadow_from_compCollider(
-            block.obj.obj,
-            block.obj.compositeCollider
-        );
-    }
+    //     ShadowGenerator._generate_shadow_from_compCollider(
+    //         block.obj.obj,
+    //         block.obj.compositeCollider
+    //     );
+    // }
 
     public Region4DrawTilemapBlock _get_draw_region(TilemapBlock block){
         Vector3Int block_origin_pos = block.offsets * block.size;

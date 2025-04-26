@@ -4,12 +4,13 @@ using UnityEngine.Tilemaps;
 
 public class TilemapBlockGameObject: BaseClass{
     public GameObject obj;
-    public TilemapBlockStatus TMap_status;
-    public Tilemap TMap;
+    // public TilemapBlockStatus TMap_status;
+    // public Tilemap TMap;
     // public TilemapRenderer TMap_renderer;
-    public TilemapCollider2D TMap_collider;
-    public Rigidbody2D rb;
-    public CompositeCollider2D compositeCollider;
+    // public TilemapCollider2D TMap_collider;
+    // public CompositeCollider2D colliders;
+    // public Rigidbody2D rb;
+    // public CompositeCollider2D compositeCollider;
     public GameObject tile_container;
     public GameObject P3D_container;
     public GameObject Decoration_container;
@@ -28,20 +29,20 @@ public class TilemapBlockGameObject: BaseClass{
 
         // ----- Container ----- //
         tile_container = new GameObject("Tiles" + obj.name);
-        // obj.tile_container.transform.SetParent(obj.obj.transform);
-        tile_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
+        tile_container.transform.SetParent(obj.transform);
+        // tile_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
         
         P3D_container = new GameObject("P3Ds" + obj.name);
-        // obj.P3D_container.transform.SetParent(obj.obj.transform);
-        P3D_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
+        P3D_container.transform.SetParent(obj.transform);
+        // P3D_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
         
         Decoration_container = new GameObject("Decorations" + obj.name);
-        // obj.Decoration_container.transform.SetParent(obj.obj.transform);
-        Decoration_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
+        Decoration_container.transform.SetParent(obj.transform);
+        // Decoration_container.transform.SetParent(_TMapSys._TMapMon._TMap_containers[new LayerType(0).ToString()]);
 
         // ----- Tilemap ----- //
-        TMap = obj.AddComponent<Tilemap>();
-        TMap.tileAnchor = Vector3Int.zero;
+        // TMap = obj.AddComponent<Tilemap>();
+        // TMap.tileAnchor = Vector3Int.zero;
 
         // ----- TilemapRenderer ----- //
         // obj.TMap_renderer = obj.obj.AddComponent<TilemapRenderer>();
@@ -52,8 +53,8 @@ public class TilemapBlockGameObject: BaseClass{
         // obj.TMap_renderer.renderingLayerMask = 0;
 
 
-        TMap_status = obj.AddComponent<TilemapBlockStatus>();
-        TMap_status.sortingOrder = this.block.layer.sortingOrder;
+        // TMap_status = obj.AddComponent<TilemapBlockStatus>();
+        // TMap_status.sortingOrder = this.block.layer.sortingOrder;
         // obj.TMap_renderer.material = _MatSys._mat._get_mat("TransparentSprite");
         // obj.TMap_renderer.sortingLayerID = layer_type.sortingLayerID;
         // obj.TMap_renderer.sortingOrder = layer_type.sortingOrder;
@@ -66,19 +67,21 @@ public class TilemapBlockGameObject: BaseClass{
         // obj.TMap_renderer.mode = TilemapRenderer.Mode.Individual;
 
         // ----- TilemapCollider2D ----- //
-        TMap_collider = obj.AddComponent<TilemapCollider2D>();
-        TMap_collider.usedByComposite = true;
+        // TMap_collider = obj.AddComponent<TilemapCollider2D>();
+        // TMap_collider.usedByComposite = true;
 
         // ----- CompositeCollider2D ----- //
-        compositeCollider = obj.AddComponent<CompositeCollider2D>();
+        // compositeCollider = obj.AddComponent<CompositeCollider2D>();
+        // colliders = obj.AddComponent<CompositeCollider2D>();
+        // colliders.usedByComposite = true;
 
         // ----- Rigidbody2D ----- //
         // --- When CompositeCollider2D add, Rigidbody2D will be added automatically by Unity.
         // obj.TMap_rb = obj.TMap_obj.AddComponent<Rigidbody2D>();
 
-        rb = obj.GetComponent<Rigidbody2D>();
-        rb.bodyType = RigidbodyType2D.Static;
-        rb.sharedMaterial = _MatSys._phyMat._get_phyMat("Default");
+        // rb = obj.GetComponent<Rigidbody2D>();
+        // rb.bodyType = RigidbodyType2D.Static;
+        // rb.sharedMaterial = _MatSys._phyMat._get_phyMat("Default");
     }
 }
 

@@ -25,7 +25,7 @@ public class PlantMonitor: BaseClass{
         // new PlantBase(keyPos.mouse_pos_world, _TMapBD_containers["BlockDecoration"]);
         Vector3Int block_offsets = TilemapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerType());
         // TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, new LayerType());
-        TilemapBlock block = TilemapBlock._get(block_offsets, new LayerType());
+        TilemapBlock block = TilemapBlock._get_force(block_offsets, new LayerType());
 
         block.status._update_status_typeMap("Ground");
         foreach (var pos in block.status.positions["Ground"]){

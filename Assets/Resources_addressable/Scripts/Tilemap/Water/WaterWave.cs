@@ -226,12 +226,12 @@ public class WaterWave : BaseClass{
 
         // ----- Water continuous ----- //
         int amount_left, amount_right;
-        if (TilemapTile._check_fullTile(water._layer, water._map_pos + Vector3Int.left))
+        if (TilemapTile._check_tile_subID_full(water._layer, water._map_pos + Vector3Int.left))
             amount_left = water._amount;
         else
             amount_left = (water._left != null) ? water._left._amount : 0;
 
-        if (TilemapTile._check_fullTile(water._layer, water._map_pos + Vector3Int.right))
+        if (TilemapTile._check_tile_subID_full(water._layer, water._map_pos + Vector3Int.right))
             amount_right = water._amount;
         else
             amount_right = (water._right != null) ? water._right._amount : 0;

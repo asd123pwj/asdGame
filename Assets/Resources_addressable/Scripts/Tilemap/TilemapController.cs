@@ -127,7 +127,7 @@ public class TilemapController: BaseClass{
     // }
 
     public async UniTaskVoid _draw_block_complete(Vector3Int block_offsets, LayerType layer_type){
-        TilemapBlock block = await TilemapBlock._get_async(block_offsets, layer_type);
+        TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
         await block._draw_me();
         // if (!_TMapsHaveDraw.ContainsKey(layer_type.ToString())) {
         //     _TMapsHaveDraw.Add(layer_type.ToString(), new());

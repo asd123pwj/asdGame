@@ -148,7 +148,7 @@ public class WaterFlow: BaseClass{
 
     bool check_allow_water(LayerType layer, Vector3Int pos_dest){
         // If: Only full tile can't flow, part tile can flow
-        if (TilemapTile._check_fullTile(layer, pos_dest)) return false;          
+        if (TilemapTile._check_tile_subID_full(layer, pos_dest)) return false;          
         
         WaterBase water_dest = WaterBase._get_neighbor(layer, pos_dest);
         if (water_dest != null && water_dest._check_full(isAfter:true)) return false;

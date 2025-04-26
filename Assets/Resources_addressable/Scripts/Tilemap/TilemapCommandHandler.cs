@@ -26,6 +26,9 @@ public class TilemapCommandHandler: CommandHandlerBase{
         else{
             block_offsets = new Vector3Int((int)args["x_block"], (int)args["y_block"], 0);
         }
+        if (args.ContainsKey("tmp")){
+            int a = 1;
+        }
         _TMapSys._TMapCtrl._draw_block_complete(block_offsets, layer_type).Forget();
         
     }

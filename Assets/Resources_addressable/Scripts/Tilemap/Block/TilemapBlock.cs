@@ -67,17 +67,18 @@ public class TilemapBlock: BaseClass{
             return;
         }
         await _wait_init_done();
-        await _draw._draw_block();
+        // await _draw._draw_block();
+        await _draw._draw_block_mine();
     }
 
-    public static TilemapBlock _get(Vector3Int offsets, LayerType layer){
+    public static TilemapBlock _get_force(Vector3Int offsets, LayerType layer){
         if (!(our.ContainsKey(layer.ToString()) && our[layer.ToString()].ContainsKey(offsets))){
             return new(offsets, layer);
         }
         return our[layer.ToString()][offsets];
     }
 
-    public static async UniTask<TilemapBlock> _get_async(Vector3Int offsets, LayerType layer){
+    public static async UniTask<TilemapBlock> _get_force_async(Vector3Int offsets, LayerType layer){
         TilemapBlock block;
         if (!(our.ContainsKey(layer.ToString()) && our[layer.ToString()].ContainsKey(offsets))){
             block = new(offsets, layer);

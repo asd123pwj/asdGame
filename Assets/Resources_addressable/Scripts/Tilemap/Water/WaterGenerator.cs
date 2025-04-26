@@ -37,7 +37,7 @@ public class WaterGenerator: BaseClass{
         LayerType layer = new(0, MapLayerType.Middle);
         Vector3Int block_offsets = TilemapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, layer);
         // TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, layer);
-        TilemapBlock block = TilemapBlock._get(block_offsets, layer);
+        TilemapBlock block = TilemapBlock._get_force(block_offsets, layer);
 
         Vector3Int map_pos = TilemapAxis._mapping_worldPos_to_mapPos(keyPos.mouse_pos_world, layer);
 
