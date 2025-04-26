@@ -45,11 +45,12 @@ public class TileTile : BaseClass{
         _delay_in_update_sprite?.Cancel();
         _delay_in_update_sprite = new CancellationTokenSource();
 
-        while (tile.tile_subID == null){
+        if (tile.tile_subID == null) return;
+        // while (tile.tile_subID == null){
             // await UniTask.Delay(10);
             await UniTask.Delay(10, cancellationToken: _delay_in_update_sprite.Token);
 
-        }
+        // }
         // if (tile.tile_subID != null){
             tile_ID = tile.tile_ID;
             tile_subID = tile.tile_subID;
