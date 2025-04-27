@@ -26,106 +26,91 @@ public class TilemapTile: BaseClass{
     // string mineral_subID = "__Full";
     // Sprite decoration_sprite;
     // ---------- Status ---------- //
-    CancellationTokenSource _delay_in_update_subID;
-    // int update_times = 0;
-
+    public Dictionary<Vector2Int, bool> _neighbor_notEmpty = new();
+    public bool _need_update_neighbor = false;
 
 
     public TilemapTile(){}
     public TilemapTile(TilemapBlock block, Vector3Int map_pos){
         this.block = block;
         this.map_pos = map_pos;
-        // lock (_lock_our){
-        //     if (!_our.ContainsKey(block.layer.ToString())) {
-        //         _our.Add(block.layer.ToString(), new());
-        //     }
-        //     _our[block.layer.ToString()].Add(map_pos, this);
-        // }
         lock(_lock_our){
             var our_layer = _our.GetOrAdd(block.layer.ToString(), _ => new ConcurrentDictionary<Vector3Int, TilemapTile>());
             our_layer.TryAdd(map_pos, this);
         }
+        foreach (Vector2Int neighbor_pos in TileMatchRule.reference_pos){
+            _neighbor_notEmpty.Add(neighbor_pos, false);
+        }
     }
 
     public void _set_ID(string tile_ID) { 
-        _update_neighbor(tile_ID);
+        _update_need_update_neighbor(tile_ID);
         this.tile_ID = tile_ID; 
-        // _update_subID();        
     }
-    public void _set_subID(string tile_subID) { this.tile_subID = tile_subID; }
 
-    public void update_need_update_sprite(){
-        
-    }
-    public void _update_neighbor(string tile){
-        if ((tile_ID == GameConfigs._sysCfg.TMap_empty_tile && tile != GameConfigs._sysCfg.TMap_empty_tile)
-         || (tile_ID != GameConfigs._sysCfg.TMap_empty_tile && tile == GameConfigs._sysCfg.TMap_empty_tile)){
-            for (int x = -GameConfigs._sysCfg.TMap_tileNeighborsCheck_max.x; x <= GameConfigs._sysCfg.TMap_tileNeighborsCheck_max.x; x++){
-                for (int y = -GameConfigs._sysCfg.TMap_tileNeighborsCheck_max.y; y <= GameConfigs._sysCfg.TMap_tileNeighborsCheck_max.y; y++){
-                    if (!_check_tile_loaded(block.layer, map_pos + new Vector3Int(x, y, 0))) continue;
-                    _get(block.layer, map_pos + new Vector3Int(x, y, 0))._update_subID();
-                }
-            }
+    public void _update_need_update_neighbor(string tile_ID){
+        if ((tile_ID == GameConfigs._sysCfg.TMap_empty_tile && this.tile_ID != GameConfigs._sysCfg.TMap_empty_tile)
+         || (tile_ID != GameConfigs._sysCfg.TMap_empty_tile && this.tile_ID == GameConfigs._sysCfg.TMap_empty_tile)){
+            _need_update_neighbor = true;
         }
     }
-    public void _update_subID(){
-        UniTask.RunOnThreadPool(() => update_subID()).Forget();
-    }
-    async UniTask update_subID() {
-        _delay_in_update_subID?.Cancel();
-        _delay_in_update_subID = new CancellationTokenSource();
-        await UniTask.Delay(10, cancellationToken: _delay_in_update_subID.Token); // very useful, update times from 1~14 to 1~3
-        TileMatchRule.match(map_pos, block.layer);
-        if (tileTile != null) _update_tile(null).Forget();
-    }
 
-    public string _get_tile() => tile_ID;
+    public string _get_tile_ID() => tile_ID;
     public static TilemapTile _get(LayerType layer, Vector3Int map_pos){
         if (!_our.ContainsKey(layer.ToString())) return null;
         if (!_our[layer.ToString()].ContainsKey(map_pos)) return null;
         return _our[layer.ToString()][map_pos];
     }
-    // public static async UniTask<TilemapTile> _get_force_async(LayerType layer, Vector3Int map_pos){
-    //     if (!_our.ContainsKey(layer.ToString())) { 
-    //         _our.Add(layer.ToString(), new()); 
-    //     }
-    //     if (!_our[layer.ToString()].ContainsKey(map_pos)) { 
-    //         Vector3Int block_offsets = TilemapAxis._mapping_mapPos_to_blockOffsets(map_pos);
-    //         TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer);
-    //         _our[layer.ToString()].Add(map_pos, new(block, map_pos)); 
-    //     }
-    //     return _our[layer.ToString()][map_pos];
-    // }
 
 
-    public static bool _check_tile_loaded(LayerType layer, Vector3Int map_pos) {
-        if (_our.TryGetValue(layer.ToString(), out var our_layer)){
-            if (our_layer.ContainsKey(map_pos)){
-                return true;
-            }
-        }
-        return false;
-    } 
-    public static bool _check_tile_loaded_and_notEmpty(LayerType layer, Vector3Int map_pos) {
+    public static TilemapTile _try_get(LayerType layer, Vector3Int map_pos) {
         if (_our.TryGetValue(layer.ToString(), out var our_layer)){
             if (our_layer.TryGetValue(map_pos, out var tile)){
-                if (tile.tile_ID != GameConfigs._sysCfg.TMap_empty_tile) return true;
+                return tile;
             }
         }
-        return false;
-        if (!_check_tile_loaded(layer, map_pos)){
-            return false; 
-        }
-        if (_our[layer.ToString()][map_pos].tile_ID == GameConfigs._sysCfg.TMap_empty_tile){
-            return false; 
-        }
-        return true;
+        return null;
+    } 
+    public static bool _check_tile_loaded_and_notEmpty(LayerType layer, Vector3Int map_pos) {
+        TilemapTile tile = _try_get(layer, map_pos);
+        if (tile == null) return false;
+        return tile.tile_ID != GameConfigs._sysCfg.TMap_empty_tile;
     } 
     public static bool _check_tile_subID_full(LayerType layer, Vector3Int map_pos) {        
         if (_check_tile_loaded_and_notEmpty(layer, map_pos) && _get(layer, map_pos).__tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
         return false;
     }
     
+    public async UniTask _update_status(CancellationToken? ct, bool force_update = false){
+        bool neighbor_isChanged = force_update;
+        bool neighbor_notEmpty;
+        bool need_update_neighbor = _need_update_neighbor;
+        _need_update_neighbor = false;
+        foreach (Vector2Int neighbor_pos in TileMatchRule.reference_pos){
+            TilemapTile neighbor = _try_get(block.layer, map_pos + new Vector3Int(neighbor_pos.x, neighbor_pos.y, 0));
+            if (neighbor == null) {
+                neighbor_notEmpty = false;
+            }
+            else {
+                neighbor_notEmpty = (neighbor.tile_ID != GameConfigs._sysCfg.TMap_empty_tile);
+                if (need_update_neighbor) {
+                    await neighbor._update_status(ct);
+                }
+            }
+            if (neighbor_notEmpty != _neighbor_notEmpty[neighbor_pos]){
+                _neighbor_notEmpty[neighbor_pos] = neighbor_notEmpty;
+                neighbor_isChanged = true;
+            }
+        }
+        if (neighbor_isChanged){
+            string tile_subID_new = TileMatchRule.match(this);
+            if (tile_subID_new != tile_subID){
+                tile_subID = tile_subID_new;
+                await _update_tile(ct);
+            }
+        }
+    }
+
     public async UniTask _update_tile(CancellationToken? ct){
         if (enable_tile){
             tileTile ??= new(this);

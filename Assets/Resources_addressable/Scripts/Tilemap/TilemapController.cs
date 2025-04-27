@@ -56,7 +56,7 @@ public class TilemapController: BaseClass{
             cts = new();
             task = draw_by_cmd(cts.Token);
             // draw_by_cmd(cts.Token).Forget();
-            await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
+            // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
         }
     }
 
@@ -74,7 +74,7 @@ public class TilemapController: BaseClass{
         for (int x = -draw_r.x; x <= draw_r.x; x++){
             for (int y = -draw_r.y; y <= draw_r.y; y++){
                 await _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}", ct);
-                await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
+                // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
             }
         }
     }

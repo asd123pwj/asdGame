@@ -34,7 +34,8 @@ public class TilemapBlockDraw: BaseClass{
             ct?.ThrowIfCancellationRequested();
             // if (ct.Value.IsCancellationRequested) 
             //     return;
-            await tile._update_tile(ct);
+            // await tile._update_tile(ct);
+            await tile._update_status(ct, true);
         }
     }
 

@@ -45,6 +45,11 @@ public enum TileRuleType{
 }
 
 public class TileMatchRule{
+    public static List<Vector2Int> reference_pos = new(){
+        new(-3, 1), new(-2, 1), new(-1, 1), new(0, 1), new(1, 1), new(2, 1), new(3, 1),
+        new(-4, 0), new(-3, 0), new(-2, 0), new(-1, 0), new(1, 0), new(2, 0), new(3, 0), new(4, 0),
+        new(0, -1)
+    };
     public static List<TileRule> match_rules = new(){
         new("__L43", new (){ // 1
             {TileRuleType.isNull, new(){new(-4, 0), new(-3, 1), new(-2, 1), new(-1, 1), new(0, 1) }},
@@ -134,15 +139,18 @@ public class TileMatchRule{
     }
 
 
-    public static void match(Vector3Int map_pos, LayerType layer){
+    public static string match(TilemapTile tile){
+    // public static string match(Vector3Int map_pos, LayerType layer){
         for(int i = 0; i < match_rules.Count; i++){
             TileRule rule = match_rules[i];
-            if (rule.isMatch(map_pos, layer)){
-                TilemapTile tile = TilemapTile._get(layer, map_pos);
-                tile._set_subID(rule.sub_ID);
-                // tile._update_tile();
-                break;
+            if (rule.isMatch(tile.map_pos, tile.block.layer)){
+                return rule.sub_ID;
+                // TilemapTile tile = TilemapTile._get(layer, map_pos);
+                // tile._set_subID(rule.sub_ID);
+                // // tile._update_tile();
+                // break;
             }
         }
+        return null;
     }
 }
