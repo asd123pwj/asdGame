@@ -35,7 +35,6 @@ public class TilemapBlock: BaseClass{
     public bool isExist;
     public bool isDrawed;
 
-    public int initStage;
 
     // public TilemapBlock(){}
     public TilemapBlock(Vector3Int offsets, LayerType layer){
@@ -64,28 +63,13 @@ public class TilemapBlock: BaseClass{
         _terr = new(this);
     }
 
-    // public override async UniTask _init_async(){
-    //     await UniTask.RunOnThreadPool(() => _terr = new(this));
-    // }
-
     public async UniTask _prepare_me(CancellationToken? ct){
-        // _terr._generate_terrain(ct);
         await UniTask.RunOnThreadPool(() => _terr._generate_terrain(ct));
     }
 
     public async UniTask _draw_me(CancellationToken? ct){
-        // CancellationTokenSource cts = new();
-        // _cts_draw.Add(cts);
-        // if (!isDrawed) {
-        //     isDrawed = true;
-        // }
-        // else{
-        //     return;
-        // }
         await _wait_init_done();
-        // await _draw._draw_block();
         await _draw._draw_block_mine(ct);
-        // _draw._draw_block_mine().Forget();
     }
 
     public static TilemapBlock _get_force(Vector3Int offsets, LayerType layer){

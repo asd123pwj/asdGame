@@ -30,11 +30,7 @@ public class TilemapBlockDraw: BaseClass{
 
     public async UniTask _draw_block_mine(CancellationToken? ct){
         foreach (TilemapTile tile in block.map.map){
-            // TileMatchRule.match(tile.map_pos, block.layer);
             ct?.ThrowIfCancellationRequested();
-            // if (ct.Value.IsCancellationRequested) 
-            //     return;
-            // await tile._update_tile(ct);
             await tile._update_status(ct, true);
         }
     }
@@ -78,168 +74,168 @@ public class TilemapBlockDraw: BaseClass{
     //     );
     // }
 
-    public Region4DrawTilemapBlock _get_draw_region(TilemapBlock block){
-        Vector3Int block_origin_pos = block.offsets * block.size;
-        Region4DrawTilemapBlock region = new();
-        for (int x = 0; x < block.size.x; x++){
-            for (int y = 0; y < block.size.y; y++){
-                TileBase tile = null;
-                if (block.map._get_tile_foce(x, y) != GameConfigs._sysCfg.TMap_empty_tile) {
-                    tile = _MatSys._tile._get_tile(block.map._get_tile_foce(x, y));
-                }
-                region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
-            }
-        }
-        return region;
+    // public Region4DrawTilemapBlock _get_draw_region(TilemapBlock block){
+    //     Vector3Int block_origin_pos = block.offsets * block.size;
+    //     Region4DrawTilemapBlock region = new();
+    //     for (int x = 0; x < block.size.x; x++){
+    //         for (int y = 0; y < block.size.y; y++){
+    //             TileBase tile = null;
+    //             if (block.map._get_tile_foce(x, y) != GameConfigs._sysCfg.TMap_empty_tile) {
+    //                 tile = _MatSys._tile._get_tile(block.map._get_tile_foce(x, y));
+    //             }
+    //             region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+    //         }
+    //     }
+    //     return region;
 
 
-    }
+    // }
 
-    public Dictionary<Vector3Int, Region4DrawTilemapBlock> _get_draw_regions_placeholder(TilemapBlock block){
-        // This function aims draw placeholder tiles around the block,
-        Vector3Int block_origin_pos = block.offsets * block.size; 
-        Vector3Int block_offset;
-        Region4DrawTilemapBlock region;
-        Dictionary<Vector3Int, Region4DrawTilemapBlock> regions = new();
-        Vector3Int neighbor = GameConfigs._sysCfg.TMap_tileNeighborsCheck_max;
+    // public Dictionary<Vector3Int, Region4DrawTilemapBlock> _get_draw_regions_placeholder(TilemapBlock block){
+    //     // This function aims draw placeholder tiles around the block,
+    //     Vector3Int block_origin_pos = block.offsets * block.size; 
+    //     Vector3Int block_offset;
+    //     Region4DrawTilemapBlock region;
+    //     Dictionary<Vector3Int, Region4DrawTilemapBlock> regions = new();
+    //     Vector3Int neighbor = GameConfigs._sysCfg.TMap_tileNeighborsCheck_max;
 
-        // ----- lower left quarter
-        block_offset = block.offsets + new Vector3Int(-1, -1, 0);
-        region = new();
-        for (int x = 0; x < neighbor.x; x++){
-            for (int y = 0; y < neighbor.y; y++){
-                if (block.map._get_tile_foce(x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
-                region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
-            }
-        }
-        regions.Add(block_offset, region);
+    //     // ----- lower left quarter
+    //     block_offset = block.offsets + new Vector3Int(-1, -1, 0);
+    //     region = new();
+    //     for (int x = 0; x < neighbor.x; x++){
+    //         for (int y = 0; y < neighbor.y; y++){
+    //             if (block.map._get_tile_foce(x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
+    //             TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
+    //             region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+    //         }
+    //     }
+    //     regions.Add(block_offset, region);
 
-        // ----- upper left quarter
-        block_offset = block.offsets + new Vector3Int(-1, 1, 0);
-        region = new();
-        for (int x = 0; x < neighbor.x; x++){
-            for (int y = 0; y < neighbor.y; y++){
-                if (block.map._get_tile_foce(x, block.size.y - 1 - y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = get_placeholder_tile(block, new Vector3Int(x, block.size.y - 1 - y, 0));
-                region._add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0), tile);
-            }
-        }
-        regions.Add(block_offset, region);
+    //     // ----- upper left quarter
+    //     block_offset = block.offsets + new Vector3Int(-1, 1, 0);
+    //     region = new();
+    //     for (int x = 0; x < neighbor.x; x++){
+    //         for (int y = 0; y < neighbor.y; y++){
+    //             if (block.map._get_tile_foce(x, block.size.y - 1 - y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
+    //             TileBase tile = get_placeholder_tile(block, new Vector3Int(x, block.size.y - 1 - y, 0));
+    //             region._add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0), tile);
+    //         }
+    //     }
+    //     regions.Add(block_offset, region);
 
-        // ----- lower right quarter
-        block_offset = block.offsets + new Vector3Int(1, -1, 0);
-        region = new();
-        for (int x = 0; x < neighbor.x; x++){
-            for (int y = 0; y < neighbor.y; y++){
-                if (block.map._get_tile_foce(block.size.x - 1 - x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, y, 0));
-                region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0), tile);
-            }
-        }
-        regions.Add(block_offset, region);
+    //     // ----- lower right quarter
+    //     block_offset = block.offsets + new Vector3Int(1, -1, 0);
+    //     region = new();
+    //     for (int x = 0; x < neighbor.x; x++){
+    //         for (int y = 0; y < neighbor.y; y++){
+    //             if (block.map._get_tile_foce(block.size.x - 1 - x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
+    //             TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, y, 0));
+    //             region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0), tile);
+    //         }
+    //     }
+    //     regions.Add(block_offset, region);
 
-        // ----- upper right quarter
-        block_offset = block.offsets + new Vector3Int(1, 1, 0);
-        region = new();
-        for (int x = 0; x < neighbor.x; x++){
-            for (int y = 0; y < neighbor.y; y++){
-                if (block.map._get_tile_foce(block.size.x - 1 - x, block.size.y - 1 - y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0));
-                region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0), tile);
-            }
-        }
-        regions.Add(block_offset, region);
+    //     // ----- upper right quarter
+    //     block_offset = block.offsets + new Vector3Int(1, 1, 0);
+    //     region = new();
+    //     for (int x = 0; x < neighbor.x; x++){
+    //         for (int y = 0; y < neighbor.y; y++){
+    //             if (block.map._get_tile_foce(block.size.x - 1 - x, block.size.y - 1 - y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
+    //             TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0));
+    //             region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, block.size.y - 1 - y, 0), tile);
+    //         }
+    //     }
+    //     regions.Add(block_offset, region);
 
-        // ----- left side
-        block_offset = block.offsets + new Vector3Int(-1, 0, 0);
-        region = new();
-        for (int x = 0; x < neighbor.x; x++){
-            for (int y = 0; y < block.size.y; y++){
-                if (block.map._get_tile_foce(x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
-                region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
-            }
-        }
-        regions.Add(block_offset, region);
-        // ----- right side
-        region = new();
-        block_offset = block.offsets + new Vector3Int(1, 0, 0);
-        for (int x = 0; x < neighbor.x; x++){
-            for (int y = 0; y < block.size.y; y++){
-                if (block.map._get_tile_foce(block.size.x - 1 - x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, y, 0));
-                region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0), tile);
-            }
-        }
-        regions.Add(block_offset, region);
+    //     // ----- left side
+    //     block_offset = block.offsets + new Vector3Int(-1, 0, 0);
+    //     region = new();
+    //     for (int x = 0; x < neighbor.x; x++){
+    //         for (int y = 0; y < block.size.y; y++){
+    //             if (block.map._get_tile_foce(x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
+    //             TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
+    //             region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+    //         }
+    //     }
+    //     regions.Add(block_offset, region);
+    //     // ----- right side
+    //     region = new();
+    //     block_offset = block.offsets + new Vector3Int(1, 0, 0);
+    //     for (int x = 0; x < neighbor.x; x++){
+    //         for (int y = 0; y < block.size.y; y++){
+    //             if (block.map._get_tile_foce(block.size.x - 1 - x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
+    //             TileBase tile = get_placeholder_tile(block, new Vector3Int(block.size.x - 1 - x, y, 0));
+    //             region._add(block_origin_pos + new Vector3Int(block.size.x - 1 - x, y, 0), tile);
+    //         }
+    //     }
+    //     regions.Add(block_offset, region);
 
         
-        // ----- bottom side
-        block_offset = block.offsets + new Vector3Int(0, -1, 0);
-        region = new();
-        for (int x = 0; x < block.size.x; x++){
-            for (int y = 0; y < neighbor.y; y++){
-                if (block.map._get_tile_foce(x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
-                region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
-            }
-        }
-        regions.Add(block_offset, region);
+    //     // ----- bottom side
+    //     block_offset = block.offsets + new Vector3Int(0, -1, 0);
+    //     region = new();
+    //     for (int x = 0; x < block.size.x; x++){
+    //         for (int y = 0; y < neighbor.y; y++){
+    //             if (block.map._get_tile_foce(x, y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
+    //             TileBase tile = get_placeholder_tile(block, new Vector3Int(x, y, 0));
+    //             region._add(block_origin_pos + new Vector3Int(x, y, 0), tile);
+    //         }
+    //     }
+    //     regions.Add(block_offset, region);
 
-        // ----- top side
-        block_offset = block.offsets + new Vector3Int(0, 1, 0);
-        region = new();
-        for (int x = 0; x < block.size.x; x++){
-            for (int y = 0; y < neighbor.y; y++){
-                if (block.map._get_tile_foce(x, block.size.y - 1 - y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
-                TileBase tile = get_placeholder_tile(block, new Vector3Int(x, block.size.y - 1 - y, 0));
-                region._add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0), tile);
-            }
-        }
-        regions.Add(block_offset, region);
+    //     // ----- top side
+    //     block_offset = block.offsets + new Vector3Int(0, 1, 0);
+    //     region = new();
+    //     for (int x = 0; x < block.size.x; x++){
+    //         for (int y = 0; y < neighbor.y; y++){
+    //             if (block.map._get_tile_foce(x, block.size.y - 1 - y) == GameConfigs._sysCfg.TMap_empty_tile) continue;
+    //             TileBase tile = get_placeholder_tile(block, new Vector3Int(x, block.size.y - 1 - y, 0));
+    //             region._add(block_origin_pos + new Vector3Int(x, block.size.y - 1 - y, 0), tile);
+    //         }
+    //     }
+    //     regions.Add(block_offset, region);
 
-        return regions;
-    }
+    //     return regions;
+    // }
 
-    TileBase get_placeholder_tile(TilemapBlock block, Vector3Int position){
-        string tile_ID = block.map._get_tile_foce(position.x, position.y);
-        TileBase tile = _MatSys._tile._get_tile(tile_ID);
-        return tile;
-    }
-
-
-    public async UniTask _draw_region(Tilemap tilemap, Region4DrawTilemapBlock region, bool isPlaceholder=false){
-        // System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        // stopwatch.Start();
+    // TileBase get_placeholder_tile(TilemapBlock block, Vector3Int position){
+    //     string tile_ID = block.map._get_tile_foce(position.x, position.y);
+    //     TileBase tile = _MatSys._tile._get_tile(tile_ID);
+    //     return tile;
+    // }
 
 
-        Color transparent = new(1, 1, 1, 0);
-        int tile_per_group = Mathf.Min(GameConfigs._sysCfg.TMap_tiles_per_loading, region.tiles.Count());
-        Vector3Int[] positions = region.positions;
-        TileBase[] tiles = region.tiles;
-        for (int i = 0; i < region.tiles.Count(); i += tile_per_group) {
-            if (i + tile_per_group > region.tiles.Count()) 
-                tile_per_group = region.tiles.Count() - i;
-            Vector3Int[] positions_segment = new ArraySegment<Vector3Int>(positions, i, tile_per_group).ToArray();
-            TileBase[] tiles_segment = new ArraySegment<TileBase>(tiles, i, tile_per_group).ToArray();
+    // public async UniTask _draw_region(Tilemap tilemap, Region4DrawTilemapBlock region, bool isPlaceholder=false){
+    //     // System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+    //     // stopwatch.Start();
+
+
+    //     Color transparent = new(1, 1, 1, 0);
+    //     int tile_per_group = Mathf.Min(GameConfigs._sysCfg.TMap_tiles_per_loading, region.tiles.Count());
+    //     Vector3Int[] positions = region.positions;
+    //     TileBase[] tiles = region.tiles;
+    //     for (int i = 0; i < region.tiles.Count(); i += tile_per_group) {
+    //         if (i + tile_per_group > region.tiles.Count()) 
+    //             tile_per_group = region.tiles.Count() - i;
+    //         Vector3Int[] positions_segment = new ArraySegment<Vector3Int>(positions, i, tile_per_group).ToArray();
+    //         TileBase[] tiles_segment = new ArraySegment<TileBase>(tiles, i, tile_per_group).ToArray();
             
-            // ----- Draw tile ----- //
-            tilemap.SetTiles(positions_segment, tiles_segment);
+    //         // ----- Draw tile ----- //
+    //         tilemap.SetTiles(positions_segment, tiles_segment);
 
-            // ----- Set Placeholder ----- //
-            if (isPlaceholder){
-                foreach (var tile_pos in positions_segment){
-                    tilemap.SetColor(tile_pos, transparent);
-                }
-            }
+    //         // ----- Set Placeholder ----- //
+    //         if (isPlaceholder){
+    //             foreach (var tile_pos in positions_segment){
+    //                 tilemap.SetColor(tile_pos, transparent);
+    //             }
+    //         }
 
-            await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
-        }
+    //         await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
+    //     }
 
-        // stopwatch.Stop();
-        // Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds);
-    }
+    //     // stopwatch.Stop();
+    //     // Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds);
+    // }
 
 
 

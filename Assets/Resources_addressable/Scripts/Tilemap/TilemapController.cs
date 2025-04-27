@@ -55,8 +55,6 @@ public class TilemapController: BaseClass{
             } catch (OperationCanceledException) { }
             cts = new();
             task = draw_by_cmd(cts.Token);
-            // draw_by_cmd(cts.Token).Forget();
-            // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
         }
     }
 
@@ -70,15 +68,37 @@ public class TilemapController: BaseClass{
         //     }
         // }
         
+        // Vector3Int draw_r = GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
+        // for (int x = -draw_r.x; x <= draw_r.x; x++){
+        //     for (int y = -draw_r.y; y <= draw_r.y; y++){
+        //         await _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}", ct);
+        //         // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
+        //     }
+        // }
         Vector3Int draw_r = GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
-        for (int x = -draw_r.x; x <= draw_r.x; x++){
-            for (int y = -draw_r.y; y <= draw_r.y; y++){
-                await _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}", ct);
-                // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
+        int maxRadius = Mathf.Max(draw_r.x, draw_r.y);
+
+        for (int radius = 0; radius <= maxRadius; radius++){
+            for (int x = -radius; x <= radius; x++){
+                await draw_block(x, -radius, ct); 
+                await draw_block(x, radius, ct);  
+            }
+            
+            for (int y = -radius + 1; y < radius; y++){
+                await draw_block(-radius, y, ct); 
+                await draw_block(radius, y, ct);  
             }
         }
     }
-    
+
+    async UniTask draw_block(int x, int y, CancellationToken ct){
+        if (Mathf.Abs(x) > GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading.x || Mathf.Abs(y) > GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading.y) 
+            return;
+        await _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}", ct);
+    }
+
+
+
     public void _task_update_queryPoint(){
         if (_CtrlSys == null || _CtrlSys._player == null) {
             _query_point = Vector3Int.zero;

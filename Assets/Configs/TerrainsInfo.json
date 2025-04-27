@@ -14,7 +14,7 @@
             "base_tile": "b8",
             "prob": 1,
             "surface": [
-                {"noise": "perlin", "f": 0.02, "min": 0, "max": 100, "ignoreY": true}
+                {"noise": "perlin", "f": 0.02, "min": 0, "max": 0, "ignoreY": true}
             ],
             "minerals": [
                 {"ID": "bd_m1", "noise": [
@@ -31,8 +31,8 @@
             "base_tile": "b7",
             "prob": 1,
             "surface": [
-                {"noise": "perlin", "f": 0.001, "min": -100, "max": 100, "ignoreY": true},
-                {"noise": "simplex2", "f": 0.01, "min": 0, "max": 200, "fractal": "fbm", "ignoreY": true}
+                {"noise": "perlin", "f": 0.001, "min": -0, "max": 0, "ignoreY": true},
+                {"noise": "simplex2", "f": 0.01, "min": 0, "max": 0, "fractal": "fbm", "ignoreY": true}
             ],
             "minerals": [
                 {"ID": "bd_m1", "noise": [
