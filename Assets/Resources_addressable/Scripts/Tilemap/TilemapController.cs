@@ -60,33 +60,22 @@ public class TilemapController: BaseClass{
 
     async UniTask draw_by_cmd(CancellationToken ct){
         // Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-        // for (int x = -prepare_r.x; x <= prepare_r.x; x++){
-        //     for (int y = -prepare_r.y; y <= prepare_r.y; y++){
-        //         await _Msg._send2COMMAND($"TMapGen --prepareOnly --x_block {_query_point.x + x} --y_block {_query_point.y + y}", ct);
-                
-        //         // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
-        //     }
-        // }
-        
-        // Vector3Int draw_r = GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
-        // for (int x = -draw_r.x; x <= draw_r.x; x++){
-        //     for (int y = -draw_r.y; y <= draw_r.y; y++){
-        //         await _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}", ct);
-        //         // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
-        //     }
-        // }
         Vector3Int draw_r = GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
         int maxRadius = Mathf.Max(draw_r.x, draw_r.y);
-
+        List<UniTask> tasks = new();
         for (int radius = 0; radius <= maxRadius; radius++){
             for (int x = -radius; x <= radius; x++){
-                await draw_block(x, -radius, ct); 
-                await draw_block(x, radius, ct);  
+                tasks.Add(draw_block(x, -radius, ct));
+                if (tasks.Count >= GameConfigs._sysCfg.TMap_blocks_per_loading) { await UniTask.WhenAll(tasks); tasks.Clear(); }
+                tasks.Add(draw_block(x, radius, ct));  
+                if (tasks.Count >= GameConfigs._sysCfg.TMap_blocks_per_loading) { await UniTask.WhenAll(tasks); tasks.Clear(); }
             }
             
             for (int y = -radius + 1; y < radius; y++){
-                await draw_block(-radius, y, ct); 
-                await draw_block(radius, y, ct);  
+                tasks.Add(draw_block(-radius, y, ct)); 
+                if (tasks.Count >= GameConfigs._sysCfg.TMap_blocks_per_loading) { await UniTask.WhenAll(tasks); tasks.Clear(); }
+                tasks.Add(draw_block(radius, y, ct));  
+                if (tasks.Count >= GameConfigs._sysCfg.TMap_blocks_per_loading) { await UniTask.WhenAll(tasks); tasks.Clear(); }
             }
         }
     }
@@ -109,45 +98,6 @@ public class TilemapController: BaseClass{
         }
     }
 
-
-    // public bool _task_prepare_gameObject(){
-    //     Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-    //     for (int x = -prepare_r.x; x <= prepare_r.x; x++){
-    //         for (int y = -prepare_r.y; y <= prepare_r.y; y++){
-    //             _TMapSys._TMapMon._get_blkObj(_query_point + new Vector3Int(x, y), new LayerType());
-    //         }
-    //     }
-    //     return true;
-    // }
-
-    // public bool _task_prepare_tilemap(){
-    //     // while (true) ;
-    //     Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-    //     for (int x = -prepare_r.x; x <= prepare_r.x; x++){
-    //         for (int y = -prepare_r.y; y <= prepare_r.y; y++){
-    //             _TMapSys._TMapZoneGen._prepare_block(_query_point + new Vector3Int(x, y), new());
-    //         }
-    //     }
-    //     return true;
-    // }
-
-    // public async UniTask _task_draw_tilemap(){
-    //     Vector3Int draw_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-    //     for (int x = -draw_r.x; x <= draw_r.x; x++){
-    //         for (int y = -draw_r.y; y <= draw_r.y; y++){
-    //             if (!_TMapSys._TMapMon._check_block_load(_query_point + new Vector3Int(x, y), new LayerType())) continue;
-    //             TilemapBlock block = _TMapSys._TMapMon._get_block(_query_point + new Vector3Int(x, y), new LayerType());
-    //             // TilemapBlock block = TMapGen._generate_block(_query_point + new Vector3Int(x, y));
-    //             await TMapDraw._draw_block(block);
-                
-    //             // ShadowGenerator._generate_shadow_from_compCollider(
-    //             //     _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).obj,
-    //             //     _TMapSys._TMapMon._get_blkObj(block.offsets, new LayerType()).compositeCollider
-    //             // );
-    //         }
-    //     }
-    // }
-
     public async UniTask _prepare_block(Vector3Int block_offsets, LayerType layer_type, CancellationToken? ct){
         // TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
         // UniTask.RunOnThreadPool(() => TilemapBlock._get_force_async(block_offsets, layer_type)).Forget();
@@ -160,56 +110,7 @@ public class TilemapController: BaseClass{
         TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
         await UniTask.RunOnThreadPool(() => block._prepare_me(ct));
         await block._draw_me(ct);
-        // if (!_TMapsHaveDraw.ContainsKey(layer_type.ToString())) {
-        //     _TMapsHaveDraw.Add(layer_type.ToString(), new());
-        // }
-        // if (_TMapsHaveDraw[layer_type.ToString()].Contains(block_offsets)) {
-        //     return;
-        // }
-        // else{
-        //     _TMapsHaveDraw[layer_type.ToString()].Add(block_offsets);
-        // }
-        
-        // _TMapSys._TMapMon._get_blkObj(block_offsets, layer_type);
-        // await UniTask.RunOnThreadPool(() => _TMapSys._TMapZoneGen._prepare_block(block_offsets, layer_type));
-        // if (!_TMapSys._TMapMon._check_block_load(block_offsets, layer_type)) return;
-        // TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, layer_type);
-        // // TilemapBlock block = TMapGen._generate_block(_query_point + new Vector3Int(x, y));
-        // TMapDraw._draw_block(block).Forget();
     }
-
-    // public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-    //     Vector3Int block_offsets = TMapCfg._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, new LayerType());
-    
-    //     List<Vector3Int> block_offsets_list = new();
-
-    //     Vector3Int blocks_around_loading = GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
-    //     for (int x = -blocks_around_loading.x; x <= blocks_around_loading.x; x++){
-    //         for (int y = -blocks_around_loading.y; y <= blocks_around_loading.y; y++){
-    //             block_offsets_list.Add(new Vector3Int(block_offsets.x + x, block_offsets.y + y));
-    //         }
-    //     }
-
-    //     System.Diagnostics.Stopwatch stopwatch = new();
-    //     stopwatch.Start();
-    //     foreach (Vector3Int BOffsets in block_offsets_list){
-    //         TilemapBlock block = _TMapSys._TerrGen._generate_block(BOffsets, new LayerType());
-    //         TMapDraw._draw_block(block);
-
-    //     }
-
-    //     foreach (Vector3Int BOffsets in block_offsets_list){
-    //         ShadowGenerator._generate_shadow_from_compCollider(
-    //             _TMapSys._TMapMon._get_blkObj(BOffsets, new LayerType()).obj,
-    //             _TMapSys._TMapMon._get_blkObj(BOffsets, new LayerType()).compositeCollider
-    //         );
-    //     }
-
-    //     stopwatch.Stop();
-    //     Debug.Log("Time loop: " + stopwatch.ElapsedMilliseconds + ", regions: " + block_offsets_list.Count);
-    //     return true;
-    // }
-
 
     public override bool _check_allow_init(){
         if (!_sys._initDone) return false;
@@ -217,7 +118,6 @@ public class TilemapController: BaseClass{
         if (!_MatSys._tile._check_P3D_all_loaded()) return false;
         if (!_InputSys._initDone) return false;
         return true;
-        // return _GCfg._MatSys._TMap._check_info_initDone();
     }
 
 

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -6,14 +7,14 @@ using UnityEngine.Tilemaps;
 
 
 public class TilemapBlockTerrainSurface: BaseClass{
-    readonly Dictionary<int, int> underground_cache = new();
+    readonly ConcurrentDictionary<int, int> underground_cache = new();
 
     public bool _check_underground(Vector3Int map_pos, TerrainHier1 hier1){
-        if (!underground_cache.ContainsKey(map_pos.x)){
-            underground_cache[map_pos.x] = GameConfigs._noise._get_int(map_pos, hier1.surface);
+        if (!underground_cache.TryGetValue(map_pos.x, out int underground_height)){
+            underground_height = GameConfigs._noise._get_int(map_pos, hier1.surface);
+            underground_cache.TryAdd(map_pos.x, underground_height);
         }
-        if (map_pos.y > underground_cache[map_pos.x]) return false;
-        else return true;
+        return map_pos.y <= underground_height;
     }
     
     // ---------- Vertical Edge ---------- //

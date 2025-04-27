@@ -23,6 +23,7 @@ public struct SystemConfig{
     
     // ----- loading ----- //
     public int TMap_tiles_per_loading;              // when loading, how many tiles in one time
+    public int TMap_blocks_per_loading;             // when loading, how many blocks in one time
     public int TMap_interval_per_loading;           // when loading, how long to wait between each loading
     public Vector3Int TMap_draw_blocksAround_RadiusMinusOne_loading;   // when loading, how many blocks around the player to load
     public Vector3Int TMap_prepare_blocksAround_RadiusMinusOne_loading; 
