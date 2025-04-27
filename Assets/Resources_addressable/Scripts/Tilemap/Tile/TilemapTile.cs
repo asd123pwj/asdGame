@@ -87,6 +87,7 @@ public class TilemapTile: BaseClass{
         bool need_update_neighbor = _need_update_neighbor;
         _need_update_neighbor = false;
         foreach (Vector2Int neighbor_pos in TileMatchRule.reference_pos){
+            ct?.ThrowIfCancellationRequested();
             TilemapTile neighbor = _try_get(block.layer, map_pos + new Vector3Int(neighbor_pos.x, neighbor_pos.y, 0));
             if (neighbor == null) {
                 neighbor_notEmpty = false;

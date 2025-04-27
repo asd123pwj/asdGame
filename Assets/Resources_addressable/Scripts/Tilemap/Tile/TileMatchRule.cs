@@ -9,31 +9,30 @@ public class TileRule{
         this.rule = rule;
     }
 
-    public bool isMatch(Vector3Int map_pos, LayerType layer){
+    public bool isMatch(TilemapTile tile){
         foreach (TileRuleType ruleType in rule.Keys){
-            if(!isMatchRule(map_pos, layer, ruleType, rule[ruleType])){
+            if(!isMatchRule(tile, ruleType, rule[ruleType])){
                 return false;
             }
         }
         return true;
     }
 
-    bool isMatchRule(Vector3Int map_pos, LayerType layer, TileRuleType ruleType, List<Vector2Int> rule){
+    bool isMatchRule(TilemapTile tile, TileRuleType ruleType, List<Vector2Int> rule){
         foreach (Vector2Int offset in rule){
-            if(!isMatchRule(map_pos, layer, ruleType, offset)){
+            if(!isMatchRule(tile, ruleType, offset)){
                 return false;
             }
         }
         return true;
     }
 
-    bool isMatchRule(Vector3Int map_pos, LayerType layer, TileRuleType ruleType, Vector2Int offset){
-        Vector3Int new_pos = map_pos + new Vector3Int((int)offset.x, (int)offset.y, 0);
+    bool isMatchRule(TilemapTile tile, TileRuleType ruleType, Vector2Int offset){
         if(ruleType == TileRuleType.isNull){
-            return !TilemapTile._check_tile_loaded_and_notEmpty(layer, new_pos);
+            return !tile._neighbor_notEmpty[offset];
         }
         else if(ruleType == TileRuleType.notNull){
-            return TilemapTile._check_tile_loaded_and_notEmpty(layer, new_pos);
+            return tile._neighbor_notEmpty[offset];
         }
         return false; // shouldn't happen, just placeholder
     }
@@ -143,7 +142,7 @@ public class TileMatchRule{
     // public static string match(Vector3Int map_pos, LayerType layer){
         for(int i = 0; i < match_rules.Count; i++){
             TileRule rule = match_rules[i];
-            if (rule.isMatch(tile.map_pos, tile.block.layer)){
+            if (rule.isMatch(tile)){
                 return rule.sub_ID;
                 // TilemapTile tile = TilemapTile._get(layer, map_pos);
                 // tile._set_subID(rule.sub_ID);
