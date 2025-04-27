@@ -9,7 +9,7 @@ using Unity.VisualScripting;
 
 public delegate void _UIInteraction(BaseEventData eventData, bool isBuildIn = true);
 
-public class UIInteractBase{
+public class UIInteractBase: BaseClass{
     // ---------- Sub Tools ----------
     // public UIIndividual _ui { get { return _self.GetComponent<UIIndividual>(); } }
     // public UIBase _Base { get { return _ui._Base; } }

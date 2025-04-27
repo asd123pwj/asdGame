@@ -6,6 +6,7 @@ using MathNet.Numerics.LinearAlgebra.Single;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Linq;
+using System.Threading;
 
 public class Region4DrawTilemapBlock{
     public Vector3Int[] positions => pos_tile_kvp.Keys.ToArray();
@@ -27,10 +28,13 @@ public class TilemapBlockDraw: BaseClass{
         this.block = block;
     }
 
-    public async UniTask _draw_block_mine(){
+    public async UniTask _draw_block_mine(CancellationToken? ct){
         foreach (TilemapTile tile in block.map.map){
             // TileMatchRule.match(tile.map_pos, block.layer);
-            await tile._update_tile();
+            ct?.ThrowIfCancellationRequested();
+            // if (ct.Value.IsCancellationRequested) 
+            //     return;
+            await tile._update_tile(ct);
         }
     }
 

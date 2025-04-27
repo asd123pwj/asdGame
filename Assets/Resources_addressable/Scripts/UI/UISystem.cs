@@ -55,7 +55,7 @@ public class UISystem : BaseClass{
         _Msg._add_receiver("MOUSE_HOVER_0.5", open_floatPanel);
     }
 
-    public async UniTask open_floatPanel(DynamicValue _){
+    public async UniTask open_floatPanel(DynamicValue _, CancellationToken? ct){
         _Msg._send2COMMAND("UIToggle --useMousePos --type UIFloatPanel --open").Forget();
     }
     

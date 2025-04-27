@@ -54,6 +54,9 @@ public class TilemapTile: BaseClass{
     }
     public void _set_subID(string tile_subID) { this.tile_subID = tile_subID; }
 
+    public void update_need_update_sprite(){
+        
+    }
     public void _update_neighbor(string tile){
         if ((tile_ID == GameConfigs._sysCfg.TMap_empty_tile && tile != GameConfigs._sysCfg.TMap_empty_tile)
          || (tile_ID != GameConfigs._sysCfg.TMap_empty_tile && tile == GameConfigs._sysCfg.TMap_empty_tile)){
@@ -73,7 +76,7 @@ public class TilemapTile: BaseClass{
         _delay_in_update_subID = new CancellationTokenSource();
         await UniTask.Delay(10, cancellationToken: _delay_in_update_subID.Token); // very useful, update times from 1~14 to 1~3
         TileMatchRule.match(map_pos, block.layer);
-        tileTile?._update_sprite().Forget();
+        if (tileTile != null) _update_tile(null).Forget();
     }
 
     public string _get_tile() => tile_ID;
@@ -96,10 +99,20 @@ public class TilemapTile: BaseClass{
 
 
     public static bool _check_tile_loaded(LayerType layer, Vector3Int map_pos) {
-        if (!_our.ContainsKey(layer.ToString())) return false;
-        return _our[layer.ToString()].ContainsKey(map_pos);
+        if (_our.TryGetValue(layer.ToString(), out var our_layer)){
+            if (our_layer.ContainsKey(map_pos)){
+                return true;
+            }
+        }
+        return false;
     } 
-    public static bool _check_tile_notEmpty(LayerType layer, Vector3Int map_pos) {
+    public static bool _check_tile_loaded_and_notEmpty(LayerType layer, Vector3Int map_pos) {
+        if (_our.TryGetValue(layer.ToString(), out var our_layer)){
+            if (our_layer.TryGetValue(map_pos, out var tile)){
+                if (tile.tile_ID != GameConfigs._sysCfg.TMap_empty_tile) return true;
+            }
+        }
+        return false;
         if (!_check_tile_loaded(layer, map_pos)){
             return false; 
         }
@@ -109,14 +122,14 @@ public class TilemapTile: BaseClass{
         return true;
     } 
     public static bool _check_tile_subID_full(LayerType layer, Vector3Int map_pos) {        
-        if (_check_tile_notEmpty(layer, map_pos) && _get(layer, map_pos).__tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
+        if (_check_tile_loaded_and_notEmpty(layer, map_pos) && _get(layer, map_pos).__tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
         return false;
     }
     
-    public async UniTask _update_tile(){
+    public async UniTask _update_tile(CancellationToken? ct){
         if (enable_tile){
             tileTile ??= new(this);
-            await tileTile._update_sprite();
+            await tileTile._update_sprite(ct);
             // tileTile._update_sprite().Forget();
         }
         else{

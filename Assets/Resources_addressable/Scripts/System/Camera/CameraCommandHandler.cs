@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 
 
@@ -7,7 +8,7 @@ public class CameraCommandHandler: CommandHandlerBase{
         CommandSystem._add(CamZoom);
     }
 
-    async UniTask CamZoom(Dictionary<string, object> args){
+    async UniTask CamZoom(Dictionary<string, object> args, CancellationToken? ct){
         /* CamZoom                  Zoom in/out
          * --[in] (flag)       
          * --[out] (flag)        

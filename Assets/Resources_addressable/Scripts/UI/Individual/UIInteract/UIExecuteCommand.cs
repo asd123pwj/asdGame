@@ -17,6 +17,7 @@ public class UIExecuteCommand: UIInteractBase{
     void execute_command(BaseEventData eventData){
         string cmd = _get_command();
         if (cmd == "") return;
-        CommandSystem._execute(cmd);
+        // CommandSystem._execute(cmd);
+        _Msg._send2COMMAND(cmd);
     }
 }

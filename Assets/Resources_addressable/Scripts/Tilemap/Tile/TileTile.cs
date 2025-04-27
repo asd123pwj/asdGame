@@ -40,8 +40,10 @@ public class TileTile : BaseClass{
         init_gameObject();
     }
 
-    public async UniTask _update_sprite(){
+    public async UniTask _update_sprite(CancellationToken? ct){
         // _delay_in_update_sprite?.Cancel();
+        // if (ct != null && ct.Value.IsCancellationRequested) return;
+        ct?.ThrowIfCancellationRequested();
         if (tile.tile_subID == null) return;
         // _delay_in_update_sprite = new CancellationTokenSource();
         // await UniTask.Delay(10, cancellationToken: _delay_in_update_sprite.Token);

@@ -4,6 +4,7 @@ using TMPro;
 using Newtonsoft.Json;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+using System.Threading;
 
 public class UIScrollTextInfo: UIInfo{
     
@@ -163,7 +164,7 @@ public class UIScrollText: UIBase{
         _Msg._add_receiver(_info.messageID, _update_text);
     }
 
-    public async UniTask _update_text(DynamicValue text){
+    public async UniTask _update_text(DynamicValue text, CancellationToken? ct){
         update_text(text.get<string>());
         adaptive_resize();
         sync_with_source(text);

@@ -33,16 +33,12 @@ public class TilemapController: BaseClass{
     public Vector3Int _query_point;
     public Vector3Int _query_point_prev = new(-999999999, -999999999, -999999999);
     // public override float _update_interval { get; set; } = 0.5f;
+    CancellationTokenSource cts;
+    UniTask task;
 
 
     public TilemapController(){
         _update_interval = 0.5f;
-    }
-
-
-    public override void _init(){
-        // _sys._InputSys._register_action("Menu 4", tmp_draw, "isFirstDown");
-
     }
 
     public override async UniTask _loop(){
@@ -54,31 +50,30 @@ public class TilemapController: BaseClass{
                 continue;
             }
             _query_point_prev = _query_point;
-            draw_by_cmd().Forget();
-            // _task_prepare_tilemap();
-            // var task = 
-            // _task_prepare_gameObject();
-            // await UniTask.RunOnThreadPool(() => _task_prepare_tilemap());
-            // await _task_draw_tilemap();
+            cts?.Cancel();try {
+            await task; 
+            } catch (OperationCanceledException) { }
+            cts = new();
+            task = draw_by_cmd(cts.Token);
+            // draw_by_cmd(cts.Token).Forget();
             await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
-            // await UniTask.Yield();
         }
     }
 
-    async UniTaskVoid draw_by_cmd(){
-        Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-        for (int x = -prepare_r.x; x <= prepare_r.x; x++){
-            for (int y = -prepare_r.y; y <= prepare_r.y; y++){
-                await _Msg._send2COMMAND($"TMapGen --prepareOnly --x_block {_query_point.x + x} --y_block {_query_point.y + y}");
+    async UniTask draw_by_cmd(CancellationToken ct){
+        // Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+        // for (int x = -prepare_r.x; x <= prepare_r.x; x++){
+        //     for (int y = -prepare_r.y; y <= prepare_r.y; y++){
+        //         await _Msg._send2COMMAND($"TMapGen --prepareOnly --x_block {_query_point.x + x} --y_block {_query_point.y + y}", ct);
                 
-                // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
-            }
-        }
+        //         // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
+        //     }
+        // }
         
         Vector3Int draw_r = GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
         for (int x = -draw_r.x; x <= draw_r.x; x++){
             for (int y = -draw_r.y; y <= draw_r.y; y++){
-                await _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}");
+                await _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}", ct);
                 await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
             }
         }
@@ -133,16 +128,18 @@ public class TilemapController: BaseClass{
     //     }
     // }
 
-    public async UniTask _prepare_block(Vector3Int block_offsets, LayerType layer_type){
+    public async UniTask _prepare_block(Vector3Int block_offsets, LayerType layer_type, CancellationToken? ct){
         // TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
         // UniTask.RunOnThreadPool(() => TilemapBlock._get_force_async(block_offsets, layer_type)).Forget();
         TilemapBlock block = await UniTask.RunOnThreadPool(() => TilemapBlock._get_force_async(block_offsets, layer_type));
+        await UniTask.RunOnThreadPool(() => block._prepare_me(ct));
         // block._terr._generate_terrain();
     }
 
-    public async UniTask _draw_block_complete(Vector3Int block_offsets, LayerType layer_type){
+    public async UniTask _draw_block_complete(Vector3Int block_offsets, LayerType layer_type, CancellationToken? ct){
         TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
-        await block._draw_me();
+        await UniTask.RunOnThreadPool(() => block._prepare_me(ct));
+        await block._draw_me(ct);
         // if (!_TMapsHaveDraw.ContainsKey(layer_type.ToString())) {
         //     _TMapsHaveDraw.Add(layer_type.ToString(), new());
         // }

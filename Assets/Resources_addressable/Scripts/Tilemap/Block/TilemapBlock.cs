@@ -7,6 +7,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Threading;
+using Unity.VisualScripting;
 
 
 public class TilemapBlock: BaseClass{
@@ -29,7 +30,8 @@ public class TilemapBlock: BaseClass{
     public TilemapBlockDraw _draw;
     public TilemapBlockTerrain _terr;
     // ---------- Status ---------- //
-    public static List<CancellationTokenSource> _cts = new();
+    public static List<CancellationTokenSource> _cts_prepare = new();
+    public static List<CancellationTokenSource> _cts_draw = new();
     public bool isExist;
     public bool isDrawed;
 
@@ -66,12 +68,14 @@ public class TilemapBlock: BaseClass{
     //     await UniTask.RunOnThreadPool(() => _terr = new(this));
     // }
 
-    public void _prepare_me(){
-        _terr._generate_terrain();
+    public async UniTask _prepare_me(CancellationToken? ct){
+        // _terr._generate_terrain(ct);
+        await UniTask.RunOnThreadPool(() => _terr._generate_terrain(ct));
     }
 
-    public async UniTask _draw_me(){
-        CancellationTokenSource cts = new();
+    public async UniTask _draw_me(CancellationToken? ct){
+        // CancellationTokenSource cts = new();
+        // _cts_draw.Add(cts);
         // if (!isDrawed) {
         //     isDrawed = true;
         // }
@@ -80,7 +84,7 @@ public class TilemapBlock: BaseClass{
         // }
         await _wait_init_done();
         // await _draw._draw_block();
-        await _draw._draw_block_mine();
+        await _draw._draw_block_mine(ct);
         // _draw._draw_block_mine().Forget();
     }
 

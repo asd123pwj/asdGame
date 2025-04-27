@@ -1,3 +1,4 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -14,9 +15,12 @@ public class TilemapBlockTerrain: BaseClass{
         this.block = block;
     }
 
-    public void _generate_terrain(){
+    public void _generate_terrain(CancellationToken? ct){
+        // if (ct.Value.IsCancellationRequested) return;
         for (int i = 0; i < block.size.x; i++){
             for (int j = 0; j < block.size.y; j++){
+                // if (ct.Value.IsCancellationRequested) return;
+                ct?.ThrowIfCancellationRequested();
                 Vector3Int map_pos = TilemapAxis._mapping_inBlockPos_to_mapPos(new(i, j), block.offsets);
                 TerrainHier1 hier1 = surface._get_hier1(map_pos, _MatSys._terrain._infos.HierBase);
                 if (surface._check_underground(map_pos, hier1)){

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
+using System.Threading;
 
 public static class argType{
     public static float toFloat(object value) => value is int i ? (float)i : (float)value;
@@ -84,7 +85,7 @@ public class CommandParser{ // Thank Deepseek
 }
 
 
-public delegate UniTask CommandHandler(Dictionary<string, object> args);
+public delegate UniTask CommandHandler(Dictionary<string, object> args, CancellationToken? ct=null);
 public class CommandSystem: BaseClass{
     static Dictionary<string, CommandHandler> handlers = new();
 
@@ -92,22 +93,22 @@ public class CommandSystem: BaseClass{
         _sys._Msg._add_receiver(GameConfigs._sysCfg.Msg_command, _execute);
     }
     
-    public static async UniTask _execute(DynamicValue command){
+    public static async UniTask _execute(DynamicValue command, CancellationToken? ct){
         string commands = command.get<string>();
         if (commands.StartsWith("FROM_INPUT")) {
-            await _execute_single(commands);
+            await _execute_single(commands, ct);
         }
         else {
             foreach (string cmd in commands.Split('\v')){
-                await _execute_single(cmd);
+                await _execute_single(cmd, ct);
             }
         }
     }
 
-    static async UniTask _execute_single(string command){
+    static async UniTask _execute_single(string command, CancellationToken? ct){
         Command cmd = CommandParser.parse(command);
         if (handlers.ContainsKey(cmd.name)){
-            await handlers[cmd.name](cmd.args);
+            await handlers[cmd.name](cmd.args, ct);
         }
         else{
             Debug.Log($"No command: {cmd.name}");
