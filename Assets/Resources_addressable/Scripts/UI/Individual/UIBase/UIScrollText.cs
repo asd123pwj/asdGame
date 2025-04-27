@@ -163,7 +163,7 @@ public class UIScrollText: UIBase{
         _Msg._add_receiver(_info.messageID, _update_text);
     }
 
-    public void _update_text(DynamicValue text){
+    public async UniTask _update_text(DynamicValue text){
         update_text(text.get<string>());
         adaptive_resize();
         sync_with_source(text);

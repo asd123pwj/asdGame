@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Cysharp.Threading.Tasks;
 
 public static class argType{
     public static float toFloat(object value) => value is int i ? (float)i : (float)value;
@@ -83,7 +84,7 @@ public class CommandParser{ // Thank Deepseek
 }
 
 
-public delegate void CommandHandler(Dictionary<string, object> args);
+public delegate UniTask CommandHandler(Dictionary<string, object> args);
 public class CommandSystem: BaseClass{
     static Dictionary<string, CommandHandler> handlers = new();
 
@@ -91,22 +92,22 @@ public class CommandSystem: BaseClass{
         _sys._Msg._add_receiver(GameConfigs._sysCfg.Msg_command, _execute);
     }
     
-    public static void _execute(DynamicValue command){
+    public static async UniTask _execute(DynamicValue command){
         string commands = command.get<string>();
         if (commands.StartsWith("FROM_INPUT")) {
-            _execute_single(commands);
+            await _execute_single(commands);
         }
         else {
             foreach (string cmd in commands.Split('\v')){
-                _execute_single(cmd);
+                await _execute_single(cmd);
             }
         }
     }
 
-    static void _execute_single(string command){
+    static async UniTask _execute_single(string command){
         Command cmd = CommandParser.parse(command);
         if (handlers.ContainsKey(cmd.name)){
-            handlers[cmd.name](cmd.args);
+            await handlers[cmd.name](cmd.args);
         }
         else{
             Debug.Log($"No command: {cmd.name}");

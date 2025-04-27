@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 
@@ -8,7 +9,7 @@ public class InputCommandHandler: CommandHandlerBase{
         CommandSystem._add(print_mouse_hover_time);
     }
 
-    void FROM_INPUT(Dictionary<string, object> args){
+    async UniTask FROM_INPUT(Dictionary<string, object> args){
         /* FROM_INPUT               Use command from INPUT system
          * --key (string)           the key name of the command
          * --[write] (string)       new command, replace the command use its value
@@ -30,17 +31,17 @@ public class InputCommandHandler: CommandHandlerBase{
             InputCommandRegister.keyName2Command[key] = (string)args["write"];
         }
         else if (args.ContainsKey("read")){
-            _Msg._send((string)args["read"], InputCommandRegister.keyName2Command[key]);
+            await _Msg._send((string)args["read"], InputCommandRegister.keyName2Command[key]);
         }
         else if (args.ContainsKey("trigger")){
             _InputSys._register_action(key, null, (string)args["trigger"], true);
         }
         else {
-            _Msg._send2COMMAND(InputCommandRegister.keyName2Command[key]);
+            await _Msg._send2COMMAND(InputCommandRegister.keyName2Command[key]);
         }
     }
     
-    void print_mouse_hover_time(Dictionary<string, object> args){
+    async UniTask print_mouse_hover_time(Dictionary<string, object> args){
         /* FROM_INPUT               Use command from INPUT system
          */
         Debug.Log(InputSystem._keyPos.mouse_hover_deltaTime);

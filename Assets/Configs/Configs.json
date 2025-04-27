@@ -9,8 +9,8 @@
 
     "TMap_tiles_per_loading": 64,
     "TMap_interval_per_loading": 10,
-    "TMap_draw_blocksAround_RadiusMinusOne_loading": {"x": 10, "y": 5, "z": 1},
-    "TMap_prepare_blocksAround_RadiusMinusOne_loading": {"x": 11, "y": 6, "z": 1},
+    "TMap_draw_blocksAround_RadiusMinusOne_loading": {"x": 5, "y": 4, "z": 1},
+    "TMap_prepare_blocksAround_RadiusMinusOne_loading": {"x": 0, "y": 0, "z": 1},
 
     "water_full_amount": 4,
     "water_wave_noise_cfgs": {

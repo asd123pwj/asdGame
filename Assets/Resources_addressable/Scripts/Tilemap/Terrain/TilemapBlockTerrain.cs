@@ -38,7 +38,7 @@ public class TilemapBlockTerrain: BaseClass{
                     block.map._set_tile(i, j, hier1.base_tile);
                     // ----- Mineral ----- //
                     string mineral_ID = mineral._get_mineral(map_pos, hier1.minerals);
-                    if (mineral_ID != null) block.map._get(i, j)._set_mineral(mineral_ID);
+                    if (mineral_ID != null) block.map._get_force(i, j)._set_mineral(mineral_ID);
                 }
                 else {
                     block.map._set_tile(i, j, GameConfigs._sysCfg.TMap_empty_tile);

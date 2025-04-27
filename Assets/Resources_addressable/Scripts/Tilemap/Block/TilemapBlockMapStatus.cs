@@ -26,7 +26,7 @@ public class TilemapBlockMapStatus: BaseClass{
             for (int j = 0; j < size.y; j++){
                 bool is_status = true;
                 foreach (var kvp in rules[type]){
-                    if (kvp.Value(map._get_tile(i + kvp.Key.x, j + kvp.Key.y))){
+                    if (kvp.Value(map._get_tile_foce(i + kvp.Key.x, j + kvp.Key.y))){
                         continue;
                     }
                     is_status = false;

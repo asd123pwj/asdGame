@@ -1,6 +1,7 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 
-public delegate void MessageReceiver(DynamicValue message);
+public delegate UniTask MessageReceiver(DynamicValue message);
 
 
 public class MessageNode{
@@ -25,16 +26,17 @@ public class MessageBus: BaseClass{
         message_nodes[ID].receivers.Add(receiver);
     }
 
-    public void _send(string ID, DynamicValue message){
+    public async UniTask _send(string ID, DynamicValue message){
+    // public void _send(string ID, DynamicValue message){
         if (!message_nodes.ContainsKey(ID)) _init_message_node(ID);
         message_nodes[ID].message = message;
         foreach (var receiver in message_nodes[ID].receivers){
-            receiver(message_nodes[ID].message);
+            await receiver(message_nodes[ID].message);
         }
     }
 
-    public void _send2COMMAND(DynamicValue message){
-        _send(GameConfigs._sysCfg.Msg_command, message);
+    public async UniTask _send2COMMAND(DynamicValue message){
+        await _send(GameConfigs._sysCfg.Msg_command, message);
     }
 
     public DynamicValue _get_message(string ID){

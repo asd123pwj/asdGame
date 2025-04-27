@@ -46,14 +46,14 @@ public class TileTile : BaseClass{
         _delay_in_update_sprite = new CancellationTokenSource();
         await UniTask.Delay(10, cancellationToken: _delay_in_update_sprite.Token);
 
-        bool need_update_collider;
-        if (_renderer.sprite != null){
-            string last_subID = _renderer.sprite.name;
-            need_update_collider = last_subID != tile.tile_subID;
-        }
-        else{
-            need_update_collider = true;
-        }
+        bool need_update_collider = check_collider_need_update();
+        // if (_renderer.sprite != null){
+        //     string last_subID = _renderer.sprite.name;
+        //     need_update_collider = last_subID != tile.tile_subID;
+        // }
+        // else{
+        //     need_update_collider = true;
+        // }
 
         tile_ID = tile.tile_ID;
         tile_subID = tile.tile_subID;
@@ -62,19 +62,48 @@ public class TileTile : BaseClass{
         _renderer.material = _MatSys._mat._get_mat(mat_ID);//TilemapLitMaterial
 
         if (need_update_collider){
-            if (tile_ID != GameConfigs._sysCfg.TMap_empty_tile){
-                _collider.enabled = true;
-                _collider.pathCount = _renderer.sprite.GetPhysicsShapeCount();
-                for (int i = 0; i < _collider.pathCount; i++){
-                    List<Vector2> path = new List<Vector2>();
-                    _renderer.sprite.GetPhysicsShape(i, path);
-                    _collider.SetPath(i, path.ToArray());
-                }
-            }
-            else{
-                _collider.enabled = false;
+            update_collider();
+            // if (tile_ID != GameConfigs._sysCfg.TMap_empty_tile){
+            //     _collider.enabled = true;
+            //     _collider.pathCount = _renderer.sprite.GetPhysicsShapeCount();
+            //     for (int i = 0; i < _collider.pathCount; i++){
+            //         List<Vector2> path = new List<Vector2>();
+            //         _renderer.sprite.GetPhysicsShape(i, path);
+            //         _collider.SetPath(i, path.ToArray());
+            //     }
+            // }
+            // else{
+            //     _collider.enabled = false;
+            // }
+        }
+    }
+
+    bool check_collider_need_update(){
+        bool need_update_collider;
+        if (_renderer.sprite != null){
+            string last_subID = _renderer.sprite.name;
+            need_update_collider = last_subID != tile.tile_subID;
+        }
+        else{
+            need_update_collider = true;
+        }
+        return need_update_collider;
+    }
+
+    void update_collider(){
+        if (tile_ID != GameConfigs._sysCfg.TMap_empty_tile){
+            _collider.enabled = true;
+            _collider.pathCount = _renderer.sprite.GetPhysicsShapeCount();
+            for (int i = 0; i < _collider.pathCount; i++){
+                List<Vector2> path = new List<Vector2>();
+                _renderer.sprite.GetPhysicsShape(i, path);
+                _collider.SetPath(i, path.ToArray());
             }
         }
+        else{
+            _collider.enabled = false;
+        }
+
     }
 
     void init_gameObject(){

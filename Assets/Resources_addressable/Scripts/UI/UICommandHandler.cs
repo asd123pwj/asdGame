@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class UICommandHandler: CommandHandlerBase{
@@ -9,7 +10,7 @@ public class UICommandHandler: CommandHandlerBase{
         CommandSystem._add(UIClose);
     }
 
-    void UIToggle(Dictionary<string, object> args){
+    async UniTask UIToggle(Dictionary<string, object> args){
         /* UIToggle                 open a closed UI or close an opened UI
          * --type (string)          the UIClass.type of UI
          * --[useMousePos] (flag)   use the mouse position as the UI position
@@ -43,26 +44,23 @@ public class UICommandHandler: CommandHandlerBase{
         }
         else{
             if (args.ContainsKey("open")){
-                // _UISys._UIDraw._reopen(type, name, spawn_pos, ui);
                 _UISys._UIDraw._open(type, name, parent:ui, isForceOpen:true);
             }
             else{
-                // _UISys._UIDraw._toggle(type, name, spawn_pos, ui);
                 _UISys._UIDraw._toggle(type, name, parent:ui);
             }
-            // _UISys._UIDraw._toggle(type, name, parent:ui);
         }
     }
 
-    void UISave(Dictionary<string, object> args){
+    async UniTask UISave(Dictionary<string, object> args){
         _UISys._UISL._save_UI();
     }
 
-    void UILoad(Dictionary<string, object> args){
+    async UniTask UILoad(Dictionary<string, object> args){
         _UISys._UISL._load_UIs();
     }
 
-    void UIClose(Dictionary<string, object> args){
+    async UniTask UIClose(Dictionary<string, object> args){
         string UI_top = _UISys._UIMonitor._get_UIHier();
         if (UI_top != null){
             _UISys._UIDraw._close(UI_top);

@@ -61,7 +61,7 @@ public class BuildGenerator : BaseClass{
                     TilemapBlock block = TilemapBlock._get_force(currentBlock_offset, new LayerType());
                     Vector3Int currentTile_inBlockPos = TilemapAxis._mapping_mapPos_to_inBlockPos(currentTile_mapPos);
                     // Debug.Log(currentTile_inBlockPos);
-                    string current_tile_ID = block.map._get_tile(currentTile_inBlockPos);
+                    string current_tile_ID = block.map._get_tile_force(currentTile_inBlockPos);
                     string build_template_tile_ID = build_template[key][i, j];
                     
                     TileBase tile = _MatSys._tile._get_tile(build_template_tile_ID);

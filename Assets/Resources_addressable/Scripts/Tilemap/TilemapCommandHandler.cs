@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class TilemapCommandHandler: CommandHandlerBase{
@@ -7,11 +8,12 @@ public class TilemapCommandHandler: CommandHandlerBase{
         CommandSystem._add(TMapMatch);
     }
 
-    public void TMapGen(Dictionary<string, object> args){
+    public async UniTask TMapGen(Dictionary<string, object> args){
         /* TMapGen                    
          * --useMousePos (flag)         world_pos
          * --[x_block] (int)            block_pos.x
          * --[y_block] (int)            block_pos.y
+         * --[prepareOnly] (flag)       prepare, no draw
          * 
          * Example:
          *   TMapGen --useMousePos
@@ -26,11 +28,16 @@ public class TilemapCommandHandler: CommandHandlerBase{
         else{
             block_offsets = new Vector3Int((int)args["x_block"], (int)args["y_block"], 0);
         }
-        _TMapSys._TMapCtrl._draw_block_complete(block_offsets, layer_type).Forget();
+        if (args.ContainsKey("prepareOnly")){
+            _TMapSys._TMapCtrl._prepare_block(block_offsets, layer_type).Forget();
+        }
+        else{
+            _TMapSys._TMapCtrl._draw_block_complete(block_offsets, layer_type).Forget();
+        }
         
     }
 
-    public void TMapMatch(Dictionary<string, object> args){
+    public async UniTask TMapMatch(Dictionary<string, object> args){
         /* TMapMatch
          * --useMousePos (flag)         world_pos
          * --[x_map] (int)            map_pos.x

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class ObjectCommandHandler: CommandHandlerBase{
@@ -8,7 +9,7 @@ public class ObjectCommandHandler: CommandHandlerBase{
         CommandSystem._add(rush);
     }
 
-    void spawn(Dictionary<string, object> args){
+    async UniTask spawn(Dictionary<string, object> args){
         /* spawn
          * --type (string)          the type of object
          * --[useMousePos] (flag)   use the mouse position 
@@ -30,7 +31,7 @@ public class ObjectCommandHandler: CommandHandlerBase{
         _ObjSys._object_spawn._instantiate((string)args["type"], spawn_pos);
     }
 
-    void move(Dictionary<string, object> args){
+    async UniTask move(Dictionary<string, object> args){
         /* move
          */
         KeyPos key_pos = InputSystem._keyPos;
@@ -43,7 +44,7 @@ public class ObjectCommandHandler: CommandHandlerBase{
         _CtrlSys._player._Move._walk(key_pos);
     }
     
-    void rush(Dictionary<string, object> args){
+    async UniTask rush(Dictionary<string, object> args){
         /* move
          */
         KeyPos key_pos = InputSystem._keyPos;
