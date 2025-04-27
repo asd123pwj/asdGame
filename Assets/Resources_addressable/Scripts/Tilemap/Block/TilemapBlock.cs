@@ -5,11 +5,14 @@ using UnityEngine.Tilemaps;
 using MathNet.Numerics.LinearAlgebra.Single;
 using System;
 using Cysharp.Threading.Tasks;
+using System.Collections.Concurrent;
+using System.Threading;
 
 
 public class TilemapBlock: BaseClass{
     // ---------- Ours ---------- //
-    public static Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> our = new();
+    private readonly object _lock_our = new();
+    public static ConcurrentDictionary<string, ConcurrentDictionary<Vector3Int, TilemapBlock>> our = new();
     // ---------- Config ---------- //
     public TilemapBlockGameObject obj;
     public string terrain_ID;
@@ -26,6 +29,7 @@ public class TilemapBlock: BaseClass{
     public TilemapBlockDraw _draw;
     public TilemapBlockTerrain _terr;
     // ---------- Status ---------- //
+    public static List<CancellationTokenSource> _cts = new();
     public bool isExist;
     public bool isDrawed;
 
@@ -33,8 +37,11 @@ public class TilemapBlock: BaseClass{
 
     // public TilemapBlock(){}
     public TilemapBlock(Vector3Int offsets, LayerType layer){
-        if(!our.ContainsKey(layer.ToString())){ our.Add(layer.ToString(), new()); }
-        our[layer.ToString()].Add(offsets, this);
+        lock(_lock_our){
+            // if(!our.ContainsKey(layer.ToString())){ our.TryAdd(layer.ToString(), new()); }
+            var our_layer = our.GetOrAdd(layer.ToString(), _ => new ConcurrentDictionary<Vector3Int, TilemapBlock>());
+            our_layer.TryAdd(offsets, this);
+        }
         this.offsets = offsets;
         this.layer = layer;
         isExist = true;
@@ -52,20 +59,25 @@ public class TilemapBlock: BaseClass{
         map = new(this);
         status = new(this);
         _draw = new(this);
-        // _terr = new(this);
+        _terr = new(this);
     }
 
-    public override async UniTask _init_async(){
-        await UniTask.RunOnThreadPool(() => _terr = new(this));
+    // public override async UniTask _init_async(){
+    //     await UniTask.RunOnThreadPool(() => _terr = new(this));
+    // }
+
+    public void _prepare_me(){
+        _terr._generate_terrain();
     }
 
     public async UniTask _draw_me(){
-        if (!isDrawed) {
-            isDrawed = true;
-        }
-        else{
-            return;
-        }
+        CancellationTokenSource cts = new();
+        // if (!isDrawed) {
+        //     isDrawed = true;
+        // }
+        // else{
+        //     return;
+        // }
         await _wait_init_done();
         // await _draw._draw_block();
         await _draw._draw_block_mine();

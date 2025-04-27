@@ -10,22 +10,11 @@ public class TilemapBlockTerrain: BaseClass{
     public static TilemapBlockTerrainMineral mineral = new();
     public TilemapBlock block;
 
-    public TilemapBlockTerrain(TilemapBlock block){
+    public TilemapBlockTerrain(TilemapBlock block) {
         this.block = block;
-        // }
+    }
 
-        // public TilemapBlock _generate_block(TilemapBlock block){
-
-        //     _generate_terrain(block);
-
-        //     return block;
-        // }
-        // int a;
-        // for (int i = 0; i < 999999999; i++){
-        //     a = i;
-        // }
-
-    // public void _generate_terrain(TilemapBlock block){
+    public void _generate_terrain(){
         for (int i = 0; i < block.size.x; i++){
             for (int j = 0; j < block.size.y; j++){
                 Vector3Int map_pos = TilemapAxis._mapping_inBlockPos_to_mapPos(new(i, j), block.offsets);

@@ -66,18 +66,19 @@ public class TilemapController: BaseClass{
     }
 
     async UniTaskVoid draw_by_cmd(){
-        // Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
-        // for (int x = -prepare_r.x; x <= prepare_r.x; x++){
-        //     for (int y = -prepare_r.y; y <= prepare_r.y; y++){
-        //         _Msg._send2COMMAND($"TMapGen --prepareOnly --x_block {_query_point.x + x} --y_block {_query_point.y + y}");
-        //         // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
-        //     }
-        // }
+        Vector3Int prepare_r = GameConfigs._sysCfg.TMap_prepare_blocksAround_RadiusMinusOne_loading;
+        for (int x = -prepare_r.x; x <= prepare_r.x; x++){
+            for (int y = -prepare_r.y; y <= prepare_r.y; y++){
+                await _Msg._send2COMMAND($"TMapGen --prepareOnly --x_block {_query_point.x + x} --y_block {_query_point.y + y}");
+                
+                // await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
+            }
+        }
         
         Vector3Int draw_r = GameConfigs._sysCfg.TMap_draw_blocksAround_RadiusMinusOne_loading;
         for (int x = -draw_r.x; x <= draw_r.x; x++){
             for (int y = -draw_r.y; y <= draw_r.y; y++){
-                _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}");
+                await _Msg._send2COMMAND($"TMapGen --x_block {_query_point.x + x} --y_block {_query_point.y + y}");
                 await UniTask.Delay(GameConfigs._sysCfg.TMap_interval_per_loading);
             }
         }
@@ -132,11 +133,14 @@ public class TilemapController: BaseClass{
     //     }
     // }
 
-    public async UniTaskVoid _prepare_block(Vector3Int block_offsets, LayerType layer_type){
-        TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
+    public async UniTask _prepare_block(Vector3Int block_offsets, LayerType layer_type){
+        // TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
+        // UniTask.RunOnThreadPool(() => TilemapBlock._get_force_async(block_offsets, layer_type)).Forget();
+        TilemapBlock block = await UniTask.RunOnThreadPool(() => TilemapBlock._get_force_async(block_offsets, layer_type));
+        // block._terr._generate_terrain();
     }
 
-    public async UniTaskVoid _draw_block_complete(Vector3Int block_offsets, LayerType layer_type){
+    public async UniTask _draw_block_complete(Vector3Int block_offsets, LayerType layer_type){
         TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
         await block._draw_me();
         // if (!_TMapsHaveDraw.ContainsKey(layer_type.ToString())) {

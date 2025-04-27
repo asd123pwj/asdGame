@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -5,10 +6,13 @@ using UnityEngine.Tilemaps;
 
 
 public class TilemapBlockTerrainSurface: BaseClass{
+    readonly Dictionary<int, int> underground_cache = new();
+
     public bool _check_underground(Vector3Int map_pos, TerrainHier1 hier1){
-        // int surface_h = _GCfg._noise._get_heights(new(map_pos.x, 0), hier1.surface);
-        int surface_h = GameConfigs._noise._get_int(map_pos, hier1.surface);
-        if (map_pos.y > surface_h) return false;
+        if (!underground_cache.ContainsKey(map_pos.x)){
+            underground_cache[map_pos.x] = GameConfigs._noise._get_int(map_pos, hier1.surface);
+        }
+        if (map_pos.y > underground_cache[map_pos.x]) return false;
         else return true;
     }
     
@@ -25,9 +29,6 @@ public class TilemapBlockTerrainSurface: BaseClass{
     public TerrainHier1 _get_hier1(Vector3Int map_pos, TerrainHierBase hier_base){
         float type_value = _get_type_value(map_pos, hier_base);
         int type_ID = RandomGenerator._random_by_prob(_MatSys._terrain._hier1s_prob, type_value);
-        if ( type_ID == 1){
-            Debug.Log("a");
-        }
         TerrainHier1 hier1 = _MatSys._terrain._hier1s[type_ID];
         return hier1;
     }

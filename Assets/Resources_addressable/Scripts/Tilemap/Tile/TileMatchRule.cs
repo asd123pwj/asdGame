@@ -30,10 +30,10 @@ public class TileRule{
     bool isMatchRule(Vector3Int map_pos, LayerType layer, TileRuleType ruleType, Vector2Int offset){
         Vector3Int new_pos = map_pos + new Vector3Int((int)offset.x, (int)offset.y, 0);
         if(ruleType == TileRuleType.isNull){
-            return !TilemapTile._check_tile_empty(layer, new_pos);
+            return !TilemapTile._check_tile_notEmpty(layer, new_pos);
         }
         else if(ruleType == TileRuleType.notNull){
-            return TilemapTile._check_tile_empty(layer, new_pos);
+            return TilemapTile._check_tile_notEmpty(layer, new_pos);
         }
         return false; // shouldn't happen, just placeholder
     }

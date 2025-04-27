@@ -2,8 +2,8 @@
     "version": "0.19.8",
     "HierBase":{
         "Hier1": [
-            {"noise": "cellular_cell", "f": 0.1, "min": 0, "max": 1, "ignoreY": true,
-                "x_noise": [{"noise": "perlin", "f": 1, "min": -50, "max": 50, "fractal": "fbm"}]}
+            {"noise": "cellular_cell", "f": 0.001, "min": 0, "max": 1, "ignoreY": true,
+                "x_noise": [{"noise": "perlin", "f": 0.01, "min": -50, "max": 50, "fractal": "fbm"}]}
         ],
         "base_scale": 1
     },
@@ -14,14 +14,14 @@
             "base_tile": "b8",
             "prob": 1,
             "surface": [
-                {"noise": "perlin", "f": 2, "min": -100, "max": 100, "ignoreY": true}
+                {"noise": "perlin", "f": 0.02, "min": 0, "max": 100, "ignoreY": true}
             ],
             "minerals": [
                 {"ID": "bd_m1", "noise": [
-                    {"noise": "cellular_2div", "f": 5, "max": 0.0005}
+                    {"noise": "cellular_2div", "f": 0.05, "max": 0.0005}
                 ]}, 
                 {"ID": "bd_m2", "noise": [
-                    {"noise": "cellular_2div", "f": 3, "max": 0.05, "fractal": "fbm"}
+                    {"noise": "cellular_2div", "f": 0.03, "max": 0.05, "fractal": "fbm"}
                 ]}
             ]
         },
@@ -31,16 +31,16 @@
             "base_tile": "b7",
             "prob": 1,
             "surface": [
-                {"noise": "perlin", "f": 0.1, "min": -100, "max": 100, "ignoreY": true},
-                {"noise": "simplex2", "f": 1, "min": 0, "max": 200, "fractal": "fbm", "ignoreY": true}
+                {"noise": "perlin", "f": 0.001, "min": -100, "max": 100, "ignoreY": true},
+                {"noise": "simplex2", "f": 0.01, "min": 0, "max": 200, "fractal": "fbm", "ignoreY": true}
             ],
             "minerals": [
                 {"ID": "bd_m1", "noise": [
-                    {"noise": "simplex2", "f": 10, "min": 0.6},
-                    {"noise": "simplex2", "f": 10, "max": 0.5}
+                    {"noise": "simplex2", "f": 0.1, "min": 0.6},
+                    {"noise": "simplex2", "f": 0.1, "max": 0.5}
                 ]}, 
                 {"ID": "bd_m2", "noise": [
-                    {"noise": "cellular_2div", "f": 5, "max": 0.05}
+                    {"noise": "cellular_2div", "f": 0.05, "max": 0.05}
                 ]}
             ]
         }

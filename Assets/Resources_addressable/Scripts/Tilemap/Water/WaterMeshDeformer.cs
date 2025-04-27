@@ -89,20 +89,22 @@ public class WaterMeshDeformer : MonoBehaviour{
 
 
     void wave(){
-        Noise noise = new(0);
+        // Noise noise = new(0);
+        Noise noise = GameConfigs._noise;
         // int wave_row_start = 3;
         float vertexNum_per_row = 5;
         // float vertex_rowNum = 5;
-        noise._noise_simplex2();
+        // noise._noise_simplex2();
+        // noise.
         for (int i = 0; i < vertices_ori.Length; i++){
             Vector3 vertex = vertices_ori[i];
             int current_row = Mathf.FloorToInt(i / vertexNum_per_row);
             if (current_row >= wave_row_start){
                 
-                vertex.y = vertices_ori[i].y 
-                        + (noise._get(transform.position.x + vertex.x + Time.time * waveSpeed, 10)
-                            + noise._get(transform.position.y + vertex.y + Time.time * waveSpeed, 10)) 
-                        * waveHeight;
+                // vertex.y = vertices_ori[i].y 
+                //         + (noise._get(transform.position.x + vertex.x + Time.time * waveSpeed, 10)
+                //             + noise._get(transform.position.y + vertex.y + Time.time * waveSpeed, 10)) 
+                //         * waveHeight;
                 
             }
             // vertex.z = vertices_ori[i].z - (current_row/(vertex_rowNum-1) + transform.position.y);

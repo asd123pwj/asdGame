@@ -29,10 +29,10 @@ public class TilemapCommandHandler: CommandHandlerBase{
             block_offsets = new Vector3Int((int)args["x_block"], (int)args["y_block"], 0);
         }
         if (args.ContainsKey("prepareOnly")){
-            _TMapSys._TMapCtrl._prepare_block(block_offsets, layer_type).Forget();
+            await _TMapSys._TMapCtrl._prepare_block(block_offsets, layer_type);
         }
         else{
-            _TMapSys._TMapCtrl._draw_block_complete(block_offsets, layer_type).Forget();
+            await _TMapSys._TMapCtrl._draw_block_complete(block_offsets, layer_type);
         }
         
     }

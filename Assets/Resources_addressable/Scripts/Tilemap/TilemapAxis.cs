@@ -30,16 +30,19 @@ public class LayerType{
     static readonly int num_layerType = Enum.GetValues(typeof(MapLayerType)).Length;
     public int sortingOrder;
     public Vector3 offsets;
+    string layer_name;
 
     public LayerType(){
         sortingOrder = _mapping_layerType_to_sortOrder();
         offsets = _mapping_layerType_to_GameObjectOffsets();
+        layer_name = $"L{layer}_{type}";
     }
     public LayerType(int sort_order){
         layer = sort_order / num_layerType;
         type = (MapLayerType)(sort_order % num_layerType);
         offsets = _mapping_layerType_to_GameObjectOffsets();
         this.sortingOrder = sort_order;
+        layer_name = $"L{layer}_{type}";
     }
     public LayerType(string layer_type){
         string[] layer_info = layer_type.Split('_'); // e.g., L1_Middle => [L1, Middle]
@@ -47,12 +50,14 @@ public class LayerType{
         type = (MapLayerType)Enum.Parse(typeof(MapLayerType), layer_info[1]);
         sortingOrder = _mapping_layerType_to_sortOrder();
         offsets = _mapping_layerType_to_GameObjectOffsets();
+        layer_name = $"L{layer}_{type}";
     }
     public LayerType(int layer, MapLayerType type){
         this.layer = layer;
         this.type = type;
         sortingOrder = _mapping_layerType_to_sortOrder();
         offsets = _mapping_layerType_to_GameObjectOffsets();
+        layer_name = $"L{layer}_{type}";
     }
 
     public static bool _check_type(int sort_order, MapLayerType type){
@@ -70,7 +75,7 @@ public class LayerType{
         return offsets;
     }
 
-    public override string ToString() => $"L{layer}_{type}";
+    public override string ToString() => layer_name;
 }
 
 

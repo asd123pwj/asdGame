@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -10,7 +11,7 @@ public class TilemapMonitor: BaseClass{
     // ---------- Tilemap Status ---------- //
     // ----- Blocks ----- //
     // public Dictionary<string, Dictionary<Vector3Int, TilemapBlock>> _TMap_blocks => TilemapBlock.our;
-    public Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _TMap_tiles => TilemapTile._our;
+    public ConcurrentDictionary<string, ConcurrentDictionary<Vector3Int, TilemapTile>> _TMap_tiles => TilemapTile._our;
     // ----- Containers ----- //
     public Dictionary<string, Transform> _TMap_containers;
     public Dictionary<string, Transform> _transforms;
@@ -53,9 +54,9 @@ public class TilemapMonitor: BaseClass{
         //     _TMap_blocks.Add(tilemap_type, new());
         // }
         
-        foreach(var tilemap_type in _TMap_containers.Keys){
-            _TMap_tiles.Add(tilemap_type, new());
-        }
+        // foreach(var tilemap_type in _TMap_containers.Keys){
+        //     _TMap_tiles.Add(tilemap_type, new());
+        // }
     }
 
 

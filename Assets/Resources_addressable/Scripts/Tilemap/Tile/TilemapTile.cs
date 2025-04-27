@@ -1,10 +1,12 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class TilemapTile: BaseClass{
-    public static Dictionary<string, Dictionary<Vector3Int, TilemapTile>> _our = new();
+    private readonly object _lock_our = new();
+    public static ConcurrentDictionary<string, ConcurrentDictionary<Vector3Int, TilemapTile>> _our = new();
     public TilemapBlock block;
     public Vector3Int map_pos;
     public TileP3D P3D;
@@ -33,7 +35,16 @@ public class TilemapTile: BaseClass{
     public TilemapTile(TilemapBlock block, Vector3Int map_pos){
         this.block = block;
         this.map_pos = map_pos;
-        _our[block.layer.ToString()].Add(map_pos, this);
+        // lock (_lock_our){
+        //     if (!_our.ContainsKey(block.layer.ToString())) {
+        //         _our.Add(block.layer.ToString(), new());
+        //     }
+        //     _our[block.layer.ToString()].Add(map_pos, this);
+        // }
+        lock(_lock_our){
+            var our_layer = _our.GetOrAdd(block.layer.ToString(), _ => new ConcurrentDictionary<Vector3Int, TilemapTile>());
+            our_layer.TryAdd(map_pos, this);
+        }
     }
 
     public void _set_ID(string tile_ID) { 
@@ -88,7 +99,7 @@ public class TilemapTile: BaseClass{
         if (!_our.ContainsKey(layer.ToString())) return false;
         return _our[layer.ToString()].ContainsKey(map_pos);
     } 
-    public static bool _check_tile_empty(LayerType layer, Vector3Int map_pos) {
+    public static bool _check_tile_notEmpty(LayerType layer, Vector3Int map_pos) {
         if (!_check_tile_loaded(layer, map_pos)){
             return false; 
         }
@@ -98,15 +109,15 @@ public class TilemapTile: BaseClass{
         return true;
     } 
     public static bool _check_tile_subID_full(LayerType layer, Vector3Int map_pos) {        
-        if (_check_tile_empty(layer, map_pos) && _get(layer, map_pos).__tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
+        if (_check_tile_notEmpty(layer, map_pos) && _get(layer, map_pos).__tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
         return false;
     }
     
     public async UniTask _update_tile(){
         if (enable_tile){
             tileTile ??= new(this);
-            // await tileTile._update_sprite();
-            tileTile._update_sprite().Forget();
+            await tileTile._update_sprite();
+            // tileTile._update_sprite().Forget();
         }
         else{
             // TODO: delete P3D
