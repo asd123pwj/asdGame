@@ -66,15 +66,19 @@ public class TilemapController: BaseClass{
         for (int radius = 0; radius <= maxRadius; radius++){
             for (int x = -radius; x <= radius; x++){
                 tasks.Add(draw_block(x, -radius, ct));
+                // tasks.Add(UniTask.RunOnThreadPool(() => draw_block(x, -radius, ct)));
                 if (tasks.Count >= GameConfigs._sysCfg.TMap_blocks_per_loading) { await UniTask.WhenAll(tasks); tasks.Clear(); }
                 tasks.Add(draw_block(x, radius, ct));  
+                // tasks.Add(UniTask.RunOnThreadPool(() => draw_block(x, radius, ct)));
                 if (tasks.Count >= GameConfigs._sysCfg.TMap_blocks_per_loading) { await UniTask.WhenAll(tasks); tasks.Clear(); }
             }
             
             for (int y = -radius + 1; y < radius; y++){
                 tasks.Add(draw_block(-radius, y, ct)); 
+                // tasks.Add(UniTask.RunOnThreadPool(() => draw_block(-radius, y, ct)));
                 if (tasks.Count >= GameConfigs._sysCfg.TMap_blocks_per_loading) { await UniTask.WhenAll(tasks); tasks.Clear(); }
                 tasks.Add(draw_block(radius, y, ct));  
+                // tasks.Add(UniTask.RunOnThreadPool(() => draw_block(radius, y, ct)));
                 if (tasks.Count >= GameConfigs._sysCfg.TMap_blocks_per_loading) { await UniTask.WhenAll(tasks); tasks.Clear(); }
             }
         }

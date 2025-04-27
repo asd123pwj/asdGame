@@ -35,7 +35,7 @@ public class TilemapTile: BaseClass{
         this.block = block;
         this.map_pos = map_pos;
         lock(_lock_our){
-            var our_layer = _our.GetOrAdd(block.layer.ToString(), _ => new ConcurrentDictionary<Vector3Int, TilemapTile>());
+            var our_layer = _our.GetOrAdd(block.layer.ToString(), _ => new());
             our_layer.TryAdd(map_pos, this);
         }
         foreach (Vector2Int neighbor_pos in TileMatchRule.reference_pos){
@@ -105,9 +105,11 @@ public class TilemapTile: BaseClass{
         }
         if (neighbor_isChanged){
             string tile_subID_new = TileMatchRule.match(this);
+            // string tile_subID_new = await UniTask.RunOnThreadPool(() => TileMatchRule.match(this));
             if (tile_subID_new != tile_subID){
                 tile_subID = tile_subID_new;
                 await _update_tile(ct);
+                // await UniTask.RunOnThreadPool(() => _update_tile(ct));
             }
         }
     }
