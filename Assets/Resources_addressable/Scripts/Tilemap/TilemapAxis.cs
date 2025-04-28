@@ -59,6 +59,13 @@ public class LayerType{
         offsets = _mapping_layerType_to_GameObjectOffsets();
         layer_name = $"L{layer}_{type}";
     }
+    public LayerType(LayerType layer_type, MapLayerType type){
+        layer = layer_type.layer;
+        this.type = type;
+        sortingOrder = _mapping_layerType_to_sortOrder();
+        offsets = _mapping_layerType_to_GameObjectOffsets();
+        layer_name = $"L{layer}_{type}";
+    }
 
     public static bool _check_type(int sort_order, MapLayerType type){
         return (sort_order % num_layerType) == (int)type;

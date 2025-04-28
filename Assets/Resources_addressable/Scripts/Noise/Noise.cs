@@ -81,7 +81,7 @@ public class Noise{
     float get(float x, float y, float frequnency, FastNoiseLite noise_gen){
         // noise_gen.SetFrequency(0.01f*frequnency);
         noise_gen.SetFrequency(frequnency);
-        float noise_value = noise_gen.GetNoise(x, y);
+        float noise_value = (noise_gen.GetNoise(x, y) + 1) / 2;
         return noise_value;
     }
     // public float _get(float x, float frequnency, FastNoiseLite noise_gen) => _get(x, 0, frequnency, noise_gen);

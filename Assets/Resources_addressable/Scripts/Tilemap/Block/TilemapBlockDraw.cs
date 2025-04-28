@@ -29,6 +29,8 @@ public class TilemapBlockDraw: BaseClass{
     }
 
     public async UniTask _draw_block_mine(CancellationToken? ct){
+        if (isDrawed) return;
+        isDrawed = true;
         foreach (TilemapTile tile in block.map.map){
             ct?.ThrowIfCancellationRequested();
             await tile._update_status(ct, true);

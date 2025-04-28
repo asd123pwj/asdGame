@@ -7,15 +7,16 @@ public class Str2Offset{
 
     public static int _get(string str){
         lock (lockObject) {
-            if (!str2offset.ContainsKey(str)) {
-                int hash = 0;
+            if (!str2offset.TryGetValue(str, out int hash)){
+            // if (!str2offset.ContainsKey(str)) {
+                // int hash = 0;
                 for (int i=str.Length-1;  i >= 0; i--){
                     char c = str[i];
                     hash = (hash * 7 + c) & 0x7FFFFFFF;
                 }
                 str2offset.Add(str, hash);
             }
-            return str2offset[str];
+            return hash;
         }
     }
 }

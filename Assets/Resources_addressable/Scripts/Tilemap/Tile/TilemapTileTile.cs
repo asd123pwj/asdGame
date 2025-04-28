@@ -2,11 +2,10 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 
-public class TileTile : BaseClass{
-    Vector3Int map_pos, block_offsets;
+public class TilemapTileTile : BaseClass{
+    Vector3Int map_pos => tile.map_pos;
     // Tilemap TMap;
     // Transform container => _TMapSys._P3DMon._containers["TileP3D"];
     Transform container;
@@ -17,18 +16,13 @@ public class TileTile : BaseClass{
     public SpriteRenderer _renderer;
     public PolygonCollider2D _collider;
     // ---------- Status ---------- //
-    public string tile_ID = "";
-    public string tile_subID = "";
-    CancellationTokenSource _delay_in_update_sprite;
-    // public string actual_subID => get_subID();
-
-    // public TileTile(Vector3Int map_pos, LayerType layer, Transform container){
-    public TileTile(TilemapTile tile){
+    public string tile_ID => tile.tile_ID;
+    public string tile_subID => tile.tile_subID;
+    
+    public TilemapTileTile(TilemapTile tile){
         this.tile = tile;
-        map_pos = tile.map_pos;
-        block_offsets = TilemapAxis._mapping_mapPos_to_blockOffsets(map_pos);
-        _self.transform.position = TilemapAxis._mapping_mapPos_to_worldPos(map_pos, tile.block.layer);
-        layer = new(tile.block.layer.layer, MapLayerType.Middle);
+        layer = new(tile.block.layer, MapLayerType.Middle);
+        _self.transform.position = TilemapAxis._mapping_mapPos_to_worldPos(map_pos, layer);
         _renderer.sortingLayerID = layer.sortingLayerID;
         _renderer.sortingOrder = layer.sortingOrder;
         container = tile.block.obj.tile_container.transform;
@@ -41,17 +35,10 @@ public class TileTile : BaseClass{
     }
 
     public async UniTask _update_sprite(CancellationToken? ct){
-        // _delay_in_update_sprite?.Cancel();
-        // if (ct != null && ct.Value.IsCancellationRequested) return;
         ct?.ThrowIfCancellationRequested();
         if (tile.tile_subID == null) return;
-        // _delay_in_update_sprite = new CancellationTokenSource();
-        // await UniTask.Delay(10, cancellationToken: _delay_in_update_sprite.Token);
-
         bool need_update_collider = check_collider_need_update();
         
-        tile_ID = tile.tile_ID;
-        tile_subID = tile.tile_subID;
         _renderer.sprite = _MatSys._tile._get_sprite(tile_ID, tile_subID);
         string mat_ID = "TransparentSprite";
         _renderer.material = _MatSys._mat._get_mat(mat_ID);//TilemapLitMaterial

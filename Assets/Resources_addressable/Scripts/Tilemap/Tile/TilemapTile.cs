@@ -9,19 +9,19 @@ public class TilemapTile: BaseClass{
     public static ConcurrentDictionary<string, ConcurrentDictionary<Vector3Int, TilemapTile>> _our = new();
     public TilemapBlock block;
     public Vector3Int map_pos;
-    public TileP3D P3D;
-    public TileTile tileTile;
+    public TilemapTileP3D P3D;
+    public TilemapTileTile tileTile;
     
-    public DecorationBase decoration;
+    public TilemapTileDecoration decoration;
     public string tile_ID = GameConfigs._sysCfg.TMap_empty_tile;
     public string tile_subID;
     bool enable_tile = true;
     bool enable_P3D = true;
     bool enable_decoration = true;
-    string mineral_ID;
+    public string mineral_ID;
 
-    public string __tile_ID => tileTile.tile_ID;
-    public string __tile_subID => tileTile.tile_subID;
+    // public string __tile_ID => tileTile.tile_ID;
+    // public string __tile_subID => tileTile.tile_subID;
     // public string __actual_subID => tileTile.actual_subID;
     // string mineral_subID = "__Full";
     // Sprite decoration_sprite;
@@ -77,8 +77,9 @@ public class TilemapTile: BaseClass{
         return tile.tile_ID != GameConfigs._sysCfg.TMap_empty_tile;
     } 
     public static bool _check_tile_subID_full(LayerType layer, Vector3Int map_pos) {        
-        if (_check_tile_loaded_and_notEmpty(layer, map_pos) && _get(layer, map_pos).__tile_subID == GameConfigs._sysCfg.TMap_fullTile_subID) return true;          
-        return false;
+        TilemapTile tile = _try_get(layer, map_pos);
+        if (tile == null) return false;
+        return tile.tile_subID != GameConfigs._sysCfg.TMap_fullTile_subID;
     }
     
     public async UniTask _update_status(CancellationToken? ct, bool force_update = false){
@@ -105,11 +106,11 @@ public class TilemapTile: BaseClass{
         }
         if (neighbor_isChanged){
             string tile_subID_new = TileMatchRule.match(this);
-            // string tile_subID_new = await UniTask.RunOnThreadPool(() => TileMatchRule.match(this));
             if (tile_subID_new != tile_subID){
                 tile_subID = tile_subID_new;
                 await _update_tile(ct);
-                // await UniTask.RunOnThreadPool(() => _update_tile(ct));
+                await _update_P3D(ct);
+                await _update_decoration(ct);
             }
         }
     }
@@ -118,21 +119,16 @@ public class TilemapTile: BaseClass{
         if (enable_tile){
             tileTile ??= new(this);
             await tileTile._update_sprite(ct);
-            // tileTile._update_sprite().Forget();
         }
         else{
             // TODO: delete P3D
         }
     }
 
-    public void _update_P3D(){
+    public async UniTask _update_P3D(CancellationToken? ct){
         if (enable_P3D){
-            if (P3D == null){
-                P3D = new(map_pos, block.layer, block.obj.P3D_container.transform);
-            }
-            else{
-                P3D._update_sprite().Forget();
-            }
+            P3D ??= new(this);
+            await P3D._update_sprite(ct);
         }
         else{
             // TODO: delete P3D
@@ -140,21 +136,11 @@ public class TilemapTile: BaseClass{
     }
 
     public void _clear_mineral() { _set_mineral(null); }
-    public void _set_mineral(string mineral_ID) { 
-        this.mineral_ID = mineral_ID; 
-        // decoration_sprite = _MatSys._spr._get_sprite(mineral_ID, mineral_subID);
-    }
-    public void _update_decoration(){
-        enable_decoration = mineral_ID != null;
-        
-        if (enable_decoration){
-            if (decoration == null){
-                decoration = new(map_pos, block.layer, mineral_ID, block.obj.Decoration_container.transform);
-            }
-            else{
-                decoration._set_sprite(mineral_ID);
-                decoration._update_sprite().Forget();
-            }
+    public void _set_mineral(string mineral_ID) => this.mineral_ID = mineral_ID; 
+    public async UniTask _update_decoration(CancellationToken? ct){
+        if (enable_decoration && mineral_ID != null){
+            decoration ??= new(this);
+            await decoration._update_sprite(ct);
         }
         else{
             // TODO: delete decoration
