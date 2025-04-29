@@ -33,7 +33,7 @@ public class TilemapBlockDraw: BaseClass{
         isDrawed = true;
         foreach (TilemapTile tile in block.map.map){
             ct?.ThrowIfCancellationRequested();
-            await tile._update_status(ct, true);
+            await tile._update_status(ct);
         }
     }
 

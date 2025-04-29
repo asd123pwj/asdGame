@@ -43,6 +43,7 @@ public class InputCommandHandler: CommandHandlerBase{
     }
     
     async UniTask print_mouse_hover_time(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         /* FROM_INPUT               Use command from INPUT system
          */
         Debug.Log(InputSystem._keyPos.mouse_hover_deltaTime);

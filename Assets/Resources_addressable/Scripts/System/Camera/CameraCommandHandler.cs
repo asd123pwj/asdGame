@@ -9,6 +9,7 @@ public class CameraCommandHandler: CommandHandlerBase{
     }
 
     async UniTask CamZoom(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         /* CamZoom                  Zoom in/out
          * --[in] (flag)       
          * --[out] (flag)        

@@ -19,6 +19,7 @@ public class TilemapTile: BaseClass{
     bool enable_P3D = true;
     bool enable_decoration = true;
     public string mineral_ID;
+    // bool firstLoadDone = false;
 
     // public string __tile_ID => tileTile.tile_ID;
     // public string __tile_subID => tileTile.tile_subID;
@@ -56,11 +57,11 @@ public class TilemapTile: BaseClass{
     }
 
     public string _get_tile_ID() => tile_ID;
-    public static TilemapTile _get(LayerType layer, Vector3Int map_pos){
-        if (!_our.ContainsKey(layer.ToString())) return null;
-        if (!_our[layer.ToString()].ContainsKey(map_pos)) return null;
-        return _our[layer.ToString()][map_pos];
-    }
+    // public static TilemapTile _get(LayerType layer, Vector3Int map_pos){
+    //     if (!_our.ContainsKey(layer.ToString())) return null;
+    //     if (!_our[layer.ToString()].ContainsKey(map_pos)) return null;
+    //     return _our[layer.ToString()][map_pos];
+    // }
 
 
     public static TilemapTile _try_get(LayerType layer, Vector3Int map_pos) {
@@ -82,8 +83,8 @@ public class TilemapTile: BaseClass{
         return tile.tile_subID != GameConfigs._sysCfg.TMap_fullTile_subID;
     }
     
-    public async UniTask _update_status(CancellationToken? ct, bool force_update = false){
-        bool neighbor_isChanged = force_update;
+    public async UniTask _update_status(CancellationToken? ct){
+        bool neighbor_isChanged = false;
         bool neighbor_notEmpty;
         bool need_update_neighbor = _need_update_neighbor;
         _need_update_neighbor = false;

@@ -24,9 +24,9 @@ public enum MapLayerType{
 }
 public class LayerType{
     public static int sortingLayerID_default = SortingLayer.NameToID("Layer");
-    public int sortingLayerID = LayerType.sortingLayerID_default;
+    public int sortingLayerID = sortingLayerID_default;
     public MapLayerType type = MapLayerType.Middle;
-    public int layer = 0;
+    public int group = 0;
     static readonly int num_layerType = Enum.GetValues(typeof(MapLayerType)).Length;
     public int sortingOrder;
     public Vector3 offsets;
@@ -35,36 +35,36 @@ public class LayerType{
     public LayerType(){
         sortingOrder = _mapping_layerType_to_sortOrder();
         offsets = _mapping_layerType_to_GameObjectOffsets();
-        layer_name = $"L{layer}_{type}";
+        layer_name = $"L{group}_{type}";
     }
     public LayerType(int sort_order){
-        layer = sort_order / num_layerType;
+        group = sort_order / num_layerType;
         type = (MapLayerType)(sort_order % num_layerType);
         offsets = _mapping_layerType_to_GameObjectOffsets();
         this.sortingOrder = sort_order;
-        layer_name = $"L{layer}_{type}";
+        layer_name = $"L{group}_{type}";
     }
     public LayerType(string layer_type){
         string[] layer_info = layer_type.Split('_'); // e.g., L1_Middle => [L1, Middle]
-        layer = int.Parse(layer_info[0][1..]); 
+        group = int.Parse(layer_info[0][1..]); 
         type = (MapLayerType)Enum.Parse(typeof(MapLayerType), layer_info[1]);
         sortingOrder = _mapping_layerType_to_sortOrder();
         offsets = _mapping_layerType_to_GameObjectOffsets();
-        layer_name = $"L{layer}_{type}";
+        layer_name = $"L{group}_{type}";
     }
     public LayerType(int layer, MapLayerType type){
-        this.layer = layer;
+        this.group = layer;
         this.type = type;
         sortingOrder = _mapping_layerType_to_sortOrder();
         offsets = _mapping_layerType_to_GameObjectOffsets();
         layer_name = $"L{layer}_{type}";
     }
     public LayerType(LayerType layer_type, MapLayerType type){
-        layer = layer_type.layer;
+        group = layer_type.group;
         this.type = type;
         sortingOrder = _mapping_layerType_to_sortOrder();
         offsets = _mapping_layerType_to_GameObjectOffsets();
-        layer_name = $"L{layer}_{type}";
+        layer_name = $"L{group}_{type}";
     }
 
     public static bool _check_type(int sort_order, MapLayerType type){
@@ -72,12 +72,12 @@ public class LayerType{
     }
 
     public int _mapping_layerType_to_sortOrder(){
-        int sort_order = layer * num_layerType + (int)type;
+        int sort_order = group * num_layerType + (int)type;
         return sort_order;
     }
 
     public Vector3 _mapping_layerType_to_GameObjectOffsets(){
-        Vector3 offsets = layer * new Vector3(0.5f, 0.5f, 0.5f);
+        Vector3 offsets = group * new Vector3(0.5f, 0.5f, 0.5f);
         if (type == MapLayerType.Back || type == MapLayerType.BackDecoration) offsets += new Vector3(0.5f, 0.5f, 0.5f); 
         return offsets;
     }

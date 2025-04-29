@@ -12,6 +12,7 @@ public class UICommandHandler: CommandHandlerBase{
     }
 
     async UniTask UIToggle(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         /* UIToggle                 open a closed UI or close an opened UI
          * --type (string)          the UIClass.type of UI
          * --[useMousePos] (flag)   use the mouse position as the UI position
@@ -54,14 +55,17 @@ public class UICommandHandler: CommandHandlerBase{
     }
 
     async UniTask UISave(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         _UISys._UISL._save_UI();
     }
 
     async UniTask UILoad(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         _UISys._UISL._load_UIs();
     }
 
     async UniTask UIClose(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         string UI_top = _UISys._UIMonitor._get_UIHier();
         if (UI_top != null){
             _UISys._UIDraw._close(UI_top);

@@ -89,13 +89,14 @@ public class UIFloatPanel: UIScrollView{
     List<UIInfo> get_floatPanel_tile(){
         Vector2 world_pos = InputSystem._keyPos.mouse_pos_world;
         Vector3Int map_pos = TilemapAxis._mapping_worldPos_to_mapPos(world_pos, new());
-        TilemapTile tile = TilemapTile._get(new LayerType(), map_pos);
+        TilemapTile tile = TilemapTile._try_get(new LayerType(), map_pos);
 
         List<UIInfo> infos = new List<UIInfo>();
         // string UI_type;
 
         infos.Add(get_title("Tile"));
         infos.Add(get_separator());
+        infos.Add(get_title($"Pos: {map_pos}"));
         if (tile != null){
             infos.Add(get_title($"ID: {tile.tile_ID}"));
             infos.Add(get_title($"subID: {tile.tile_subID}"));

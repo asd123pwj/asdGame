@@ -105,13 +105,13 @@ public class TilemapController: BaseClass{
     public async UniTask _prepare_block(Vector3Int block_offsets, LayerType layer_type, CancellationToken? ct){
         // TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
         // UniTask.RunOnThreadPool(() => TilemapBlock._get_force_async(block_offsets, layer_type)).Forget();
-        TilemapBlock block = await UniTask.RunOnThreadPool(() => TilemapBlock._get_force_async(block_offsets, layer_type));
+        TilemapBlock block = await UniTask.RunOnThreadPool(() => TilemapBlock._get_force_waitInitDone(block_offsets, layer_type));
         await UniTask.RunOnThreadPool(() => block._prepare_me(ct));
         // block._terr._generate_terrain();
     }
 
     public async UniTask _draw_block_complete(Vector3Int block_offsets, LayerType layer_type, CancellationToken? ct){
-        TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
+        TilemapBlock block = await TilemapBlock._get_force_waitInitDone(block_offsets, layer_type);
         await UniTask.RunOnThreadPool(() => block._prepare_me(ct));
         await block._draw_me(ct);
     }

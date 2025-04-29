@@ -11,6 +11,7 @@ public class ObjectCommandHandler: CommandHandlerBase{
     }
 
     async UniTask spawn(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         /* spawn
          * --type (string)          the type of object
          * --[useMousePos] (flag)   use the mouse position 
@@ -33,6 +34,7 @@ public class ObjectCommandHandler: CommandHandlerBase{
     }
 
     async UniTask move(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         /* move
          */
         KeyPos key_pos = InputSystem._keyPos;
@@ -46,6 +48,7 @@ public class ObjectCommandHandler: CommandHandlerBase{
     }
     
     async UniTask rush(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         /* move
          */
         KeyPos key_pos = InputSystem._keyPos;

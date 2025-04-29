@@ -39,7 +39,6 @@ public class TilemapBlock: BaseClass{
     // public TilemapBlock(){}
     public TilemapBlock(Vector3Int offsets, LayerType layer){
         lock(_lock_our){
-            // if(!our.ContainsKey(layer.ToString())){ our.TryAdd(layer.ToString(), new()); }
             var our_layer = our.GetOrAdd(layer.ToString(), _ => new ConcurrentDictionary<Vector3Int, TilemapBlock>());
             our_layer.TryAdd(offsets, this);
         }
@@ -72,21 +71,41 @@ public class TilemapBlock: BaseClass{
         await _draw._draw_block_mine(ct);
     }
 
-    public static TilemapBlock _get_force(Vector3Int offsets, LayerType layer){
-        if (!(our.ContainsKey(layer.ToString()) && our[layer.ToString()].ContainsKey(offsets))){
-            return new(offsets, layer);
-        }
-        return our[layer.ToString()][offsets];
+    public static async UniTask _modify_tile(LayerType layer, Vector3Int map_pos, string tile_ID, CancellationToken? ct){
+        Vector3Int block_offsets = TilemapAxis._mapping_mapPos_to_blockOffsets(map_pos);
+        Vector3Int inBlock_pos = TilemapAxis._mapping_mapPos_to_inBlockPos(map_pos);
+        TilemapBlock block = await _get_force_waitInitDone(block_offsets, layer);
+        block.map._set_tile(inBlock_pos, tile_ID);
     }
 
-    public static async UniTask<TilemapBlock> _get_force_async(Vector3Int offsets, LayerType layer){
+    public static TilemapBlock _get_force(Vector3Int offsets, LayerType layer){
+        if (our.TryGetValue(layer.ToString(), out var our_layer)){
+            if (our_layer.TryGetValue(offsets, out var block)){
+                return block;
+            }
+        }
+        return new(offsets, layer);
+        // if (!(our.ContainsKey(layer.ToString()) && our[layer.ToString()].ContainsKey(offsets))){
+        //     return new(offsets, layer);
+        // }
+        // return our[layer.ToString()][offsets];
+    }
+
+    public static async UniTask<TilemapBlock> _get_force_waitInitDone(Vector3Int offsets, LayerType layer){
         TilemapBlock block;
-        if (!(our.ContainsKey(layer.ToString()) && our[layer.ToString()].ContainsKey(offsets))){
+        if (our.TryGetValue(layer.ToString(), out var our_layer)){
+            if (our_layer.TryGetValue(offsets, out block)){}
+        }
+        else {
             block = new(offsets, layer);
         }
-        else{
-            block = our[layer.ToString()][offsets];
-        }
+        // TilemapBlock block;
+        // if (!(our.ContainsKey(layer.ToString()) && our[layer.ToString()].ContainsKey(offsets))){
+        //     block = new(offsets, layer);
+        // }
+        // else{
+        //     block = our[layer.ToString()][offsets];
+        // }
         await block._wait_init_done();
         return block;
     }
