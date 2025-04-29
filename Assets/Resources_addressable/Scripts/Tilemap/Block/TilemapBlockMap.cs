@@ -45,16 +45,18 @@ public class TilemapBlockMap: BaseClass{
         return new() { tile_ID = GameConfigs._sysCfg.TMap_notLoaded_tile };
     }
 
-    public void _set_tile(Dictionary<Vector3Int, string> map){
-        foreach (var pair in map){
-            _set_tile(pair.Key, pair.Value);
-        }
+    // public void _set_tiles(Dictionary<Vector3Int, string> map){
+    //     foreach (var pair in map){
+    //         _set_tile(pair.Key, pair.Value);
+    //     }
+    // } 
+    public TilemapTile _set_tile(Vector3Int pos, string tile_ID){
+        return _set_tile(pos.x, pos.y, tile_ID);
     } 
-    public void _set_tile(Vector3Int pos, string tile_ID){
-        _set_tile(pos.x, pos.y, tile_ID);
-    } 
-    public void _set_tile(int x, int y, string tile_ID){
-        _get_force(x, y)._set_ID(tile_ID);
+    public TilemapTile _set_tile(int x, int y, string tile_ID){
+        TilemapTile tile = _get_force(x, y);
+        tile._set_ID(tile_ID);
+        return tile;
     } 
 
     // public void _update_

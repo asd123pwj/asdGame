@@ -29,6 +29,7 @@ public class TilemapTile: BaseClass{
     // ---------- Status ---------- //
     public Dictionary<Vector2Int, bool> _neighbor_notEmpty = new();
     public bool _need_update_neighbor = false;
+    public bool _need_update_texture = false;
 
 
     public TilemapTile(){}
@@ -44,8 +45,20 @@ public class TilemapTile: BaseClass{
         }
     }
 
+    public static async UniTask _modify(LayerType layer, Vector3Int map_pos, string tile_ID, CancellationToken? ct, bool needDraw=false){
+        ct?.ThrowIfCancellationRequested();
+        Vector3Int block_offsets = TilemapAxis._mapping_mapPos_to_blockOffsets(map_pos);
+        Vector3Int inBlock_pos = TilemapAxis._mapping_mapPos_to_inBlockPos(map_pos);
+        TilemapBlock block = await TilemapBlock._get_force_waitInitDone(block_offsets, layer);
+        TilemapTile tile = block.map._set_tile(inBlock_pos, tile_ID);
+        if (needDraw){
+            await tile._update_status(ct);
+        }
+    }
+
     public void _set_ID(string tile_ID) { 
         _update_need_update_neighbor(tile_ID);
+        _update_need_update_texture(tile_ID);
         this.tile_ID = tile_ID; 
     }
 
@@ -54,6 +67,10 @@ public class TilemapTile: BaseClass{
          || (tile_ID != GameConfigs._sysCfg.TMap_empty_tile && this.tile_ID == GameConfigs._sysCfg.TMap_empty_tile)){
             _need_update_neighbor = true;
         }
+    }
+    
+    public void _update_need_update_texture(string tile_ID){
+        _need_update_texture = (tile_ID != this.tile_ID);
     }
 
     public string _get_tile_ID() => tile_ID;
@@ -108,12 +125,20 @@ public class TilemapTile: BaseClass{
         if (neighbor_isChanged){
             string tile_subID_new = TileMatchRule.match(this);
             if (tile_subID_new != tile_subID){
+                _need_update_texture = true;
                 tile_subID = tile_subID_new;
-                await _update_tile(ct);
-                await _update_P3D(ct);
-                await _update_decoration(ct);
             }
         }
+        if (_need_update_texture){
+            _need_update_texture = false;
+            await _update_texture(ct);
+        }
+    }
+
+    public async UniTask _update_texture(CancellationToken? ct){
+        await _update_tile(ct);
+        await _update_P3D(ct);
+        await _update_decoration(ct);
     }
 
     public async UniTask _update_tile(CancellationToken? ct){

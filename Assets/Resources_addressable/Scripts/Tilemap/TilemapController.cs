@@ -25,7 +25,7 @@ public class TilemapController: BaseClass{
     // TilemapBlockGenerator TMapGen { get => _TMapSys._TMapGen; }
     // TilemapDraw TMapDraw { get => _TMapSys._TMapDraw; }
     // TilemapAxis TMapCfg { get => _TMapSys._TMapAxis; }
-    TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
+    // TilemapSaveLoad TMapSL { get => _TMapSys._TMapSL; }
     // ---------- status ---------- // 
     // private Vector3Int _tilemapBlock_offsets;
     // private bool _tilemapBlockChange = true;

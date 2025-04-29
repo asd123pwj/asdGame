@@ -24,7 +24,7 @@ public class TilemapSystem : BaseClass{
     // public TilemapBlockGenerator _TMapGen;
     // public TilemapDraw _TMapDraw;
     // public TilemapAxis _TMapAxis;
-    public TilemapSaveLoad _TMapSL;
+    // public TilemapSaveLoad _TMapSL;
     public TilemapController _TMapCtrl;
     public TilemapMonitor _TMapMon;
     public PlantMonitor _PlantMon;
@@ -42,7 +42,7 @@ public class TilemapSystem : BaseClass{
         // _TMapAxis = new();
         // _TMapDraw = new();
         // _TMapGen = new();
-        _TMapSL = new();
+        // _TMapSL = new();
         _TMapCtrl = new();
         _TMapMon = new();
         _PlantMon = new();

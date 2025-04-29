@@ -39,7 +39,7 @@ public class BaseClass{
 
     public virtual void _update(){}
 
-    public virtual async UniTask _loop(){await UniTask.Delay(0); /* just placeholder */}
+    public virtual async UniTask _loop(){if (_initDone) await UniTask.Yield(); /* just placeholder */}
 
     public virtual bool _check_allow_init() => true;
 
@@ -48,7 +48,7 @@ public class BaseClass{
     }
 
     public virtual void _init(){}
-    public virtual async UniTask _init_async(){await UniTask.Delay(0); /* just placeholder */}
+    public virtual async UniTask _init_async(){if (_initDone) await UniTask.Yield(); /* just placeholder */}
     async UniTaskVoid init(){
         while (true){
             if (!_check_allow_init()){
@@ -68,7 +68,6 @@ public class BaseClass{
         MethodInfo method = GetType().GetMethod("_update");
         bool is_overridden = method.DeclaringType != typeof(BaseClass);
         if (is_overridden){
-            // _UpdateSys._add_updater(_update, _update_interval);
             _UpdateSys._add_updater(this);
         }
     }
@@ -76,7 +75,6 @@ public class BaseClass{
         MethodInfo method = GetType().GetMethod("_update");
         bool is_overridden = method.DeclaringType != typeof(BaseClass);
         if (is_overridden){
-            // _UpdateSys._remove_updater(_update);
             _UpdateSys._remove_updater(this);
         }
     }
@@ -85,12 +83,4 @@ public class BaseClass{
         _isDestroyed = true;
         unregister_update();
     }
-
-    // void run_loop(){
-    //     MethodInfo method = GetType().GetMethod("_loop");
-    //     bool is_overridden = method.DeclaringType != typeof(BaseClass);
-    //     if (is_overridden){
-    //         _loop().Forget();
-    //     }
-    // }
 }
