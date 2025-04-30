@@ -4,6 +4,7 @@
 // 小营地位置小，例如5x1，那么在非边缘部分找到地面最大的部分，
 
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -39,7 +40,7 @@ public class BuildGenerator : BaseClass{
     // }
 
 
-    public Region4DrawTilemapBlock _generate_build(Vector2 mouse_pos){
+    public async UniTask<Region4DrawTilemapBlock> _generate_build(Vector2 mouse_pos){
         // Tilemap posRef_tilemap = _TMapSys._TMapMon._get_TilemapBlockGameObject(Vector3Int.zero, new LayerTTT()).TMap;
         LayerType layer_type = new LayerType();
         Vector3Int mouse_origin_mapPos = TilemapAxis._mapping_worldPos_to_mapPos(mouse_pos, layer_type);;
@@ -61,7 +62,8 @@ public class BuildGenerator : BaseClass{
                     TilemapBlock block = TilemapBlock._get_force(currentBlock_offset, new LayerType());
                     Vector3Int currentTile_inBlockPos = TilemapAxis._mapping_mapPos_to_inBlockPos(currentTile_mapPos);
                     // Debug.Log(currentTile_inBlockPos);
-                    string current_tile_ID = block.map._get_tile_force(currentTile_inBlockPos);
+                    // string current_tile_ID = block.map._get_tile_force(currentTile_inBlockPos);
+                    // string current_tile_ID = (await TilemapTile._get_force_async(block.layer, currentTile_mapPos)).tile_ID;
                     string build_template_tile_ID = build_template[key][i, j];
                     
                     TileBase tile = _MatSys._tile._get_tile(build_template_tile_ID);

@@ -23,7 +23,7 @@ public class TilemapBlock: BaseClass{
     public List<Vector3Int> groundPos;
     public string[] direction;
     public bool direction_reverse;
-    public TilemapBlockMap map;
+    // public TilemapBlockMap map;
     public LayerType layer;
     public TilemapBlockAround around => new(this);
     public TilemapBlockMapStatus status;
@@ -56,7 +56,7 @@ public class TilemapBlock: BaseClass{
 
     public override void _init(){
         obj = new(this);
-        map = new(this);
+        // map = new(this);
         status = new(this);
         _draw = new(this);
         _terr = new(this);
@@ -84,6 +84,10 @@ public class TilemapBlock: BaseClass{
         // return our[layer.ToString()][offsets];
     }
 
+    public static async UniTask<TilemapBlock> _get_force_waitInitDone_useMapPos(Vector3Int map_pos, LayerType layer){
+        Vector3Int block_offsets = TilemapAxis._mapping_mapPos_to_blockOffsets(map_pos);
+        return await _get_force_waitInitDone(block_offsets, layer);
+    }
     public static async UniTask<TilemapBlock> _get_force_waitInitDone(Vector3Int offsets, LayerType layer){
         TilemapBlock block;
         if (our.TryGetValue(layer.ToString(), out var our_layer)){

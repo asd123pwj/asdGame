@@ -14,7 +14,7 @@ public class TilemapTile: BaseClass{
     
     public TilemapTileDecoration decoration;
     public string tile_ID = GameConfigs._sysCfg.TMap_empty_tile;
-    public string tile_subID;
+    public string tile_subID = GameConfigs._sysCfg.TMap_fullTile_subID;
     bool enable_tile = true;
     bool enable_P3D = true;
     bool enable_decoration = true;
@@ -41,16 +41,14 @@ public class TilemapTile: BaseClass{
             our_layer.TryAdd(map_pos, this);
         }
         foreach (Vector2Int neighbor_pos in TileMatchRule.reference_pos){
-            _neighbor_notEmpty.Add(neighbor_pos, false);
+            _neighbor_notEmpty.Add(neighbor_pos, true);
         }
     }
 
     public static async UniTask _modify(LayerType layer, Vector3Int map_pos, string tile_ID, CancellationToken? ct, bool needDraw=false){
         ct?.ThrowIfCancellationRequested();
-        Vector3Int block_offsets = TilemapAxis._mapping_mapPos_to_blockOffsets(map_pos);
-        Vector3Int inBlock_pos = TilemapAxis._mapping_mapPos_to_inBlockPos(map_pos);
-        TilemapBlock block = await TilemapBlock._get_force_waitInitDone(block_offsets, layer);
-        TilemapTile tile = block.map._set_tile(inBlock_pos, tile_ID);
+        TilemapTile tile = await _get_force_async(layer, map_pos);
+        tile._set_ID(tile_ID);
         if (needDraw){
             await tile._update_status(ct);
         }
@@ -74,13 +72,15 @@ public class TilemapTile: BaseClass{
     }
 
     public string _get_tile_ID() => tile_ID;
-    // public static TilemapTile _get(LayerType layer, Vector3Int map_pos){
-    //     if (!_our.ContainsKey(layer.ToString())) return null;
-    //     if (!_our[layer.ToString()].ContainsKey(map_pos)) return null;
-    //     return _our[layer.ToString()][map_pos];
-    // }
 
-
+    public static async UniTask<TilemapTile> _get_force_async(LayerType layer, Vector3Int map_pos) {
+        TilemapTile tile = _try_get(layer, map_pos);
+        if (tile == null) {
+            TilemapBlock block = await TilemapBlock._get_force_waitInitDone_useMapPos(map_pos, layer);
+            return new(block, map_pos);
+        }
+        return tile;
+    } 
     public static TilemapTile _try_get(LayerType layer, Vector3Int map_pos) {
         if (_our.TryGetValue(layer.ToString(), out var our_layer)){
             if (our_layer.TryGetValue(map_pos, out var tile)){
@@ -101,7 +101,7 @@ public class TilemapTile: BaseClass{
     }
     
     public async UniTask _update_status(CancellationToken? ct){
-        bool neighbor_isChanged = false;
+        bool neighbor_isChanged = tile_subID == null;
         bool neighbor_notEmpty;
         bool need_update_neighbor = _need_update_neighbor;
         _need_update_neighbor = false;

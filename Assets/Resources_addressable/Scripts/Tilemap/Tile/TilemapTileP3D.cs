@@ -11,6 +11,8 @@ public class TilemapTileP3D : BaseClass{
     // ---------- Status ---------- //
     public GameObject _self;
     public SpriteRenderer _renderer;
+    public string tile_ID => tile.tile_ID;
+    public string tile_subID => tile.tile_subID;
 
     public TilemapTileP3D(TilemapTile tile){
         this.tile = tile;
@@ -28,8 +30,8 @@ public class TilemapTileP3D : BaseClass{
 
     public async UniTask _update_sprite(CancellationToken? ct){
         ct?.ThrowIfCancellationRequested();
-        if (tile.tile_subID == null) return;
-        _renderer.sprite = _MatSys._tile._get_P3D(tile.tile_ID, tile.tile_subID);
+        if (tile_subID == null) return;
+        _renderer.sprite = _MatSys._tile._get_P3D(tile_ID, tile_subID);
         string mat_ID = "TransparentSprite";
         _renderer.material = _MatSys._mat._get_mat(mat_ID);//TilemapLitMaterial
     }

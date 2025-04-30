@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Cysharp.Threading.Tasks;
 
 
 public class TilemapBlockMapStatus: BaseClass{
     Vector3Int size => GameConfigs._sysCfg.TMap_tiles_per_block;
-    TilemapBlockMap map => block.map;
+    // TilemapBlockMap map => block.map;
     TilemapBlock block;
     public static Dictionary<string, Dictionary<Vector3Int, Func<string, bool>>> rules = new() { 
         {"Ground", new ()  {{Vector3Int.up, (tile) => tile == "0" }, {Vector3Int.zero, (tile) => tile != "0" }}},
@@ -20,13 +21,14 @@ public class TilemapBlockMapStatus: BaseClass{
         }
     }
     
-    public void _update_status_typeMap(string type){
+    public async UniTask _update_status_typeMap(string type){
         positions[type].Clear();
         for (int i = 0; i < size.x; i++){
             for (int j = 0; j < size.y; j++){
                 bool is_status = true;
                 foreach (var kvp in rules[type]){
-                    if (kvp.Value(map._get_tile_foce(i + kvp.Key.x, j + kvp.Key.y))){
+                    // if (kvp.Value(map._get_tile_force(i + kvp.Key.x, j + kvp.Key.y))){
+                    if (kvp.Value((await TilemapTile._get_force_async(block.layer, new(i + kvp.Key.x, j + kvp.Key.y))).tile_ID)){
                         continue;
                     }
                     is_status = false;

@@ -97,13 +97,6 @@ public class TilemapCommandHandler: CommandHandlerBase{
         bool needDraw = args.ContainsKey("needDraw");
 
         await TilemapTile._modify(layer_type, map_pos, (string)tile_ID, ct, needDraw);
-        // if (args.ContainsKey("prepareOnly")){
-        //     await _TMapSys._TMapCtrl._prepare_block(map_pos, layer_type, ct);
-        // }
-        // else{
-        //     await _TMapSys._TMapCtrl._draw_block_complete(map_pos, layer_type, ct);
-        // }
-        
     }
 
 }

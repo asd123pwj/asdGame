@@ -31,10 +31,22 @@ public class TilemapBlockDraw: BaseClass{
     public async UniTask _draw_block_mine(CancellationToken? ct){
         if (isDrawed) return;
         isDrawed = true;
-        foreach (TilemapTile tile in block.map.map){
-            ct?.ThrowIfCancellationRequested();
-            await tile._update_status(ct);
+        int x_start = block.offsets.x * block.size.x;
+        int y_start = block.offsets.y * block.size.y;
+        int x_end = x_start + block.size.x;
+        int y_end = y_start + block.size.y;
+        for (int x = x_start; x < x_end; x++){
+            for (int y = y_start; y < y_end; y++){
+                Vector3Int pos = new(x, y, 0);
+                TilemapTile tile = await TilemapTile._get_force_async(block.layer, pos);
+                ct?.ThrowIfCancellationRequested();
+                await tile._update_status(ct);
+            }
         }
+        // foreach (TilemapTile tile in block.map.map){
+        //     ct?.ThrowIfCancellationRequested();
+        //     await tile._update_status(ct);
+        // }
     }
 
     // public async UniTask _draw_block(){

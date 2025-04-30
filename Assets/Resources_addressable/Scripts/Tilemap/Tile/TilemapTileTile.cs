@@ -36,7 +36,7 @@ public class TilemapTileTile : BaseClass{
 
     public async UniTask _update_sprite(CancellationToken? ct){
         ct?.ThrowIfCancellationRequested();
-        if (tile.tile_subID == null) return;
+        if (tile_subID == null) return;
         bool need_update_collider = check_collider_need_update();
         
         _renderer.sprite = _MatSys._tile._get_sprite(tile_ID, tile_subID);
@@ -52,7 +52,7 @@ public class TilemapTileTile : BaseClass{
         bool need_update_collider;
         if (_renderer.sprite != null){
             string last_subID = _renderer.sprite.name;
-            need_update_collider = last_subID != tile.tile_subID;
+            need_update_collider = last_subID != tile_subID;
         }
         else{
             need_update_collider = true;
