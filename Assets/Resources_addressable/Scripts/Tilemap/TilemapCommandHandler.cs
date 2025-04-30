@@ -32,8 +32,8 @@ public class TilemapCommandHandler: CommandHandlerBase{
             layer_type = new((int)sortingOrder);
         }
         else{
-            layer_type = new();
-            Debug.Log($"No layer or sortingOrder specified, using default layer {layer_type}");
+            layer_type = _CtrlSys._get_current_layer();
+            // Debug.Log($"No layer or sortingOrder specified, using current layer {layer_type}");
         }
 
         if(args.ContainsKey("useMousePos")){
@@ -78,8 +78,8 @@ public class TilemapCommandHandler: CommandHandlerBase{
             layer_type = new((int)sortingOrder);
         }
         else{
-            layer_type = new();
-            Debug.Log($"No layer or sortingOrder specified, using default layer {layer_type}");
+            layer_type = _CtrlSys._get_current_layer();
+            // Debug.Log($"No layer or sortingOrder specified, using current layer {layer_type}");
         }
 
         if(args.ContainsKey("useMousePos")){

@@ -88,8 +88,8 @@ public class UIFloatPanel: UIScrollView{
 
     List<UIInfo> get_floatPanel_tile(){
         Vector2 world_pos = InputSystem._keyPos.mouse_pos_world;
-        Vector3Int map_pos = TilemapAxis._mapping_worldPos_to_mapPos(world_pos, new());
-        TilemapTile tile = TilemapTile._try_get(new LayerType(), map_pos);
+        Vector3Int map_pos = TilemapAxis._mapping_worldPos_to_mapPos(world_pos, _CtrlSys._get_current_layer());
+        TilemapTile tile = TilemapTile._try_get(_CtrlSys._get_current_layer(), map_pos);
 
         List<UIInfo> infos = new List<UIInfo>();
         // string UI_type;

@@ -34,7 +34,8 @@ public class WaterGenerator: BaseClass{
     }
 
     public bool tmp_draw(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-        LayerType layer = new(0, MapLayerType.Middle);
+        // LayerType layer = new(0, MapLayerType.Middle);
+        LayerType layer = _CtrlSys._get_current_layer();
         Vector3Int block_offsets = TilemapAxis._mapping_worldPos_to_blockOffsets(keyPos.mouse_pos_world, layer);
         // TilemapBlock block = _TMapSys._TMapMon._get_block(block_offsets, layer);
         TilemapBlock block = TilemapBlock._get_force(block_offsets, layer);

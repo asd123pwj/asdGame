@@ -98,7 +98,9 @@ public class TilemapController: BaseClass{
         }
         else{
             Vector3 player_pos = _CtrlSys._player._self.transform.position;
-            _query_point = TilemapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, MapLayerType.Middle));
+            // _query_point = TilemapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, MapLayerType.Middle));
+            _query_point = TilemapAxis._mapping_worldPos_to_blockOffsets(player_pos, _CtrlSys._get_current_layer());
+            
         }
     }
 

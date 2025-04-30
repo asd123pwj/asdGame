@@ -13,6 +13,9 @@ public class ControlSystem{
         // _HierSearch._CtrlSys = this;
     }
 
+    public LayerType _get_current_layer(){
+        return new();
+    }
     
     public void _set_player(ObjectConfig player){
         _player = player;
