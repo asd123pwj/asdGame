@@ -34,8 +34,9 @@ public class TilemapTileTile : BaseClass{
         init_gameObject();
     }
 
-    public async UniTask _update_sprite(CancellationToken? ct){
-        ct?.ThrowIfCancellationRequested();
+    // public async UniTask _update_sprite(CancellationToken? ct){
+    //     ct?.ThrowIfCancellationRequested();
+    public void _update_sprite(){
         if (tile_subID == null) return;
         bool need_update_collider = check_collider_need_update();
         

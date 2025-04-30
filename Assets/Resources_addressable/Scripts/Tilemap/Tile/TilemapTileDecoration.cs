@@ -28,8 +28,9 @@ public class TilemapTileDecoration : BaseClass{
     public override void _init(){
         init_gameObject();
     }
-    public async UniTask _update_sprite(CancellationToken? ct){
-        ct?.ThrowIfCancellationRequested();
+    // public async UniTask _update_sprite(CancellationToken? ct){
+    //     ct?.ThrowIfCancellationRequested();
+    public void _update_sprite(){
         if (tile.tile_subID == null) return;
         Sprite sprite = _MatSys._spr._get_sprite(sprite_ID, subID);
         _renderer.sprite = sprite;

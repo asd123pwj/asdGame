@@ -18,6 +18,7 @@ public class TilemapTile: BaseClass{
     bool enable_tile = true;
     bool enable_P3D = true;
     bool enable_decoration = true;
+    public string tile_ID_terrain;
     public string mineral_ID;
     // bool firstLoadDone = false;
 
@@ -54,6 +55,11 @@ public class TilemapTile: BaseClass{
         }
     }
 
+    public bool _check_terrainDone() => tile_ID_terrain != null;
+    public void _set_ID_terrain(string tile_ID){
+        tile_ID_terrain = tile_ID;
+        _set_ID(tile_ID);
+    }
     public void _set_ID(string tile_ID) { 
         _update_need_update_neighbor(tile_ID);
         _update_need_update_texture(tile_ID);
@@ -100,13 +106,13 @@ public class TilemapTile: BaseClass{
         return tile.tile_subID != GameConfigs._sysCfg.TMap_fullTile_subID;
     }
     
-    public async UniTask _update_status(CancellationToken? ct){
+    public async UniTask _update_status(CancellationToken? ct=null){
+        ct?.ThrowIfCancellationRequested();
         bool neighbor_isChanged = tile_subID == null;
         bool neighbor_notEmpty;
         bool need_update_neighbor = _need_update_neighbor;
         _need_update_neighbor = false;
         foreach (Vector2Int neighbor_pos in TileMatchRule.reference_pos){
-            ct?.ThrowIfCancellationRequested();
             TilemapTile neighbor = _try_get(block.layer, map_pos + new Vector3Int(neighbor_pos.x, neighbor_pos.y, 0));
             if (neighbor == null) {
                 neighbor_notEmpty = false;
@@ -114,7 +120,7 @@ public class TilemapTile: BaseClass{
             else {
                 neighbor_notEmpty = (neighbor.tile_ID != GameConfigs._sysCfg.TMap_empty_tile);
                 if (need_update_neighbor) {
-                    await neighbor._update_status(ct);
+                    await neighbor._update_status();
                 }
             }
             if (neighbor_notEmpty != _neighbor_notEmpty[neighbor_pos]){
@@ -131,30 +137,32 @@ public class TilemapTile: BaseClass{
         }
         if (_need_update_texture){
             _need_update_texture = false;
-            await _update_texture(ct);
+            _update_texture(); 
         }
     }
 
-    public async UniTask _update_texture(CancellationToken? ct){
-        await _update_tile(ct);
-        await _update_P3D(ct);
-        await _update_decoration(ct);
+    public void _update_texture(){
+        _update_tile();
+        _update_P3D();
+        _update_decoration();
     }
 
-    public async UniTask _update_tile(CancellationToken? ct){
+    public void _update_tile(){
         if (enable_tile){
             tileTile ??= new(this);
-            await tileTile._update_sprite(ct);
+            tileTile._update_sprite();
+            // await tileTile._update_sprite(ct);
         }
         else{
             // TODO: delete P3D
         }
     }
 
-    public async UniTask _update_P3D(CancellationToken? ct){
+    public void _update_P3D(){
         if (enable_P3D){
             P3D ??= new(this);
-            await P3D._update_sprite(ct);
+            P3D._update_sprite();
+            // await P3D._update_sprite(ct);
         }
         else{
             // TODO: delete P3D
@@ -163,10 +171,11 @@ public class TilemapTile: BaseClass{
 
     public void _clear_mineral() { _set_mineral(null); }
     public void _set_mineral(string mineral_ID) => this.mineral_ID = mineral_ID; 
-    public async UniTask _update_decoration(CancellationToken? ct){
+    public void _update_decoration(){
         if (enable_decoration && mineral_ID != null){
             decoration ??= new(this);
-            await decoration._update_sprite(ct);
+            // await decoration._update_sprite(ct);
+            decoration._update_sprite();
         }
         else{
             // TODO: delete decoration

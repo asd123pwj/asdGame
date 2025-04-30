@@ -28,8 +28,9 @@ public class TilemapTileP3D : BaseClass{
         init_gameObject();
     }
 
-    public async UniTask _update_sprite(CancellationToken? ct){
-        ct?.ThrowIfCancellationRequested();
+    // public async UniTask _update_sprite(CancellationToken? ct){
+    //     ct?.ThrowIfCancellationRequested();
+    public void _update_sprite(){
         if (tile_subID == null) return;
         _renderer.sprite = _MatSys._tile._get_P3D(tile_ID, tile_subID);
         string mat_ID = "TransparentSprite";
