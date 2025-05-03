@@ -44,7 +44,6 @@ public class UIFloatPanel: UIScrollView{
 
     public override void _enable(){
         base._enable();
-        Debug.Log("enable");
         if (_UISys._UIMonitor.ui_currentPointerEnter != null){
             // ---------- UI ---------- //
             Debug.Log(_UISys._UIMonitor.ui_currentPointerEnter._info.name);

@@ -53,9 +53,9 @@ public class UIDrag: UIInteractBase{
         // remove item from ScrollView.info
         // GameObject ScrollView = get_parent_ScrollView();
         // if (ScrollView.GetComponent<UIIndividual>()._Base is UIScrollView SV_base) {
-        if (_Base._UISys._UIMonitor._UIObj2base[get_parent_ScrollView()] is UIScrollView SV_base) {
-            SV_base._remove_item(_Base);
-        }
+        // if (_Base._UISys._UIMonitor._UIObj2base[get_parent_ScrollView()] is UIScrollView SV_base) {
+        //     SV_base._remove_item(_Base);
+        // }
         // set item's parent to foreground
         _Base._set_parent(_Base._UISys._foreground);
     }

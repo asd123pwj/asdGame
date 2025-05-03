@@ -52,7 +52,7 @@ public class UIDrop: UIInteractBase{
         UIBase item_base = _Base._UISys._UIMonitor._UIObj2base[item];
         // ----- get container index
         int container_index_start = _Base._info.name.LastIndexOf(' ');
-        string numberPart = _Base._info.name.Substring(container_index_start + 1);
+        string numberPart = _Base._info.name[(container_index_start + 1)..];
         int container_index = int.Parse(numberPart) - 1;
         // ----- update as item
         item_base._info.item_index = container_index;
@@ -61,9 +61,10 @@ public class UIDrop: UIInteractBase{
         // ----- log to ScrollView.info
         // UIBase item_base = _Base._UISys._UIMonitor._UIObj2base[item];
         // if (get_parent_ScrollView().GetComponent<UIIndividual>()._Base is UIScrollView SV_base) {
-        if (_Base._UISys._UIMonitor._UIObj2base[get_parent_ScrollView()] is UIScrollView SV_base) {
-            SV_base._append_item(item_base);
-        }
+        
+        // if (_Base._UISys._UIMonitor._UIObj2base[get_parent_ScrollView()] is UIScrollView SV_base) {
+        //     SV_base._append_item(item_base);
+        // }
     }
 
     void resize_item_to_container(UIBase container_base, UIBase item_base){

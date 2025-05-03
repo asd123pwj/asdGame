@@ -4,17 +4,29 @@ public class UIClassContainer{
     public UIClassContainer(){
         
         UIClass._add("UIContainer", new (){
-        // readonly public static UIInfo UIContainer = new() {
             class_type = "UIContainer",
-            background_key = "",
-            sizeDelta = new (800, 800),
+            background_key = "ui_RoundedIcon_16",
+            sizeDelta = new (64, 64),
             interactions = new List<string>() {
-                // "UISetTop",
                 "UIDrop",
                 "UIPassScroll2Parent"
             },
         });
 
+        UIClass._add("UIScrollStorehouse", new UIContainerInfo(){
+            class_type = "UIScrollStorehouse",
+            base_type = "UIScrollStorehouse",
+            prefab_key = "ScrollView",
+            background_key = "ui_RoundedIcon_32",
+            sizeDelta = new (512, 768),
+            interactions = new List<string>() {
+                "UIDrag",
+            },
+            subUIs = new(){
+                new() { class_type = "UICloseButtom", sizeDelta = new(24, 24), anchoredPosition = new(-16, -16) },
+                new() { class_type = "UIResizeButtom", sizeDelta = new(24, 24), anchoredPosition = new(-16, 16) },
+            },
+        });
         
 
         
@@ -24,20 +36,12 @@ public class UIClassContainer{
             class_type = "UIScrollView",
             base_type = "UIScrollView",
             prefab_key = "ScrollView",
-            background_key = "Empty",
-            // anchorMin = new(0, 1), anchorMax = new(0, 1), pivot = new(0, 1), localScale = new(1, 1), rotation = new(0, 0, 0, 1),
+            background_key = "ui_RoundedIcon_32",
             sizeDelta = new(620, 240),
-            // constraintCount = 3,
             subUIs = new(){
                 new() { class_type = "UICloseButtom" },
                 new() { class_type = "UIResizeButtom" },
             },
-            // subUIs = new Dictionary<string, List<UIInfo>>(){
-            //     { "ControlUIs", new (){
-            //         new() { type = "UICloseButtom" },
-            //         new() { type = "UIResizeButtom" },
-            //     } },
-            // },
             interactions = new List<string>() {
                 // "UISetTop",
                 "UIDrag",
