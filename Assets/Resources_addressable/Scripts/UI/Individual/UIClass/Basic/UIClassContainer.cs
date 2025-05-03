@@ -14,9 +14,9 @@ public class UIClassContainer{
             },
         });
 
-        UIClass._add("UIScrollStorehouse", new UIScrollInventoryInfo(){
-            class_type = "UIScrollStorehouse",
-            base_type = "UIScrollStorehouse",
+        UIClass._add("UIScrollInventory", new UIScrollInventoryInfo(){
+            class_type = "UIScrollInventory",
+            base_type = "UIScrollInventory",
             prefab_key = "ScrollView",
             background_key = "ui_RoundedIcon_32",
             sizeDelta = new (512, 768),

@@ -10,7 +10,6 @@ public class UIInteractionManager{
     // ---------- Sub Tools ----------
     UIBase Base;
     // ---------- Interaction ----------
-    // public List<UIInteractBase> _interactions = new();
     public Dictionary<string, UIInteractBase> _interactions = new();
     // ---------- Status ----------
 
@@ -71,37 +70,27 @@ public class UIInteractionManager{
 
 
     public void _unregister_interaction(string type_name){
-        Type type = Type.GetType(type_name);
-        _unregister_interaction(type);
-    }
-    public void _unregister_interaction(UIInteractBase interaction){
-        Type type = interaction.GetType();
-        _unregister_interaction(type);
-    }
-    public void _unregister_interaction(Type type){
-        foreach (var interaction in _interactions.Values){
-            if (interaction.GetType() == type){
-                _interactions.Remove(interaction.GetType().Name);
-                
-                _unregister_PointerEnter(interaction);
-                _unregister_PointerExit(interaction);
-                _unregister_PointerDown(interaction);
-                _unregister_PointerUp(interaction);
-                _unregister_PointerClick(interaction);
-                _unregister_Drag(interaction);
-                _unregister_Drop(interaction);
-                _unregister_Scroll(interaction);
-                _unregister_UpdateSelected(interaction);
-                _unregister_Select(interaction);
-                _unregister_Deselect(interaction);
-                _unregister_Move(interaction);
-                _unregister_InitializePotentialDrag(interaction);
-                _unregister_BeginDrag(interaction);
-                _unregister_EndDrag(interaction);
-                _unregister_Submit(interaction);
-                _unregister_Cancel(interaction);
-                Base._Trigger._init_eventTrigger();
-            }
+        if (_interactions.TryGetValue(type_name, out UIInteractBase interaction)){
+            _interactions.Remove(type_name);
+            
+            _unregister_PointerEnter(interaction);
+            _unregister_PointerExit(interaction);
+            _unregister_PointerDown(interaction);
+            _unregister_PointerUp(interaction);
+            _unregister_PointerClick(interaction);
+            _unregister_Drag(interaction);
+            _unregister_Drop(interaction);
+            _unregister_Scroll(interaction);
+            _unregister_UpdateSelected(interaction);
+            _unregister_Select(interaction);
+            _unregister_Deselect(interaction);
+            _unregister_Move(interaction);
+            _unregister_InitializePotentialDrag(interaction);
+            _unregister_BeginDrag(interaction);
+            _unregister_EndDrag(interaction);
+            _unregister_Submit(interaction);
+            _unregister_Cancel(interaction);
+            Base._Trigger._init_eventTrigger();
         }
     }
 
@@ -253,20 +242,11 @@ public class UIInteractionManager{
 
     public void _register_interaction(string name){
         Type type = Type.GetType(name);
-        _register_interaction(type);
-    }
-    public void _register_interaction(Type type){
-        // object[] args = new object[] { Base._self };
+        
         object[] args = new object[] { Base };
         UIInteractBase interaction = (UIInteractBase)Activator.CreateInstance(type, args);
-        _register_interaction(interaction);
-    }
-    public void _register_interaction(UIInteractBase interaction){
-        /*
-         *  The triggerMethod of interactions should be overriden.
-         *  After overriding, it will add to _Event._event_xxx, to make it work.
-         */
-        _interactions.Add(interaction.GetType().Name, interaction);
+
+        _interactions.Add(name, interaction);
         _register_PointerEnter(interaction);
         _register_PointerExit(interaction);
         _register_PointerDown(interaction);

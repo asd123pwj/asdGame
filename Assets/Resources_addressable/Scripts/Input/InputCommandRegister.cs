@@ -63,7 +63,7 @@ public class InputCommandRegister : BaseClass{
 
         keyName2Command.Add("a", "move --left");
         keyName2Command.Add("b", "");
-        keyName2Command.Add("c", "UIToggle --type UIScrollStorehouse");
+        keyName2Command.Add("c", "UIToggle --type UIScrollInventory");
         keyName2Command.Add("d", "move --right");
         keyName2Command.Add("e", "");
         keyName2Command.Add("f", "");
