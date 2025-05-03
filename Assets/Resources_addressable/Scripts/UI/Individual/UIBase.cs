@@ -17,6 +17,7 @@ public class UIBase: BaseClass{
     public GameObject _self, _parent;
     public RectTransform _rt_self { get { return _self != null ? _self.GetComponent<RectTransform>() : null; } }
     public RectTransform _rt_parent { get { return _parent != null ? _parent.GetComponent<RectTransform>() : null; } }
+    public Image img;
     // ---------- Config ----------
     public UIInfo _info;
     // ---------- Component ----------
@@ -25,7 +26,7 @@ public class UIBase: BaseClass{
     public bool _isAvailable { get{ return _self.activeSelf; }}
     public List<UIBase> _subUIs;
     bool allow_init = false;
-    List<string> essential_interactions = new() { nameof(UISetTop), nameof(UILogPointerOverUI) };
+    public List<string> essential_interactions = new() { nameof(UISetTop), nameof(UILogPointerOverUI) };
 
 
     public UIBase(GameObject parent, UIInfo info=null){
@@ -42,14 +43,17 @@ public class UIBase: BaseClass{
 
     // ---------- Initialization ----------
     public override void _init(){
+    // public override async UniTask _init_async(){
         // ----- begin
         _init_begin();
         // ----- Background
         set_background().Forget();
+        // await set_background();
         // ----- Sub
         init_sub_script();
         init_sub_UIs();
         init_interactions().Forget();
+        // await init_interactions();
         _register_receiver();
         // ----- Activate
         _enable();
@@ -81,7 +85,7 @@ public class UIBase: BaseClass{
         }
     }
 
-    async UniTaskVoid init_interactions(){
+    async UniTask init_interactions(){
         // ----- Essential Interactions ----- //
         foreach (string interaction in essential_interactions){
             _InteractMgr._register_interaction(interaction);
@@ -135,18 +139,22 @@ public class UIBase: BaseClass{
 
 
     // ---------- Background ----------
-    async UniTaskVoid set_background(){
+    public async UniTask set_background(Sprite spr){
+        while (img == null) await UniTask.Delay(10);
+        img.sprite = spr;
+    }
+    async UniTask set_background(){
         while (!_initDone) await UniTask.Delay(10);
         while (!_MatSys._check_all_info_initDone()) {
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(10);
         }
         if (_info.background_key == "") {
-            Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
+            img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
             img.color = new(0, 0, 0, 0);
         }
         else {
-            Image img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
+            img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
             img.color = _info.color;
             if (_MatSys._spr._check_exist(_info.background_key)){
                 while (!_MatSys._spr._check_loaded(_info.background_key)) {

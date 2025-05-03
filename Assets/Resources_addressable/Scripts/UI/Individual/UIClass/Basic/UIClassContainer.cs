@@ -5,6 +5,7 @@ public class UIClassContainer{
         
         UIClass._add("UIContainer", new (){
             class_type = "UIContainer",
+            // base_type = "UIContainer",
             background_key = "ui_RoundedIcon_16",
             sizeDelta = new (64, 64),
             interactions = new List<string>() {
@@ -13,7 +14,7 @@ public class UIClassContainer{
             },
         });
 
-        UIClass._add("UIScrollStorehouse", new UIContainerInfo(){
+        UIClass._add("UIScrollStorehouse", new UIScrollInventoryInfo(){
             class_type = "UIScrollStorehouse",
             base_type = "UIScrollStorehouse",
             prefab_key = "ScrollView",

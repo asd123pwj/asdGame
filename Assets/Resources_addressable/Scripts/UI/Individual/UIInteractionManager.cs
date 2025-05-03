@@ -10,7 +10,8 @@ public class UIInteractionManager{
     // ---------- Sub Tools ----------
     UIBase Base;
     // ---------- Interaction ----------
-    public List<UIInteractBase> _interactions = new();
+    // public List<UIInteractBase> _interactions = new();
+    public Dictionary<string, UIInteractBase> _interactions = new();
     // ---------- Status ----------
 
     public UIInteractionManager(UIBase UIBase){
@@ -28,7 +29,7 @@ public class UIInteractionManager{
         _enable_interaction(type);
     }
     public void _enable_interaction(Type type){
-        foreach (var interaction in _interactions){
+        foreach (var interaction in _interactions.Values){
             if (interaction.GetType() == type){
                 interaction._enable();
             }
@@ -45,7 +46,7 @@ public class UIInteractionManager{
         _disable_interaction(type);
     }
     public void _disable_interaction(Type type){
-        foreach (var interaction in _interactions){
+        foreach (var interaction in _interactions.Values){
             if (interaction.GetType() == type){
                 interaction._disable();
             }
@@ -61,7 +62,7 @@ public class UIInteractionManager{
         _toggle_interaction(type);
     }
     public void _toggle_interaction(Type type){
-        foreach (var interaction in _interactions){
+        foreach (var interaction in _interactions.Values){
             if (interaction.GetType() == type){
                 interaction._toggle();
             }
@@ -78,9 +79,9 @@ public class UIInteractionManager{
         _unregister_interaction(type);
     }
     public void _unregister_interaction(Type type){
-        foreach (var interaction in _interactions){
+        foreach (var interaction in _interactions.Values){
             if (interaction.GetType() == type){
-                _interactions.Remove(interaction);
+                _interactions.Remove(interaction.GetType().Name);
                 
                 _unregister_PointerEnter(interaction);
                 _unregister_PointerExit(interaction);
@@ -265,7 +266,7 @@ public class UIInteractionManager{
          *  The triggerMethod of interactions should be overriden.
          *  After overriding, it will add to _Event._event_xxx, to make it work.
          */
-        _interactions.Add(interaction);
+        _interactions.Add(interaction.GetType().Name, interaction);
         _register_PointerEnter(interaction);
         _register_PointerExit(interaction);
         _register_PointerDown(interaction);

@@ -101,7 +101,7 @@ public class UIScrollView: UIBase{
     // public override float _update_interval { get; set; } = 0.1f;
     // int resize_pass_count = 0;
     // List<UIBase> containers = new();
-    List<UIBase> items = new();
+    public List<UIBase> items = new();
     Dictionary<UIBase, UIInfo> base2info = new();
     // bool withScrollbarHorizontal = false;
     // bool withScrollbarVertical = false; 

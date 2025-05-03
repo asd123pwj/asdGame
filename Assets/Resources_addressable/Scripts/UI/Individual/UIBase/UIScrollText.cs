@@ -165,6 +165,7 @@ public class UIScrollText: UIBase{
     }
 
     public async UniTask _update_text(DynamicValue text, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
         update_text(text.get<string>());
         adaptive_resize();
         sync_with_source(text);
