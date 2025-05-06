@@ -1,9 +1,4 @@
-using UnityEngine;
-using UnityEngine.UI;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine.EventSystems;
-using Cysharp.Threading.Tasks;
 
 
 public class UIOpenAttributeManager: UIInteractBase{

@@ -7,6 +7,7 @@ public class TilemapCommandHandler: CommandHandlerBase{
     public override void register(){
         CommandSystem._add(TMapGen);
         CommandSystem._add(TMapDrawTile);
+        CommandSystem._add(TMapSetSelectedTile);
     }
 
     public async UniTask TMapGen(Dictionary<string, object> args, CancellationToken? ct){
@@ -58,16 +59,17 @@ public class TilemapCommandHandler: CommandHandlerBase{
          * --[useMousePos] (flag)     
          * --[x_map] (int)            tile.map_pos.x
          * --[y_map] (int)            tile.map_pos.y
-         * --[layer] (string)         tile.block.layer
-         * --[sortingOrder] (int)     tile.block.layer.sortingOrder
-         * --[tile_ID] (string)       tile.tile_ID, if not specified, use selected tile in _TMapSys.TMapMon._tile_ID_selected4Draw
+         * --[layer] (string)         tile.block.layer,              if not specified, use _CtrlSys._get_current_layer();
+         * --[sortingOrder] (int)     tile.block.layer.sortingOrder, if not specified, use _CtrlSys._get_current_layer();
+         * --[tile_ID] (string)       tile.tile_ID,                  if not specified, use selected tile in _TMapSys.TMapMon._tile_ID_selected4Draw
          * --[needDraw] (flag)        modify and draw
          * 
          * Example:
          *   TMapDrawTile --useMousePos --tile_ID b6 --needDraw
-         *   TMapDrawTile --x_map 0 --x_map 0
+         *   - In mousePos, player current layer, modify tile to "b6", and draw
+         *   TMapDrawTile --x_map 0 --x_map 0, --layer L0_Middle
+         *   - In (0, 0), L0 of L0_Middle, modify tile to _TMapSys.TMapMon._tile_ID_selected4Draw, and draw
          */
-        // LayerType layer_type = new();
         LayerType layer_type;
         Vector3Int map_pos;
 
@@ -79,7 +81,6 @@ public class TilemapCommandHandler: CommandHandlerBase{
         }
         else{
             layer_type = _CtrlSys._get_current_layer();
-            // Debug.Log($"No layer or sortingOrder specified, using current layer {layer_type}");
         }
 
         if(args.ContainsKey("useMousePos")){
@@ -99,4 +100,22 @@ public class TilemapCommandHandler: CommandHandlerBase{
         await TilemapTile._modify(layer_type, map_pos, (string)tile_ID, ct, needDraw);
     }
 
+    public async UniTask TMapSetSelectedTile(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
+        /* TMapDrawTile                    
+         * --[tile_ID] (string)       if not specified, use GameConfig._sysCfg.TMap_empty_tile
+         * 
+         * Example:
+         *   TMapSetSelectedTile --tile_ID b6
+         *   - Set selected tile to "b6"
+         *   TMapSetSelectedTile
+         *   - Set selected tile to GameConfig._sysCfg.TMap_empty_tile
+         */
+        // LayerType layer_type = new();
+        if (!args.TryGetValue("tile_ID", out object tile_ID)){
+            tile_ID = GameConfigs._sysCfg.TMap_empty_tile;
+        }
+        Debug.Log($"Set selected tile to {tile_ID}");
+        _TMapSys._TMapMon._tile_ID_selected4Draw = (string)tile_ID;
+    }
 }

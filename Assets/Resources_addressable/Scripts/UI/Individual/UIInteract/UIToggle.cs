@@ -1,9 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine.EventSystems;
-using Cysharp.Threading.Tasks;
 
 
 public class UIToggle: UIInteractBase{
@@ -24,7 +20,6 @@ public class UIToggle: UIInteractBase{
     
     void toggle_subUI() {
         if (target_type != 0) return;
-        // foreach (var subUI in target_obj.GetComponent<UIIndividual>()._Base._subUIs){
         foreach (var subUI in _Base._UISys._UIMonitor._UIObj2base[target_obj]._subUIs){
             if (subUI._info.name == target){
                 subUI._toggle();

@@ -9,7 +9,7 @@ public class UIClassCommon{
             anchorMin = new(1, 1), anchorMax = new(1, 1), pivot = new (1, 1), 
             sizeDelta = new(16, 16),
             interactions = new List<string>() {
-                "UIClickClose",
+                nameof(UIClickClose),
             },
         });
 
@@ -19,7 +19,7 @@ public class UIClassCommon{
             background_key = "Empty",
             sizeDelta = new (120, 40),
             interactions = new List<string>() {
-                "UIToggle",
+                nameof(UIToggle),
             },
         });
 
@@ -31,7 +31,7 @@ public class UIClassCommon{
             sizeDelta = new (16, 16),
             interactions = new List<string>() {
                 // "UISetTop",
-                "UIResizeScaleConstrait",
+                nameof(UIResizeScaleConstrait),
             },
         });
         
@@ -42,7 +42,7 @@ public class UIClassCommon{
             base_type = "UIThumbnail",
             interactions = new List<string>() {
                 // "UISetTop",
-                "UIDragInstantiate",
+                nameof(UIDragInstantiate),
             },
         });
     }

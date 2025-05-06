@@ -7,7 +7,7 @@ public class UIClassCommandWindow{
             background_key = "ui_1", sizeDelta = new(800, 400),
             interactions = new List<string>() {
                 // "UISetTop",
-                "UIDrag",
+                nameof(UIDrag),
             },
             subUIs = new(){
                 new() { class_type = "UICloseButtom", sizeDelta = new(25, 25)},

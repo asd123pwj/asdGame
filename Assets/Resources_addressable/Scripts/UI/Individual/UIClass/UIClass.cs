@@ -22,6 +22,7 @@ public class UIClass{
 
         new UIClassFloatPanel();
         new UIClassAttributeManager();
+        new UIClassTilemap();
 
         new UIClassBackpack();
         new UIClassCommandWindow();

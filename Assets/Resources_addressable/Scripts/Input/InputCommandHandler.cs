@@ -19,13 +19,13 @@ public class InputCommandHandler: CommandHandlerBase{
          * 
          * Example:
          *   FROM_INPUT --key z     
-         *     run command of key z
+         *   - run command of key z
          *   FROM_INPUT --key z --write "UIToggle --type UIBackpack"  
-         *     replace command of key z to "UIToggle --type UIBackpack"
+         *   - replace command of key z to "UIToggle --type UIBackpack"
          *   FROM_INPUT --key z --read OWNER_25365_COMMAND 
-         *     send command of key z to messageID "OWNER_25365_COMMAND"
+         *   - send command of key z to messageID "OWNER_25365_COMMAND"
          *   FROM_INPUT --key z --trigger isDown
-         *     modify key z to trigger isDown
+         *   - modify key z to trigger isDown
          */
         string key = (string)args["key"];
         if (args.ContainsKey("write")){

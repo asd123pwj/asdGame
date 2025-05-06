@@ -1,12 +1,4 @@
-using UnityEngine;
-using UnityEngine.UI;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine.EventSystems;
-using Cysharp.Threading.Tasks;
-using Unity.VisualScripting;
-// using Force.DeepCloner;
-using System;
 
 
 public class UIOpenRightMenu: UIInteractBase{

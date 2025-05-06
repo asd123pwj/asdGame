@@ -14,8 +14,8 @@ public class UIClassBackpack{
             },
             interactions = new List<string>() {
                 // "UISetTop",
-                "UIDrag",
-                "UIOpenRightMenu",
+                nameof(UIDrag),
+                nameof(UIOpenRightMenu),
                 // "UIClickCloseRightMenu",
             },
         });

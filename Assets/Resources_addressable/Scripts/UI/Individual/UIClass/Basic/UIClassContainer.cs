@@ -9,8 +9,8 @@ public class UIClassContainer{
             background_key = "ui_RoundedIcon_16",
             sizeDelta = new (64, 64),
             interactions = new List<string>() {
-                "UIDrop",
-                "UIPassScroll2Parent"
+                nameof(UIDrop),
+                nameof(UIPassScroll2Parent)
             },
         });
 
@@ -21,7 +21,7 @@ public class UIClassContainer{
             background_key = "ui_RoundedIcon_32",
             sizeDelta = new (512, 768),
             interactions = new List<string>() {
-                "UIDrag",
+                nameof(UIDrag),
             },
             subUIs = new(){
                 new() { class_type = "UICloseButtom", sizeDelta = new(24, 24), anchoredPosition = new(-16, -16) },
@@ -45,7 +45,7 @@ public class UIClassContainer{
             },
             interactions = new List<string>() {
                 // "UISetTop",
-                "UIDrag",
+                nameof(UIDrag),
             },
         });
 

@@ -15,7 +15,7 @@ public class UIClassAttributeManager{
             spacing = new (16, 16),
             minSize = new (512, 128),
             interactions = new List<string>() {
-                "UIDrag",
+                nameof(UIDrag),
             },
             subUIs = new(){
                 new() { class_type = "UICloseButtom", sizeDelta = new(24, 24), anchoredPosition = new(-16, -16) },

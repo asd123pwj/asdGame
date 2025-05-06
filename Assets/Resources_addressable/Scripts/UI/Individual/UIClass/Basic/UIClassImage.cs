@@ -43,7 +43,7 @@ public class UIClassImage{
             sizeDelta = new(16, 16), 
             interactions = new List<string>() {
                 // "UISetTop",
-                "UIPassScroll2Parent",
+                nameof(UIPassScroll2Parent),
             },
         });
     }

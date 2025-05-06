@@ -41,9 +41,9 @@ public class UIClassKeyboardShortcut{
             // constraintCount = 1,
             anchoredPosition = new (8, -8),
             interactions = new List<string>() {
-                "UIDrag",
+                nameof(UIDrag),
                 // "UIDeselectClose"
-                "UIOpenRightMenu",
+                nameof(UIOpenRightMenu),
             },
             items = new(){
                 // new() {
@@ -80,8 +80,8 @@ public class UIClassKeyboardShortcut{
             background_key="p5", 
             interactions = new List<string>() {
                 // "UISetTop",
-                "UIExecuteCommandFromMessage",
-                "UIPassScroll2Parent"
+                nameof(UIExecuteCommandFromMessage),
+                nameof(UIPassScroll2Parent)
             },
             messageID = "UIExecuteCommandFromMessage"
         });
@@ -109,12 +109,12 @@ public class UIClassKeyboardShortcut{
             class_type="UIKey", background_key="ui_RoundedIcon_16", PixelsPerUnitMultiplier=1,
             rightMenu_name = "UIRightMenuInteractionManager_UIKey",
             interactions = new () {
-                "UIOpenRightMenu", 
-                "UIExecuteCommandFromAttribute",
-                "UIPassBeginDrag2Parent", 
-                "UIPassEndDrag2Parent",
-                "UIPassDrag2Parent",
-                "UIPassPointerDown2Parent",
+                nameof(UIOpenRightMenu), 
+                nameof(UIExecuteCommandFromAttribute),
+                nameof(UIPassBeginDrag2Parent), 
+                nameof(UIPassEndDrag2Parent),
+                nameof(UIPassDrag2Parent),
+                nameof(UIPassPointerDown2Parent),
             },
             subUIs = new(){
                 new UIScrollTextInfo(){ class_type = "UIKeyName", text = "Esc", },
@@ -128,10 +128,10 @@ public class UIClassKeyboardShortcut{
             minSize = new(24, 24), maxSize = new(128, 24), anchoredPosition= new(6, -8), 
             prefab_key = "ScrollText", background_key = "",
             interactions = new() {
-                "UIPassBeginDrag2Parent", 
-                "UIPassEndDrag2Parent",
-                "UIPassDrag2Parent",
-                "UIPassPointerDown2Parent",
+                nameof(UIPassBeginDrag2Parent), 
+                nameof(UIPassEndDrag2Parent),
+                nameof(UIPassDrag2Parent),
+                nameof(UIPassPointerDown2Parent),
             }
         });
         
@@ -141,10 +141,10 @@ public class UIClassKeyboardShortcut{
             minSize = new(32, 24), maxSize = new(60, 24), anchoredPosition= new(6, -32), 
             prefab_key = "ScrollText", background_key = "",
             interactions = new() {
-                "UIPassBeginDrag2Parent", 
-                "UIPassEndDrag2Parent",
-                "UIPassDrag2Parent",
-                "UIPassPointerDown2Parent",
+                nameof(UIPassBeginDrag2Parent), 
+                nameof(UIPassEndDrag2Parent),
+                nameof(UIPassDrag2Parent),
+                nameof(UIPassPointerDown2Parent),
             }
         });
 
@@ -302,7 +302,7 @@ public class UIClassKeyboardShortcut{
             PixelsPerUnitMultiplier = 1f,
             sizeDelta = new (800*2, 288*2),
             interactions = new List<string>() {
-                "UIDrag",
+                nameof(UIDrag),
             },
             // rightMenu_name = "UIRightMenuInteractionManager_KeyboardShortcut",
             subUIs = subUIs,
