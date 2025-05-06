@@ -22,7 +22,7 @@ public class UISystem : BaseClass{
     // public UIPrefabList _UIPrefabList;
     public UIDraw _UIDraw;
     public UIMonitor _UIMonitor;
-    public UIControl _UICtrl;
+    // public UIControl _UICtrl;
     public UISaveLoad _UISL;
     UIClass _UICls;
     UICommandHandler _handler;
@@ -48,7 +48,7 @@ public class UISystem : BaseClass{
     public override void _init(){
         _UIDraw = new();
         _UIMonitor = new();
-        _UICtrl = new();
+        // _UICtrl = new();
         _UISL = new();
         _UICls = new();
         _handler = new();

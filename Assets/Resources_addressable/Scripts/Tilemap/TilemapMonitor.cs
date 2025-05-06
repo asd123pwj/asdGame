@@ -15,6 +15,8 @@ public class TilemapMonitor: BaseClass{
     // ----- Containers ----- //
     public Dictionary<string, Transform> _TMap_containers;
     public Dictionary<string, Transform> _transforms;
+    // ----- Status ----- //
+    public string _tile_ID_selected4Draw = GameConfigs._sysCfg.TMap_empty_tile;
     // ----- GameObjects ----- //
     // public Dictionary<string, Dictionary<Vector3Int, TilemapBlockGameObject>> _TMap_objs;
 
@@ -60,16 +62,16 @@ public class TilemapMonitor: BaseClass{
     }
 
 
-    void clear_block_tilemap(Vector3Int block_offsets, string layer_type){ /* no implement */}
+    // void clear_block_tilemap(Vector3Int block_offsets, string layer_type){ /* no implement */}
 
     // public bool _check_block_load(Vector3Int block_offsets, LayerType layer_type) => _TMap_blocks[layer_type.ToString()].ContainsKey(block_offsets);
-    public bool _check_tile_load(Vector3Int map_pos, LayerType layer_type) => _TMap_tiles[layer_type.ToString()].ContainsKey(map_pos);
+    // public bool _check_tile_load(Vector3Int map_pos, LayerType layer_type) => _TMap_tiles[layer_type.ToString()].ContainsKey(map_pos);
 
 
     // public TilemapBlock _get_block(Vector3Int block_offsets, LayerType layer_type) => _TMap_blocks[layer_type.ToString()][block_offsets];
 
 
-    public TilemapTile _get_tile(Vector3Int map_pos, LayerType layer_type) => _TMap_tiles[layer_type.ToString()][map_pos];
+    // public TilemapTile _get_tile(Vector3Int map_pos, LayerType layer_type) => _TMap_tiles[layer_type.ToString()][map_pos];
 
 
     // public TilemapBlockGameObject _get_blkObj(Vector3Int block_offsets, string tilemap_type){

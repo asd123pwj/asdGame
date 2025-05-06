@@ -81,12 +81,12 @@ public class Pseudo3DRuleTile : RuleTile<Pseudo3DRuleTile.Neighbor> {
         // int sortingOrder = tilemap.GetComponent<TilemapRenderer>().sortingOrder;
         int sortingOrder = tilemap.GetComponent<TilemapBlockStatus>().sortingOrder;
         if (LayerType._check_type(sortingOrder, MapLayerType.Middle)){
-            if (_sys._TMapSys._TMapMon._check_tile_load(position, new LayerType(sortingOrder))){
-                TilemapTile tile = _sys._TMapSys._TMapMon._get_tile(position, new LayerType(sortingOrder));
-                tile._update_tile();
-                tile._update_P3D();
-                tile._update_decoration();
-            }
+            // if (_sys._TMapSys._TMapMon._check_tile_load(position, new LayerType(sortingOrder))){
+            //     TilemapTile tile = _sys._TMapSys._TMapMon._get_tile(position, new LayerType(sortingOrder));
+            //     tile._update_tile();
+            //     tile._update_P3D();
+            //     tile._update_decoration();
+            // }
         }
         // if (P3D == null){
         //     // P3D ??= _sys._TMapSys._P3DMon._generate_P3D(position, tile_ID, tile_subID, layer);

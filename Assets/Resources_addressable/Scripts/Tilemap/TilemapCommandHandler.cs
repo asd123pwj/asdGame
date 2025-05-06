@@ -60,7 +60,7 @@ public class TilemapCommandHandler: CommandHandlerBase{
          * --[y_map] (int)            tile.map_pos.y
          * --[layer] (string)         tile.block.layer
          * --[sortingOrder] (int)     tile.block.layer.sortingOrder
-         * --[tile_ID] (string)       tile.tile_ID
+         * --[tile_ID] (string)       tile.tile_ID, if not specified, use selected tile in _TMapSys.TMapMon._tile_ID_selected4Draw
          * --[needDraw] (flag)        modify and draw
          * 
          * Example:
@@ -91,7 +91,7 @@ public class TilemapCommandHandler: CommandHandlerBase{
         }
 
         if (!args.TryGetValue("tile_ID", out object tile_ID)){
-            tile_ID = GameConfigs._sysCfg.TMap_empty_tile;
+            tile_ID = _TMapSys._TMapMon._tile_ID_selected4Draw;
         }
 
         bool needDraw = args.ContainsKey("needDraw");

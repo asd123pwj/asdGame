@@ -13,8 +13,6 @@ public struct UIs{
 }
 
 public class UIMonitor: BaseClass{
-    // ---------- UI Tool ----------
-    GameConfigs GCfg;
     // ---------- Status ----------
     UIs UIs;
     public UIBase rightMenu_currentOpen = null;
