@@ -93,11 +93,11 @@ public class TilemapController: BaseClass{
 
 
     public void _task_update_queryPoint(){
-        if (_CtrlSys == null || _CtrlSys._player == null) {
+        if (_ObjSys._mon._player == null) {
             _query_point = Vector3Int.zero;
         }
         else{
-            Vector3 player_pos = _CtrlSys._player._self.transform.position;
+            Vector3 player_pos = _ObjSys._mon._player._self.transform.position;
             // _query_point = TilemapAxis._mapping_worldPos_to_blockOffsets(player_pos, new(0, MapLayerType.Middle));
             _query_point = TilemapAxis._mapping_worldPos_to_blockOffsets(player_pos, _CtrlSys._get_current_layer());
             

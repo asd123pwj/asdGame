@@ -42,7 +42,7 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("Number 0", "");
         keyName2Command.Add("Number 1", "TMapGen --useMousePos");
         keyName2Command.Add("Number 2", "TMapDrawTile --useMousePos --needDraw");
-        keyName2Command.Add("Number 3", "");
+        keyName2Command.Add("Number 3", "ObjTeleport --useMousePos");
         keyName2Command.Add("Number 4", "");
         keyName2Command.Add("Number 5", "");
         keyName2Command.Add("Number 6", "");

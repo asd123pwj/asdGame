@@ -7,10 +7,8 @@ using UnityEngine.Tilemaps;
 using Cysharp.Threading.Tasks;
 
 public class ObjectConfig: BaseClass{
-    // ---------- System Tool ----------
-    // public SystemManager _sys;
-    // public InputSystem _InputSys;
-    // public ObjectIndividual _individual;
+    // ---------- Status - Global ----------
+    public static Dictionary<int, ObjectConfig> _our = new();
     // ---------- Unity ----------
     public GameObject _self;
     public Rigidbody2D _rb;
@@ -44,6 +42,7 @@ public class ObjectConfig: BaseClass{
         _tags = info.tags;
         _max_move_speed = new Vector2(2f, 2f);
         _move_force = new Vector2(1f, 5f);
+        _our.Add(_runtimeID, this);
         // isInit = false;
         // init_sub_script();
     }

@@ -17,8 +17,9 @@ public class ControlSystem{
         return new();
     }
     
-    public void _set_player(ObjectConfig player){
-        _player = player;
-        sys._searchInit<CinemachineVirtualCamera>("Camera", "Player Camera").Follow = _player._self.transform;
-    }
+    // public void _set_player(ObjectConfig player){
+    //     _player = player;
+
+    //     sys._searchInit<CinemachineVirtualCamera>("Camera", "Player Camera").Follow = _player._self.transform;
+    // }
 }

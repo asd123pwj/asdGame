@@ -27,6 +27,7 @@ public class ObjectMove{
         _moves.Add("jump wall", new ObjectAbilMoveJumpWall(_Config, 0, 0.25f, uses:-1));
         // _moves.Add("fly", new ObjectAbilMoveFly(_Config, 5, 0.25f, duration:5f));
         _moves.Add("rush", new ObjectAbilMoveRush(_Config, 1, 0.25f, uses:-1));
+        _moves.Add("teleport", new ObjectAbilMoveTeleport(_Config, 0, 0.1f, uses:-1));
     }
 
     public bool _walk(KeyPos input) { return move(input, "walk"); }
@@ -34,6 +35,7 @@ public class ObjectMove{
     public bool _jump_wall(KeyPos input) { return move(input, "jump wall"); }
     public bool _fly(KeyPos input) { return move(input, "fly"); }
     public bool _rush(KeyPos input) { return move(input, "rush"); }
+    public bool _teleport(KeyPos input) { return move(input, "teleport"); }
     
     bool move(KeyPos input, string movement){
         if (_moves[movement]._act(input)){

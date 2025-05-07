@@ -18,10 +18,10 @@ public class ObjectSystem: BaseClass{
     // GameConfigs _GCfg { get { return _HierSearch._GCfg; } }
     // ----------
     // public ObjectList _object_list;
-    // ---------- Command ---------- //
+    // ---------- SubScript ---------- //
     public ObjectCommandHandler _handler;
-    // ---------- Spawn ---------- //
     public ObjectSpawn _object_spawn;
+    public ObjectMonitor _mon;
     // ---------- Status ---------- //
     public Dictionary<GameObject, ObjectConfig> _obj2base = new();
     public Dictionary<int, ObjectConfig> _runtimeID2base = new();
@@ -31,6 +31,7 @@ public class ObjectSystem: BaseClass{
     public override void _init(){
         _object_spawn = new(_GCfg);
         _handler = new();
+        _mon = new();
     }
     
     public override void _update(){

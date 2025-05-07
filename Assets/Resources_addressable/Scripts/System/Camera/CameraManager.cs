@@ -27,9 +27,6 @@ public class CameraManager: BaseClass{
     }
 
     public override void _init(){
-        // register actions
-        // _InputSys._register_action("Zoom In", zoomIn, "isDown");
-        // _InputSys._register_action("Zoom Out", zoomOut, "isDown");
         // Get camera
         cam_main = Camera.main;
         cam_player = _sys._searchInit<CinemachineVirtualCamera>("Camera", "Player Camera");
@@ -39,23 +36,6 @@ public class CameraManager: BaseClass{
         handler = new CameraCommandHandler();
     }
 
-    // public bool zoomIn(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-    //     if (rowTiles_in_camera < GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_max){
-    //         rowTiles_in_camera += 1f;
-    //         cam_player.m_Lens.OrthographicSize = orthographic_size;
-    //     }
-    //     return true;
-    // }
-
-    // public bool zoomOut(KeyPos keyPos, Dictionary<string, KeyInfo> keyStatus){
-    //     if (rowTiles_in_camera > GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_min){
-    //         rowTiles_in_camera -= 1f;
-    //         cam_player.m_Lens.OrthographicSize = orthographic_size;
-    //     }
-    //     return true;
-    // }
-
-    
     public bool _zoom(bool isZoomIn){
         if (isZoomIn && rowTiles_in_camera < GameConfigs._sysCfg.CAM_rowTiles_in_playerCamera_max){
             rowTiles_in_camera += 1f;
@@ -66,6 +46,10 @@ public class CameraManager: BaseClass{
             cam_player.m_Lens.OrthographicSize = orthographic_size;
         }
         return true;
+    }
+
+    public void _set_camera_follow(Transform target){
+        cam_player.Follow = target;
     }
 
 }
