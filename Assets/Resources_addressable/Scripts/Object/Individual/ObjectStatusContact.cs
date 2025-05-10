@@ -30,8 +30,10 @@ public class ObjectStatusContact{
         
     void init_action(){
         // ---------- Init ----------
-        List<string> contact_self = _Config._tags.contact_self;
-        List<string> contact_other = _Config._tags.contact_other;
+        // List<string> contact_self = _Config._tags.contact_self;
+        // List<string> contact_other = _Config._tags.contact_other;
+        List<string> contact_self = _Config._cfg.tags.GetValueOrDefault("contact_self", new ());
+        List<string> contact_other = _Config._cfg.tags.GetValueOrDefault("contact_other", new ());
         // ---------- Action default ----------
         _Config._Contact._actions_update.Add(update_contact_count);
         _Config._Contact._actions_update.Add(update_onGround_and_onFloat);

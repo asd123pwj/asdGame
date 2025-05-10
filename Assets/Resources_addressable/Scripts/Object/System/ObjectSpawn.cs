@@ -18,11 +18,14 @@ public class ObjectSpawn{
 
     public void _instantiate(string name, Vector2 position){
         // GameObject obj = _object_list._name2object[name];
-        GameObject obj = MatSys._obj._get_prefab(name);
+        // GameObject obj = MatSys._obj._get_prefab(name);
         // ObjectTags tags = _object_list._objects_info.objects[name].tags;
-        obj = UnityEngine.Object.Instantiate(obj, position, Quaternion.identity);
+        // obj = UnityEngine.Object.Instantiate(obj, position, Quaternion.identity);
         // obj.GetComponent<ObjectIndividual>()._info = _object_list._objects_info.objects[name];
-        ObjectBase Base = new(obj, MatSys._obj._get_info(name));
+        ObjectConfig cfg = ObjectClass._set_default(name);
+        cfg.position = position;
+        // ObjectBase Base = new(obj, MatSys._obj._get_info(name));
+        ObjectBase Base = new(GCfg._sys._object, cfg);
         // GCfg._ObjSys._obj2base.Add(obj, Base);
         // GCfg._ObjSys._runtimeID2base.Add(Base._runtimeID, Base);
         // obj.GetComponent<ObjectIndividual>()._info = MatSys._obj._get_info(name);

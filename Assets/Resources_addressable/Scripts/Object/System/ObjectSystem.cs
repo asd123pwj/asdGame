@@ -19,6 +19,7 @@ public class ObjectSystem: BaseClass{
     // ----------
     // public ObjectList _object_list;
     // ---------- SubScript ---------- //
+    public ObjectClass _class;
     public ObjectCommandHandler _handler;
     public ObjectSpawn _object_spawn;
     public ObjectMonitor _mon;
@@ -29,6 +30,7 @@ public class ObjectSystem: BaseClass{
 
 
     public override void _init(){
+        _class = new();
         _object_spawn = new(_GCfg);
         _handler = new();
         _mon = new();

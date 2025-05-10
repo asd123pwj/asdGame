@@ -18,8 +18,8 @@ using Unity.VectorGraphics;
 public struct ObjectInfo{
     public string name;
     public string description;
-    public string prefab;
-    public string sprites;
+    public string prefab_key;
+    public string sprite_key;
     public ObjectTags tags;
 }
 
@@ -77,7 +77,7 @@ public class ObjectManager: BaseClass{
 
 
     void load_prefab(string ID){
-        string prefab_path = _infos.items[ID].prefab;
+        string prefab_path = _infos.items[ID].prefab_key;
         if (prefab_path == null){
             Debug.LogError("Prefab path is null for object: " + ID);
             return;
@@ -95,7 +95,7 @@ public class ObjectManager: BaseClass{
 
     
     void load_sprite(string ID){
-        string sprite_path = _infos.items[ID].sprites;
+        string sprite_path = _infos.items[ID].sprite_key;
         if (sprite_path == null){
             Debug.LogError("sprite path is null for object: " + ID);
             return;

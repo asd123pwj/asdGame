@@ -1,16 +1,18 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class ObjectBase: BaseClass{
     // ---------- Status - Global ----------
     public static Dictionary<int, ObjectBase> _our = new();
     // ---------- Unity ----------
-    public GameObject _self;
+    public GameObject _self, _parent;
     public Rigidbody2D _rb;
     // ---------- Sub Script - Config ----------
     ObjectIdentity _Identity;
-    ObjectControl _Control;
-    public ObjectInfo _info;
+    // ObjectControl _Control;
+    // public ObjectInfo _info;
+    public ObjectConfig _cfg;
     // ---------- Sub Script - Action ----------
     public ObjectContact _Contact;
     public ObjectMove _Move;
@@ -20,21 +22,24 @@ public class ObjectBase: BaseClass{
     // ---------- Sub Script - Attribute ----------
     public ObjectAttrMoveFloat _AttrMoveFloat;
     // ---------- Config ----------
-    public ObjectTags _tags;
+    // public ObjectTags _tags;
+    // public ObjectTags _tags;
     public Vector2 _max_move_speed;
     public Vector2 _move_force;
     // bool isInit = true;
     
 
-    public ObjectBase(GameObject self, ObjectInfo info){
+    public ObjectBase(GameObject parent, ObjectConfig cfg=null){
+        _cfg = ObjectClass._set_default(GetType().Name, cfg);
+        _parent = parent;
+    // public ObjectBase(GameObject self, ObjectInfo info){
         // ---------- action ----------
         // _sys = hierarchy_search;
         // _InputSys = input_base;
         
-        _self = self;
-        _rb = _self.GetComponent<Rigidbody2D>();
-        _info = info;
-        _tags = info.tags;
+        // _self = self;
+        // _info = info;
+        // _tags = _cfg.tags;
         _max_move_speed = new Vector2(2f, 2f);
         _move_force = new Vector2(1f, 5f);
         _our.Add(_runtimeID, this);
@@ -47,20 +52,21 @@ public class ObjectBase: BaseClass{
         // _AttrMoveFloat._onUpdate();
     }
 
-    public void _set_tags(ObjectTags tags){
-        _tags = tags;
-    }
+    // public void _set_tags(ObjectTags tags){
+    //     _tags = tags;
+    // }
 
     public override bool _check_allow_init(){
-        if (_info.name is null) return false;
-        if (!_MatSys._obj._check_info_initDone()) return false;
+        if (_cfg is null) return false;
+        // if (!_MatSys._obj._check_info_initDone()) return false;
         return true;
     }
 
     public override void _init(){
+        create_self().Forget();
         // ---------- Sub Script - Config ----------
         _Identity = new(this);
-        _Control = new(this);
+        // _Control = new(this);
         // ---------- Sub Script - Action ----------
         _Contact = new(this);
         _Move = new(this);
@@ -74,4 +80,40 @@ public class ObjectBase: BaseClass{
         _ObjSys._runtimeID2base.Add(_runtimeID, this);
     }
 
+    void _set_pos(){
+        _self.transform.position = _cfg.position;
+    }
+
+    // ---------- GameObject Generate ----------
+    async UniTask create_self(){ 
+        if (_cfg.prefab_key == "" || _cfg.prefab_key == null) 
+            create_gameObject(); 
+        else 
+            await create_prefab(); 
+        _set_pos();
+        _rb = _self.GetComponent<Rigidbody2D>();
+    }
+    void create_gameObject(){ 
+        _self = new(_cfg.name); 
+        _self.transform.SetParent(_parent.transform, false);
+    }
+    async UniTask create_prefab(){
+        while (!_MatSys._check_all_info_initDone()) {
+            Debug.Log("waiting for Material System init.");
+            await UniTask.Delay(10);
+        }
+        if (_MatSys._obj._check_exist(_cfg.class_type)){
+            // while (!_MatSys._obj._check_prefab_loaded(_cfg.prefab_key)) {
+            while (!_MatSys._obj._check_prefab_loaded(_cfg.class_type)) {
+                Debug.Log("waiting for UI prefab loaded: " + _cfg.name + " - " + _cfg.prefab_key);
+                await UniTask.Delay(10);
+            }
+            GameObject obj = _MatSys._obj._get_prefab(_cfg.class_type);
+            _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
+            _self.name = _cfg.name;
+        }
+        else {
+            Debug.Log("UI prefab not exist: " + _cfg.prefab_key);
+        }
+    }
 }

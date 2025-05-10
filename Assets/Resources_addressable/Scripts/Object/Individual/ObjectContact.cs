@@ -36,8 +36,8 @@ public class ObjectContact{
 
     void init_action(){
         // ---------- init ----------
-        List<string> contact_self = _Config._tags.contact_self;
-        List<string> contact_other = _Config._tags.contact_other;
+        List<string> contact_self = _Config._cfg.tags.GetValueOrDefault("contact_self", new ());
+        List<string> contact_other = _Config._cfg.tags.GetValueOrDefault("contact_other", new ());
         //-------------------- Action onCollision --------------------
         // ---------- action default ----------
         // ---------- action self ----------

@@ -25,7 +25,8 @@ public class ObjectIdentity{
     // }
 
     void init_action(){
-        List<string> identity = _config._tags.identity;
+        // List<string> identity = _config._tags.identity;
+        if (!_config._cfg.tags.TryGetValue("identity", out List<string> identity)) return;
         // ---------- Action Init ----------
         if (identity.Contains("player")) action_player();
         // ---------- Action Default ----------
