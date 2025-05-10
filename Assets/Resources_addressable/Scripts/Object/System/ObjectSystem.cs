@@ -23,8 +23,8 @@ public class ObjectSystem: BaseClass{
     public ObjectSpawn _object_spawn;
     public ObjectMonitor _mon;
     // ---------- Status ---------- //
-    public Dictionary<GameObject, ObjectConfig> _obj2base = new();
-    public Dictionary<int, ObjectConfig> _runtimeID2base = new();
+    public Dictionary<GameObject, ObjectBase> _obj2base = new();
+    public Dictionary<int, ObjectBase> _runtimeID2base = new();
     // public ObjectConfig player;
 
 

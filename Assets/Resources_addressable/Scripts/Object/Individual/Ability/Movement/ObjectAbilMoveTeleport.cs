@@ -1,9 +1,9 @@
 using UnityEngine;
 
 public class ObjectAbilMoveTeleport: ObjectAbilMoveBase{
-    public ObjectAbilMoveTeleport(ObjectConfig config, float cooldown, float wait, int uses): this(config, cooldown, wait, uses, -1){}
-    public ObjectAbilMoveTeleport(ObjectConfig config, float cooldown, float wait, float duration): this(config, cooldown, wait, -1, duration){}
-    public ObjectAbilMoveTeleport(ObjectConfig config, float cooldown, float wait, int uses, float duration): base(config, cooldown, wait, uses, duration){
+    public ObjectAbilMoveTeleport(ObjectBase config, float cooldown, float wait, int uses): this(config, cooldown, wait, uses, -1){}
+    public ObjectAbilMoveTeleport(ObjectBase config, float cooldown, float wait, float duration): this(config, cooldown, wait, -1, duration){}
+    public ObjectAbilMoveTeleport(ObjectBase config, float cooldown, float wait, int uses, float duration): base(config, cooldown, wait, uses, duration){
         _name = "teleport";
     }
 

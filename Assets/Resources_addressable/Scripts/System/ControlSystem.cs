@@ -5,7 +5,7 @@ using UnityEngine;
 public class ControlSystem{
     SystemManager sys;
     // public GameObject _player;
-    public ObjectConfig _player;
+    public ObjectBase _player;
 
     public ControlSystem(SystemManager sys){
         this.sys = sys;

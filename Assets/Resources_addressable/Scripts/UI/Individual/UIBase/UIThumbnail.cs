@@ -23,11 +23,11 @@ public class UIThumbnail: UIBase{
             await UniTask.Delay(10);
         }
         if (_MatSys._obj._check_exist(_info.background_key)){
-            while (!_MatSys._obj._check_thumbnail_loaded(_info.background_key)) {
+            while (!_MatSys._obj._check_sprite_loaded(_info.background_key)) {
                 Debug.Log("waiting for object thumbnail loaded: " + _info.name + " - " + _info.background_key);
                 await UniTask.Delay(10);
             }
-            img.sprite = _MatSys._obj._get_thumbnail(_info.background_key);
+            img.sprite = _MatSys._obj._get_sprite(_info.background_key, "0");
         }
         else{
             Debug.Log("No thumbnail found: " + _info.name + " - " + _info.background_key);

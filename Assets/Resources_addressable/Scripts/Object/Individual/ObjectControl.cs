@@ -9,11 +9,11 @@ using Cysharp.Threading.Tasks;
 public class ObjectControl{
     // ---------- Action ----------
     // ---------- Config ----------
-    ObjectConfig _Cfg;
+    ObjectBase _Cfg;
     // ---------- Status ----------
 
 
-    public ObjectControl(ObjectConfig config){
+    public ObjectControl(ObjectBase config){
         _Cfg = config;
         if (_Cfg._tags.identity.Contains("player")) register_input_action();
     }

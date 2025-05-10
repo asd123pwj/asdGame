@@ -10,7 +10,7 @@ using Cysharp.Threading.Tasks;
 public class ObjectStatusContact{
     // ---------- Action ----------
     // ---------- Config ----------
-    ObjectConfig _Config;
+    ObjectBase _Config;
     // ---------- Status ----------
     public bool _up         { get { return _contact_count_up > 0; } }
     public bool _down       { get { return _contact_count_down > 0; } }
@@ -22,7 +22,7 @@ public class ObjectStatusContact{
     Dictionary<Collision2D, int[]> _contact_count = new(); // int[4]: up, down, left, right
     int _contact_count_up, _contact_count_down, _contact_count_left, _contact_count_right;
 
-    public ObjectStatusContact(ObjectConfig config){
+    public ObjectStatusContact(ObjectBase config){
         _Config = config;
         _Config._StatusContact = this;
         init_action();

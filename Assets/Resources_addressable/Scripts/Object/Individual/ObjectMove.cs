@@ -11,11 +11,11 @@ public class ObjectMove{
     // ---------- Action ----------
     public Dictionary<string, ObjectAbilMoveBase> _moves = new();
     // ---------- Config ----------
-    ObjectConfig _Config;
+    ObjectBase _Config;
 
     // ---------- Status ----------
 
-    public ObjectMove(ObjectConfig config){
+    public ObjectMove(ObjectBase config){
         _Config = config;
         _Config._Move = this;
         init();

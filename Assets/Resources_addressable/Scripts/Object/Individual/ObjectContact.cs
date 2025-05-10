@@ -14,11 +14,11 @@ public class ObjectContact{
     public List<Action> _actions_ground2Float = new();
     public List<Action> _actions_float2Ground = new();
     // ---------- Config ----------
-    ObjectConfig _Config;
+    ObjectBase _Config;
     // ---------- Status ----------
     // ---------- Internal ----------
     
-    public ObjectContact(ObjectConfig config){
+    public ObjectContact(ObjectBase config){
         _Config = config;
         _Config._Contact = this;
         init_action();

@@ -10,7 +10,7 @@ using Unity.VisualScripting;
 
 public class ObjectAbilMoveBase{
     // ---------- Config ----------
-    public ObjectConfig _Config;
+    public ObjectBase _Config;
     // ---------- Init ----------
     public string _name;
     public bool _moving;
@@ -23,7 +23,7 @@ public class ObjectAbilMoveBase{
     public int _uses;
     public float _duration;
 
-    public ObjectAbilMoveBase(ObjectConfig config, float cooldown, float wait, int uses, float duration){
+    public ObjectAbilMoveBase(ObjectBase config, float cooldown, float wait, int uses, float duration){
         // ---------- Config ----------
         _Config = config;
         // ---------- Init ----------

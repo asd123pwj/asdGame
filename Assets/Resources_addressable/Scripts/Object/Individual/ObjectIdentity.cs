@@ -8,21 +8,21 @@ using Cysharp.Threading.Tasks;
 
 public class ObjectIdentity{
     // ---------- Action ----------
-    List<Action> _actions = new();
+    // List<Action> _actions = new();
     // ---------- Config ----------
-    ObjectConfig _config;
+    ObjectBase _config;
     // ---------- Status ----------
     
-    public ObjectIdentity(ObjectConfig config){
+    public ObjectIdentity(ObjectBase config){
         _config = config;
         init_action();
     }
 
-    public void _update(){
-        foreach (var action in _actions){
-            action();
-        }
-    }
+    // public void _update(){
+    //     foreach (var action in _actions){
+    //         action();
+    //     }
+    // }
 
     void init_action(){
         List<string> identity = _config._tags.identity;

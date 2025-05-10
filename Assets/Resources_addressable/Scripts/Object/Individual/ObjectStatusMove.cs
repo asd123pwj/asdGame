@@ -10,7 +10,7 @@ using Unity.VisualScripting;
 
 public class ObjectStatusMove{
     // ---------- Config ----------
-    ObjectConfig _Config;
+    ObjectBase _Config;
 
     // ---------- Status ----------
 
@@ -22,7 +22,7 @@ public class ObjectStatusMove{
     public bool _movingLeft { get {return check_moving("left"); } }
     public bool _movingRight { get {return check_moving("right"); } }
 
-    public ObjectStatusMove(ObjectConfig config){
+    public ObjectStatusMove(ObjectBase config){
         // ---------- Config ----------
         _Config = config;
         _Config._StatusMove = this;

@@ -1,14 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
-using System;
-using System.Threading;
 using UnityEngine;
-using UnityEngine.Tilemaps;
-using Cysharp.Threading.Tasks;
 
-public class ObjectConfig: BaseClass{
+public class ObjectBase: BaseClass{
     // ---------- Status - Global ----------
-    public static Dictionary<int, ObjectConfig> _our = new();
+    public static Dictionary<int, ObjectBase> _our = new();
     // ---------- Unity ----------
     public GameObject _self;
     public Rigidbody2D _rb;
@@ -31,7 +26,7 @@ public class ObjectConfig: BaseClass{
     // bool isInit = true;
     
 
-    public ObjectConfig(GameObject self, ObjectInfo info){
+    public ObjectBase(GameObject self, ObjectInfo info){
         // ---------- action ----------
         // _sys = hierarchy_search;
         // _InputSys = input_base;

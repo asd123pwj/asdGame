@@ -8,9 +8,9 @@ using Cysharp.Threading.Tasks;
 using Unity.VisualScripting;
 
 public class ObjectAbilMoveFly: ObjectAbilMoveBase{
-    public ObjectAbilMoveFly(ObjectConfig config, float cooldown, float wait, int uses): this(config, cooldown, wait, uses, -1){}
-    public ObjectAbilMoveFly(ObjectConfig config, float cooldown, float wait, float duration): this(config, cooldown, wait, -1, duration){}
-    public ObjectAbilMoveFly(ObjectConfig config, float cooldown, float wait, int uses, float duration): base(config, cooldown, wait, uses, duration){
+    public ObjectAbilMoveFly(ObjectBase config, float cooldown, float wait, int uses): this(config, cooldown, wait, uses, -1){}
+    public ObjectAbilMoveFly(ObjectBase config, float cooldown, float wait, float duration): this(config, cooldown, wait, -1, duration){}
+    public ObjectAbilMoveFly(ObjectBase config, float cooldown, float wait, int uses, float duration): base(config, cooldown, wait, uses, duration){
         _name = "fly";
     }
 

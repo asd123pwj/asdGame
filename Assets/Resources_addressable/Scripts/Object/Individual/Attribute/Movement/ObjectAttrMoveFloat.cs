@@ -16,7 +16,7 @@ public enum FloatStatus{
 
 public class ObjectAttrMoveFloat{
     // ---------- Config ----------
-    public ObjectConfig _Config;
+    public ObjectBase _Config;
     // ---------- Init ----------
     public string _name;
     float _gravity = 1;
@@ -24,7 +24,7 @@ public class ObjectAttrMoveFloat{
     public bool _floating = true;
 
     // ---------- Action ----------
-    public ObjectAttrMoveFloat(ObjectConfig config){
+    public ObjectAttrMoveFloat(ObjectBase config){
         _Config = config;
     }
 

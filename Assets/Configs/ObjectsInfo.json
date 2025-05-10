@@ -4,8 +4,8 @@
         "yang":{
             "name": "yang",
             "description": "",
-            "path": "Assets/Resources_addressable/Prefab/Objects/yang.prefab",
-            "path_thumbnail": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png",
+            "prefab": "Assets/Resources_addressable/Prefab/Objects/yang.prefab",
+            "sprites": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png",
             "tags": {
                 "identity": ["player"],
                 "contact_self": [],
@@ -15,8 +15,8 @@
         "asd":{
             "name": "asd",
             "description": "",
-            "path": "Assets/Resources_addressable/Prefab/Objects/asd.prefab",
-            "path_thumbnail": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png",
+            "prefab": "Obj_prefab_asd",
+            "sprites": "Obj_sprite_asd",
             "tags": {
                 "identity": ["player"],
                 "contact_self": [],
@@ -26,8 +26,8 @@
         "test ammo":{
             "name": "test ammo",
             "description": "",
-            "path": "Assets/Resources_addressable/Prefab/Objects/test ammo.prefab",
-            "path_thumbnail": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png",
+            "prefab": "Assets/Resources_addressable/Prefab/Objects/test ammo.prefab",
+            "sprites": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png",
             "tags": {
                 "identity": [],
                 "contact_self": ["destruction"],

@@ -10,12 +10,12 @@ using Unity.VisualScripting;
 
 public class ObjectAttrMoveSystem{
     // ---------- Config ----------
-    public ObjectConfig _Config;
+    public ObjectBase _Config;
     // ---------- Init ----------
     public string _name;
 
     // ---------- Action ----------
-    public ObjectAttrMoveSystem(ObjectConfig config){
+    public ObjectAttrMoveSystem(ObjectBase config){
         _Config = config;
     }
 
