@@ -36,14 +36,14 @@ public class UIClassCommon{
         });
         
         
-        UIClass._add("UIThumbnail", new (){
-        // readonly public static UIInfo UIThumbnail = new() {
-            class_type = "UIThumbnail",
-            base_type = "UIThumbnail",
-            interactions = new List<string>() {
-                // "UISetTop",
-                nameof(UIDragInstantiate),
-            },
-        });
+        // UIClass._add("UIThumbnail", new (){
+        // // readonly public static UIInfo UIThumbnail = new() {
+        //     class_type = "UIThumbnail",
+        //     base_type = "UIThumbnail",
+        //     interactions = new List<string>() {
+        //         // "UISetTop",
+        //         nameof(UIDragInstantiate),
+        //     },
+        // });
     }
 }

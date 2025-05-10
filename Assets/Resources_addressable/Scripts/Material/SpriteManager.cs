@@ -6,23 +6,21 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using System.Linq;
 
-public struct SpriteInfo{
-    public string name;
-    public string refUrl;
-    public string description;
-    public string path;
-    public string[] tags;
-    public string[] sprites;
-};
+// public class SpriteInfo{
+//     public string path;
+//     public string spriteSet_type;   // type of spriteSet
+//     public string[] spriteSet;        // just for _infos.spriteSet[spriteSet_type]
+// };
 
-public struct SpritesInfo{
+public class SpritesInfo{
     public string version;
-    public Dictionary<string, SpriteInfo> items;
+    public Dictionary<string, string> items;
 }
 
 public class SpriteManager: BaseClass{
     public SpritesInfo _infos;
     public Dictionary<string, Dictionary<string, Sprite>> _ID_to_subID2Sprites = new();
+    public List<string> item_loadDone = new();
 
     public SpriteManager(){
         load_items();
@@ -33,29 +31,31 @@ public class SpriteManager: BaseClass{
     }
 
     // ---------- mapping ----------
-    public Sprite _get_sprite(string ID, string subID="_SingleSprite_"){
+    public Sprite _get_sprite(string ID, string subID="_DefaultSprite_"){
         if (ID == "0") return null; // No sprite
-        if (subID == "_SingleSprite_") subID = _ID_to_subID2Sprites[ID].Keys.First(); // Some png only have one sprite, its subID is the same as ID
+        if (subID == "_DefaultSprite_") subID = _ID_to_subID2Sprites[ID].Keys.First(); // Some png only have one sprite, its subID is the same as ID
         if (_ID_to_subID2Sprites.ContainsKey(ID)) return _ID_to_subID2Sprites[ID][subID]; // Sprite have been loaded
         return null; // !!! 记得更新默认sprite。Can't find sprite, return missing placeholder
     }
 
-    public SpriteInfo _get_info(string ID){
-        return _infos.items[ID];
+    // public SpriteInfo _get_info(string ID){
+    //     return _infos.items[ID];
+    // }
+    public string[] _get_spriteSet(string ID){
+        return _ID_to_subID2Sprites[ID].Keys.ToArray();
     }
     public bool _check_loaded(string ID, string subID){
         return _ID_to_subID2Sprites[ID].ContainsKey(subID);
     }
     public bool _check_loaded(string ID){
-        if (_infos.items[ID].sprites == null) {
-            if (_ID_to_subID2Sprites[ID].Count == 0) 
-                return false; // Some png only have one sprite, count = 0 means no loaded
-        }
-        else {
-            foreach(var sprite in _infos.items[ID].sprites)
-                if (!_ID_to_subID2Sprites[ID].ContainsKey(sprite)) 
-                    return false;
-        }
+        if (!item_loadDone.Contains(ID)) return false;
+        // if (_ID_to_subID2Sprites[ID].Count == 0) 
+        //     return false; // Some png only have one sprite, count = 0 means no loaded
+        // if (!(_infos.items[ID].spriteSet == null)) {
+        //     foreach(var sprite in _infos.items[ID].spriteSet)
+        //         if (!_ID_to_subID2Sprites[ID].ContainsKey(sprite)) 
+        //             return false;
+        // }
         return true;
     }
     
@@ -73,8 +73,9 @@ public class SpriteManager: BaseClass{
     }
 
     void load_item(string ID){
+        // _infos.items[ID].spriteSet = _infos.spriteSet[_infos.items[ID].spriteSet_type];
         _ID_to_subID2Sprites.Add(ID, new());
-        AsyncOperationHandle<Sprite[]> handle = Addressables.LoadAssetAsync<Sprite[]>(_infos.items[ID].path);
+        AsyncOperationHandle<Sprite[]> handle = Addressables.LoadAssetAsync<Sprite[]>(_infos.items[ID]);
         handle.Completed += (operationalHandle) => action_sprite_loaded(operationalHandle, ID);
     }
 
@@ -83,6 +84,7 @@ public class SpriteManager: BaseClass{
             foreach(var sprite in handle.Result){
                 _ID_to_subID2Sprites[ID].Add(sprite.name, sprite);
             }
+            item_loadDone.Add(ID);
         }
         else 
             Debug.LogError("Failed to load sprite: ID-" + ID);

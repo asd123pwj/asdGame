@@ -15,7 +15,7 @@ public struct ObjectTags{
 
 public class ObjectTag{
     GameConfigs _game_configs;
-    ObjectsInfo _objects_info;
+    // ObjectsInfo _objects_info;
     public Dictionary<string, GameObject> _name2object = new();
     public Dictionary<string, string> _ID2objectName = new();
 

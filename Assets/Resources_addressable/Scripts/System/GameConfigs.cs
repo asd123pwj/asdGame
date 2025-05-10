@@ -79,7 +79,7 @@ public class GameConfigs{
     // public string __root_dir__ = "";
     public string __sysConfig_path { get { return Path.Combine(__root_dir, "Configs.json"); } }
     public string __tilesInfo_path { get { return Path.Combine(__root_dir, "TilesInfo.json"); } }
-    public string __objectsInfo_path { get { return Path.Combine(__root_dir, "ObjectsInfo.json"); } }
+    // public string __objectsInfo_path { get { return Path.Combine(__root_dir, "ObjectsInfo.json"); } }
     public string __UISpritesInfo_path { get { return Path.Combine(__root_dir, "UISpritesInfo.json"); } }
     public string __UIPrefabsInfo_path { get { return Path.Combine(__root_dir, "UIPrefabsInfo.json"); } }
     public string __MaterialsInfo_path { get { return Path.Combine(__root_dir, "MaterialsInfo.json"); } }
@@ -90,6 +90,7 @@ public class GameConfigs{
     public string __SpriteMaterialsInfo_path { get { return Path.Combine(__root_dir, "SpriteMaterialsInfo.json"); } }
     public string __FontsInfo_path { get { return Path.Combine(__root_dir, "FontsInfo.json"); } }
     public string __PrefabsInfo_path { get { return Path.Combine(__root_dir, "PrefabsInfo.json"); } }
+    // public string __OldSpritesInfo_path { get { return Path.Combine(__root_dir, "OldSpritesInfo.json"); } }
 
 
     // ---------- tilemap config ----------

@@ -78,10 +78,20 @@ public class ObjectBase: BaseClass{
         
         _ObjSys._obj2base.Add(_self, this);
         _ObjSys._runtimeID2base.Add(_runtimeID, this);
+        _enable();
     }
 
-    void _set_pos(){
-        _self.transform.position = _cfg.position;
+    async UniTask _set_pos(Vector2 pos){
+        while (_self == null) await UniTask.Yield();
+        _self.transform.position = pos;
+    }
+
+    public void _enable(){
+        _self.SetActive(true);
+    }
+    public void _enable(Vector2 pos){
+        _set_pos(pos).Forget();
+        _enable();
     }
 
     // ---------- GameObject Generate ----------
@@ -90,8 +100,8 @@ public class ObjectBase: BaseClass{
             create_gameObject(); 
         else 
             await create_prefab(); 
-        _set_pos();
         _rb = _self.GetComponent<Rigidbody2D>();
+        await _set_pos(_cfg.position);
     }
     void create_gameObject(){ 
         _self = new(_cfg.name); 
@@ -102,13 +112,14 @@ public class ObjectBase: BaseClass{
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(10);
         }
-        if (_MatSys._obj._check_exist(_cfg.class_type)){
+        if (_MatSys._pfb._check_exist(_cfg.prefab_key)){
             // while (!_MatSys._obj._check_prefab_loaded(_cfg.prefab_key)) {
-            while (!_MatSys._obj._check_prefab_loaded(_cfg.class_type)) {
+            while (!_MatSys._pfb._check_loaded(_cfg.prefab_key)) {
                 Debug.Log("waiting for UI prefab loaded: " + _cfg.name + " - " + _cfg.prefab_key);
                 await UniTask.Delay(10);
             }
-            GameObject obj = _MatSys._obj._get_prefab(_cfg.class_type);
+            // GameObject obj = _MatSys._obj._get_prefab(_cfg.class_type);
+            GameObject obj = _MatSys._pfb._get_prefab(_cfg.prefab_key);
             _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
             _self.name = _cfg.name;
         }

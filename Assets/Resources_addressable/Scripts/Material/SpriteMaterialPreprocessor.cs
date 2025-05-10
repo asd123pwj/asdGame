@@ -52,6 +52,7 @@ public class SpriteMaterialPreprocessor: BaseClass{
         SpriteMaterialInfo info = _infos.items[ID];
         if (!_sys._MatSys._check_all_info_initDone()) return false;
         if (!_sys._MatSys._mat._check_loaded(info.material)) return false;
+        // if (!_sys._MatSys._old_spr._check_loaded(info.sprite)) return false;
         if (!_sys._MatSys._spr._check_loaded(info.sprite)) return false;
         return true;
     }
@@ -70,9 +71,11 @@ public class SpriteMaterialPreprocessor: BaseClass{
             // Debug.Log("wait");
             await UniTask.Delay(10);
         }
-        string[] subIDs = _sys._MatSys._spr._get_info(info.sprite).sprites;
+        // string[] subIDs = _sys._MatSys._old_spr._get_info(info.sprite).sprites;
+        string[] subIDs = _sys._MatSys._spr._get_spriteSet(info.sprite);
         _ID_to_subID2SpriteMaterials.Add(ID, new());
         foreach (string subID in subIDs){
+            // Sprite sprite = _sys._MatSys._old_spr._get_sprite(ID, subID);
             Sprite sprite = _sys._MatSys._spr._get_sprite(ID, subID);
             Material material= new(_sys._MatSys._mat._get_mat(info.material)){
                 mainTexture = sprite.texture,

@@ -1,30 +1,6 @@
 {
     "version": "0.0.1",
     "items":{
-        "b1":{
-            "category": "Block",
-            "name": "Grassy Soil",
-            "description": "",
-            "root_path_key": "Block",
-            "relative_path": "tile_b1",
-            "tags": ["common"]
-        },
-        "b2":{
-            "category": "Block",
-            "name": "Mineral Test",
-            "description": "",
-            "root_path_key": "Block",
-            "relative_path": "tile_b2",
-            "tags": ["rare"]
-        },
-        "b3":{
-            "category": "Block",
-            "name": "砾石",
-            "description": "",
-            "root_path_key": "Block",
-            "relative_path": "tile_b3",
-            "tags": ["uncommon"]
-        },
         "b4":{
             "category": "Block",
             "name": "玻璃",

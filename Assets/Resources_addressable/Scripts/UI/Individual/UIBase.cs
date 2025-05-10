@@ -157,6 +157,7 @@ public class UIBase: BaseClass{
             img = _self.GetComponent<Image>() ?? _self.AddComponent<Image>();
             img.color = _info.color;
             if (_MatSys._spr._check_exist(_info.background_key)){
+                // while (!_MatSys._old_spr._check_loaded(_info.background_key)) {
                 while (!_MatSys._spr._check_loaded(_info.background_key)) {
                     Debug.Log("waiting for UI sprite loaded: " + _info.name + " - " + _info.background_key);
                     await UniTask.Delay(10);

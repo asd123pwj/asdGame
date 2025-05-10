@@ -5,8 +5,8 @@ public class ObjectClassBasic{
 
         ObjectClass._add("asd", new (){
             class_type = "asd", 
-            prefab_key = "defaultObject",
-            sprite_key = "Obj_sprite_asd",
+            prefab_key = "obj_default",
+            sprite_key = "obj_asd",
             tags = new(){
                 {"identity", new(){ "player" } }
             }
