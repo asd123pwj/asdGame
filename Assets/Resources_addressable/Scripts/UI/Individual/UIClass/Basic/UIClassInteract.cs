@@ -3,7 +3,7 @@ using System.Collections.Generic;
 public class UIClassInteract{
     public UIClassInteract(){
         UIClass._add("UIExecuteCommandFromAttribute", new UIScrollTextInfo(){
-            class_type="UIExecuteCommandFromAttribute", base_type = "UIScrollText", prefab_key = "ScrollText",
+            class_type="UIExecuteCommandFromAttribute", base_type = "UIScrollText", prefab_key = "UIScrollText",
             background_key="ui_RoundedIcon_8", PixelsPerUnitMultiplier=1, 
             attributes = new() {
                 {"COMMAND", "" },

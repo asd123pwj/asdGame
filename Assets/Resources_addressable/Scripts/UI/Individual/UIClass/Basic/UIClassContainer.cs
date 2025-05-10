@@ -17,7 +17,7 @@ public class UIClassContainer{
         UIClass._add("UIScrollInventory", new UIScrollInventoryInfo(){
             class_type = "UIScrollInventory",
             base_type = "UIScrollInventory",
-            prefab_key = "ScrollView",
+            prefab_key = "UIScrollView",
             background_key = "ui_RoundedIcon_32",
             sizeDelta = new (512, 768),
             interactions = new List<string>() {
@@ -36,7 +36,7 @@ public class UIClassContainer{
         // readonly public static UIScrollViewInfo UIScrollView = new() {
             class_type = "UIScrollView",
             base_type = "UIScrollView",
-            prefab_key = "ScrollView",
+            prefab_key = "UIScrollView",
             background_key = "ui_RoundedIcon_32",
             sizeDelta = new(620, 240),
             subUIs = new(){

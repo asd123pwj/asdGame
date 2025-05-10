@@ -10,7 +10,7 @@ public class UIClassAttributeManager{
             base_type = "UIAttributeManager",
             background_key = "ui_RoundedIcon_32",
             PixelsPerUnitMultiplier = 1,
-            prefab_key = "ScrollView",
+            prefab_key = "UIScrollView",
             paddingLeft = 16, paddingRight = 16, paddingTop = 16 + 8*2 + 16*2, paddingBottom = 16 + 8*2 + 16*2,
             spacing = new (16, 16),
             minSize = new (512, 128),
@@ -31,7 +31,7 @@ public class UIClassAttributeManager{
         
         UIClass._add("UIOpenAttributeManager", new UIScrollTextInfo (){
             class_type="UIOpenAttributeManager", base_type = "UIScrollText",
-            prefab_key = "ScrollText",
+            prefab_key = "UIScrollText",
             background_key = "ui_RoundedIcon_8", PixelsPerUnitMultiplier=1,
             text="属性管理器",
             interactions = new List<string>() {

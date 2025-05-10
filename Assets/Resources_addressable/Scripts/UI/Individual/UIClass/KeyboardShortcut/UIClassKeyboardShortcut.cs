@@ -30,7 +30,7 @@ public class UIClassKeyboardShortcut{
             base_type = "UIRightMenu",
             background_key = "ui_RoundedIcon_32",
             PixelsPerUnitMultiplier = 1,
-            prefab_key = "ScrollView",
+            prefab_key = "UIScrollView",
             // sizeDelta = new (96*1 + 16 + 16, 32*3 + 4*2 + 16 + 16),
             // padding = new RectOffset(16, 16, 16, 16),
             paddingLeft = 16, paddingRight = 16, paddingTop = 16, paddingBottom = 16,
@@ -126,7 +126,7 @@ public class UIClassKeyboardShortcut{
             class_type = "UIKeyName", base_type = "UIScrollText",
             fontSize = 16, marginTop=0, marginBottom=0, marginLeft=4, marginRight=0, 
             minSize = new(24, 24), maxSize = new(128, 24), anchoredPosition= new(6, -8), 
-            prefab_key = "ScrollText", background_key = "",
+            prefab_key = "UIScrollText", background_key = "",
             interactions = new() {
                 nameof(UIPassBeginDrag2Parent), 
                 nameof(UIPassEndDrag2Parent),
@@ -139,7 +139,7 @@ public class UIClassKeyboardShortcut{
             class_type = "UIKeyDescription", base_type = "UIScrollText",
             fontSize = 16, marginTop=0, marginBottom=0, marginLeft=4, marginRight=0, 
             minSize = new(32, 24), maxSize = new(60, 24), anchoredPosition= new(6, -32), 
-            prefab_key = "ScrollText", background_key = "",
+            prefab_key = "UIScrollText", background_key = "",
             interactions = new() {
                 nameof(UIPassBeginDrag2Parent), 
                 nameof(UIPassEndDrag2Parent),

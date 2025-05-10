@@ -1,6 +1,11 @@
 {
     "version": "0.0.1",
     "items":{
+        "defaultObject":{
+            "name": "defaultObject",
+            "prefab_key": "Obj_prefab_default",
+            "sprite_key": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png"
+        },
         "yang":{
             "name": "yang",
             "description": "",

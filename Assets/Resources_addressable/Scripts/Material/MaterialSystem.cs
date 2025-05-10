@@ -23,6 +23,7 @@ public class MaterialSystem: BaseClass{
     public SpriteManager _spr;
     public SpriteMaterialPreprocessor _sprMat;
     public FontManager _font;
+    public PrefabManager _pfb;
 
     public override void _init(){
         _obj = new();
@@ -36,6 +37,7 @@ public class MaterialSystem: BaseClass{
         _spr = new();
         _sprMat = new();
         _font = new();
+        _pfb = new();
     }
     
     public bool _check_all_info_initDone(){
@@ -52,6 +54,7 @@ public class MaterialSystem: BaseClass{
         if (!_spr._check_info_initDone()) return false;
         if (!_sprMat._check_info_initDone()) return false;
         if (!_font._check_info_initDone()) return false;
+        if (!_pfb._check_info_initDone()) return false;
         all_info_initDone = true;
         return true;
     }

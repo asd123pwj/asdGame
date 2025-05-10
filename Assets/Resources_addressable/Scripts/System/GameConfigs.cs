@@ -89,6 +89,7 @@ public class GameConfigs{
     public string __SpritesInfo_path { get { return Path.Combine(__root_dir, "SpritesInfo.json"); } }
     public string __SpriteMaterialsInfo_path { get { return Path.Combine(__root_dir, "SpriteMaterialsInfo.json"); } }
     public string __FontsInfo_path { get { return Path.Combine(__root_dir, "FontsInfo.json"); } }
+    public string __PrefabsInfo_path { get { return Path.Combine(__root_dir, "PrefabsInfo.json"); } }
 
 
     // ---------- tilemap config ----------

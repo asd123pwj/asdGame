@@ -225,12 +225,12 @@ public class UIBase: BaseClass{
             Debug.Log("waiting for Material System init.");
             await UniTask.Delay(10);
         }
-        if (_MatSys._UIPfb._check_exist(_info.prefab_key)){
-            while (!_MatSys._UIPfb._check_loaded(_info.prefab_key)) {
+        if (_MatSys._pfb._check_exist(_info.prefab_key)){
+            while (!_MatSys._pfb._check_loaded(_info.prefab_key)) {
                 Debug.Log("waiting for UI prefab loaded: " + _info.name + " - " + _info.prefab_key);
                 await UniTask.Delay(10);
             }
-            GameObject obj = _MatSys._UIPfb._get_pfb(_info.prefab_key);
+            GameObject obj = _MatSys._pfb._get_prefab(_info.prefab_key);
             _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
             _self.name = _info.name;
         }

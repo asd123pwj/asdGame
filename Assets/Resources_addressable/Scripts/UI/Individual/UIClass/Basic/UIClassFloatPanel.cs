@@ -8,7 +8,7 @@ public class UIClassFloatPanel{
             base_type = "UIFloatPanel",
             background_key = "ui_RoundedIcon_32",
             PixelsPerUnitMultiplier = 1,
-            prefab_key = "ScrollView",
+            prefab_key = "UIScrollView",
             paddingLeft = 16, paddingRight = 16, paddingTop = 16 + 8*2 + 16*2, paddingBottom = 16 + 8*2 + 16*2,
             spacing = new (16, 16),
             minSize = new (512, 128),
