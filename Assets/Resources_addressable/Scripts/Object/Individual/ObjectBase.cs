@@ -48,7 +48,7 @@ public class ObjectBase: BaseClass{
     }
 
     public void _onUpdate(){
-        _Contact._onUpdate();
+        // _Contact._onUpdate();
         // _AttrMoveFloat._onUpdate();
     }
 
@@ -62,7 +62,11 @@ public class ObjectBase: BaseClass{
         return true;
     }
 
+    public virtual void _init_begin(){}
+    public virtual void _init_done(){}
+
     public override void _init(){
+        _init_begin();
         create_self().Forget();
         // ---------- Sub Script - Config ----------
         _Identity = new(this);
@@ -79,6 +83,7 @@ public class ObjectBase: BaseClass{
         _ObjSys._obj2base.Add(_self, this);
         _ObjSys._runtimeID2base.Add(_runtimeID, this);
         _enable();
+        _init_done();
     }
 
     async UniTask _set_pos(Vector2 pos){

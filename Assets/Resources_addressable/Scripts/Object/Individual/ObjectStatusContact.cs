@@ -32,6 +32,7 @@ public class ObjectStatusContact{
         // ---------- Init ----------
         // List<string> contact_self = _Config._tags.contact_self;
         // List<string> contact_other = _Config._tags.contact_other;
+        if (_Config._cfg.tags == null) return;
         List<string> contact_self = _Config._cfg.tags.GetValueOrDefault("contact_self", new ());
         List<string> contact_other = _Config._cfg.tags.GetValueOrDefault("contact_other", new ());
         // ---------- Action default ----------

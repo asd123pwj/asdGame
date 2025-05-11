@@ -13,6 +13,7 @@ public class ObjectClass{
 
     public ObjectClass(){
         new ObjectClassBasic();
+        new ObjectClassTile();
     }
 
     public static void _add(string name, ObjectConfig info){

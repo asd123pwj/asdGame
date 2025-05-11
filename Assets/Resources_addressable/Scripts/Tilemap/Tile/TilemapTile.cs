@@ -11,6 +11,8 @@ public class TilemapTile: BaseClass{
     public Vector3Int map_pos;
     public TilemapTileP3D P3D;
     public TilemapTileTile tileTile;
+    public TilemapTileTexture texture;
+    public Vector2 world_pos;
     
     public TilemapTileDecoration decoration;
     public string tile_ID = GameConfigs._sysCfg.TMap_empty_tile;
@@ -37,6 +39,7 @@ public class TilemapTile: BaseClass{
     public TilemapTile(TilemapBlock block, Vector3Int map_pos){
         this.block = block;
         this.map_pos = map_pos;
+        world_pos = TilemapAxis._mapping_mapPos_to_worldPos(map_pos, block.layer);
         lock(_lock_our){
             var our_layer = _our.GetOrAdd(block.layer.ToString(), _ => new());
             our_layer.TryAdd(map_pos, this);
@@ -137,14 +140,20 @@ public class TilemapTile: BaseClass{
         }
         if (_need_update_texture){
             _need_update_texture = false;
-            _update_texture(); 
+            await _update_texture(); 
         }
     }
 
-    public void _update_texture(){
-        _update_tile();
-        _update_P3D();
-        _update_decoration();
+    public async UniTask _update_texture(){
+        if (texture == null){
+            ObjectConfig cfg = ObjectClass._set_default("tile_default");
+            cfg.position = world_pos;
+            texture = new(this, block.obj.tile_container, cfg);
+        }
+        await texture._update_sprite();
+        // _update_tile();
+        // _update_P3D();
+        // _update_decoration();
     }
 
     public void _update_tile(){

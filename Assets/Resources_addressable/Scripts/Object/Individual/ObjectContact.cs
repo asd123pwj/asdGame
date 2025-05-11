@@ -36,6 +36,7 @@ public class ObjectContact{
 
     void init_action(){
         // ---------- init ----------
+        if (_Config._cfg.tags == null) return;
         List<string> contact_self = _Config._cfg.tags.GetValueOrDefault("contact_self", new ());
         List<string> contact_other = _Config._cfg.tags.GetValueOrDefault("contact_other", new ());
         //-------------------- Action onCollision --------------------

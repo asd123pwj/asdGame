@@ -37,9 +37,9 @@ public class ObjectSystem: BaseClass{
     }
     
     public override void _update(){
-        foreach (int runtimeID in _runtimeID2base.Keys){
-            _runtimeID2base[runtimeID]._onUpdate();
-        }
+        // foreach (int runtimeID in _runtimeID2base.Keys){
+        //     _runtimeID2base[runtimeID]._onUpdate();
+        // }
     }
 
     // public void _down_fire3(Vector2 mouse_pos){

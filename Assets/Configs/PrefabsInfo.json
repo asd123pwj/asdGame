@@ -4,6 +4,7 @@
         "obj_default": "Obj_prefab_default",
         "obj_asd": "Obj_prefab_asd",
         "obj_yang": "Assets/Resources_addressable/Prefab/Objects/yang.prefab",
+        "obj_tile_default": "obj_tile_default_prefab",
         "UIScrollView": "UIPfb_ScrollView",
         "UIInputField": "UIPfb_InputField",
         "UIScrollText": "UIPfb_ScrollText",

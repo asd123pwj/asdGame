@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 public class ObjectClassBasic{
     public ObjectClassBasic(){
 
