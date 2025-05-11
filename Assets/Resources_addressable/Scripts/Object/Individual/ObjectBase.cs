@@ -29,8 +29,9 @@ public class ObjectBase: BaseClass{
     // bool isInit = true;
     
 
-    public ObjectBase(GameObject parent, ObjectConfig cfg=null){
-        _cfg = ObjectClass._set_default(GetType().Name, cfg);
+    public ObjectBase(GameObject parent, ObjectConfig cfg){
+        // _cfg = ObjectClass._set_default(GetType().Name, cfg);
+        _cfg = cfg;
         _parent = parent;
     // public ObjectBase(GameObject self, ObjectInfo info){
         // ---------- action ----------

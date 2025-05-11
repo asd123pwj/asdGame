@@ -19,7 +19,7 @@ public class TilemapTileTexture : ObjectBase{
     public string tile_ID => tile.tile_ID;
     public string tile_subID => tile.tile_subID;
     
-    public TilemapTileTexture(TilemapTile tile, GameObject parent, ObjectConfig cfg=null) : base(parent, cfg){
+    public TilemapTileTexture(TilemapTile tile, GameObject parent, ObjectConfig cfg) : base(parent, cfg){
         this.tile = tile;
         layer = new(tile.block.layer, MapLayerType.Middle);
     }

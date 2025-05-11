@@ -30,6 +30,7 @@ public class BaseClass{
     static int nextRuntimeID = 0;
     public int _runtimeID { get; }
     public bool _isDestroyed = false;
+    int wait_init_count = 0;
 
 
     public BaseClass(){
@@ -44,7 +45,12 @@ public class BaseClass{
     public virtual bool _check_allow_init() => true;
 
     public async UniTask _wait_init_done(){
-        while (!_initDone){ await UniTask.Delay(10); }
+        while (!_initDone){
+            await UniTask.Delay(wait_init_count); 
+            if (wait_init_count < 1000){ 
+                wait_init_count++;
+            }
+        }
     }
 
     public virtual void _init(){}
