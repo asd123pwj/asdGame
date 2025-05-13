@@ -32,7 +32,7 @@ public class SpriteManager: BaseClass{
 
     // ---------- mapping ----------
     public Sprite _get_sprite(string ID, string subID="_DefaultSprite_"){
-        if (ID == "0") return null; // No sprite
+        if (ID == "0" || ID == null) return null; // No sprite
         if (subID == "_DefaultSprite_") subID = _ID_to_subID2Sprites[ID].Keys.First(); // Some png only have one sprite, its subID is the same as ID
         if (_ID_to_subID2Sprites.ContainsKey(ID)) return _ID_to_subID2Sprites[ID][subID]; // Sprite have been loaded
         return null; // !!! 记得更新默认sprite。Can't find sprite, return missing placeholder

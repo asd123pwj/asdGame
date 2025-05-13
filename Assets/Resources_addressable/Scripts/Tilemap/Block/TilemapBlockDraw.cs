@@ -28,7 +28,7 @@ public class TilemapBlockDraw: BaseClass{
         this.block = block;
     }
 
-    public async UniTask _draw_block_mine(CancellationToken? ct){
+    public async UniTask _draw_block_mine(CancellationToken ct){
         if (isDrawed) return;
         isDrawed = true;
         int x_start = block.offsets.x * block.size.x;
@@ -39,7 +39,7 @@ public class TilemapBlockDraw: BaseClass{
             for (int y = y_start; y < y_end; y++){
                 Vector3Int pos = new(x, y, 0);
                 TilemapTile tile = await TilemapTile._get_force_async(block.layer, pos);
-                ct?.ThrowIfCancellationRequested();
+                ct.ThrowIfCancellationRequested();
                 await tile._update_status(ct);
             }
         }

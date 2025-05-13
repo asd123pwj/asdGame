@@ -150,7 +150,7 @@ public class TilemapTile: BaseClass{
             cfg.position = world_pos;
             texture = new(this, block.obj.tile_container, cfg);
         }
-        await texture._update_sprite();
+        await texture._update_texture();
         // _update_tile();
         // _update_P3D();
         // _update_decoration();

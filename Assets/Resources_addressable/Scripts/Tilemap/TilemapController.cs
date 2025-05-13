@@ -108,14 +108,14 @@ public class TilemapController: BaseClass{
         // TilemapBlock block = await TilemapBlock._get_force_async(block_offsets, layer_type);
         // UniTask.RunOnThreadPool(() => TilemapBlock._get_force_async(block_offsets, layer_type)).Forget();
         TilemapBlock block = await UniTask.RunOnThreadPool(() => TilemapBlock._get_force_waitInitDone(block_offsets, layer_type));
-        await UniTask.RunOnThreadPool(() => block._prepare_me(ct));
+        await UniTask.RunOnThreadPool(() => block._prepare_me(ct.Value));
         // block._terr._generate_terrain();
     }
 
     public async UniTask _draw_block_complete(Vector3Int block_offsets, LayerType layer_type, CancellationToken? ct){
         TilemapBlock block = await TilemapBlock._get_force_waitInitDone(block_offsets, layer_type);
-        await UniTask.RunOnThreadPool(() => block._prepare_me(ct));
-        await block._draw_me(ct);
+        await UniTask.RunOnThreadPool(() => block._prepare_me(ct.Value));
+        await block._draw_me(ct.Value);
     }
 
     public override bool _check_allow_init(){

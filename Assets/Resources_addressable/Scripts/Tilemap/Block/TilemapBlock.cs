@@ -62,11 +62,11 @@ public class TilemapBlock: BaseClass{
         _terr = new(this);
     }
 
-    public async UniTask _prepare_me(CancellationToken? ct){
+    public async UniTask _prepare_me(CancellationToken ct){
         await UniTask.RunOnThreadPool(() => _terr._generate_terrain(ct));
     }
 
-    public async UniTask _draw_me(CancellationToken? ct){
+    public async UniTask _draw_me(CancellationToken ct){
         await _wait_init_done();
         await _draw._draw_block_mine(ct);
     }
