@@ -140,54 +140,57 @@ public class TilemapTile: BaseClass{
         }
         if (_need_update_texture){
             _need_update_texture = false;
-            await _update_texture(); 
+            // await _update_texture(); 
+            _update_texture(); 
         }
     }
 
-    public async UniTask _update_texture(){
+    // public async UniTask _update_texture(){
+    public void _update_texture(){
         if (texture == null){
             ObjectConfig cfg = ObjectClass._set_default("tile_default");
             cfg.position = world_pos;
             texture = new(this, block.obj.tile_container, cfg);
         }
-        await texture._update_texture();
+        // await texture._update_texture();
+        texture._update_texture();
         // _update_tile();
         // _update_P3D();
         // _update_decoration();
     }
 
-    public void _update_tile(){
-        if (enable_tile){
-            tileTile ??= new(this);
-            tileTile._update_sprite();
-            // await tileTile._update_sprite(ct);
-        }
-        else{
-            // TODO: delete P3D
-        }
-    }
+    // public void _update_tile(){
+    //     if (enable_tile){
+    //         tileTile ??= new(this);
+    //         tileTile._update_sprite();
+    //         // await tileTile._update_sprite(ct);
+    //     }
+    //     else{
+    //         // TODO: delete P3D
+    //     }
+    // }
 
-    public void _update_P3D(){
-        if (enable_P3D){
-            P3D ??= new(this);
-            P3D._update_sprite();
-            // await P3D._update_sprite(ct);
-        }
-        else{
-            // TODO: delete P3D
-        }
-    }
+    // public void _update_P3D(){
+    //     if (enable_P3D){
+    //         P3D ??= new(this);
+    //         P3D._update_sprite();
+    //         // await P3D._update_sprite(ct);
+    //     }
+    //     else{
+    //         // TODO: delete P3D
+    //     }
+    // }
 
     public void _clear_mineral() { _set_mineral(null); }
     public void _set_mineral(string mineral_ID) => this.mineral_ID = mineral_ID; 
-    public void _update_decoration(){
-        if (enable_decoration && mineral_ID != null){
-            decoration ??= new(this);
-            // await decoration._update_sprite(ct);
-            decoration._update_sprite();
-        }
-        else{
-            // TODO: delete decoration
-        }
-    }
+    // public void _update_decoration(){
+    //     if (enable_decoration && mineral_ID != null){
+    //         decoration ??= new(this);
+    //         // await decoration._update_sprite(ct);
+    //         decoration._update_sprite();
+    //     }
+    //     else{
+    //         // TODO: delete decoration
+    //     }
+    // }
 }

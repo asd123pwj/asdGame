@@ -26,36 +26,23 @@ public class ObjectBase: BaseClass{
     // public ObjectTags _tags;
     public Vector2 _max_move_speed;
     public Vector2 _move_force;
+    bool createSuccess = false;
     // bool isInit = true;
     
 
     public ObjectBase(GameObject parent, ObjectConfig cfg){
-        // _cfg = ObjectClass._set_default(GetType().Name, cfg);
         _cfg = cfg;
         _parent = parent;
-    // public ObjectBase(GameObject self, ObjectInfo info){
-        // ---------- action ----------
-        // _sys = hierarchy_search;
-        // _InputSys = input_base;
-        
-        // _self = self;
-        // _info = info;
-        // _tags = _cfg.tags;
         _max_move_speed = new Vector2(2f, 2f);
         _move_force = new Vector2(1f, 5f);
         _our.Add(_runtimeID, this);
-        // isInit = false;
-        // init_sub_script();
+        createSuccess = create_self_sync();
     }
 
     public void _onUpdate(){
         // _Contact._onUpdate();
         // _AttrMoveFloat._onUpdate();
     }
-
-    // public void _set_tags(ObjectTags tags){
-    //     _tags = tags;
-    // }
 
     public override bool _check_allow_init(){
         if (_cfg is null) return false;
@@ -68,7 +55,10 @@ public class ObjectBase: BaseClass{
 
     public override void _init(){
         _init_begin();
-        create_self().Forget();
+        if (!createSuccess){
+            Debug.Log("ObjectBase init fail: ");
+            create_self().Forget();
+        }
         // ---------- Sub Script - Config ----------
         _Identity = new(this);
         // _Control = new(this);
@@ -100,7 +90,8 @@ public class ObjectBase: BaseClass{
         _enable();
     }
 
-    // ---------- GameObject Generate ----------
+    // ---------- GameObject Generate ---------- //
+    // ----- async create ----- //
     async UniTask create_self(){ 
         if (_cfg.prefab_key == "" || _cfg.prefab_key == null) 
             create_gameObject(); 
@@ -114,17 +105,11 @@ public class ObjectBase: BaseClass{
         _self.transform.SetParent(_parent.transform, false);
     }
     async UniTask create_prefab(){
-        while (!_MatSys._check_all_info_initDone()) {
-            Debug.Log("waiting for Material System init.");
-            await UniTask.Delay(10);
-        }
         if (_MatSys._pfb._check_exist(_cfg.prefab_key)){
-            // while (!_MatSys._obj._check_prefab_loaded(_cfg.prefab_key)) {
             while (!_MatSys._pfb._check_loaded(_cfg.prefab_key)) {
                 Debug.Log("waiting for UI prefab loaded: " + _cfg.name + " - " + _cfg.prefab_key);
                 await UniTask.Delay(10);
             }
-            // GameObject obj = _MatSys._obj._get_prefab(_cfg.class_type);
             GameObject obj = _MatSys._pfb._get_prefab(_cfg.prefab_key);
             _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
             _self.name = _cfg.name;
@@ -132,5 +117,33 @@ public class ObjectBase: BaseClass{
         else {
             Debug.Log("UI prefab not exist: " + _cfg.prefab_key);
         }
+    }
+    
+    // ----- sync create ----- //
+    // - why sync? because it create immediately, no need to wait for next frame
+    bool create_self_sync(){ 
+        if (_cfg.prefab_key == "" || _cfg.prefab_key == null) 
+            create_gameObject(); 
+        else {
+            bool createSuccess = create_prefab_sync(); 
+            if (!createSuccess) return false;
+        }
+        _rb = _self.GetComponent<Rigidbody2D>();
+        _set_pos(_cfg.position).Forget();
+        return true;
+    }
+    bool create_prefab_sync(){
+        if (_MatSys._pfb._check_exist(_cfg.prefab_key)){
+            if (!_MatSys._pfb._check_loaded(_cfg.prefab_key)) {
+                return false;
+            }
+            GameObject obj = _MatSys._pfb._get_prefab(_cfg.prefab_key);
+            _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
+            _self.name = _cfg.name;
+        }
+        else {
+            return false;
+        }
+        return true;
     }
 }

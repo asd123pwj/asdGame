@@ -19,12 +19,22 @@ public class TilemapTileTexture : ObjectBase{
     // ---------- Status ---------- //
     public string tile_ID => tile.tile_ID;
     public string tile_subID => tile.tile_subID;
+    bool initGameObjectDone = false;
     
     public TilemapTileTexture(TilemapTile tile, GameObject parent, ObjectConfig cfg) : base(parent, cfg){
         this.tile = tile;
+        if (_self != null){
+            init_gameObject();
+            initGameObjectDone = true;
+        }
     }
 
     public override void _init_done(){
+        if (initGameObjectDone) return;
+        init_gameObject();
+    }
+
+    void init_gameObject(){
         _self.isStatic = true;
         tile_layer = new(tile.block.layer, MapLayerType.Middle);
         P3D_layer = new(tile.block.layer, MapLayerType.MiddleP3D);
@@ -54,8 +64,9 @@ public class TilemapTileTexture : ObjectBase{
     }
 
 
-    public async UniTask _update_texture(){
-        await _wait_init_done();
+    // public async UniTask _update_texture(){
+        // await _wait_init_done();
+    public void _update_texture(){
         if (tile_subID == null) return;
         _update_tile_and_collider();
         _update_P3D();
