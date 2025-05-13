@@ -66,8 +66,8 @@ public class BuildGenerator : BaseClass{
                     // string current_tile_ID = (await TilemapTile._get_force_async(block.layer, currentTile_mapPos)).tile_ID;
                     string build_template_tile_ID = build_template[key][i, j];
                     
-                    TileBase tile = _MatSys._tile._get_tile(build_template_tile_ID);
-                    region._add(currentTile_mapPos, tile);
+                    //////// TileBase tile = _MatSys._tile._get_tile(build_template_tile_ID);
+                    //////// region._add(currentTile_mapPos, tile);
                 }
             }
         }

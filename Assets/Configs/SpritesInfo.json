@@ -44,18 +44,18 @@
         
 
         
-        "b4": "sprite_b4",
-        "b4_P3D": "sprite_b4_P3D",
-        "b5": "sprite_b5",
-        "b5_P3D": "sprite_b5_P3D",
-        "b6": "sprite_b6",
-        "b6_P3D": "sprite_b6_P3D",
-        "b7": "sprite_b7",
-        "b7_P3D": "sprite_b7_P3D",
-        "b8": "sprite_b8",
-        "b8_P3D": "sprite_b8_P3D",
-        "b9": "sprite_b9",
-        "b9_P3D": "sprite_b9_P3D"
+        "Tile_Block_Transparent_Glass": "Sprite_Tile_Block_Transparent_Glass",
+        "Tile_Block_Transparent_Glass_P3D": "Sprite_Tile_Block_Transparent_Glass_P3D",
+        "Tile_Block_Brick": "Sprite_Tile_Block_Brick",
+        "Tile_Block_Brick_P3D": "Sprite_Tile_Block_Brick_P3D",
+        "Tile_Block_Sand": "Sprite_Tile_Block_Sand",
+        "Tile_Block_Sand_P3D": "Sprite_Tile_Block_Sand_P3D",
+        "Tile_Block_Soil": "Sprite_Tile_Block_Soil",
+        "Tile_Block_Soil_P3D": "Sprite_Tile_Block_Soil_P3D",
+        "Tile_Block_Brick_Brown": "Sprite_Tile_Block_Brick_Brown",
+        "Tile_Block_Brick_Brown_P3D": "Sprite_Tile_Block_Brick_Brown_P3D",
+        "Tile_Block_Snow": "Sprite_Tile_Block_Snow",
+        "Tile_Block_Snow_P3D": "Sprite_Tile_Block_Snow_P3D"
 
         
 

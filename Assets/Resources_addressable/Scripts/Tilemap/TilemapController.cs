@@ -121,7 +121,7 @@ public class TilemapController: BaseClass{
     public override bool _check_allow_init(){
         if (!_sys._initDone) return false;
         if (!_MatSys._check_all_info_initDone()) return false;
-        if (!_MatSys._tile._check_P3D_all_loaded()) return false;
+        // if (!_MatSys._tile._check_P3D_all_loaded()) return false;
         if (!_InputSys._initDone) return false;
         return true;
     }

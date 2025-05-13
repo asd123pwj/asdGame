@@ -1,7 +1,20 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEngine;
 
+// public class TilemapTileTextureConfig: ObjectConfig{
+//     [JsonProperty("tile_sprite_key", NullValueHandling = NullValueHandling.Ignore)] 
+//     private string _tile_sprite_key;
+//     private string _tile_sprite_key_default { get => null; }
+//     [JsonIgnore] public string tile_sprite_key { get => _tile_sprite_key ?? _tile_sprite_key_default; set => _tile_sprite_key = value; }
+
+//     [JsonProperty("P3D_sprite_key", NullValueHandling = NullValueHandling.Ignore)] 
+//     private string _P3D_sprite_key;
+//     private string _P3D_sprite_key_default { get => null; }
+//     [JsonIgnore] public string P3D_sprite_key { get => _tile_sprite_key ?? _tile_sprite_key_default; set => _tile_sprite_key = value; }
+
+// }
 
 public class TilemapTileTexture : ObjectBase{
     Vector3Int map_pos => tile.map_pos;
@@ -10,8 +23,9 @@ public class TilemapTileTexture : ObjectBase{
     LayerType mineral_layer;
     TilemapTile tile;
     // ---------- GameObject ---------- //
+    public PolygonCollider2D _collider;
+    public GameObject _tile_self;
     public SpriteRenderer _tile_renderer;
-    public PolygonCollider2D _tile_collider;
     public GameObject _P3D_self;
     public SpriteRenderer _P3D_renderer;
     public GameObject _mineral_self;
@@ -35,17 +49,18 @@ public class TilemapTileTexture : ObjectBase{
     }
 
     void init_gameObject(){
-        _self.isStatic = true;
         tile_layer = new(tile.block.layer, MapLayerType.Middle);
         P3D_layer = new(tile.block.layer, MapLayerType.MiddleP3D);
         mineral_layer = new(tile.block.layer, MapLayerType.MiddleDecoration);
+        _self.isStatic = true;
         _self.transform.position = TilemapAxis._mapping_mapPos_to_worldPos(map_pos, tile_layer);
-
+        _collider = _self.GetComponent<PolygonCollider2D>();
+        
         string mat_ID = "TransparentSprite";
         Material material = _MatSys._mat._get_mat(mat_ID);//TilemapLitMaterial
 
-        _tile_renderer = _self.GetComponent<SpriteRenderer>();
-        _tile_collider = _self.GetComponent<PolygonCollider2D>();
+        _tile_self = _self.transform.Find("Tile").gameObject;
+        _tile_renderer = _tile_self.GetComponent<SpriteRenderer>();
         _tile_renderer.sortingLayerID = tile_layer.sortingLayerID;
         _tile_renderer.sortingOrder = tile_layer.sortingOrder;
         _tile_renderer.material = material;
@@ -75,7 +90,13 @@ public class TilemapTileTexture : ObjectBase{
 
     void _update_tile_and_collider(){
         bool need_update_collider = check_collider_need_update();
-        _tile_renderer.sprite = _MatSys._tile._get_sprite(tile_ID, tile_subID);
+        if (tile_ID != GameConfigs._sysCfg.TMap_empty_tile){
+            string tile_sprite_key = _MatSys._tile._get_info(tile_ID).sprite;
+            _tile_renderer.sprite = _MatSys._spr._get_sprite(tile_sprite_key, tile_subID);
+        }
+        else{
+            _tile_renderer.sprite = null;
+        }
 
         if (need_update_collider){
             update_collider();
@@ -83,7 +104,13 @@ public class TilemapTileTexture : ObjectBase{
     }
     
     void _update_P3D(){
-        _P3D_renderer.sprite = _MatSys._tile._get_P3D(tile_ID, tile_subID);
+        if (tile_ID != GameConfigs._sysCfg.TMap_empty_tile){
+            string P3D_sprite_key = _MatSys._tile._get_info(tile_ID).P3D_path;
+            _P3D_renderer.sprite = _MatSys._spr._get_sprite(P3D_sprite_key, tile_subID);
+        }
+        else{
+            _P3D_renderer.sprite = null;
+        }
     }
 
     
@@ -105,16 +132,16 @@ public class TilemapTileTexture : ObjectBase{
 
     void update_collider(){
         if (tile_ID != GameConfigs._sysCfg.TMap_empty_tile){
-            _tile_collider.enabled = true;
-            _tile_collider.pathCount = _tile_renderer.sprite.GetPhysicsShapeCount();
-            for (int i = 0; i < _tile_collider.pathCount; i++){
-                List<Vector2> path = new List<Vector2>();
+            _collider.enabled = true;
+            _collider.pathCount = _tile_renderer.sprite.GetPhysicsShapeCount();
+            for (int i = 0; i < _collider.pathCount; i++){
+                List<Vector2> path = new();
                 _tile_renderer.sprite.GetPhysicsShape(i, path);
-                _tile_collider.SetPath(i, path.ToArray());
+                _collider.SetPath(i, path.ToArray());
             }
         }
         else{
-            _tile_collider.enabled = false;
+            _collider.enabled = false;
         }
 
     }

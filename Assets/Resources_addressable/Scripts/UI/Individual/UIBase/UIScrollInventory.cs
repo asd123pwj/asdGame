@@ -38,7 +38,8 @@ public class UIScrollInventory: UIScrollView{
         drop_item(UI, item_index);
         item_index++;
         foreach(string key in _MatSys._tile._infos.items.Keys){
-            if (_MatSys._tile._check_sprite_loaded(key)){
+            // if (_MatSys._tile._check_sprite_loaded(key)){
+            if (true){
                 UI = await draw_item(key);
                 drop_item(UI, item_index);
             }
@@ -49,7 +50,8 @@ public class UIScrollInventory: UIScrollView{
     async UniTask<UIBase> draw_item(string key){
         UIInfo info = UIClass._set_default("UITileThumb", key);
         UIBase UI = UIDraw._draw_UI(_UISys._foreground, "UITileThumb", info);
-        await UI.set_background(_MatSys._tile._get_sprite(key, "__Full"));
+        // await UI.set_background(_MatSys._tile._get_sprite(key, "__Full"));
+        // await UI.set_background(_MatSys._tile._get_sprite(key, "__Full"));
         return UI;
     }
 

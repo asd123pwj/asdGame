@@ -11,7 +11,7 @@
         "0":{
             "ID": "0",
             "name": "flat desert",
-            "base_tile": "b8",
+            "base_tile": "Block_Brick_Brown",
             "prob": 1,
             "surface": [
                 {"noise": "perlin", "f": 0.002, "min": -100, "max": 100, "ignoreY": true}
@@ -28,7 +28,7 @@
         "1":{
             "ID": "1",
             "name": "undulating mountain",
-            "base_tile": "b7",
+            "base_tile": "Block_Soil",
             "prob": 1,
             "surface": [
                 {"noise": "perlin", "f": 0.001, "min": -100, "max": 100, "ignoreY": true},

@@ -9,17 +9,17 @@ public class TilemapTile: BaseClass{
     public static ConcurrentDictionary<string, ConcurrentDictionary<Vector3Int, TilemapTile>> _our = new();
     public TilemapBlock block;
     public Vector3Int map_pos;
-    public TilemapTileP3D P3D;
-    public TilemapTileTile tileTile;
+    // public TilemapTileP3D P3D;
+    // public TilemapTileTile tileTile;
     public TilemapTileTexture texture;
-    public Vector2 world_pos;
+    // public Vector2 world_pos;
     
-    public TilemapTileDecoration decoration;
+    // public TilemapTileDecoration decoration;
     public string tile_ID = GameConfigs._sysCfg.TMap_empty_tile;
     public string tile_subID = GameConfigs._sysCfg.TMap_fullTile_subID;
-    bool enable_tile = true;
-    bool enable_P3D = true;
-    bool enable_decoration = true;
+    // bool enable_tile = true;
+    // bool enable_P3D = true;
+    // bool enable_decoration = true;
     public string tile_ID_terrain;
     public string mineral_ID;
     // bool firstLoadDone = false;
@@ -39,7 +39,7 @@ public class TilemapTile: BaseClass{
     public TilemapTile(TilemapBlock block, Vector3Int map_pos){
         this.block = block;
         this.map_pos = map_pos;
-        world_pos = TilemapAxis._mapping_mapPos_to_worldPos(map_pos, block.layer);
+        // world_pos = TilemapAxis._mapping_mapPos_to_worldPos(map_pos, block.layer);
         lock(_lock_our){
             var our_layer = _our.GetOrAdd(block.layer.ToString(), _ => new());
             our_layer.TryAdd(map_pos, this);
@@ -148,8 +148,8 @@ public class TilemapTile: BaseClass{
     // public async UniTask _update_texture(){
     public void _update_texture(){
         if (texture == null){
-            ObjectConfig cfg = ObjectClass._set_default("tile_default");
-            cfg.position = world_pos;
+            ObjectConfig cfg = ObjectClass._set_default("tile_default", $"tile_{map_pos.x}_{map_pos.y}");
+            cfg.position = TilemapAxis._mapping_mapPos_to_worldPos(map_pos, block.layer);;
             texture = new(this, block.obj.tile_container, cfg);
         }
         // await texture._update_texture();
