@@ -3,10 +3,18 @@ public class ObjectClassBasic{
 
         ObjectClass._add("asd", new (){
             class_type = "asd", 
-            prefab_key = "obj_default",
-            sprite_key = "obj_asd",
+            prefab_key = "obj_asd",
+            sprite_key = "Sprite_Object_asd",
             tags = new(){
-                {"identity", new(){ "player" } }
+                {"identity", new(){ nameof(ObjectAsPlayer), nameof(ObjectAsImpactTrigger) } }
+            }
+        });
+
+
+        ObjectClass._add("NonEntity", new (){
+            class_type = "NonEntity", 
+            tags = new(){
+                {"identity", new(){ nameof(ObjectAsPlayer) } }
             }
         });
 

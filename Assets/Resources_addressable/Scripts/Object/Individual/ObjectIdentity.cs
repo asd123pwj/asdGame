@@ -1,42 +1,52 @@
-using System.Collections;
-using System.Collections.Generic;
 using System;
-using System.Threading;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
-using Cysharp.Threading.Tasks;
+
 
 public class ObjectIdentity{
-    // ---------- Action ----------
-    // List<Action> _actions = new();
-    // ---------- Config ----------
-    ObjectBase _config;
     // ---------- Status ----------
+    ObjectBase _Base;
+    static Dictionary<string, Type> _actionTypes = new ();
+    public Dictionary<string, ObjectAsBase> _actions = new ();
     
     public ObjectIdentity(ObjectBase config){
-        _config = config;
+        _Base = config;
         init_action();
     }
 
-    // public void _update(){
-    //     foreach (var action in _actions){
-    //         action();
-    //     }
-    // }
-
-    void init_action(){
-        // List<string> identity = _config._tags.identity;
-        if (_config._cfg.tags == null) return;
-        if (!_config._cfg.tags.TryGetValue("identity", out List<string> identity)) return;
-        // ---------- Action Init ----------
-        if (identity.Contains("player")) action_player();
-        // ---------- Action Default ----------
-    }
-
-    void action_player(){
-        // ControlSystem con = _config._sys._searchInit<ControlSystem>("System");
-        // BaseClass._sys._CtrlSys._set_player(_config);
-        BaseClass._sys._ObjSys._mon._set_player(_config);
-    }
+    ObjectAsBase _get_action(string action_name){
+        if (!_actionTypes.TryGetValue(action_name, out Type type)){
+            type = Type.GetType(action_name);
+            _actionTypes.Add(action_name, type);
+            if (type == null){
+                return null;
+            }
+        }
+        object[] args = new object[] { _Base};
+        ObjectAsBase action = (ObjectAsBase)Activator.CreateInstance(type, args);
+        return action;
+    } 
     
+    public void init_action(){
+        clear_actions();
+        if (_Base._cfg.tags == null) return;
+        if (!_Base._cfg.tags.TryGetValue("identity", out List<string> identity)) return;
+        foreach (var id in identity){
+            ObjectAsBase action = _get_action(id);
+            if (action == null) {
+                Debug.Log("ObjectIdentity: No action found for identity: " + id);
+            }
+            else{
+                _actions.Add(id, action);
+                action._apply();
+            }
+        }
+    }
+
+    void clear_actions(){
+        foreach (var action in _actions.Values){
+            action._clear();
+        }
+        _actions.Clear();
+    }
 }

@@ -1,8 +1,10 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 
 public class UIDraw: BaseClass{
+    static Dictionary<string, Type> UIClasses = new Dictionary<string, Type>();
 
     public bool _toggle(string type, string name="", Vector2? pos=null, UIBase parent=null){
         UIInfo info = UIClass._set_default(type, name);
@@ -44,7 +46,11 @@ public class UIDraw: BaseClass{
     
     public static UIBase _draw_UI(GameObject parent, string ui_type, UIInfo info=null){
         UIInfo info_ = UIClass._set_default(ui_type, info);
-        Type type = Type.GetType(info_.base_type);
+        if (!UIClasses.TryGetValue(ui_type, out Type type)){
+            type = Type.GetType(info_.base_type);
+            if (type == null) Debug.LogError($"type is null: {ui_type}");
+            UIClasses.Add(ui_type, type);
+        }
         object[] args = new object[] { parent, info_};
         UIBase cfg = (UIBase)Activator.CreateInstance(type, args);
         return cfg;

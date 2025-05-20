@@ -19,28 +19,28 @@
         
         "l1": "sprite_l1",
 
-        "ui_1": "UISpr_CommandWindow",
-        "ui_2": "UISpr_CircleButtom",
-        "ui_3_32": "UISpr_CloseButtom_32",
-        "ui_3_16": "UISpr_CloseButtom_16",
-        "ui_4_32": "UISpr_ResizeButtom_32",
-        "ui_4_16": "UISpr_ResizeButtom_16",
-        "ui_5": "UISpr_KeyboardShortcut",
-        "ui_RoundedIcon_8": "UISpr_RoundedIcon_8",
-        "ui_RoundedIcon_8_Gray": "UISpr_RoundedIcon_8_Gray",
-        "ui_RoundedIcon_16": "UISpr_RoundedIcon_16",
-        "ui_RoundedIcon_32": "UISpr_RoundedIcon_32",
-        "ui_AccentLine_Left": "UISpr_AccentLine_Left",
-        "ui_Separator_Horizontal":  "UISpr_Separator_Horizontal",
-        "ui_TitleBg": "UISpr_TitleWindowBackground",
+        "ui_1": "Sprite_UI_CommandWindow",
+        "ui_2": "Sprite_UI_CircleButtom",
+        "ui_3_32": "Sprite_UI_CloseButtom_32",
+        "ui_3_16": "Sprite_UI_CloseButtom_16",
+        "ui_4_32": "Sprite_UI_ResizeButtom_32",
+        "ui_4_16": "Sprite_UI_ResizeButtom_16",
+        "ui_5": "Sprite_UI_KeyboardShortcut",
+        "ui_RoundedIcon_8": "Sprite_UI_RoundedIcon_8",
+        "ui_RoundedIcon_8_Gray": "Sprite_UI_RoundedIcon_8_Gray",
+        "ui_RoundedIcon_16": "Sprite_UI_RoundedIcon_16",
+        "ui_RoundedIcon_32": "Sprite_UI_RoundedIcon_32",
+        "ui_AccentLine_Left": "Sprite_UI_AccentLine_Left",
+        "ui_Separator_Horizontal":  "Sprite_UI_Separator_Horizontal",
+        "ui_TitleBg": "Sprite_UI_TitleWindowBackground",
 
         
         "obj_default": "Assets/Resources_addressable/Graphics/Creature/Player/Player_thumb.png",
-        "obj_asd": "Obj_sprite_asd",
+        "obj_asd": "Sprite_Object_asd",
         
 
-        "p5": "sprite_highlight_placeholder",
-        "p5_a0.5": "sprite_highlight_placeholder_alpha0.5",
+        "p5": "Sprite_UI_highlight_placeholder",
+        "p5_a0.5": "Sprite_UI_highlight_placeholder_alpha0.5",
         
 
         

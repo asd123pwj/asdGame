@@ -9,7 +9,7 @@ public class ObjectBase: BaseClass{
     public GameObject _self, _parent;
     public Rigidbody2D _rb;
     // ---------- Sub Script - Config ----------
-    ObjectIdentity _Identity;
+    public ObjectIdentity _Identity;
     // ObjectControl _Control;
     // public ObjectInfo _info;
     public ObjectConfig _cfg;
@@ -40,7 +40,7 @@ public class ObjectBase: BaseClass{
     }
 
     public void _onUpdate(){
-        // _Contact._onUpdate();
+        _Contact._onUpdate();
         // _AttrMoveFloat._onUpdate();
     }
 
