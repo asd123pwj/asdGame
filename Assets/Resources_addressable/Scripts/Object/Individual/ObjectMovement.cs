@@ -8,10 +8,18 @@ public class ObjectMovement{
     ObjectBase _Base;
     static Dictionary<string, Type> _actionTypes = new ();
     public Dictionary<string, ObjectMoveBase> _actions = new ();
+    KeyPos input;
     
     public ObjectMovement(ObjectBase config){
         _Base = config;
         init_action();
+    }
+
+    public void _onUpdate(){
+        if (input != null){
+            move();
+            input = null;
+        }
     }
 
     ObjectMoveBase _get_action(string action_name){
@@ -41,7 +49,11 @@ public class ObjectMovement{
         }
     }
 
-    public void move(KeyPos input){
+    public void _prepare_to_move(KeyPos input){
+        this.input = input;
+    }
+
+    public void move(){
         foreach (var action in _actions.Values){
             action._act(input);
         }

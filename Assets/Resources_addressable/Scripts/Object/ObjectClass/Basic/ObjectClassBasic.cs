@@ -7,7 +7,7 @@ public class ObjectClassBasic{
             sprite_key = "Sprite_Object_asd",
             tags = new(){
                 {"identity", new(){ nameof(ObjectAsPlayer), nameof(ObjectAsImpactTrigger) } },
-                {"movement", new(){ nameof(ObjectMoveDrag), nameof(ObjectMoveForceKeyX), nameof(ObjectMoveTeleport) } },
+                {"movement", new(){ nameof(ObjectMoveDrag), nameof(ObjectMoveForceKeyX), nameof(ObjectMoveImpulseKeyY) } },
             }
         });
 

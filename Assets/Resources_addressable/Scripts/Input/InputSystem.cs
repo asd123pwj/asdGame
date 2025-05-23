@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct KeyPos{
+public class KeyPos{
     public Vector2 mouse_pos_world;
     public Vector2 mouse_pos_screen;
     public Vector2 mouse_pos_world_change;

@@ -113,6 +113,6 @@ public class ObjectCommandHandler: CommandHandlerBase{
         if (args.TryGetValue("ID", out object runtimeID_)){
             runtimeID = (int)runtimeID_;
         }
-        _ObjSys._runtimeID2base[runtimeID]._Movement.move(InputSystem._keyPos);
+        _ObjSys._runtimeID2base[runtimeID]._Movement._prepare_to_move(InputSystem._keyPos);
     }
 }

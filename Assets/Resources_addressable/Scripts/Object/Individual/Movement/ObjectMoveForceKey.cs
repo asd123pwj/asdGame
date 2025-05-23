@@ -6,7 +6,6 @@ public class ObjectMoveForceKey: ObjectMoveBase{
 
     protected override void _act_move(KeyPos input) { 
         Vector2 direction = new(input.x, input.y);
-        Debug.Log("direction: " + direction);
         _Base._rb.AddForce(direction * 5, ForceMode2D.Force);
     }
 }

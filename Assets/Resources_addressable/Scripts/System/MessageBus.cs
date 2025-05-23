@@ -11,7 +11,7 @@ public class MessageNode{
     public DynamicValue message;
 }
 
-public class MessageBus: BaseClass{
+public class MessageBus{
     Dictionary<string, MessageNode> message_nodes = new();
 
     public void _init_message_node(string ID){

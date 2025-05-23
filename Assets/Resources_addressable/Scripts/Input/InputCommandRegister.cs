@@ -17,12 +17,12 @@ public class InputCommandRegister : BaseClass{
     }
 
     void init_comboKey2Command(){
-        comboKey2Command.Add(new List<string>() {"w", "w" }, "rush --up");
-        comboKey2Command.Add(new List<string>() {"d", "d" }, "rush --right");
-        comboKey2Command.Add(new List<string>() {"a", "a" }, "rush --left");
-        comboKey2Command.Add(new List<string>() {"left shift", "w" }, "rush --up");
-        comboKey2Command.Add(new List<string>() {"left shift", "a" }, "rush --left");
-        comboKey2Command.Add(new List<string>() {"left shift", "d" }, "rush --right");
+        // comboKey2Command.Add(new List<string>() {"w", "w" }, "rush --up");
+        // comboKey2Command.Add(new List<string>() {"d", "d" }, "rush --right");
+        // comboKey2Command.Add(new List<string>() {"a", "a" }, "rush --left");
+        // comboKey2Command.Add(new List<string>() {"left shift", "w" }, "rush --up");
+        // comboKey2Command.Add(new List<string>() {"left shift", "a" }, "rush --left");
+        // comboKey2Command.Add(new List<string>() {"left shift", "d" }, "rush --right");
     }
 
     void init_key2Command(){
@@ -61,10 +61,10 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("Numpad 8", "");
         keyName2Command.Add("Numpad 9", "");
 
-        keyName2Command.Add("a", "move --left");
+        keyName2Command.Add("a", "ApplyInput --x -1 \v ObjMove");
         keyName2Command.Add("b", "");
         keyName2Command.Add("c", "UIToggle --type UIScrollInventory");
-        keyName2Command.Add("d", "move --right");
+        keyName2Command.Add("d", "ApplyInput --x 1 \v ObjMove");
         keyName2Command.Add("e", "");
         keyName2Command.Add("f", "");
         keyName2Command.Add("g", "");
@@ -79,11 +79,11 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("p", "");
         keyName2Command.Add("q", "");
         keyName2Command.Add("r", "");
-        keyName2Command.Add("s", "move --down");
+        keyName2Command.Add("s", "ApplyInput --y -1 \v ObjMove");
         keyName2Command.Add("t", "");
         keyName2Command.Add("u", "");
         keyName2Command.Add("v", "");
-        keyName2Command.Add("w", "move --up");
+        keyName2Command.Add("w", "ApplyInput --y 1 \v ObjMove");
         keyName2Command.Add("x", "UIToggle --type UIKeyboardShortcut");
         keyName2Command.Add("y", "");
         keyName2Command.Add("z", "spawn --useMousePos --type asd");

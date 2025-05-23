@@ -42,6 +42,7 @@ public class ObjectBase: BaseClass{
 
     public void _onUpdate(){
         _Contact._onUpdate();
+        _Movement._onUpdate();
         // _AttrMoveFloat._onUpdate();
     }
 
