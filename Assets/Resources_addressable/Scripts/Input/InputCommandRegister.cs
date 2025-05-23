@@ -43,7 +43,7 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("Number 1", "TMapGen --useMousePos");
         keyName2Command.Add("Number 2", "TMapDrawTile --useMousePos --needDraw");
         keyName2Command.Add("Number 3", "ObjTeleport --useMousePos");
-        keyName2Command.Add("Number 4", "");
+        keyName2Command.Add("Number 4", "ObjMove --useMousePos");
         keyName2Command.Add("Number 5", "");
         keyName2Command.Add("Number 6", "");
         keyName2Command.Add("Number 7", "");
@@ -129,10 +129,10 @@ public class InputCommandRegister : BaseClass{
         // keyName2Command.Add("windows", "");
         keyName2Command.Add("menu", "");
         
-        keyName2Command.Add("up", "");
-        keyName2Command.Add("down", "");
-        keyName2Command.Add("left", "");
-        keyName2Command.Add("right", "");
+        keyName2Command.Add("up", "ApplyInput --y 1 \v ObjMove");
+        keyName2Command.Add("down", "ApplyInput --y -1 \v ObjMove");
+        keyName2Command.Add("left", "ApplyInput --x -1 \v ObjMove");
+        keyName2Command.Add("right", "ApplyInput --x 1 \v ObjMove");
 
 
 
@@ -141,7 +141,8 @@ public class InputCommandRegister : BaseClass{
     }
     void init_keyAction(){
         List<string> tmp_key_isDown = new(){
-            "a", "d", "w", "s", "-", "=", "Number 1", "Number 2", "Number 3"
+            "a", "d", "w", "s", "-", "=", "Number 1", "Number 2", "Number 3",
+            "up", "down", "left", "right"
         };
         foreach(string keyName in keyName2Command.Keys){
             if(tmp_key_isDown.Contains(keyName)){

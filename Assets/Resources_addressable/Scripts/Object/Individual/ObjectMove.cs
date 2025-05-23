@@ -39,7 +39,8 @@ public class ObjectMove{
     
     bool move(KeyPos input, string movement){
         if (_moves[movement]._act(input)){
-            if (_moves[movement]._wait > 0) foreach (var kvp in _moves) kvp.Value._act_wait(_moves[movement]._wait).Forget();
+            // if (_moves[movement]._wait > 0) foreach (var kvp in _moves) kvp.Value._act_wait(_moves[movement]._wait).Forget();
+            // _Config._Movement.move(input);
             return true;
         }
         return false;

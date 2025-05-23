@@ -8,6 +8,7 @@ public class InputCommandHandler: CommandHandlerBase{
     public override void register(){
         CommandSystem._add(FROM_INPUT);
         CommandSystem._add(print_mouse_hover_time);
+        CommandSystem._add(ApplyInput);
     }
 
     async UniTask FROM_INPUT(Dictionary<string, object> args, CancellationToken? ct){
@@ -47,6 +48,23 @@ public class InputCommandHandler: CommandHandlerBase{
         /* FROM_INPUT               Use command from INPUT system
          */
         Debug.Log(InputSystem._keyPos.mouse_hover_deltaTime);
+    }
+    
+    async UniTask ApplyInput(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
+        /* ApplyInput               Use command from INPUT system
+         * --[x] (float)            add force in x
+         * --[y] (float)            add force in y
+         *
+         * Example:
+         *   ApplyInput --x 1
+         */
+        if (args.TryGetValue("x", out object x)){
+            InputSystem._keyPos.x = Mathf.Clamp(InputSystem._keyPos.x + argType.toFloat(x), -1, 1);
+        }
+        if (args.TryGetValue("y", out object y)){
+            InputSystem._keyPos.y = Mathf.Clamp(InputSystem._keyPos.y + argType.toFloat(y), -1, 1);
+        }
     }
     
 }

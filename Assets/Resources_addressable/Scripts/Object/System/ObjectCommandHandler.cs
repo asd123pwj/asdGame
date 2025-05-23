@@ -11,6 +11,7 @@ public class ObjectCommandHandler: CommandHandlerBase{
         CommandSystem._add(move);
         CommandSystem._add(rush);
         CommandSystem._add(ObjTeleport);
+        CommandSystem._add(ObjMove);
     }
 
     async UniTask spawn(Dictionary<string, object> args, CancellationToken? ct){
@@ -95,5 +96,23 @@ public class ObjectCommandHandler: CommandHandlerBase{
         // ObjectConfig obj = ObjectConfig._our[(int)runtimeID];
         // obj._self.transform.position = dest_pos;
         _ObjSys._mon._player._Move._teleport(key_pos);
+    }
+    
+    async UniTask ObjMove(Dictionary<string, object> args, CancellationToken? ct){
+        await Placeholder.noAsyncWarning();
+        /* ObjPull
+         * --[ID] (string)            the runtimeID of object, if not specified, use the player          
+         * 
+         * Example
+         *   ObjMove 
+         *   - Move the player
+         *   ObjMove -ID 10636
+         *   - Move the object with runtimeID 10636
+         */
+        int runtimeID = _ObjSys._mon._player._runtimeID;
+        if (args.TryGetValue("ID", out object runtimeID_)){
+            runtimeID = (int)runtimeID_;
+        }
+        _ObjSys._runtimeID2base[runtimeID]._Movement.move(InputSystem._keyPos);
     }
 }

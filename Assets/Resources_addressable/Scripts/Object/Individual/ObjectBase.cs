@@ -16,6 +16,7 @@ public class ObjectBase: BaseClass{
     // ---------- Sub Script - Action ----------
     public ObjectContact _Contact;
     public ObjectMove _Move;
+    public ObjectMovement _Movement;
     // ---------- Sub Script - Status ----------
     public ObjectStatusContact _StatusContact;
     public ObjectStatusMove _StatusMove;
@@ -65,6 +66,7 @@ public class ObjectBase: BaseClass{
         // ---------- Sub Script - Action ----------
         _Contact = new(this);
         _Move = new(this);
+        _Movement = new(this);
         // ---------- Sub Script - Status ----------
         _StatusContact = new(this);
         _StatusMove = new(this);

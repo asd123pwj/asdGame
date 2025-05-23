@@ -1,11 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using System;
-using System.Threading;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 using Cysharp.Threading.Tasks;
-using Unity.VisualScripting;
 
 
 public class ObjectAbilMoveBase{
@@ -14,7 +9,7 @@ public class ObjectAbilMoveBase{
     // ---------- Init ----------
     public string _name;
     public bool _moving;
-    public bool _waiting;
+    public static bool _waiting = false; // global waiting, but I dont use it
     public bool _cooldowning;
     public float _wait;
     protected float _cooldown;
@@ -52,8 +47,9 @@ public class ObjectAbilMoveBase{
     }
 
     public async UniTaskVoid _act_wait(float time){
+        if (_wait <= 0) return;
         _waiting = true;
-        await UniTask.Delay(TimeSpan.FromSeconds(time));
+        await UniTask.Delay(TimeSpan.FromSeconds(_wait));
         _waiting = false;
     }
 

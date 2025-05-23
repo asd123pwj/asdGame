@@ -100,7 +100,7 @@ public class CommandSystem: BaseClass{
         }
         else {
             foreach (string cmd in commands.Split('\v')){
-                await _execute_single(cmd, ct);
+                await _execute_single(cmd.TrimStart(' '), ct);
             }
         }
     }

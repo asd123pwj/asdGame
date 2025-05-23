@@ -8,7 +8,8 @@ using Cysharp.Threading.Tasks;
 
 
 public class ObjectContact{
-    // ---------- Action ----------
+    // ---------- GameObject ---------- //
+    // ---------- Action ---------- //
     public List<Action<Collision2D, string>> _actions_onCollision = new();
     public List<Action> _actions_update = new();
     public List<Action> _actions_ground2Float = new();
