@@ -8,7 +8,7 @@ public class ObjectClassBasic{
             tags = new(){
                 {"identity", new(){ nameof(ObjectAsPlayer), nameof(ObjectAsImpactTrigger) } },
                 {"movement", new(){ nameof(ObjectMoveForceKeyX), nameof(ObjectMoveImpulseKeyY), nameof(ObjectMoveSuspend) } },
-                {"contact", new(){ nameof(ObjectContactGround)}}
+                {"contact", new(){ nameof(ObjectContactCheckGround)}}
             }
         });
 

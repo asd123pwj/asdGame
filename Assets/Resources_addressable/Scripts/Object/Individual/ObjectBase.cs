@@ -3,22 +3,25 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class ObjectBase: BaseClass{
-    // ---------- Status - Global ----------
+    // ---------- Status - Global ---------- //
     public static Dictionary<int, ObjectBase> _our = new();
-    // ---------- Unity ----------
+    // ---------- Unity ---------- //
     public GameObject _self, _parent;
     public Rigidbody2D _rb;
     public PolygonCollider2D _collider;
     public ObjectColliderMono _colliderMono;
-    // ---------- Sub Script - Config ----------
+    // ---------- Sub Script - Config ---------- //
     public ObjectIdentity _Identity;
     // ObjectControl _Control;
     // public ObjectInfo _info;
     public ObjectConfig _cfg;
-    // ---------- Sub Script - Action ----------
-    public ObjectContact _Contact;
-    public ObjectMove _Move;
     public ObjectMovement _Movement;
+    public ObjectContact _Contact;
+    // ---------- Status - Self ---------- //
+    public Dictionary<string, DynamicValue> status = new();
+
+    // ---------- Sub Script - Action ----------
+    public ObjectMove _Move;
     // ---------- Sub Script - Status ----------
     // public ObjectStatusContact _StatusContact;
     // public ObjectStatusMove _StatusMove;
