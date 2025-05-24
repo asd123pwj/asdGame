@@ -15,7 +15,7 @@ public class ObjectAbilMoveJumpWall: ObjectAbilMoveBase{
     }
 
     protected override bool _check(KeyPos input) { 
-        if (!_Config._StatusContact._onWall) return false;
+        // if (!_Config._StatusContact._onWall) return false;
         return true; 
     }
 

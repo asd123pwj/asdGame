@@ -9,6 +9,7 @@ public class ObjectBase: BaseClass{
     public GameObject _self, _parent;
     public Rigidbody2D _rb;
     public PolygonCollider2D _collider;
+    public ObjectColliderMono _colliderMono;
     // ---------- Sub Script - Config ----------
     public ObjectIdentity _Identity;
     // ObjectControl _Control;
@@ -19,8 +20,8 @@ public class ObjectBase: BaseClass{
     public ObjectMove _Move;
     public ObjectMovement _Movement;
     // ---------- Sub Script - Status ----------
-    public ObjectStatusContact _StatusContact;
-    public ObjectStatusMove _StatusMove;
+    // public ObjectStatusContact _StatusContact;
+    // public ObjectStatusMove _StatusMove;
     // ---------- Sub Script - Attribute ----------
     public ObjectAttrMoveFloat _AttrMoveFloat;
     // ---------- Config ----------
@@ -42,7 +43,7 @@ public class ObjectBase: BaseClass{
     }
 
     public void _onUpdate(){
-        _Contact._onUpdate();
+        // _Contact._onUpdate();
         _Movement._onUpdate();
         // _AttrMoveFloat._onUpdate();
     }
@@ -70,8 +71,8 @@ public class ObjectBase: BaseClass{
         _Move = new(this);
         _Movement = new(this);
         // ---------- Sub Script - Status ----------
-        _StatusContact = new(this);
-        _StatusMove = new(this);
+        // _StatusContact = new(this);
+        // _StatusMove = new(this);
         // ---------- Sub Script - Attribute ----------
         _AttrMoveFloat = new(this);
         

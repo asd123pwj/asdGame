@@ -30,14 +30,14 @@ public class ObjectIdentity{
     public void init_action(){
         clear_actions();
         if (_Base._cfg.tags == null) return;
-        if (!_Base._cfg.tags.TryGetValue("identity", out List<string> identity)) return;
-        foreach (var id in identity){
-            ObjectAsBase action = _get_action(id);
+        if (!_Base._cfg.tags.TryGetValue("identity", out List<string> identities)) return;
+        foreach (var identity in identities){
+            ObjectAsBase action = _get_action(identity);
             if (action == null) {
-                Debug.Log("ObjectIdentity: No action found for identity: " + id);
+                Debug.Log("ObjectIdentity: No action found for identity: " + identity);
             }
             else{
-                _actions.Add(id, action);
+                _actions.Add(identity, action);
                 action._apply();
             }
         }

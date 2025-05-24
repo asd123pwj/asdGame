@@ -49,7 +49,7 @@ public class ObjectMoveBase{
         return false;
     }
 
-    public async UniTaskVoid _act_wait(){
+    async UniTaskVoid _act_wait(){
         if (_wait <= 0) return;
         _waiting = true;
         await UniTask.Delay(TimeSpan.FromSeconds(_wait));
@@ -81,7 +81,7 @@ public class ObjectMoveBase{
     }
 
     // ---------- Status ----------
-    public void _reset() {
+    void _reset() {
         _uses = _uses_init;
         _waiting = false;
         _cooldowning = false;
