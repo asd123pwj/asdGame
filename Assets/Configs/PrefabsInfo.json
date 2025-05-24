@@ -4,6 +4,7 @@
         "obj_default": "Prefab_Object_Default",
         "obj_asd": "Prefab_Object_asd",
         "obj_yang": "Prefab_Object_Yang",
+        "obj_nonEntity": "Prefab_Object_NonEntity",
         "obj_tile_default": "Prefab_Object_Tile_Default",
         "UIScrollView": "Prefab_UI_ScrollView",
         "UIInputField": "Prefab_UI_InputField",

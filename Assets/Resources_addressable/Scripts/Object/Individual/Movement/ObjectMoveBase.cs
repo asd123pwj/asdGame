@@ -15,16 +15,16 @@ public class ObjectMoveBase{
     static bool _waiting;
     bool _cooldowning;
 
-    public ObjectMoveBase(ObjectBase Base, float cooldown, float wait, int uses, float duration){
-        // ---------- Config ----------
-        _Base = Base;
-        // ---------- Init ----------
-        _wait = wait;
-        _cooldown = cooldown;
-        _uses_init = uses;
-        _duration = duration;
-        _reset();
-    }
+    // public ObjectMoveBase(ObjectBase Base, float cooldown, float wait, int uses, float duration){
+    //     // ---------- Config ----------
+    //     _Base = Base;
+    //     // ---------- Init ----------
+    //     _wait = wait;
+    //     _cooldown = cooldown;
+    //     _uses_init = uses;
+    //     _duration = duration;
+    //     _reset();
+    // }
     public ObjectMoveBase(ObjectBase Base){
         // ---------- Config ----------
         _Base = Base;

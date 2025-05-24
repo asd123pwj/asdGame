@@ -85,7 +85,7 @@ public class InputCommandRegister : BaseClass{
         keyName2Command.Add("v", "");
         keyName2Command.Add("w", "ApplyInput --y 1 \v ObjMove");
         keyName2Command.Add("x", "UIToggle --type UIKeyboardShortcut");
-        keyName2Command.Add("y", "");
+        keyName2Command.Add("y", "spawn --useMousePos --type NonEntity");
         keyName2Command.Add("z", "spawn --useMousePos --type asd");
 
         keyName2Command.Add("`", "UIToggle --type UICommandWindow");

@@ -7,15 +7,17 @@ public class ObjectClassBasic{
             sprite_key = "Sprite_Object_asd",
             tags = new(){
                 {"identity", new(){ nameof(ObjectAsPlayer), nameof(ObjectAsImpactTrigger) } },
-                {"movement", new(){ nameof(ObjectMoveDrag), nameof(ObjectMoveForceKeyX), nameof(ObjectMoveImpulseKeyY) } },
+                {"movement", new(){ nameof(ObjectMoveForceKeyX), nameof(ObjectMoveImpulseKeyY) } },
             }
         });
 
 
         ObjectClass._add("NonEntity", new (){
             class_type = "NonEntity", 
+            prefab_key = "obj_default",
             tags = new(){
-                {"identity", new(){ nameof(ObjectAsPlayer) } }
+                {"identity", new(){ nameof(ObjectAsPlayer), nameof(ObjectAsImpactTrigger), nameof(ObjectAsAgravic), nameof(ObjectAsNoCollision) } },
+                {"movement", new(){ nameof(ObjectMoveForceKey), nameof(ObjectMoveImpulseKey) } },
             }
         });
 

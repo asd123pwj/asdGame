@@ -8,6 +8,7 @@ public class ObjectBase: BaseClass{
     // ---------- Unity ----------
     public GameObject _self, _parent;
     public Rigidbody2D _rb;
+    public PolygonCollider2D _collider;
     // ---------- Sub Script - Config ----------
     public ObjectIdentity _Identity;
     // ObjectControl _Control;
@@ -55,11 +56,11 @@ public class ObjectBase: BaseClass{
     public virtual void _init_begin(){}
     public virtual void _init_done(){}
 
-    public override void _init(){
+    public override async UniTask _init_async(){
         _init_begin();
         if (!createSuccess){
             Debug.Log("ObjectBase init fail: ");
-            create_self().Forget();
+            await create_self();
         }
         // ---------- Sub Script - Config ----------
         _Identity = new(this);
@@ -110,15 +111,16 @@ public class ObjectBase: BaseClass{
     async UniTask create_prefab(){
         if (_MatSys._pfb._check_exist(_cfg.prefab_key)){
             while (!_MatSys._pfb._check_loaded(_cfg.prefab_key)) {
-                Debug.Log("waiting for UI prefab loaded: " + _cfg.name + " - " + _cfg.prefab_key);
+                Debug.Log("Waiting for object prefab loaded: " + _cfg.name + " - " + _cfg.prefab_key);
                 await UniTask.Delay(10);
             }
             GameObject obj = _MatSys._pfb._get_prefab(_cfg.prefab_key);
-            _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
+            _self = Object.Instantiate(obj, _parent.transform);
             _self.name = _cfg.name;
+            _collider = _self.GetComponent<PolygonCollider2D>();
         }
         else {
-            Debug.Log("UI prefab not exist: " + _cfg.prefab_key);
+            Debug.Log("Object prefab not exist: " + _cfg.prefab_key);
         }
     }
     
@@ -141,8 +143,9 @@ public class ObjectBase: BaseClass{
                 return false;
             }
             GameObject obj = _MatSys._pfb._get_prefab(_cfg.prefab_key);
-            _self = UnityEngine.Object.Instantiate(obj, _parent.transform);
+            _self = Object.Instantiate(obj, _parent.transform);
             _self.name = _cfg.name;
+            _collider = _self.GetComponent<PolygonCollider2D>();
         }
         else {
             return false;
