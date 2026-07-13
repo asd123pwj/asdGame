@@ -8,3 +8,10 @@ enum Code {
     FORBIDDEN = 403, 
     NOT_FOUND = 404,    
 }
+
+enum ValueType {
+    BASE,
+    CUR,
+    MIN,
+    FINAL
+}

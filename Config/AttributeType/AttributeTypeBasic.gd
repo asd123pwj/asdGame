@@ -1,16 +1,15 @@
-class_name AttributeSetAttack
-extends RefCounted
+class_name AttributeTypeBasic
+extends ConfigBase
 
+## name_index = [0]时 value[0][0]为value[0]名称
+## name_index = [0, 1]时 "value[0][0] | value[0][1]"为value[0]名称
+var name_index = [0] 
+var values: Array[Array] = [
+    ["Attack", 3, 10],
+    ["Defense", 3, 10],
+    ["Health", 3, 10, 0]
+]
 
-func _init() -> void:
-    # type, level_base, multiplier, level_min, allow_negative
-    AttributeType.new("Attack", 3, 10)
-    AttributeType.new("Defense", 3, 10)
-    AttributeType.new("Health", 3, 10, 0)
-
-    # type, isPosition, isMax, isMyself
-    AttributeRelation.new("Attack", "Defense", "Health", false, true, false)
-    
 
 
 """ ---------- Description ---------- 

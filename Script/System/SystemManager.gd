@@ -8,6 +8,10 @@ static var msgBus: MessageBus
 static var timeSys: TimeSystem
 static var attrSys: AttributeSystem
 
+static var USER_CONFIG_DIR := "user://Config/"
+static var SYS_CONFIG_DIR := "res://Config/"
+static var RESET := true
+
 var _test = Test.new()
 
 func _ready() -> void:
