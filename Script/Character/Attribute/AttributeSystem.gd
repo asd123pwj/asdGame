@@ -1,10 +1,8 @@
-class_name AttributeSystem
+class_name AttrSys
 extends RefCounted
 
 
 func _init() -> void:
-    # AttributeTypeBasic.new()
-    # AttributeBuffBasic.new()
     PresetRegister.register(AttributeType)
     PresetRegister.register(AttributeBuff)
     PresetRegister.register(AttributeRelation)
@@ -56,7 +54,7 @@ static func impact(
     
 ## 设置当前等级
 ## @param level_new: 新等级
-static func set_level_cur(attr: AttributeState, attr_type_name: String, level_new: int) -> ChangeResult:
+static func set_level_cur(attr: Attribute, attr_type_name: String, level_new: int) -> ChangeResult:
     var level_ori = attr.get_level_cur(attr_type_name)
     var level_offset = level_new - level_ori
     var code: Enums.Code
@@ -64,11 +62,13 @@ static func set_level_cur(attr: AttributeState, attr_type_name: String, level_ne
         attr._level_curs[attr_type_name] = level_new
         if level_ori != level_new:
             code = Enums.Code.OK
+            MsgHubChar.send_type_change(attr.me, attr_type_name)
         else:
             code = Enums.Code.NOT_MODIFIED
     else:
         if attr.get_attr_type(attr_type_name).allow_negative:
             attr._level_curs[attr_type_name] = level_new
+            MsgHubChar.send_type_change(attr.me, attr_type_name)
         code = Enums.Code.FORBIDDEN
 
     return ChangeResult.new(

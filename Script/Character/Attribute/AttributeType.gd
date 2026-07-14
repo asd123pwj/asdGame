@@ -39,10 +39,10 @@ func get_dynamic_level(level: int, multiplier: int = INT64_MIN) -> int:
     """ 无限范围的近似等比随机 """
     if multiplier == INT64_MIN:
         multiplier = self.multiplier
-    var v: int = Sys.randSys.rand.randi_range(0, multiplier)
+    var v: int = RandSys.rand.randi_range(0, multiplier)
     if v != 0: # 抽到当前level
         return level
-    v = Sys.randSys.rand.randi_range(0, multiplier + 1)
+    v = RandSys.rand.randi_range(0, multiplier + 1)
     var dir: int = 0
     if v == 0:                       # level抽到减少
         dir = -1
@@ -51,7 +51,7 @@ func get_dynamic_level(level: int, multiplier: int = INT64_MIN) -> int:
     var level_changed: int = 0
     while true:
         level_changed += dir         # 记录level变化量
-        v = Sys.randSys.rand.randi_range(0, multiplier)  # 重新抽，但只往1个方向抽
+        v = RandSys.rand.randi_range(0, multiplier)  # 重新抽，但只往1个方向抽
         if v > 0:                    # 抽到偏移后的当前level
             break
     return level + level_changed

@@ -2,11 +2,11 @@ class_name Sys
 extends Node
 
 static var sys: Sys
-static var sys_cfg: SystemConfig
-static var randSys: RandomSystem
-static var msgBus: MessageBus
-static var timeSys: TimeSystem
-static var attrSys: AttributeSystem
+static var sys_cfg: SysCfg
+static var randSys: RandSys
+static var msgBus: MsgBus
+static var timeSys: TimeSys
+static var attrSys: AttrSys
 
 static var USER_CONFIG_DIR := "user://Config/"
 static var SYS_CONFIG_DIR := "res://Config/"
@@ -23,9 +23,9 @@ func _ready() -> void:
 
 
 func init_sub_system() -> void:
-    sys_cfg = SystemConfig.new()
-    randSys = RandomSystem.new()
-    msgBus = MessageBus.new()
-    timeSys = TimeSystem.new()
-    attrSys = AttributeSystem.new()
+    sys_cfg = SysCfg.new()
+    randSys = RandSys.new()
+    msgBus = MsgBus.new()
+    timeSys = TimeSys.new()
+    attrSys = AttrSys.new()
     # print("init_done")

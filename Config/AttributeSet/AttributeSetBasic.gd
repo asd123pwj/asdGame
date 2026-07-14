@@ -12,8 +12,8 @@ var values: Array[Array] = [
         []
     ],
     [
-        "Human B",
+        "Rabbit",
         ["Attack", "Defense", "Health",],
-        ["Base Attack +3"]
+        ["Base Attack -3", "Base Defense -3",]
     ],
 ]

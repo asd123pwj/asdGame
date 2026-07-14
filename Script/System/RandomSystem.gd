@@ -1,8 +1,7 @@
-class_name RandomSystem
+class_name RandSys
 extends RefCounted
 
-static var rand: RandomNumberGenerator
+static var rand: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _init() -> void:
-    rand = RandomNumberGenerator.new()
     rand.seed = hash(Sys.sys_cfg.random_seed)

@@ -1,4 +1,4 @@
-class_name SystemConfig
+class_name SysCfg
 extends ConfigBase
 
 var random_seed: String = "20230204"

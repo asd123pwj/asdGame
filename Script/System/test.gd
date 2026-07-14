@@ -10,14 +10,22 @@ var char_E: Character
 func _init() -> void:
     pass
 
+
 func run() -> void:
     char_A = Character.new("角色1", "Human A")
-    char_B = Character.new("角色2", "Human B")
-
+    char_B = Character.new("角色2", "Rabbit")
+    MsgHubChar.listen_type_change(char_A, "Health", char_A_injured)
+    MsgHubChar.listen_type_change(char_B, "Health", char_B_injured)
     print(Sys.sys_cfg.random_seed)
     # var a = char_A.attr.attrs["食_食量"].get_random_level_base_on_cur_level()
     # print(a)
     delay_loop_test()
+
+func char_A_injured(_msg) -> void:
+    get_char_info(char_A)
+
+func char_B_injured(_msg) -> void:
+    get_char_info(char_B)
 
 func get_char_info(char_: Character) -> void:
     var info: String = char_.name
@@ -26,17 +34,17 @@ func get_char_info(char_: Character) -> void:
     print(info)
 
 func attack(char_A: Character, char_B: Character) -> Enums.Code:
-    var result = AttributeSystem.impact(char_A, char_B, char_B, "Attack", "Defense", "Health")
+    var result = AttrSys.impact(char_A, char_B, char_B, "Attack", "Defense", "Health")
     if (result.code == Enums.Code.OK) or (result.code == Enums.Code.FORBIDDEN):
         print("%s 对 %s 造成了 %d 点伤害" % [char_A.name, char_B.name, abs(result.offset)])
-        get_char_info(char_A)
-        get_char_info(char_B)
+        # get_char_info(char_A)
+        # get_char_info(char_B)
     if (result.code == Enums.Code.FORBIDDEN):
         print("%s 死亡" % [char_A.name])
     return result.code
 
 func delay_loop_test() -> void:
-    Sys.msgBus.add_receiver(TimeSystem.msgID_advance, when_time_advance)
+    Sys.msgBus.listen(TimeSys.msgID_advance, when_time_advance)
     get_char_info(char_A)
     get_char_info(char_B)
     

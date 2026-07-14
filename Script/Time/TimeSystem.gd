@@ -1,4 +1,4 @@
-class_name TimeSystem
+class_name TimeSys
 extends RefCounted
 
 """ -----  ----- """
@@ -9,11 +9,11 @@ static var msgID_advance_xun: String = "TIME_ADVANCE_XUN"
 static var msgID_advance_day: String = "TIME_ADVANCE_DAY"
 
 """ ----- 年 月 旬 日 时辰 ----- """
-var year: int = 1
-var month: int = 1
-var xun: int = 1
-var day: int = 1
-var hour: int = 1
+static var year: int = 1
+static var month: int = 1
+static var xun: int = 1
+static var day: int = 1
+static var hour: int = 1
 
 
 func _init() -> void:
@@ -43,12 +43,12 @@ func advance() -> void:
                     year += 1
                     year_changed = true
     TimeFormat.update()
-    Sys.msgBus.send(msgID_advance, "")
+    MsgBus.send(msgID_advance, "")
     if year_changed:
-        Sys.msgBus.send(msgID_advance_year, "")
+        MsgBus.send(msgID_advance_year, "")
     if month_changed:
-        Sys.msgBus.send(msgID_advance_month, "")
+        MsgBus.send(msgID_advance_month, "")
     if xun_changed:
-        Sys.msgBus.send(msgID_advance_xun, "")
+        MsgBus.send(msgID_advance_xun, "")
     if day_changed:
-        Sys.msgBus.send(msgID_advance_day, "")
+        MsgBus.send(msgID_advance_day, "")
