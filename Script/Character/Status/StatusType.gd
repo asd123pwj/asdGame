@@ -1,0 +1,162 @@
+class_name StatusType
+extends PresetRegister
+
+
+var name: String
+## 为true时，每次变化完后自动重置，例如受伤后，发送一次受伤通知，然后恢复为未受伤
+var auto_reset: bool
+var _attr_type_listeners: Array[ListenType] = []
+var _attr_type_triggers: Dictionary[Character, Array] = {}
+var _attr_buff_listeners: Array[ListenType] = []
+var _attr_buff_triggers: Dictionary[Character, Array] = {}
+var enabled: bool = false
+
+## 仅用于unlisten时取消对应消息接收器
+## {Character: {MessageID: func}}
+var _trigger_funcs: Dictionary[Character, Dictionary] = {}
+
+# static var new_: Callable
+static var _we: Dictionary[String, StatusType] = {}
+
+## @param attr_type_listener_cfgs: 支持present, absent, changed, >, >=, <, <=, ==, !=
+## @param attr_buff_listener_cfgs: 支持present, absent
+## cfgs为嵌套列表[[配置1],[配置2]]
+func _init(name: String, auto_reset: bool, attr_type_listener_cfgs: Array=[], attr_buff_listener_cfgs: Array=[]) -> void:
+    _we[name] = self
+    self.name = name
+    self.auto_reset = auto_reset
+
+    for cfg in attr_type_listener_cfgs:
+        self._attr_type_listeners.append(ListenType.new.callv(cfg))
+
+    for cfg in attr_buff_listener_cfgs:
+        self._attr_buff_listeners.append(ListenType.new.callv(cfg))
+
+static func get_(name: String) -> StatusType:
+    return _we[name]
+
+## 在Status添加后，使用listen监听角色
+## 在各监听类型中，先判断触发器是否可触发，再添加监听器
+func listen(char_: Character) -> void:
+    var trigger_func: Callable
+    var trigger_cur: bool
+    var listener: ListenType
+    var msg_ID: String
+    _trigger_funcs[char_] = {}
+
+    # ----- Type监听器 -----
+    _attr_type_triggers[char_] = []
+    for i in range(_attr_type_listeners.size()):
+        trigger_cur = false
+        listener = _attr_type_listeners[i]
+        if listener.match_type in ["present", "absent"]:
+            var isPresent: bool = listener.match_type == "present"
+            # 获取当前type是否满足条件
+            trigger_cur = (isPresent == char_.attr.check_attr_type(listener.name))
+            # 两个叠加的监听器用于实时监控。
+            # 如果match_type是present，那么在type添加/移除时触发器为真/假，absent相反
+            trigger_func = func(_msg): 
+                self._attr_type_triggers[char_][i] = isPresent
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_type_add(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+            
+            trigger_func = func(_msg): 
+                self._attr_type_triggers[char_][i] = !isPresent
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_type_remove(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+        elif listener.match_type == "changed":
+            # 获取当前type是否满足条件
+            trigger_cur = false 
+            # 同样是两个监听器，上面用于监控值变化，下面用于监控type被移除
+            trigger_func = func(_msg): 
+                self._attr_type_triggers[char_][i] = true
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_type_changed(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+            trigger_func = func(_msg): 
+                self._attr_type_triggers[char_][i] = false;
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_type_remove(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+        elif listener.match_type in [">", ">=", "<", "<=", "==", "!="]:
+            # 获取当前type是否满足条件
+            if char_.attr.check_attr_type(listener.name):
+                trigger_cur = listener.check(char_.attr.get_level_cur(listener.name))
+            # 同样是两个监听器，上面用于监控值变化后是否满足条件，下面用于监控type被移除
+            trigger_func = func(_msg): 
+                var level_cur = char_.attr.get_level_cur(listener.name)
+                # if not listener.check(level_cur):
+                #     return false
+                self._attr_type_triggers[char_][i] = listener.check(level_cur)
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_type_changed(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+            
+            trigger_func = func(_msg): 
+                self._attr_type_triggers[char_][i] = false;
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_type_remove(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+        else:
+            pass ## TODO: 报错
+        _attr_type_triggers[char_].append(trigger_cur)
+
+    # ----- Buff监听器 -----
+    _attr_buff_triggers[char_] = []
+    for i in range(_attr_buff_listeners.size()):
+        trigger_cur = false
+        listener = _attr_buff_listeners[i]
+        _attr_buff_triggers[char_].append(false)
+        if listener.match_type in ["present", "absent"]:
+            var isPresent: bool = listener.match_type == "present"
+            # 获取当前buff是否满足条件
+            trigger_cur = (isPresent == char_.attr.check_attr_buff(listener.name))
+            # 两个叠加的监听器用于实时监控。
+            trigger_func = func(_msg): 
+                self._attr_buff_triggers[char_][i] = isPresent
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_buff_add(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+
+            trigger_func = func(_msg): 
+                self._attr_buff_triggers[char_][i] = !isPresent
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_buff_remove(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+        else:
+            pass ## TODO: 报错
+
+    # 初始化监听器后执行一次，发送最新状态，虽然我觉得它没有用
+    _check_and_execute(char_, true)
+
+func unlisten(char_: Character) -> void:
+    for msg_ID in _trigger_funcs[char_].keys():
+        MsgBus.unlisten(msg_ID, _trigger_funcs[char_][msg_ID])
+
+func _check_and_execute(char_: Character, force: bool = false) -> bool:
+    var enabled_ori: bool = enabled
+    enabled = true
+    for isAllow in _attr_type_triggers[char_]:
+        if not isAllow:
+            enabled = false
+    for isAllow in _attr_buff_triggers[char_]:
+        if not isAllow:
+            enabled = false
+    
+    if (enabled and not enabled_ori) or force:
+        MsgHubChar.send_status_satisfied(char_, self.name)
+    # unsatisfied仅对auto_reset为false的生效，例如Live不满足，意味着死亡，需要触发unsatisfied
+    elif (not enabled and enabled_ori) or force:
+        MsgHubChar.send_status_unsatisfied(char_, self.name)
+
+    if auto_reset:
+        enabled = false
+
+    return enabled

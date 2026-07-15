@@ -15,4 +15,3 @@ enum ValueType {
     MIN,
     FINAL
 }
-

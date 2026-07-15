@@ -16,7 +16,8 @@ var allow_negative: bool
 # var _buffs: Dictionary[Enums.ValueType, AttributeType] = {}
 
 """ ----- Global ----- """
-static var new_: Callable
+static var _we: Dictionary[String, AttributeType] = {}
+# static var new_: Callable
 # static var _presets: Dictionary[String, Array] = {}
 
 
@@ -29,11 +30,16 @@ func _init(
         level_min: int = INT64_MIN,
         allow_negative: bool = true 
         ) -> void:
+    _we[name] = self
     self.name = name
     self.level_base = level_base
     self.multiplier = multiplier
     self.level_min = level_min
     self.allow_negative = allow_negative
+
+static func get_(name: String) -> AttributeType:
+    return _we[name]
+
 
 func get_dynamic_level(level: int, multiplier: int = INT64_MIN) -> int:
     """ 无限范围的近似等比随机 """

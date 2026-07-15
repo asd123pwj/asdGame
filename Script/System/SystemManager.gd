@@ -6,7 +6,7 @@ static var sys_cfg: SysCfg
 static var randSys: RandSys
 static var msgBus: MsgBus
 static var timeSys: TimeSys
-static var attrSys: AttrSys
+static var charSys: CharSys
 
 static var USER_CONFIG_DIR := "user://Config/"
 static var SYS_CONFIG_DIR := "res://Config/"
@@ -27,5 +27,5 @@ func init_sub_system() -> void:
     randSys = RandSys.new()
     msgBus = MsgBus.new()
     timeSys = TimeSys.new()
-    attrSys = AttrSys.new()
+    charSys = CharSys.new()
     # print("init_done")

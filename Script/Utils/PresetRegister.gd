@@ -8,9 +8,6 @@ class_name PresetRegister
 extends RefCounted
 
 
-## {Class, {preset_name, preset_args}}
-static var _presets: Dictionary[GDScript, Dictionary] = {}
-
 
 ## 给定类class_，自动扫描"res://Config/class_"下的配置文件，并以此实例化class_
 ## 
@@ -34,8 +31,7 @@ static var _presets: Dictionary[GDScript, Dictionary] = {}
 static func register(class_: GDScript) -> void:
     var config_dir = Sys.SYS_CONFIG_DIR + class_.resource_path.get_file().get_basename()
     var scripts: Array[GDScript] = _scan(config_dir)
-    _presets[class_] = {}
-    _add_new(class_)
+    # _add_new(class_)
     _add_presets(class_, scripts)
 
 ## 扫描指定目录下的所有 .gd 脚本
@@ -60,12 +56,13 @@ static func _scan(config_dir: String) -> Array[GDScript]:
 static func _add_presets(class_: GDScript, scripts: Array[GDScript]) -> void:
     for script: GDScript in scripts:
         var instance = script.new()
-        var name_formatter: Callable = _make_formatter(instance.name_index)
+        # var name_formatter: Callable = _make_formatter(instance.name_index)
         for value in instance.values:
             # naming
-            var name: String = name_formatter.call(value)
+            # var name: String = name_formatter.call(value)
             # add
-            _add_preset(class_, name, value)
+            _add_preset(class_, value)
+            # _add_preset(class_, name, value)
 
 static func _make_formatter(indices: Array) -> Callable:
     return func(values: Array) -> String:
@@ -77,13 +74,14 @@ static func _make_formatter(indices: Array) -> Callable:
             parts.append(str(values[idx]))
         return "|".join(parts)
 
-static func _add_preset(class_: GDScript, name: String, args: Array) -> void:
-    _presets[class_][name] = args
+static func _add_preset(class_: GDScript, args: Array) -> void:
+    class_.new.callv(args)
+    # _presets[class_][name] = args
 
-static func _add_new(class_: GDScript):
-    var new_ = func new_(names: Array):
-        var name = "|".join(names)
-        var args = _presets[class_][name]
-        return class_.new.callv(args)
-    @warning_ignore("unsafe_property_access")
-    class_.new_ = new_
+# static func _add_new(class_: GDScript):
+#     var new_ = func new_(names: Array):
+#         var name = "|".join(names)
+#         var args = _presets[class_][name]
+#         return class_.new.callv(args)
+#     @warning_ignore("unsafe_property_access")
+#     class_.new_ = new_

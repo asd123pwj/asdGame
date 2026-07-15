@@ -4,15 +4,17 @@ extends RefCounted
 
 var name: String
 var attr: Attribute
+var status: Status
 var ID: int = get_instance_id()
 
-func _init(name: String, attr_set_name: String) -> void:
+func _init(name: String, race_name: String) -> void:
     self.name = name
-    _init_attr(attr_set_name)
+    _init_as_race(race_name)
 
-func _init_attr(attr_set_name: String) -> void:
-    var attr_set: AttributeSet = AttributeSet.new_.call([attr_set_name])
-    attr = Attribute.new(self, attr_set.types, attr_set.buffs)
+func _init_as_race(race_name: String) -> void:
+    var race_type: RaceType = RaceType.get_(race_name)
+    attr = Attribute.new(self, race_type.types, race_type.buffs)
+    status = Status.new(self, race_type.statuses)
 
 
 

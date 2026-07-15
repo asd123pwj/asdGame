@@ -31,7 +31,7 @@ func add_attr_types(attr_types: Array[String]) -> Array[Enums.Code]:
 func add_attr_type(attr_type_name: String) -> Enums.Code:
     if attr_types.has(attr_type_name):
         return Enums.Code.NOT_MODIFIED
-    attr_types[attr_type_name] = AttributeType.new_.call([attr_type_name])
+    attr_types[attr_type_name] = AttributeType.get_(attr_type_name)
     MsgHubChar.send_type_add(me, attr_type_name)
     return Enums.Code.OK
 
@@ -53,6 +53,8 @@ func get_attr_type(attr_type_name: String) -> AttributeType:
     else:
         return null
 
+func check_attr_type(attr_type_name: String) -> bool:
+    return attr_types.has(attr_type_name)
 
 """ ---------- Attr Buff ---------- """
 func add_attr_buffs(attr_buff_names: Array[String]) -> Array[Enums.Code]:
@@ -62,7 +64,7 @@ func add_attr_buffs(attr_buff_names: Array[String]) -> Array[Enums.Code]:
     return codes
 
 func add_attr_buff(attr_buff_name: String) -> Enums.Code:
-    var attr_buff = AttributeBuff.new_.call([attr_buff_name])
+    var attr_buff = AttributeBuff.get_(attr_buff_name)
     var impact_dict = Utils.get_dict(attr_buffs, attr_buff.attr_type_name, attr_buff.impact_type)
     if impact_dict.has(attr_buff_name):
         return Enums.Code.NOT_MODIFIED
@@ -87,7 +89,7 @@ func remove_attr_buffs(attr_buff_names: Array[String]) -> Array[Enums.Code]:
 #                 return Enums.Code.OK
 #     return Enums.Code.NOT_MODIFIED
 func remove_attr_buff(attr_buff_name: String) -> Enums.Code:
-    var attr_buff = AttributeBuff.new_.call([attr_buff_name])
+    var attr_buff = AttributeBuff.get_(attr_buff_name)
     var impact_dict = Utils.find_dict(attr_buffs, attr_buff.attr_type_name, attr_buff.impact_type)
     if impact_dict.is_empty():
         return Enums.Code.NOT_MODIFIED
@@ -105,6 +107,10 @@ func get_attr_buffs(attr_type_name: String, impact_type: Enums.ValueType) -> Dic
     #         return attr_buffs[attr_type_name][impact_type]
     # return {}
 
+func check_attr_buff(attr_buff_name: String) -> bool:
+    var attr_buff = AttributeBuff.get_(attr_buff_name)
+    var impact_dict = Utils.get_dict(attr_buffs, attr_buff.attr_type_name, attr_buff.impact_type)
+    return impact_dict.has(attr_buff_name)
 
 
 
@@ -132,10 +138,10 @@ func _init_level(attr_type_name: String, impact_type: Enums.ValueType) -> int:
         level = _attr_type.level_min
     else:
         pass ## 报错
-    # 加Buff
-    level = _apply_buffs(attr_type_name, impact_type, level)
     # 取动态属性（极限值为定值，例如生命极限为0）
     if impact_type != Enums.ValueType.MIN:
+        # 加Buff
+        level = _apply_buffs(attr_type_name, impact_type, level)
         level = _attr_type.get_dynamic_level(level)
     return level
 

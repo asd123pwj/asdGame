@@ -12,10 +12,14 @@ func _init() -> void:
 
 
 func run() -> void:
-    char_A = Character.new("角色1", "Human A")
+    char_A = Character.new("角色1", "Human")
     char_B = Character.new("角色2", "Rabbit")
-    MsgHubChar.listen_type_change(char_A, "Health", char_A_injured)
-    MsgHubChar.listen_type_change(char_B, "Health", char_B_injured)
+    MsgHubChar.listen_status_satisfied(char_A, "Injured", char_A_injured)
+    MsgHubChar.listen_status_satisfied(char_B, "Injured", char_B_injured)
+    MsgHubChar.listen_status_unsatisfied(char_A, "Live", char_A_died)
+    MsgHubChar.listen_status_unsatisfied(char_B, "Live", char_B_died)
+    # MsgHubChar.listen_type_change(char_A, "Health", char_A_injured)
+    # MsgHubChar.listen_type_change(char_B, "Health", char_B_injured)
     print(Sys.sys_cfg.random_seed)
     # var a = char_A.attr.attrs["食_食量"].get_random_level_base_on_cur_level()
     # print(a)
@@ -26,6 +30,12 @@ func char_A_injured(_msg) -> void:
 
 func char_B_injured(_msg) -> void:
     get_char_info(char_B)
+
+func char_A_died(_msg) -> void:
+    print("角色1死亡")
+
+func char_B_died(_msg) -> void:
+    print("角色2死亡")
 
 func get_char_info(char_: Character) -> void:
     var info: String = char_.name
@@ -40,7 +50,8 @@ func attack(char_A: Character, char_B: Character) -> Enums.Code:
         # get_char_info(char_A)
         # get_char_info(char_B)
     if (result.code == Enums.Code.FORBIDDEN):
-        print("%s 死亡" % [char_A.name])
+        pass
+        # print("%s 死亡" % [char_B.name])
     return result.code
 
 func delay_loop_test() -> void:

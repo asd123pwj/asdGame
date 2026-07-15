@@ -8,10 +8,18 @@ static func _init_message_node(id: String) -> void:
         return
     _nodes[id] = MessageNode.new()
 
-static func listen(id: String, receiver: Callable) -> void:
+static func listen(id: String, receiver: Callable) -> String:
     if not _nodes.has(id):
         _init_message_node(id)
     _nodes[id].receivers.append(receiver)
+    return id
+
+static func unlisten(id: String, receiver: Callable) -> void:
+    if not _nodes.has(id):
+        return
+    _nodes[id].receivers.erase(receiver)
+    if _nodes[id].receivers.is_empty():
+        _nodes.erase(id)
 
 static func send(id: String, message: Variant) -> Enums.Code:
     if not _nodes.has(id):

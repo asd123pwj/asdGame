@@ -2,11 +2,11 @@ class_name AttrSys
 extends RefCounted
 
 
-func _init() -> void:
-    PresetRegister.register(AttributeType)
-    PresetRegister.register(AttributeBuff)
-    PresetRegister.register(AttributeRelation)
-    PresetRegister.register(AttributeSet)
+# func _init() -> void:
+#     PresetRegister.register(AttributeType)
+#     PresetRegister.register(AttributeBuff)
+#     PresetRegister.register(AttributeRelation)
+#     PresetRegister.register(AttributeSet)
 
 
 """ ---------- Impact ---------- """
@@ -28,7 +28,7 @@ static func impact(
     var level_final_B = attr_B.get_level_final(attr_type_name_B)
 
     # 关系
-    var relation = AttributeRelation.new_.call([attr_type_name_A, attr_type_name_B, attr_type_name_C]) 
+    var relation = AttributeRelation.get_(attr_type_name_A, attr_type_name_B, attr_type_name_C) 
     # 计算变化量，是否为单面变化(非负数)
     var offset = max(level_final_A - level_final_B, 0) if relation.isMax else level_final_A - level_final_B
     # 计算变化方向，为正向或反向
@@ -62,13 +62,13 @@ static func set_level_cur(attr: Attribute, attr_type_name: String, level_new: in
         attr._level_curs[attr_type_name] = level_new
         if level_ori != level_new:
             code = Enums.Code.OK
-            MsgHubChar.send_type_change(attr.me, attr_type_name)
+            MsgHubChar.send_type_changed(attr.me, attr_type_name, level_new)
         else:
             code = Enums.Code.NOT_MODIFIED
     else:
         if attr.get_attr_type(attr_type_name).allow_negative:
             attr._level_curs[attr_type_name] = level_new
-            MsgHubChar.send_type_change(attr.me, attr_type_name)
+            MsgHubChar.send_type_changed(attr.me, attr_type_name, level_new)
         code = Enums.Code.FORBIDDEN
 
     return ChangeResult.new(
