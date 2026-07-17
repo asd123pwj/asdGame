@@ -12,8 +12,8 @@ func _init() -> void:
 
 
 func run() -> void:
-    char_A = CharSys.spawn("角色1", "Human")
-    char_B = CharSys.spawn("角色2", "Rabbit")
+    char_A = CharSys.spawn("Human")
+    char_B = CharSys.spawn("Rabbit")
     MsgHubChar.listen_status_satisfied(char_A, "Injured", char_A_injured)
     MsgHubChar.listen_status_satisfied(char_B, "Injured", char_B_injured)
     MsgHubChar.listen_status_unsatisfied(char_A, "Live", char_A_died)

@@ -1,9 +1,13 @@
 class_name AttributeTypeBasic
 extends ConfigBase
 
-## name_index = [0]时 value[0][0]为value[0]名称
-## name_index = [0, 1]时 "value[0][0] | value[0][1]"为value[0]名称
-var name_index = [0] 
+"""
+name: String,
+level_base: int, 
+multiplier: int,
+level_min: int = INT64_MIN,
+allow_negative: bool = true 
+"""
 var values: Array[Array] = [
     ["Attack", 3, 10],
     ["Defense", 3, 10],

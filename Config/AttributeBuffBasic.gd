@@ -1,9 +1,13 @@
 class_name  AttributeBuffBasic 
 extends ConfigBase
 
-## name_index = [0]时 value[0][0]为value[0]名称
-## name_index = [0, 1]时 "value[0][0] | value[0][1]"为value[0]名称
-var name_index = [0] 
+"""
+name: String, 
+type_name: String, 
+buff_value: int, 
+impact_type: Enums.ValueType
+
+"""
 var values: Array[Array] = [
     ["Base Attack +1", "Attack", 1, Enums.ValueType.BASE],
     ["Base Attack +2", "Attack", 2, Enums.ValueType.BASE],

@@ -7,8 +7,8 @@ var attr: Attribute
 var status: Status
 var ID: int = get_instance_id()
 
-func _init(name: String, race_name: String) -> void:
-    self.name = name
+func _init(race_name: String, name: String="") -> void:
+    self.name = name if name != "" else race_name
     _init_as_race(race_name)
 
 func _init_as_race(race_name: String) -> void:

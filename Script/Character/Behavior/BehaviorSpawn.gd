@@ -5,5 +5,6 @@ extends RefCounted
 func _init() -> void:
     pass
 
-func spawn(name: String, race_type: String) -> Character:
-    return null
+func spawn(race_name: String, name: String="") -> Character:
+    var char_: Character = CharSys.spawn(race_name, name)
+    return char_
