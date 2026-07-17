@@ -12,15 +12,15 @@ func _init() -> void:
 
 
 func run() -> void:
-    char_A = Character.new("角色1", "Human")
-    char_B = Character.new("角色2", "Rabbit")
+    char_A = CharSys.spawn("角色1", "Human")
+    char_B = CharSys.spawn("角色2", "Rabbit")
     MsgHubChar.listen_status_satisfied(char_A, "Injured", char_A_injured)
     MsgHubChar.listen_status_satisfied(char_B, "Injured", char_B_injured)
     MsgHubChar.listen_status_unsatisfied(char_A, "Live", char_A_died)
     MsgHubChar.listen_status_unsatisfied(char_B, "Live", char_B_died)
     # MsgHubChar.listen_type_change(char_A, "Health", char_A_injured)
     # MsgHubChar.listen_type_change(char_B, "Health", char_B_injured)
-    print(Sys.sys_cfg.random_seed)
+    print(Sys.sysCfg.random_seed)
     # var a = char_A.attr.attrs["食_食量"].get_random_level_base_on_cur_level()
     # print(a)
     delay_loop_test()

@@ -2,7 +2,7 @@ class_name Sys
 extends Node
 
 static var sys: Sys
-static var sys_cfg: SysCfg
+static var sysCfg: SysCfg
 static var randSys: RandSys
 static var msgBus: MsgBus
 static var timeSys: TimeSys
@@ -23,7 +23,7 @@ func _ready() -> void:
 
 
 func init_sub_system() -> void:
-    sys_cfg = SysCfg.new()
+    sysCfg = SysCfg.new()
     randSys = RandSys.new()
     msgBus = MsgBus.new()
     timeSys = TimeSys.new()

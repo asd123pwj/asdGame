@@ -1,18 +1,18 @@
 class_name MsgHubChar
-extends RefCounted
+extends MsgBus
 
 
 """ ---------- Basic ---------- """
 static func _format_ID(char_: Character, type: String, type_name: String, action: String) -> String:
-    return MsgBus.format_ID(["CHAR", str(char_.ID), type, type_name, action])
+    return format_ID(["CHAR", str(char_.ID), type, type_name, action])
 
 static func _send(char_: Character, type: String, type_name: String, action: String, message = "") -> Enums.Code:
     var node_ID = _format_ID(char_, type, type_name, action)
-    return MsgBus.send(node_ID, message)
+    return send(node_ID, message)
 
 static func _listen(char_: Character, type: String, type_name: String, action: String, callback: Callable) -> String:
     var node_ID = _format_ID(char_, type, type_name, action)
-    return MsgBus.listen(node_ID, callback)
+    return listen(node_ID, callback)
 
 
 """ ---------- Attribute Type ---------- """
@@ -72,3 +72,4 @@ static func listen_status_add(char_: Character, status_name: String, callback: C
 
 static func listen_status_remove(char_: Character, status_name: String, callback: Callable) -> String:
     return _listen(char_, "STATUS", status_name, "remove", callback)
+

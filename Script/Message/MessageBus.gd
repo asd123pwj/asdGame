@@ -29,9 +29,6 @@ static func send(id: String, message: Variant) -> Enums.Code:
         receiver.call(message)
     return Enums.Code.OK
 
-static func send2COMMAND(message: Variant) -> void:
-    send("COMMAND", message)
-
 static func get_message(id: String) -> Variant:
     if not _nodes.has(id):
         return null

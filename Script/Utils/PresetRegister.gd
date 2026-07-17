@@ -29,23 +29,27 @@ extends RefCounted
 ##         ]
 ## 随后，使用value里的参数实例化AttributeBuff
 static func register(class_: GDScript) -> void:
-    var config_dir = Sys.SYS_CONFIG_DIR + class_.resource_path.get_file().get_basename()
-    var scripts: Array[GDScript] = _scan(config_dir)
+    # var config_dir = Sys.SYS_CONFIG_DIR + class_.resource_path.get_file().get_basename()
+    var scripts: Array[GDScript] = _scan(class_)
     # _add_new(class_)
     _add_presets(class_, scripts)
 
 ## 扫描指定目录下的所有 .gd 脚本
-static func _scan(config_dir: String) -> Array[GDScript]:
+static func _scan(class_: GDScript) -> Array[GDScript]:
+    var class_name_ = class_.resource_path.get_file().get_basename()
     var scripts : Array[GDScript] = []
-    var dir = DirAccess.open(config_dir)
+    var dir = DirAccess.open(Sys.SYS_CONFIG_DIR)
     if not dir:
-        push_warning("ConfigScanner: 目录不存在: ", config_dir)
+        push_warning("ConfigScanner: 目录不存在: ", Sys.SYS_CONFIG_DIR)
         return scripts
     dir.list_dir_begin()
     var file_name = dir.get_next()
     while file_name != "":
+        if not file_name.begins_with(class_name_):
+            file_name = dir.get_next()
+            continue
         if file_name.ends_with(".gd") and not file_name.begins_with("."):
-            var script_path = config_dir.path_join(file_name)
+            var script_path = Sys.SYS_CONFIG_DIR.path_join(file_name)
             var script : GDScript = load(script_path)
             if script and script is GDScript and script.can_instantiate():
                 scripts.append(script)

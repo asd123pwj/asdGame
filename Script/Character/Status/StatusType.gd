@@ -6,10 +6,12 @@ var name: String
 ## 为true时，每次变化完后自动重置，例如受伤后，发送一次受伤通知，然后恢复为未受伤
 var auto_reset: bool
 var _attr_type_listeners: Array[ListenType] = []
-var _attr_type_triggers: Dictionary[Character, Array] = {}
 var _attr_buff_listeners: Array[ListenType] = []
+var _status_listeners: Array[ListenType] = []
+var _attr_type_triggers: Dictionary[Character, Array] = {}
 var _attr_buff_triggers: Dictionary[Character, Array] = {}
-var enabled: bool = false
+var _status_triggers: Dictionary[Character, Array] = {}
+var satisfied: Dictionary[Character, bool] = {}
 
 ## 仅用于unlisten时取消对应消息接收器
 ## {Character: {MessageID: func}}
@@ -20,8 +22,15 @@ static var _we: Dictionary[String, StatusType] = {}
 
 ## @param attr_type_listener_cfgs: 支持present, absent, changed, >, >=, <, <=, ==, !=
 ## @param attr_buff_listener_cfgs: 支持present, absent
+## @param status_listener_cfgs: 支持satisfied, unsatisfied
 ## cfgs为嵌套列表[[配置1],[配置2]]
-func _init(name: String, auto_reset: bool, attr_type_listener_cfgs: Array=[], attr_buff_listener_cfgs: Array=[]) -> void:
+func _init(
+        name: String, 
+        auto_reset: bool, 
+        attr_type_listener_cfgs: Array=[], 
+        attr_buff_listener_cfgs: Array=[],
+        status_listener_cfgs: Array=[]
+        ) -> void:
     _we[name] = self
     self.name = name
     self.auto_reset = auto_reset
@@ -31,6 +40,9 @@ func _init(name: String, auto_reset: bool, attr_type_listener_cfgs: Array=[], at
 
     for cfg in attr_buff_listener_cfgs:
         self._attr_buff_listeners.append(ListenType.new.callv(cfg))
+
+    for cfg in status_listener_cfgs:
+        self._status_listeners.append(ListenType.new.callv(cfg))
 
 static func get_(name: String) -> StatusType:
     return _we[name]
@@ -43,6 +55,7 @@ func listen(char_: Character) -> void:
     var listener: ListenType
     var msg_ID: String
     _trigger_funcs[char_] = {}
+    satisfied[char_] = false
 
     # ----- Type监听器 -----
     _attr_type_triggers[char_] = []
@@ -90,8 +103,6 @@ func listen(char_: Character) -> void:
             # 同样是两个监听器，上面用于监控值变化后是否满足条件，下面用于监控type被移除
             trigger_func = func(_msg): 
                 var level_cur = char_.attr.get_level_cur(listener.name)
-                # if not listener.check(level_cur):
-                #     return false
                 self._attr_type_triggers[char_][i] = listener.check(level_cur)
                 _check_and_execute(char_)
             msg_ID = MsgHubChar.listen_type_changed(char_, listener.name, trigger_func)
@@ -111,7 +122,6 @@ func listen(char_: Character) -> void:
     for i in range(_attr_buff_listeners.size()):
         trigger_cur = false
         listener = _attr_buff_listeners[i]
-        _attr_buff_triggers[char_].append(false)
         if listener.match_type in ["present", "absent"]:
             var isPresent: bool = listener.match_type == "present"
             # 获取当前buff是否满足条件
@@ -132,6 +142,33 @@ func listen(char_: Character) -> void:
 
         else:
             pass ## TODO: 报错
+        _attr_buff_triggers[char_].append(trigger_cur)
+
+    # ----- Status监听器 -----
+    _status_triggers[char_] = []
+    for i in range(_status_listeners.size()):
+        trigger_cur = false
+        listener = _status_listeners[i]
+        if listener.match_type in ["satisfied", "unsatisfied"]:
+            var isSatisfied: bool = listener.match_type == "satisfied"
+            # 获取当前status是否满足条件
+            trigger_cur = (isSatisfied == char_.status.check_satisfied(listener.name))
+            # 两个叠加的监听器用于实时监控。
+            trigger_func = func(_msg): 
+                self._status_triggers[char_][i] = isSatisfied
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_status_satisfied(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+            trigger_func = func(_msg): 
+                self._status_triggers[char_][i] = !isSatisfied
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_status_unsatisfied(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+        else:
+            pass ## TODO: 报错
+        _status_triggers[char_].append(trigger_cur)
 
     # 初始化监听器后执行一次，发送最新状态，虽然我觉得它没有用
     _check_and_execute(char_, true)
@@ -139,24 +176,29 @@ func listen(char_: Character) -> void:
 func unlisten(char_: Character) -> void:
     for msg_ID in _trigger_funcs[char_].keys():
         MsgBus.unlisten(msg_ID, _trigger_funcs[char_][msg_ID])
+    _trigger_funcs.erase(char_)
+    satisfied.erase(char_)
+    _attr_type_triggers.erase(char_)
+    _attr_buff_triggers.erase(char_)
+    
 
 func _check_and_execute(char_: Character, force: bool = false) -> bool:
-    var enabled_ori: bool = enabled
-    enabled = true
+    var enabled_ori: bool = satisfied[char_]
+    satisfied[char_] = true
     for isAllow in _attr_type_triggers[char_]:
         if not isAllow:
-            enabled = false
+            satisfied[char_] = false
     for isAllow in _attr_buff_triggers[char_]:
         if not isAllow:
-            enabled = false
+            satisfied[char_] = false
     
-    if (enabled and not enabled_ori) or force:
+    if (satisfied[char_] and not enabled_ori) or force:
         MsgHubChar.send_status_satisfied(char_, self.name)
     # unsatisfied仅对auto_reset为false的生效，例如Live不满足，意味着死亡，需要触发unsatisfied
-    elif (not enabled and enabled_ori) or force:
+    elif (not satisfied[char_] and enabled_ori) or force:
         MsgHubChar.send_status_unsatisfied(char_, self.name)
 
     if auto_reset:
-        enabled = false
+        satisfied[char_] = false
 
-    return enabled
+    return satisfied[char_]
