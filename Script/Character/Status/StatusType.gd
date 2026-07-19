@@ -11,6 +11,7 @@ var _status_listeners: Array[ListenType] = []
 var _attr_type_triggers: Dictionary[Character, Array] = {}
 var _attr_buff_triggers: Dictionary[Character, Array] = {}
 var _status_triggers: Dictionary[Character, Array] = {}
+var _init_done: Dictionary[Character, bool] = {}
 var satisfied: Dictionary[Character, bool] = {}
 
 ## 仅用于unlisten时取消对应消息接收器
@@ -56,6 +57,7 @@ func listen(char_: Character) -> void:
     var msg_ID: String
     _trigger_funcs[char_] = {}
     satisfied[char_] = false
+    _init_done[char_] = false
 
     # ----- Type监听器 -----
     _attr_type_triggers[char_] = []
@@ -145,6 +147,15 @@ func listen(char_: Character) -> void:
         _attr_buff_triggers[char_].append(trigger_cur)
 
     # ----- Status监听器 -----
+    # 等待status初始化完成
+    for i in range(_status_listeners.size()):
+        var status_type = get_(_status_listeners[i].name)
+        @warning_ignore("unsafe_method_access")
+        while (not status_type._init_done.get(char_, false)) or (char_.status == null):
+            print("等待" + char_.name + "的状态" + status_type.name + "初始化完成")
+            @warning_ignore("unsafe_property_access")
+            await Engine.get_main_loop().process_frame
+    # 开始监听
     _status_triggers[char_] = []
     for i in range(_status_listeners.size()):
         trigger_cur = false
@@ -170,6 +181,7 @@ func listen(char_: Character) -> void:
             pass ## TODO: 报错
         _status_triggers[char_].append(trigger_cur)
 
+    _init_done[char_] = true
     # 初始化监听器后执行一次，发送最新状态，虽然我觉得它没有用
     _check_and_execute(char_, true)
 
@@ -191,11 +203,14 @@ func _check_and_execute(char_: Character, force: bool = false) -> bool:
     for isAllow in _attr_buff_triggers[char_]:
         if not isAllow:
             satisfied[char_] = false
+    for isAllow in _status_triggers[char_]:
+        if not isAllow:
+            satisfied[char_] = false
     
-    if (satisfied[char_] and not enabled_ori) or force:
+    if satisfied[char_] and (not enabled_ori or force):
         MsgHubChar.send_status_satisfied(char_, self.name)
     # unsatisfied仅对auto_reset为false的生效，例如Live不满足，意味着死亡，需要触发unsatisfied
-    elif (not satisfied[char_] and enabled_ori) or force:
+    elif (not satisfied[char_]) and (enabled_ori or force):
         MsgHubChar.send_status_unsatisfied(char_, self.name)
 
     if auto_reset:

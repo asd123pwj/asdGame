@@ -8,7 +8,9 @@ static func _format_ID(char_: Character, type: String, type_name: String, action
 
 static func _send(char_: Character, type: String, type_name: String, action: String, message = "") -> Enums.Code:
     var node_ID = _format_ID(char_, type, type_name, action)
-    return send(node_ID, message)
+    if message != "":
+        return send(node_ID, message)
+    return send(node_ID, char_)
 
 static func _listen(char_: Character, type: String, type_name: String, action: String, callback: Callable) -> String:
     var node_ID = _format_ID(char_, type, type_name, action)

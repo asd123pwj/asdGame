@@ -2,6 +2,9 @@ class_name DropOnDeath
 extends RefCounted
 
 
+
+
 func _init(races: Array) -> void:
-    # for race
-    pass
+    for race in races:
+        CharSys.spawn(race)
+    

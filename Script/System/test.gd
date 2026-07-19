@@ -12,18 +12,25 @@ func _init() -> void:
 
 
 func run() -> void:
+    MsgHubSys.listen_spawn(char_spawn)
     char_A = CharSys.spawn("Human")
     char_B = CharSys.spawn("Rabbit")
     MsgHubChar.listen_status_satisfied(char_A, "Injured", char_A_injured)
     MsgHubChar.listen_status_satisfied(char_B, "Injured", char_B_injured)
-    MsgHubChar.listen_status_unsatisfied(char_A, "Live", char_A_died)
-    MsgHubChar.listen_status_unsatisfied(char_B, "Live", char_B_died)
+    # MsgHubChar.listen_status_unsatisfied(char_A, "Live", char_A_died)
+    # MsgHubChar.listen_status_unsatisfied(char_B, "Live", char_B_died)
+    MsgHubChar.listen_status_satisfied(char_A, "Dead", char_A_died)
+    MsgHubChar.listen_status_satisfied(char_B, "Dead", char_B_died)
     # MsgHubChar.listen_type_change(char_A, "Health", char_A_injured)
     # MsgHubChar.listen_type_change(char_B, "Health", char_B_injured)
     print(Sys.sysCfg.random_seed)
     # var a = char_A.attr.attrs["食_食量"].get_random_level_base_on_cur_level()
     # print(a)
+    @warning_ignore("missing_await")
     delay_loop_test()
+
+func char_spawn(char_) -> void:
+    print("角色 %s 生成" % char_.name)
 
 func char_A_injured(_msg) -> void:
     get_char_info(char_A)

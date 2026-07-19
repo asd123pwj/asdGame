@@ -62,13 +62,13 @@ static func set_level_cur(attr: Attribute, attr_type_name: String, level_new: in
         attr._level_curs[attr_type_name] = level_new
         if level_ori != level_new:
             code = Enums.Code.OK
-            MsgHubChar.send_type_changed(attr.me, attr_type_name, level_new)
+            MsgHubChar.send_type_changed(attr.me, attr_type_name)
         else:
             code = Enums.Code.NOT_MODIFIED
     else:
         if attr.get_attr_type(attr_type_name).allow_negative:
             attr._level_curs[attr_type_name] = level_new
-            MsgHubChar.send_type_changed(attr.me, attr_type_name, level_new)
+            MsgHubChar.send_type_changed(attr.me, attr_type_name)
         code = Enums.Code.FORBIDDEN
 
     return ChangeResult.new(
