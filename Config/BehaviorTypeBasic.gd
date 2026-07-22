@@ -4,5 +4,6 @@ extends ConfigBase
 """
 """
 var values: Array[Array] = [
-    ["DropOnDeath", "Dead", ["Meat", "Fur"]]
+    ["DropOnDeath", "Dead", ["Meat", "Fur"]],
+    ["Rebirth", "Dead"]
 ]

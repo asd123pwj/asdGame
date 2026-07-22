@@ -3,8 +3,8 @@ extends RefCounted
 
 
 
-
-func _init(races: Array) -> void:
+static func act(_char: Character, _config: Array) -> void:
+    var races = _config
     for race in races:
         CharSys.spawn(race)
     

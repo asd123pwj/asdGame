@@ -75,3 +75,22 @@ static func listen_status_add(char_: Character, status_name: String, callback: C
 static func listen_status_remove(char_: Character, status_name: String, callback: Callable) -> String:
     return _listen(char_, "STATUS", status_name, "remove", callback)
 
+
+""" ---------- Character Behaviors ---------- """
+static func send_behavior_add(char_: Character, behavior_name: String, message = "") -> Enums.Code:
+    return _send(char_, "BEHAVIOR", behavior_name, "add", message)
+
+static func send_behavior_remove(char_: Character, behavior_name: String, message = "") -> Enums.Code:
+    return _send(char_, "BEHAVIOR", behavior_name, "remove", message)
+
+static func send_behavior_act(char_: Character, behavior_name: String, message = "") -> Enums.Code:
+    return _send(char_, "BEHAVIOR", behavior_name, "act", message)
+
+static func listen_behavior_add(char_: Character, behavior_name: String, callback: Callable) -> String:
+    return _listen(char_, "BEHAVIOR", behavior_name, "add", callback)
+
+static func listen_behavior_remove(char_: Character, behavior_name: String, callback: Callable) -> String:
+    return _listen(char_, "BEHAVIOR", behavior_name, "remove", callback)
+
+static func listen_behavior_act(char_: Character, behavior_name: String, callback: Callable) -> String:
+    return _listen(char_, "BEHAVIOR", behavior_name, "act", callback)

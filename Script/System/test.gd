@@ -15,12 +15,14 @@ func run() -> void:
     MsgHubSys.listen_spawn(char_spawn)
     char_A = CharSys.spawn("Human")
     char_B = CharSys.spawn("Rabbit")
-    MsgHubChar.listen_status_satisfied(char_A, "Injured", char_A_injured)
-    MsgHubChar.listen_status_satisfied(char_B, "Injured", char_B_injured)
+    MsgHubChar.listen_status_satisfied(char_A, "Injured", char_injured)
+    MsgHubChar.listen_status_satisfied(char_B, "Injured", char_injured)
     # MsgHubChar.listen_status_unsatisfied(char_A, "Live", char_A_died)
     # MsgHubChar.listen_status_unsatisfied(char_B, "Live", char_B_died)
-    MsgHubChar.listen_status_satisfied(char_A, "Dead", char_A_died)
-    MsgHubChar.listen_status_satisfied(char_B, "Dead", char_B_died)
+    MsgHubChar.listen_status_satisfied(char_A, "Dead", char_died)
+    MsgHubChar.listen_status_satisfied(char_B, "Dead", char_died)
+    MsgHubChar.listen_status_satisfied(char_A, "Rebirth", char_rebirth)
+    MsgHubChar.listen_status_satisfied(char_B, "Rebirth", char_rebirth)
     # MsgHubChar.listen_type_change(char_A, "Health", char_A_injured)
     # MsgHubChar.listen_type_change(char_B, "Health", char_B_injured)
     print(Sys.sysCfg.random_seed)
@@ -32,17 +34,14 @@ func run() -> void:
 func char_spawn(char_) -> void:
     print("角色 %s 生成" % char_.name)
 
-func char_A_injured(_msg) -> void:
-    get_char_info(char_A)
+func char_injured(_msg: Character) -> void:
+    get_char_info(_msg)
 
-func char_B_injured(_msg) -> void:
-    get_char_info(char_B)
+func char_died(_msg: Character) -> void:
+    print(_msg.name + "死亡")
 
-func char_A_died(_msg) -> void:
-    print("角色1死亡")
-
-func char_B_died(_msg) -> void:
-    print("角色2死亡")
+func char_rebirth(_msg: Character) -> void:
+    print(_msg.name + "复活")
 
 func get_char_info(char_: Character) -> void:
     var info: String = char_.name
@@ -69,12 +68,15 @@ func delay_loop_test() -> void:
     for i in range(1000):
         # print("第 %d 秒" % i)   # 可选输出，便于观察进度
         Sys.timeSys.advance()
-        if attack(char_A, char_B) == Enums.Code.FORBIDDEN:
-            break
-        if attack(char_B, char_A) == Enums.Code.FORBIDDEN:
-            break
+        attack(char_A, char_B)
+        attack(char_B, char_A)
+        # if attack(char_A, char_B) == Enums.Code.FORBIDDEN:
+        #     break
+        # if attack(char_B, char_A) == Enums.Code.FORBIDDEN:
+            # break
 
         await Sys.sys.get_tree().create_timer(1.0).timeout
 
 func when_time_advance(_msg: Variant) -> void:
+    print("===================================")
     print(TimeFormat.year + TimeFormat.month + TimeFormat.day + TimeFormat.hour)

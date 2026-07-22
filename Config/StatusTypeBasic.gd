@@ -13,10 +13,14 @@ attr_buff_listener_cfgs: Array[Array[ListenType]]=[],
 status_listener_cfgs: Array[Array[ListenType]]=[]
     [["name", "condition"], ["name", "condition"]]
     condition: satisfied, unsatisfied
+behavior_listener_cfgs: Array[Array[ListenType]]=[]
+    [["name", "condition"], ["name", "condition"]]
+    condition: satisfied, unsatisfied, act
 """
 
 var values: Array[Array] = [
     ["Live", false, [["Health", ">", 0]]],
     ["Injured", true, [["Health", "changed"]]],
-    ["Dead", false, [], [], [["Live", "unsatisfied"]]]
+    ["Dead", false, [], [], [["Live", "unsatisfied"]]],
+    ["Rebirth", true, [], [], [], [["Rebirth", "act"]]]
 ]

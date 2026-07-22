@@ -6,11 +6,13 @@ var name: String
 ## 为true时，每次变化完后自动重置，例如受伤后，发送一次受伤通知，然后恢复为未受伤
 var auto_reset: bool
 var _attr_type_listeners: Array[ListenType] = []
-var _attr_buff_listeners: Array[ListenType] = []
-var _status_listeners: Array[ListenType] = []
 var _attr_type_triggers: Dictionary[Character, Array] = {}
+var _attr_buff_listeners: Array[ListenType] = []
 var _attr_buff_triggers: Dictionary[Character, Array] = {}
+var _status_listeners: Array[ListenType] = []
 var _status_triggers: Dictionary[Character, Array] = {}
+var _behavior_listeners: Array[ListenType] = []
+var _behavior_triggers: Dictionary[Character, Array] = {}
 var _init_done: Dictionary[Character, bool] = {}
 var satisfied: Dictionary[Character, bool] = {}
 
@@ -24,13 +26,15 @@ static var _we: Dictionary[String, StatusType] = {}
 ## @param attr_type_listener_cfgs: 支持present, absent, changed, >, >=, <, <=, ==, !=
 ## @param attr_buff_listener_cfgs: 支持present, absent
 ## @param status_listener_cfgs: 支持satisfied, unsatisfied
+## @param behavior_listener_cfgs: 支持present, absent, act
 ## cfgs为嵌套列表[[配置1],[配置2]]
 func _init(
         name: String, 
         auto_reset: bool, 
         attr_type_listener_cfgs: Array=[], 
         attr_buff_listener_cfgs: Array=[],
-        status_listener_cfgs: Array=[]
+        status_listener_cfgs: Array=[],
+        behavior_listener_cfgs: Array=[]
         ) -> void:
     _we[name] = self
     self.name = name
@@ -44,6 +48,9 @@ func _init(
 
     for cfg in status_listener_cfgs:
         self._status_listeners.append(ListenType.new.callv(cfg))
+
+    for cfg in behavior_listener_cfgs:
+        self._behavior_listeners.append(ListenType.new.callv(cfg))
 
 static func get_(name: String) -> StatusType:
     return _we[name]
@@ -181,6 +188,50 @@ func listen(char_: Character) -> void:
             pass ## TODO: 报错
         _status_triggers[char_].append(trigger_cur)
 
+    # ----- Behavior监听器 -----
+    _behavior_triggers[char_] = []
+    for i in range(_behavior_listeners.size()):
+        trigger_cur = false
+        listener = _behavior_listeners[i]
+        if listener.match_type in ["present", "absent"]:
+            var isPresent: bool = listener.match_type == "present"
+            # 获取当前behavior是否满足条件
+            trigger_cur = (isPresent == char_.behavior.check_behavior(listener.name))
+            # 两个叠加的监听器用于实时监控。
+            trigger_func = func(_msg): 
+                _behavior_triggers[char_][i] = isPresent
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_behavior_add(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+            trigger_func = func(_msg): 
+                _behavior_triggers[char_][i] = !isPresent
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_behavior_remove(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+    
+        elif listener.match_type == "act":
+            trigger_cur = false 
+            # 类似attr_type的changed
+            trigger_func = func(_msg): 
+                self._behavior_triggers[char_][i] = true
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_behavior_act(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+            trigger_func = func(_msg): 
+                self._behavior_triggers[char_][i] = false;
+                _check_and_execute(char_)
+            msg_ID = MsgHubChar.listen_behavior_remove(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+
+        else:
+            pass ## TODO: 报错
+        _behavior_triggers[char_].append(trigger_cur)
+
+
+
     _init_done[char_] = true
     # 初始化监听器后执行一次，发送最新状态，虽然我觉得它没有用
     _check_and_execute(char_, true)
@@ -192,18 +243,32 @@ func unlisten(char_: Character) -> void:
     satisfied.erase(char_)
     _attr_type_triggers.erase(char_)
     _attr_buff_triggers.erase(char_)
+    _status_triggers.erase(char_)
+    _behavior_triggers.erase(char_)
+    _init_done.erase(char_)
     
 
 func _check_and_execute(char_: Character, force: bool = false) -> bool:
     var enabled_ori: bool = satisfied[char_]
     satisfied[char_] = true
     for isAllow in _attr_type_triggers[char_]:
+        if not satisfied[char_]:
+            break
         if not isAllow:
             satisfied[char_] = false
     for isAllow in _attr_buff_triggers[char_]:
+        if not satisfied[char_]:
+            break
         if not isAllow:
             satisfied[char_] = false
     for isAllow in _status_triggers[char_]:
+        if not satisfied[char_]:
+            break
+        if not isAllow:
+            satisfied[char_] = false
+    for isAllow in _behavior_triggers[char_]:
+        if not satisfied[char_]:
+            break
         if not isAllow:
             satisfied[char_] = false
     

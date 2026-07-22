@@ -78,16 +78,6 @@ func remove_attr_buffs(attr_buff_names: Array[String]) -> Array[Enums.Code]:
         codes.append(remove_attr_buff(attr_buff_name))
     return codes
 
-# func remove_attr_buff(attr_buff_name: String) -> Enums.Code:
-#     var attr_buff = AttributeBuff.new_.call([attr_buff_name])
-#     if attr_buffs.has(attr_buff.attr_type_name):
-#         if attr_buffs[attr_buff.attr_type_name].has(attr_buff.impact_type):
-#             @warning_ignore("unsafe_method_access")
-#             if attr_buffs[attr_buff.attr_type_name][attr_buff.impact_type].has(attr_buff_name):
-#                 @warning_ignore("unsafe_method_access")
-#                 attr_buffs[attr_buff.attr_type_name][attr_buff.impact_type].erase(attr_buff_name)
-#                 return Enums.Code.OK
-#     return Enums.Code.NOT_MODIFIED
 func remove_attr_buff(attr_buff_name: String) -> Enums.Code:
     var attr_buff = AttributeBuff.get_(attr_buff_name)
     var impact_dict = Utils.find_dict(attr_buffs, attr_buff.attr_type_name, attr_buff.impact_type)
@@ -101,11 +91,6 @@ func remove_attr_buff(attr_buff_name: String) -> Enums.Code:
 
 func get_attr_buffs(attr_type_name: String, impact_type: Enums.ValueType) -> Dictionary:
     return Utils.find_dict(attr_buffs, attr_type_name, impact_type)
-
-    # if attr_buffs.has(attr_type_name):
-    #     if attr_buffs[attr_type_name].has(impact_type):
-    #         return attr_buffs[attr_type_name][impact_type]
-    # return {}
 
 func check_attr_buff(attr_buff_name: String) -> bool:
     var attr_buff = AttributeBuff.get_(attr_buff_name)

@@ -14,14 +14,14 @@ var values: Array[Array] = [
         "Human",
         ["Attack", "Defense", "Health",],
         [],
-        ["Live", "Injured", "Dead"]
+        ["Live", "Injured", "Dead", "Rebirth"]
     ],
     [
         "Rabbit",
         ["Attack", "Defense", "Health",],
         ["Base Attack -1", "Base Defense -1",],
-        ["Live", "Injured", "Dead"],
-        ["DropOnDeath"]
+        ["Live", "Injured", "Dead", "Rebirth"],
+        ["DropOnDeath", "Rebirth"]
     ],
     [
         "Meat",
