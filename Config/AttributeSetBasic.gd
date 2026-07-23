@@ -6,14 +6,14 @@ extends ConfigBase
 ## name_index = [0, 1]时 "value[0][0] | value[0][1]"为value[0]名称
 # var name_index = [0] 
 var values: Array[Array] = [
-    [
-        "Human A",
-        ["Attack", "Defense", "Health",],
-        []
-    ],
-    [
-        "Rabbit",
-        ["Attack", "Defense", "Health",],
-        ["Base Attack -3", "Base Defense -3",]
-    ],
+    # [
+    #     "Human A",
+    #     ["Strength", "Defense", "Health",],
+    #     []
+    # ],
+    # [
+    #     "Rabbit",
+    #     ["Strength", "Defense", "Health",],
+    #     ["Base Attack -3", "Base Defense -3",]
+    # ],
 ]

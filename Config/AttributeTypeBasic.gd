@@ -9,7 +9,7 @@ level_min: int = INT64_MIN,
 allow_negative: bool = true 
 """
 var values: Array[Array] = [
-    ["Attack", 3, 10],
+    ["Strength", 3, 10],
     ["Defense", 3, 10],
     ["Health", 3, 10, 0]
 ]

@@ -1,4 +1,4 @@
-class_name Behavior
+class_name Behaviors
 extends RefCounted
 
 
@@ -41,7 +41,7 @@ func remove_behavior(behavior_name: String) -> Enums.Code:
 func check_behavior(behavior_name: String) -> bool:
     return behaviors.has(behavior_name)
 
-# func get_behavior(behavior_name: String) -> Behavior:
+# func get_behavior(behavior_name: String) -> Behaviors:
 #     if not behavior_name in self.behaviors:
 #         return null
 #     return self.me.get_behavior(behavior_name)

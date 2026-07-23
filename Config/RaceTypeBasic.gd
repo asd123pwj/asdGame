@@ -12,27 +12,30 @@ behaviors: Array[String]=[]
 var values: Array[Array] = [
     [
         "Human",
-        ["Attack", "Defense", "Health",],
+        ["Strength", "Defense", "Health",],
         [],
-        ["Live", "Injured", "Dead", "Rebirth"]
+        ["Live", "Injured", "Dead", "Rebirth", "Touch"],
+        [],
+        ["Attack"]
     ],
     [
         "Rabbit",
-        ["Attack", "Defense", "Health",],
-        ["Base Attack -1", "Base Defense -1",],
-        ["Live", "Injured", "Dead", "Rebirth"],
-        ["DropOnDeath", "Rebirth"]
+        ["Strength", "Defense", "Health",],
+        ["Base Strength -1", "Base Defense -1",],
+        ["Live", "Injured", "Dead", "Rebirth", "Touch"],
+        ["DropOnDeath", "Rebirth"],
+        ["Attack"]
     ],
     [
         "Meat",
-        ["Attack", "Defense", "Health",],
-        ["Base Attack -1", "Base Defense -1",],
+        ["Strength", "Defense", "Health",],
+        ["Base Strength -1", "Base Defense -1",],
         ["Live", "Injured", "Dead"]
     ],
     [
         "Fur",
-        ["Attack", "Defense", "Health",],
-        ["Base Attack -1", "Base Defense -1",],
+        ["Strength", "Defense", "Health",],
+        ["Base Strength -1", "Base Defense -1",],
         ["Live", "Injured", "Dead"]
     ],
 ]

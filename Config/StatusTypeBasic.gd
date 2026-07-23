@@ -16,11 +16,14 @@ status_listener_cfgs: Array[Array[ListenType]]=[]
 behavior_listener_cfgs: Array[Array[ListenType]]=[]
     [["name", "condition"], ["name", "condition"]]
     condition: satisfied, unsatisfied, act
+with_detect: bool=false
+    为true时，需要send_status_detected发送信号来检测，
 """
 
 var values: Array[Array] = [
     ["Live", false, [["Health", ">", 0]]],
     ["Injured", true, [["Health", "changed"]]],
     ["Dead", false, [], [], [["Live", "unsatisfied"]]],
-    ["Rebirth", true, [], [], [], [["Rebirth", "act"]]]
+    ["Rebirth", true, [], [], [], [["Rebirth", "act"]]],
+    ["Touch", true, [], [], [], [], true]
 ]

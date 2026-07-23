@@ -1,4 +1,4 @@
-class_name Attribute
+class_name Attributes
 extends RefCounted
 
 var me: Character

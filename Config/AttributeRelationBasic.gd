@@ -10,5 +10,5 @@ isMax: bool,
 isMyself: bool = false
 """
 var values: Array[Array] = [
-    ["Attack", "Defense", "Health", false, true, false],
+    ["Strength", "Defense", "Health", false, true, false],
 ]

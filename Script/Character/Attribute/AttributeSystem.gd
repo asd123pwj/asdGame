@@ -18,9 +18,9 @@ static func impact(
         有影响者A，比较对象B，受影响者C 
         基于当前值进行影响
     """
-    var attr_A = char_A.attr
-    var attr_B = char_B.attr
-    var attr_C := char_C.attr
+    var attr_A = char_A.attrs
+    var attr_B = char_B.attrs
+    var attr_C := char_C.attrs
 
     var level_cur_C = attr_C.get_level_cur(attr_type_name_C)
 
@@ -54,7 +54,7 @@ static func impact(
     
 ## 设置当前等级
 ## @param level_new: 新等级
-static func set_level_cur(attr: Attribute, attr_type_name: String, level_new: int) -> ChangeResult:
+static func set_level_cur(attr: Attributes, attr_type_name: String, level_new: int) -> ChangeResult:
     var level_ori = attr.get_level_cur(attr_type_name)
     var level_offset = level_new - level_ori
     var code: Enums.Code

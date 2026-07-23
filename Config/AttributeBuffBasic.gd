@@ -9,12 +9,12 @@ impact_type: Enums.ValueType
 
 """
 var values: Array[Array] = [
-    ["Base Attack +1", "Attack", 1, Enums.ValueType.BASE],
-    ["Base Attack +2", "Attack", 2, Enums.ValueType.BASE],
-    ["Base Attack +3", "Attack", 3, Enums.ValueType.BASE],
-    ["Base Attack -1", "Attack", -1, Enums.ValueType.BASE],
-    ["Base Attack -2", "Attack", -2, Enums.ValueType.BASE],
-    ["Base Attack -3", "Attack", -3, Enums.ValueType.BASE],
+    ["Base Strength +1", "Strength", 1, Enums.ValueType.BASE],
+    ["Base Strength +2", "Strength", 2, Enums.ValueType.BASE],
+    ["Base Strength +3", "Strength", 3, Enums.ValueType.BASE],
+    ["Base Strength -1", "Strength", -1, Enums.ValueType.BASE],
+    ["Base Strength -2", "Strength", -2, Enums.ValueType.BASE],
+    ["Base Strength -3", "Strength", -3, Enums.ValueType.BASE],
     
     ["Base Defense +1", "Defense", 1, Enums.ValueType.BASE],
     ["Base Defense +2", "Defense", 2, Enums.ValueType.BASE],
