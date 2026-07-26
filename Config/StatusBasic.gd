@@ -1,4 +1,4 @@
-class_name StatusTypeBasic
+class_name StatusBasic
 extends ConfigBase
 
 """
@@ -6,7 +6,7 @@ name: String,
 auto_reset: bool, 
 attr_type_listener_cfgs: Array[Array[ListenType]]=[]   
     [["name", "condition", value], ["name", "condition", value]]
-    condition: present, absent, changed, >, >=, <, <=, ==, !=
+    condition: changed, not_modified, out_of_limited, >, >=, <, <=, ==, !=
 attr_buff_listener_cfgs: Array[Array[ListenType]]=[],
     [["name", "condition"], ["name", "condition"]]
     condition: present, absent
@@ -21,9 +21,9 @@ with_detect: bool=false
 """
 
 var values: Array[Array] = [
-    ["Live", false, [["Health", ">", 0]]],
+    ["Dead", false, [["Health", "over_limit"]], [], []],
+    ["Live", false, [], [], [["Dead", "unsatisfied"]]],
     ["Injured", true, [["Health", "changed"]]],
-    ["Dead", false, [], [], [["Live", "unsatisfied"]]],
     ["Rebirth", true, [], [], [], [["Rebirth", "act"]]],
     ["Touch", true, [], [], [], [], true]
 ]

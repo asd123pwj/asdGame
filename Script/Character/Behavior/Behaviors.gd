@@ -3,7 +3,7 @@ extends RefCounted
 
 
 var me: Character
-var behaviors: Dictionary[String, BehaviorType] = {}
+var behaviors: Dictionary[String, Behavior] = {}
 
 func _init(me: Character, behavior_name: Array[String]) -> void:
     self.me = me
@@ -18,7 +18,7 @@ func add_behaviors(behavior_name: Array[String]) -> Array[Enums.Code]:
 func add_behavior(behavior_name: String) -> Enums.Code:
     if behavior_name in behaviors:
         return Enums.Code.NOT_MODIFIED
-    var behavior = BehaviorType.get_(behavior_name)
+    var behavior = Behavior.get_(behavior_name)
     behaviors[behavior_name] = behavior
     behavior.listen(me)
     MsgHubChar.send_behavior_add(me, behavior_name)

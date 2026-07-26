@@ -1,4 +1,4 @@
-class_name StatusType
+class_name Status
 extends PresetRegister
 
 
@@ -23,9 +23,9 @@ var satisfied: Dictionary[Character, bool] = {}
 var _trigger_funcs: Dictionary[Character, Dictionary] = {}
 
 # static var new_: Callable
-static var _we: Dictionary[String, StatusType] = {}
+static var _we: Dictionary[String, Status] = {}
 
-## @param attr_type_listener_cfgs: 支持present, absent, changed, >, >=, <, <=, ==, !=
+## @param attr_type_listener_cfgs: 支持changed, over_limit, within_limit, >, >=, <, <=, ==, !=
 ## @param attr_buff_listener_cfgs: 支持present, absent
 ## @param status_listener_cfgs: 支持satisfied, unsatisfied
 ## @param behavior_listener_cfgs: 支持present, absent, act
@@ -58,7 +58,7 @@ func _init(
 
     self.with_detect = with_detect
 
-static func get_(name: String) -> StatusType:
+static func get_(name: String) -> Status:
     return _we[name]
 
 ## 在Status添加后，使用listen监听角色
@@ -77,57 +77,66 @@ func listen(char_: Character) -> void:
     for i in range(_attr_type_listeners.size()):
         trigger_cur = false
         listener = _attr_type_listeners[i]
-        if listener.match_type in ["present", "absent"]:
-            var isPresent: bool = listener.match_type == "present"
-            # 获取当前type是否满足条件
-            trigger_cur = (isPresent == char_.attrs.check_attr_type(listener.name))
-            # 两个叠加的监听器用于实时监控。
-            # 如果match_type是present，那么在type添加/移除时触发器为真/假，absent相反
-            trigger_func = func(_msg): 
-                self._attr_type_triggers[char_][i] = isPresent
-                execute(char_)
-            msg_ID = MsgHubChar.listen_type_add(char_, listener.name, trigger_func)
-            _trigger_funcs[char_][msg_ID] = trigger_func
+        # if listener.match_type in ["present", "absent"]:
+        #     var isPresent: bool = listener.match_type == "present"
+        #     # 获取当前type是否满足条件
+        #     trigger_cur = (isPresent == char_.attrs.check_attr_type(listener.name))
+        #     # 两个叠加的监听器用于实时监控。
+        #     # 如果match_type是present，那么在type添加/移除时触发器为真/假，absent相反
+        #     trigger_func = func(_msg): 
+        #         self._attr_type_triggers[char_][i] = isPresent
+        #         execute(char_)
+        #     msg_ID = MsgHubChar.listen_type_add(char_, listener.name, trigger_func)
+        #     _trigger_funcs[char_][msg_ID] = trigger_func
             
-            trigger_func = func(_msg): 
-                self._attr_type_triggers[char_][i] = !isPresent
-                execute(char_)
-            msg_ID = MsgHubChar.listen_type_remove(char_, listener.name, trigger_func)
-            _trigger_funcs[char_][msg_ID] = trigger_func
+        #     trigger_func = func(_msg): 
+        #         self._attr_type_triggers[char_][i] = !isPresent
+        #         execute(char_)
+        #     msg_ID = MsgHubChar.listen_type_remove(char_, listener.name, trigger_func)
+        #     _trigger_funcs[char_][msg_ID] = trigger_func
 
-        elif listener.match_type == "changed":
-            # 获取当前type是否满足条件
+        if listener.match_type == "changed":
+            # 初始未改变
             trigger_cur = false 
             # 同样是两个监听器，上面用于监控值变化，下面用于监控type被移除
             trigger_func = func(_msg): 
                 self._attr_type_triggers[char_][i] = true
                 execute(char_)
-            msg_ID = MsgHubChar.listen_type_changed(char_, listener.name, trigger_func)
+            msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
+        # elif listener.match_type == "not_modified":
+        #     # 初始时未触发，not_modified为触发后发现值不变，初始时未触发所以false
+        #     trigger_cur = false 
+        #     # 同样是两个监听器，上面用于监控值变化，下面用于监控type被移除
+        #     trigger_func = func(_msg): 
+        #         self._attr_type_triggers[char_][i] = true
+        #         execute(char_)
+        #     msg_ID = MsgHubChar.listen_attr_not_modified(char_, listener.name, trigger_func)
+        #     _trigger_funcs[char_][msg_ID] = trigger_func
+
+        elif listener.match_type in ["over_limit", "within_limit"]:
+            # 获取当前type是否满足条件
+            trigger_cur = char_.attrs.check_limitation(listener.name) == (listener.match_type == "within_limit")
+            # 同样是两个监听器，上面用于监控值变化，下面用于监控type被移除
             trigger_func = func(_msg): 
-                self._attr_type_triggers[char_][i] = false;
+                self._attr_type_triggers[char_][i] = char_.attrs.check_limitation(listener.name) == (listener.match_type == "within_limit")
                 execute(char_)
-            msg_ID = MsgHubChar.listen_type_remove(char_, listener.name, trigger_func)
+            msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type in [">", ">=", "<", "<=", "==", "!="]:
             # 获取当前type是否满足条件
-            if char_.attrs.check_attr_type(listener.name):
-                trigger_cur = listener.check(char_.attrs.get_level_cur(listener.name))
+            # if char_.attrs.check_attr_type(listener.name):
+            trigger_cur = listener.check(char_.attrs.get_(listener.name))
             # 同样是两个监听器，上面用于监控值变化后是否满足条件，下面用于监控type被移除
             trigger_func = func(_msg): 
-                var level_cur = char_.attrs.get_level_cur(listener.name)
+                var level_cur = char_.attrs.get_(listener.name)
                 self._attr_type_triggers[char_][i] = listener.check(level_cur)
                 execute(char_)
-            msg_ID = MsgHubChar.listen_type_changed(char_, listener.name, trigger_func)
+            msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
             
-            trigger_func = func(_msg): 
-                self._attr_type_triggers[char_][i] = false;
-                execute(char_)
-            msg_ID = MsgHubChar.listen_type_remove(char_, listener.name, trigger_func)
-            _trigger_funcs[char_][msg_ID] = trigger_func
         else:
             pass ## TODO: 报错
         _attr_type_triggers[char_].append(trigger_cur)
@@ -140,7 +149,7 @@ func listen(char_: Character) -> void:
         if listener.match_type in ["present", "absent"]:
             var isPresent: bool = listener.match_type == "present"
             # 获取当前buff是否满足条件
-            trigger_cur = (isPresent == char_.attrs.check_attr_buff(listener.name))
+            trigger_cur = (isPresent == char_.attrs.check_buff(listener.name))
             # 两个叠加的监听器用于实时监控。
             trigger_func = func(_msg): 
                 self._attr_buff_triggers[char_][i] = isPresent

@@ -21,27 +21,14 @@ static func _get_message(char_: Character, type: String, type_name: String, acti
     return get_message(node_ID)
 
 
-""" ---------- Attributes Type ---------- """
-static func send_type_add(char_: Character, type_name: String) -> Enums.Code:
-    return _send(char_, "TYPE", type_name, "add")
-    
-static func send_type_remove(char_: Character, type_name: String) -> Enums.Code:
-    return _send(char_, "TYPE", type_name, "remove")
+""" ---------- Attributes ---------- """
+static func send_attr_changed(char_: Character, type_name: String) -> Enums.Code:
+    return _send(char_, "ATTR", type_name, "changed")
 
-static func send_type_changed(char_: Character, type_name: String) -> Enums.Code:
-    return _send(char_, "TYPE", type_name, "change")
+static func listen_attr_changed(char_: Character, type_name: String, callback: Callable) -> String:
+    return _listen(char_, "ATTR", type_name, "changed", callback)
 
-static func listen_type_add(char_: Character, type_name: String, callback: Callable) -> String:
-    return _listen(char_, "TYPE", type_name, "add", callback)
-
-static func listen_type_remove(char_: Character, type_name: String, callback: Callable) -> String:
-    return _listen(char_, "TYPE", type_name, "remove", callback)
-
-static func listen_type_changed(char_: Character, type_name: String, callback: Callable) -> String:
-    return _listen(char_, "TYPE", type_name, "change", callback)
-
-    
-""" ---------- Attributes Buff ---------- """
+""" ---------- Buff ---------- """
 static func send_buff_add(char_: Character, buff_name: String) -> Enums.Code:
     return _send(char_, "BUFF", buff_name, "add")
 

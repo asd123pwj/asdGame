@@ -3,7 +3,7 @@ extends RefCounted
 
 
 var me: Character
-var interactions: Dictionary[String, InteractionType] = {}
+var interactions: Dictionary[String, Interaction] = {}
 
 func _init(me: Character, interactions_name: Array[String]) -> void:
     self.me = me
@@ -18,7 +18,7 @@ func add_interactions(interactions_name: Array[String]) -> Array[Enums.Code]:
 func add_interaction(interaction_name: String) -> Enums.Code:
     if interaction_name in interactions:
         return Enums.Code.NOT_MODIFIED
-    var interaction = InteractionType.get_(interaction_name)
+    var interaction = Interaction.get_(interaction_name)
     interactions[interaction_name] = interaction
     interaction.listen(me)
     MsgHubChar.send_interaction_add(me, interaction_name)

@@ -1,18 +1,47 @@
-class_name AttributeTypeBasic
+class_name BuffBasic
 extends ConfigBase
 
 """
 name: String,
-level_base: int, 
-multiplier: int,
-level_min: int = INT64_MIN,
-allow_negative: bool = true 
+category: String,
+value_type: Enums.ValueType,
+value: int,
+method: Enums.ModificationMethod = Enums.ModificationMethod.ADD
+    ADD, SUBTRACT, MULTIPLY, DIVIDE, SET
 """
 var values: Array[Array] = [
-    ["Strength", 3, 10],
-    ["Defense", 3, 10],
-    ["Health", 3, 10, 0]
+    # ["Strength Base Base", "Strength", Enums.ValueType.BASE, 3],
+    ["Strength Multiplier =10", "Strength", Enums.ValueType.MULTIPLIER, 10, Enums.ModificationMethod.SET],
+    # ["Defense Base", "Defense", Enums.ValueType.BASE, 3],
+    ["Defense Multiplier =10", "Defense", Enums.ValueType.MULTIPLIER, 10, Enums.ModificationMethod.SET],
+    # ["Health Base", "Health", Enums.ValueType.BASE, 3],
+    ["Health Multiplier =10", "Health", Enums.ValueType.MULTIPLIER, 10, Enums.ModificationMethod.SET],
+    ["人被杀就会死", "Health", Enums.ValueType.MIN, 0, Enums.ModificationMethod.SET],
+
+    ["Strength Base +1", "Strength", Enums.ValueType.BASE, 1],
+    ["Strength Base +2", "Strength", Enums.ValueType.BASE, 2],
+    ["Strength Base +3", "Strength", Enums.ValueType.BASE, 3],
+    ["Strength Base -1", "Strength", Enums.ValueType.BASE, -1],
+    ["Strength Base -2", "Strength", Enums.ValueType.BASE, -2],
+    ["Strength Base -3", "Strength", Enums.ValueType.BASE, -3],
+    
+    ["Defense Base +1", "Defense", Enums.ValueType.BASE, 1],
+    ["Defense Base +2", "Defense", Enums.ValueType.BASE, 2],
+    ["Defense Base +3", "Defense", Enums.ValueType.BASE, 3],
+    ["Defense Base -1", "Defense", Enums.ValueType.BASE, -1],
+    ["Defense Base -2", "Defense", Enums.ValueType.BASE, -2],
+    ["Defense Base -3", "Defense", Enums.ValueType.BASE, -3],
+
+    ["Health Base +1", "Health", Enums.ValueType.BASE, 1],
+    ["Health Base +2", "Health", Enums.ValueType.BASE, 2],
+    ["Health Base +3", "Health", Enums.ValueType.BASE, 3],
+    ["Health Base -1", "Health", Enums.ValueType.BASE, -1],
+    ["Health Base -2", "Health", Enums.ValueType.BASE, -2],
+    ["Health Base -3", "Health", Enums.ValueType.BASE, -3],
 ]
+#     ["Defense", 3, 10],
+#     ["Health", 3, 10, 0]
+# ]
 
 
 

@@ -14,8 +14,8 @@ func _init(race_name: String, name: String="") -> void:
     _init_as_race(race_name)
 
 func _init_as_race(race_name: String) -> void:
-    var race_type: RaceType = RaceType.get_(race_name)
-    attrs = Attributes.new(self, race_type.types, race_type.buffs)
+    var race_type: Race = Race.get_(race_name)
+    attrs = Attributes.new(self, race_type.buffs)
     statuses = Statuses.new(self, race_type.statuses)
     behaviors = Behaviors.new(self, race_type.behaviors)
     interactions = Interactions.new(self, race_type.interactions)

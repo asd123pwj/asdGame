@@ -13,5 +13,14 @@ enum ValueType {
     BASE,
     CUR,
     MIN,
-    FINAL
+    FINAL,
+    MULTIPLIER
+}
+
+enum ModificationMethod {
+    ADD,
+    SUBTRACT,
+    MULTIPLY,
+    DIVIDE,
+    SET
 }

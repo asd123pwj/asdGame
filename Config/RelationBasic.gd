@@ -1,4 +1,4 @@
-class_name  AttributeRelationBasic 
+class_name  RelationBasic 
 extends ConfigBase
 
 """

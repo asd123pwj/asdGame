@@ -39,8 +39,8 @@ func char_rebirth(_msg: Character) -> void:
 
 func get_char_info(char_: Character) -> void:
     var info: String = char_.name
-    for attr_type_name in char_.attrs.attr_types.keys():
-        info += " %s: %d" % [attr_type_name, char_.attrs.get_level_cur(attr_type_name)]
+    for attr_type_name in char_.attrs.attributes.keys():
+        info += " %s: %d" % [attr_type_name, char_.attrs.get_(attr_type_name)]
     print(info)
 
 
@@ -50,16 +50,14 @@ func delay_loop_test() -> void:
     get_char_info(char_B)
     
     for i in range(1000):
-        # print("第 %d 秒" % i)   # 可选输出，便于观察进度
-
         await Sys.sys.get_tree().create_timer(1.0).timeout
         Sys.timeSys.advance()
-        if RandSys.rand.randi_range(0, 3) == 0:
+        if RandSys.rand.randi_range(0, 1) == 0:
             print("A触摸B")
             MsgHubChar.send_status_detected(char_A, "Touch", char_B)
-        if RandSys.rand.randi_range(0, 3) == 0:
-            print("B触摸A")
-            MsgHubChar.send_status_detected(char_B, "Touch", char_A)
+        # if RandSys.rand.randi_range(0, 3) == 0:
+        #     print("B触摸A")
+        #     MsgHubChar.send_status_detected(char_B, "Touch", char_A)
 
 func when_time_advance(_msg: Variant) -> void:
     print("===================================")
