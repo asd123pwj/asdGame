@@ -52,6 +52,8 @@ func check_buff(buff_name: String) -> bool:
     var buff = Buff.get_(buff_name)
     return Utils.find_dict(buffs, [buff.category, buff.value_type, buff.name], null) != null
 
+func check_attribute(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR) -> bool:
+    return Utils.find_dict(attributes, [category, impact_type], null) != null
 
 func init_attribute(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR) -> int:
     var value: int
@@ -64,8 +66,8 @@ func init_attribute(category: String, impact_type: Enums.ValueType = Enums.Value
         # 其它值的基准值从世界默认值开始叠加
         value = Sys.sysCfg.dao_init_value[impact_type]
     var dict: Dictionary = Utils.find_dict(buffs, [category, impact_type], {})
-    for attr: Buff in dict.values() as Array[Buff]:
-        value = attr.apply(value)
+    for buff: Buff in dict.values():
+        value = buff.apply(value, me)
     _set_(category, value, impact_type)
     return value
 

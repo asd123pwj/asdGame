@@ -5,7 +5,8 @@ extends ConfigBase
 name: String,
 category: String,
 value_type: Enums.ValueType,
-value: int,
+value: int | String
+    为String时，取char_.attrs.get_(value)的值，value需属于任一category
 method: Enums.ModificationMethod = Enums.ModificationMethod.ADD
     ADD, SUBTRACT, MULTIPLY, DIVIDE, SET
 """
@@ -17,6 +18,9 @@ var values: Array[Array] = [
     # ["Health Base", "Health", Enums.ValueType.BASE, 3],
     ["Health Multiplier =10", "Health", Enums.ValueType.MULTIPLIER, 10, Enums.ModificationMethod.SET],
     ["人被杀就会死", "Health", Enums.ValueType.MIN, 0, Enums.ModificationMethod.SET],
+
+    ["生命源于力量 Base", "Health", Enums.ValueType.BASE, "Strength"],
+    ["力量源于生命 Base", "Strength", Enums.ValueType.BASE, "Health"],
 
     ["Strength Base +1", "Strength", Enums.ValueType.BASE, 1],
     ["Strength Base +2", "Strength", Enums.ValueType.BASE, 2],

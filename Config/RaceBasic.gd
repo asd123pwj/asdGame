@@ -22,8 +22,9 @@ var values: Array[Array] = [
     [
         "Rabbit",
         # ["Strength", "Defense", "Health",],
-        ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
-        ["Dead", "Live", "Injured", "Rebirth", "Touch"],
+        ["Strength Base +2", "Defense Base +2", "Health Base +3", 
+         "人被杀就会死", "生命源于力量 Base", "力量源于生命 Base"],
+        ["Live", "Dead", "Injured", "Rebirth", "Touch"],
         ["DropOnDeath", "Rebirth"],
         ["Attack"]
     ],

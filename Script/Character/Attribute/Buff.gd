@@ -7,7 +7,7 @@ extends PresetRegister
 var name: String
 var category: String
 var value_type: Enums.ValueType
-var value: int
+var value #: int | String
 var method: Enums.ModificationMethod
 
 
@@ -21,7 +21,7 @@ func _init(
         name: String,
         category: String,
         value_type: Enums.ValueType,
-        value: int,
+        value,#: int | String
         method: Enums.ModificationMethod = Enums.ModificationMethod.ADD
         ) -> void:
     _we[name] = self
@@ -34,18 +34,27 @@ func _init(
 static func get_(name: String) -> Buff:
     return _we[name]
 
-func apply(value: int) -> int:
+func apply(value: int, char_: Character) -> int:
+    var value_offset: int
+    match typeof(self.value):
+        TYPE_INT:
+            value_offset = self.value
+        TYPE_STRING:
+            if char_.attrs == null or (not char_.attrs.check_attribute(self.value)):
+                value_offset = 0
+            else:
+                value_offset = char_.attrs.get_(self.value)
     if method == Enums.ModificationMethod.ADD:
-        return self.value + value
+        return value + value_offset
     elif method == Enums.ModificationMethod.SUBTRACT:
-        return self.value - value
+        return value - value_offset
     elif method == Enums.ModificationMethod.MULTIPLY:
-        return self.value * value
+        return value * value_offset
     elif method == Enums.ModificationMethod.DIVIDE:
         @warning_ignore("integer_division")
-        return self.value / value
+        return value / value_offset
     elif method == Enums.ModificationMethod.SET:
-        return self.value
+        return value_offset
     else:
-        return self.value
+        return value_offset
 
