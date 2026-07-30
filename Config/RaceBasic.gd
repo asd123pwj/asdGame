@@ -7,37 +7,79 @@ name: String,
 buffs: Array[String]=[], 
 statuses: Array[String]=[],
 behaviors: Array[String]=[],
-interactions: Array[String]=[]
+interactions: Array[String]=[],
+bodies: Array[String]=[],
 """
 
-var values: Array[Array] = [
-    [
-        "Human",
-        # ["Strength", "Defense", "Health",],
-        ["Strength Base +3", "Defense Base +3", "Health Base +3", "人被杀就会死"],
-        ["Dead", "Live", "Injured", "Rebirth", "Touch"],
-        [],
-        ["Attack"]
-    ],
-    [
-        "Rabbit",
-        # ["Strength", "Defense", "Health",],
-        ["Strength Base +2", "Defense Base +2", "Health Base +3", 
-         "人被杀就会死", "生命源于力量 Base", "力量源于生命 Base"],
-        ["Live", "Dead", "Injured", "Rebirth", "Touch"],
-        ["DropOnDeath", "Rebirth"],
-        ["Attack"]
-    ],
-    [
-        "Meat",
-        # ["Strength", "Defense", "Health",],
-        ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
-        ["Dead", "Live", "Injured", ]
-    ],
-    [
-        "Fur",
-        # ["Strength", "Defense", "Health",],
-        ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
-        ["Dead", "Live", "Injured", ]
-    ],
+var values: Array[Dictionary] = [
+    {
+        "name": "Human",
+        "buffs": ["Strength Base +3", "Defense Base +3", "Health Base +3", "人被杀就会死"],
+        "statuses": ["Dead", "Live", "Injured", "Rebirth", "Touch"],
+        "behaviors": [],
+        "interactions": ["Attack"],
+        "bodies": ["Human"]
+    },
+    {
+        "name": "Rabbit",
+        "buffs": ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死", "生命源于力量 Base", "力量源于生命 Base"],
+        "statuses": ["Live", "Dead", "Injured", "Rebirth", "Touch"],
+        "behaviors": ["DropOnDeath", "Rebirth"],
+        "interactions": ["Attack"],
+        "bodies": ["Yang"]
+    },
+    {
+        "name": "Meat",
+        "buffs": ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
+        "statuses": ["Dead", "Live", "Injured"],
+        "behaviors": [],
+        "interactions": [],
+        "bodies": ["Yang"]
+    },
+    {
+        "name": "Fur",
+        "buffs": ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
+        "statuses": ["Dead", "Live", "Injured"],
+        "behaviors": [],
+        "interactions": [],
+        "bodies": ["Yang"]
+    },
 ]
+    # [
+    #     "Human",
+    #     # ["Strength", "Defense", "Health",],
+    #     ["Strength Base +3", "Defense Base +3", "Health Base +3", "人被杀就会死"],
+    #     ["Dead", "Live", "Injured", "Rebirth", "Touch"],
+    #     [],
+    #     ["Attack"],
+    #     ["Human"]
+    # ],
+    # [
+    #     "Rabbit",
+    #     # ["Strength", "Defense", "Health",],
+    #     ["Strength Base +2", "Defense Base +2", "Health Base +3", 
+    #      "人被杀就会死", "生命源于力量 Base", "力量源于生命 Base"],
+    #     ["Live", "Dead", "Injured", "Rebirth", "Touch"],
+    #     ["DropOnDeath", "Rebirth"],
+    #     ["Attack"],
+    #     ["Yang"]
+    # ],
+    # [
+    #     "Meat",
+    #     # ["Strength", "Defense", "Health",],
+    #     ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
+    #     ["Dead", "Live", "Injured", ],
+    #     [],
+    #     [],
+    #     ["Yang"]
+    # ],
+    # [
+    #     "Fur",
+    #     # ["Strength", "Defense", "Health",],
+    #     ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
+    #     ["Dead", "Live", "Injured", ],
+    #     [],
+    #     [],
+    #     ["Yang"]
+    # ],
+# ]

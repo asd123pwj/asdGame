@@ -47,5 +47,11 @@ static func _add_presets(class_: GDScript, scripts: Array[GDScript]) -> void:
         for value in instance.values:
             _add_preset(class_, value)
 
-static func _add_preset(class_: GDScript, args: Array) -> void:
-    class_.new.callv(args)
+static func _add_preset(class_: GDScript, args) -> void:
+    if typeof(args) == TYPE_ARRAY:
+        class_.new.callv(args)
+    elif typeof(args) == TYPE_DICTIONARY:
+        class_.new.call(args)
+    else:
+        ## TODO: 报错
+        print("ConfigScanner: 不支持的参数类型: ", typeof(args))

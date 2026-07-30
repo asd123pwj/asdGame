@@ -7,5 +7,7 @@
 .editorconfig
 .gitattributes
 icon.svg.import
+**/*.import
 project.godot
 icon.svg
+**/Material/

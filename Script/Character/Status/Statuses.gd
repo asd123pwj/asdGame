@@ -5,6 +5,14 @@ extends RefCounted
 var me: Character
 var statuses: Dictionary[String, Status] = {}
 
+# var attr_triggers: Dictionary[String, bool] = {}
+# var buff_triggers: Dictionary[String, bool] = {}
+# var status_triggers: Dictionary[String, bool] = {}
+# var behavior_triggers: Dictionary[String, bool] = {}
+# var detect_trigger: bool = false
+# # var init_done: bool = false
+# var satisfied: bool = false
+
 func _init(me: Character, status_name: Array[String]) -> void:
     self.me = me
     add_statuses(status_name)
