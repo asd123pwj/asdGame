@@ -24,3 +24,10 @@ enum ModificationMethod {
     DIVIDE,
     SET
 }
+
+enum KeyStatus{
+    DOWN,
+    FIRST_DOWN,
+    UP,
+    FIRST_UP
+}

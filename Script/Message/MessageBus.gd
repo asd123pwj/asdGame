@@ -36,3 +36,8 @@ static func get_message(id: String) -> Variant:
 
 static func format_ID(infos: Array[String]) -> String:
     return "->".join(infos)
+
+static func parse_ID(id: String) -> Array[String]:
+    var result: Array[String] = []
+    result.assign(id.split("->"))
+    return result

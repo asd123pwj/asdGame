@@ -26,6 +26,9 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
     InputSys._input(event)
 
+func _process(delta: float) -> void:
+    InputSys._process(delta)
+
 func init_sub_system() -> void:
     sysCfg = SysCfg.new()
     randSys = RandSys.new()

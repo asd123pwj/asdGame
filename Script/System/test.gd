@@ -9,6 +9,12 @@ var char_E: Character
 
 func _init() -> void:
     pass
+    ComboStatus.new([KEY_A, KEY_A])
+    MsgHubInput.listen_combo([KEY_A, KEY_A], down_a)
+    pass
+
+func down_a(_msg) -> void:
+    print(_msg)
 
 
 func run() -> void:
