@@ -8,6 +8,7 @@ var _last_input_msec: float = 0
 var _current_index: int = 0
 var _listen_ids: Array[String] = []
 
+static var _key_downing: Array[Variant] = []
 static var _we: Dictionary[Array, ComboStatus] = {}
 
 func _init(sequence: Array[Variant], interval: float = 400) -> void:
@@ -19,18 +20,24 @@ func _init(sequence: Array[Variant], interval: float = 400) -> void:
 func _listen() -> void:
     var listen_keys: Array[String] = []
     for i in range(_sequence.size()):
+        var key_and_key_status
         if _check_checkWithFirstDown(i):
-            var key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.FIRST_DOWN)
+            key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.FIRST_DOWN)
             if not key_and_key_status in listen_keys:
                 listen_keys.append(key_and_key_status)
                 var msg_ID = MsgHubInput.listen_key_first_down(_sequence[i], _act)
                 _listen_ids.append(msg_ID)
         else:
-            var key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.DOWN)
+            key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.DOWN)
             if not key_and_key_status in listen_keys:
                 listen_keys.append(key_and_key_status)
                 var msg_ID = MsgHubInput.listen_key_down(_sequence[i], _act)
                 _listen_ids.append(msg_ID)
+        key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.FIRST_UP)
+        if not key_and_key_status in listen_keys:
+            listen_keys.append(key_and_key_status)
+            var msg_ID = MsgHubInput.listen_key_first_up(_sequence[i], _act)
+            _listen_ids.append(msg_ID)
 
 func _unlisten() -> void:
     for i in range(_listen_ids.size()):
@@ -71,7 +78,14 @@ func _check_next_key_down(key_and_key_status) -> bool:
 
 func _act(key_and_key_status) -> bool:
     if _check_combo(key_and_key_status):
-        MsgHubInput.send_combo(_sequence)
+        if not _sequence in InputSys.keys_downing:
+            InputSys.keys_downing.append(_sequence)
+            MsgHubInput.send_key_first_down(_sequence)
+    else:
+        if key_and_key_status[1] == Enums.KeyStatus.FIRST_UP:
+            if _sequence in InputSys.keys_downing:
+                InputSys.keys_downing.erase(_sequence)
+                MsgHubInput.send_key_first_up(_sequence)
     return false
 
 func _check_combo(key_and_key_status):

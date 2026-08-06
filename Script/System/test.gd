@@ -9,8 +9,16 @@ var char_E: Character
 
 func _init() -> void:
     pass
+    ComboStatus.new([KEY_SHIFT, MOUSE_BUTTON_LEFT])
     ComboStatus.new([KEY_A, KEY_A])
-    MsgHubInput.listen_combo([KEY_A, KEY_A], down_a)
+    MsgHubInput.listen_key_down([KEY_A, KEY_A], down_a)
+    ComboStatus.new([KEY_S, KEY_S])
+    # MsgHubInput.listen_key_first_down([KEY_S, KEY_S], down_a)
+    ComboStatus.new([KEY_SHIFT, KEY_S])
+    MsgHubInput.listen_key_first_up([KEY_S, KEY_S], down_a)
+    MsgHubInput.listen_key_first_down([KEY_S, KEY_S], down_a)
+    MsgHubInput.listen_key_down([KEY_S, KEY_S], down_a)
+    # MsgHubInput.listen_combo([KEY_A, KEY_A], down_a)
     pass
 
 func down_a(_msg) -> void:
@@ -27,9 +35,9 @@ func run() -> void:
     MsgHubChar.listen_status_satisfied(char_B, "Dead", char_died)
     MsgHubChar.listen_status_satisfied(char_A, "Rebirth", char_rebirth)
     MsgHubChar.listen_status_satisfied(char_B, "Rebirth", char_rebirth)
-    MsgHubChar.listen_status_satisfied(char_A, "Right", right)
-    MsgHubChar.listen_status_satisfied(char_A, "On Left", left)
-    MsgHubChar.listen_status_satisfied(char_A, "Up", up)
+    MsgHubChar.listen_status_satisfied(char_A, "Left", left)
+    MsgHubChar.listen_status_satisfied(char_A, "Shift + Left Click", right)
+    MsgHubChar.listen_status_unsatisfied(char_A, "Shift + Left Click", right)
     print(Sys.sysCfg.random_seed)
     @warning_ignore("missing_await")
     # delay_loop_test()

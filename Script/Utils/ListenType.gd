@@ -3,10 +3,10 @@ extends RefCounted
 
 
 var name: Variant
-var match_type: String
+var match_type: Variant
 var thres: int
 
-func _init(name: Variant, match: String, thres: int = INT64_MIN) -> void:
+func _init(name: Variant, match: Variant = null, thres: int = INT64_MIN) -> void:
     self.name = name
     self.match_type = match
     self.thres = thres

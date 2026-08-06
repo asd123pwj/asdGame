@@ -4,7 +4,10 @@ extends MsgBus
 
 """ ---------- Single Key Basic ---------- """
 static func _format_ID(key: Variant, status: Enums.KeyStatus) -> String:
-    return format_ID(["Input", str(key), str(status)])
+    if typeof(key) == TYPE_ARRAY:
+        return format_ID(["Input", " ".join(key), str(status)])
+    else:
+        return format_ID(["Input", str(key), str(status)])
 
 static func _send(key: Variant, status: Enums.KeyStatus) -> Enums.Code:
     return send(_format_ID(key, status), [key, status])
@@ -44,11 +47,11 @@ static func listen_key_first_up(key: Variant, callback: Callable) -> String:
 
     
 """ ---------- Combo Key ---------- """
-static func _format_keys(keys: Array) -> String:
-    return format_ID(["Input", " ".join(keys)])
+# static func _format_keys(keys: Array) -> String:
+#     return format_ID(["Input", " ".join(keys)])
 
-static func send_combo(keys: Array) -> Enums.Code:
-    return send(_format_keys(keys), keys)
+# static func send_combo(keys: Array) -> Enums.Code:
+#     return send(_format_keys(keys), keys)
 
-static func listen_combo(keys: Array, callback: Callable) -> String:
-    return listen(_format_keys(keys), callback)
+# static func listen_combo(keys: Array, callback: Callable) -> String:
+#     return listen(_format_keys(keys), callback)

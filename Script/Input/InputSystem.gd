@@ -28,7 +28,6 @@ static func _send_key_status(key, isDown: bool):
         if not key in keys_downing:
             keys_downing.append(key)
             MsgHubInput.send_key_first_down(key)
-            # MsgHubInput.send_key_down(key)
     else:
         keys_downing.erase(key)
         MsgHubInput.send_key_first_up(key)

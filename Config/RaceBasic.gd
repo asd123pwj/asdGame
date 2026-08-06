@@ -15,7 +15,8 @@ var values: Array[Dictionary] = [
     {
         "name": "Human",
         "buffs": ["Strength Base +3", "Defense Base +3", "Health Base +3", "人被杀就会死"],
-        "statuses": ["Dead", "Live", "Injured", "Rebirth", "Touch", "Right", "Up", "Left", "On Left"],
+        "statuses": ["Dead", "Live", "Injured", "Rebirth", "Touch", 
+                     "Right", "Up", "Left", "On Left", "Shift + Left Click"],
         "behaviors": [],
         "interactions": ["Attack"],
         "bodies": ["Human"]

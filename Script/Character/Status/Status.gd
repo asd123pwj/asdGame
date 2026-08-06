@@ -6,6 +6,7 @@ var name: String
 ## 为true时，每次变化完后自动重置，例如受伤后，发送一次受伤通知，然后恢复为未受伤
 ## 不建议为true的状态被监控unsatififed，
 var auto_reset: bool
+var match_any: bool
 var _attr_listeners: Array[ListenType] = []
 var _attr_triggers: Dictionary[Character, Dictionary] = {}
 var _buff_listeners: Array[ListenType] = []
@@ -34,13 +35,14 @@ static var _we: Dictionary[String, Status] = {}
 ## buffs: 支持present, absent
 ## statuses: 支持satisfied, unsatisfied
 ## behaviors: 支持present, absent, act
-## keys: 支持down, first down, first up
+## keys: 支持Enums.KeyStatus.FIRST_DOWN, Enums.KeyStatus.DOWN, Enums.KeyStatus.FIRST_UP
 ## with_detect: 使用外部检测信号，用send_status_detected发送
 ## cfgs为嵌套列表[[配置1],[配置2]]
 func _init(config: Dictionary) -> void:
     name = config["name"]
     _we[name] = self
     auto_reset = Utils.find_dict(config, ["auto_reset"], false)
+    match_any = Utils.find_dict(config, ["match_any"], false)
     for cfg in Utils.find_dict(config, ["attrs"], []):
         self._attr_listeners.append(ListenType.new.callv(cfg))
     for cfg in Utils.find_dict(config, ["buffs"], []):
@@ -61,11 +63,9 @@ static func get_(name: String) -> Status:
 func listen(char_: Character) -> void:
     var trigger_func: Callable
     var trigger_cur: bool
-    # var listener: ListenType
     var msg_ID: String
     _trigger_funcs[char_] = {}
     satisfied[char_] = false
-    # _init_done[char_] = false
 
     # ----- Attribute监听器 -----
     _attr_triggers[char_] = {}
@@ -216,7 +216,7 @@ func listen(char_: Character) -> void:
     _key_triggers[char_] = {}
     for listener in _key_listeners:
         trigger_cur = false
-        if listener.match_type == "down":
+        if listener.match_type == Enums.KeyStatus.DOWN:
             # 按键为单帧触发，因此不需要监听当前按键，我猜是这样
             trigger_func = func(_msg):
                 _key_triggers[char_][listener.name] = true
@@ -230,7 +230,7 @@ func listen(char_: Character) -> void:
             msg_ID = MsgHubInput.listen_key_first_up(listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
-        elif listener.match_type == "first down":
+        elif listener.match_type == Enums.KeyStatus.FIRST_DOWN:
             # first down必然是瞬时事件，所以触发后直接重置
             trigger_func = func(_msg):
                 _key_triggers[char_][listener.name] = true
@@ -240,7 +240,7 @@ func listen(char_: Character) -> void:
             msg_ID = MsgHubInput.listen_key_first_down(listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
-        elif listener.match_type == "first up":
+        elif listener.match_type == Enums.KeyStatus.FIRST_UP:
             # first up必然是瞬时事件，所以触发后直接重置
             trigger_func = func(_msg):
                 _key_triggers[char_][listener.name] = true
@@ -253,6 +253,7 @@ func listen(char_: Character) -> void:
         else:
             pass ## TODO: 报错
         _key_triggers[char_][listener.name] = trigger_cur
+
 
     # ----- 外部信号记录 -----
     if with_detect:
@@ -273,7 +274,6 @@ func listen(char_: Character) -> void:
 
 
     # ----- 监听初始化完成 -----
-    # _init_done[char_] = true
     # 初始化监听器后执行一次，发送最新状态，虽然我觉得它没有用
     execute(char_, true)
 
@@ -286,39 +286,71 @@ func unlisten(char_: Character) -> void:
     _buff_triggers.erase(char_)
     _status_triggers.erase(char_)
     _behavior_triggers.erase(char_)
-    # _init_done.erase(char_)
+    _key_triggers.erase(char_)
     
 
 func execute(char_: Character, force: bool = false) -> bool:
     var enabled_ori: bool = satisfied[char_]
-    satisfied[char_] = true
-    for isAllow in _attr_triggers[char_].values():
-        if not satisfied[char_]:
-            break
-        if not isAllow:
-            satisfied[char_] = false
-    for isAllow in _buff_triggers[char_].values():
-        if not satisfied[char_]:
-            break
-        if not isAllow:
-            satisfied[char_] = false
-    for isAllow in _status_triggers[char_].values():
-        if not satisfied[char_]:
-            break
-        if not isAllow:
-            satisfied[char_] = false
-    for isAllow in _behavior_triggers[char_].values():
-        if not satisfied[char_]:
-            break
-        if not isAllow:
-            satisfied[char_] = false
-    for isAllow in _key_triggers[char_].values():
-        if not satisfied[char_]:
-            break
-        if not isAllow:
-            satisfied[char_] = false
-    if not _detect_triggers.get(char_, true):
+    if match_any:
+        # 任一条件满足则状态满足
         satisfied[char_] = false
+        for isAllow in _attr_triggers[char_].values():
+            if satisfied[char_]:
+                break
+            if isAllow:
+                satisfied[char_] = true
+        for isAllow in _buff_triggers[char_].values():
+            if satisfied[char_]:
+                break
+            if isAllow:
+                satisfied[char_] = true
+        for isAllow in _status_triggers[char_].values():
+            if satisfied[char_]:
+                break
+            if isAllow:
+                satisfied[char_] = true
+        for isAllow in _behavior_triggers[char_].values():
+            if satisfied[char_]:
+                break
+            if isAllow:
+                satisfied[char_] = true
+        for isAllow in _key_triggers[char_].values():
+            if satisfied[char_]:
+                break
+            if isAllow:
+                satisfied[char_] = true
+        if _detect_triggers.get(char_, false):
+            satisfied[char_] = true
+    else:
+        # 所有条件满足则状态满足
+        satisfied[char_] = true
+        for isAllow in _attr_triggers[char_].values():
+            if not satisfied[char_]:
+                break
+            if not isAllow:
+                satisfied[char_] = false
+        for isAllow in _buff_triggers[char_].values():
+            if not satisfied[char_]:
+                break
+            if not isAllow:
+                satisfied[char_] = false
+        for isAllow in _status_triggers[char_].values():
+            if not satisfied[char_]:
+                break
+            if not isAllow:
+                satisfied[char_] = false
+        for isAllow in _behavior_triggers[char_].values():
+            if not satisfied[char_]:
+                break
+            if not isAllow:
+                satisfied[char_] = false
+        for isAllow in _key_triggers[char_].values():
+            if not satisfied[char_]:
+                break
+            if not isAllow:
+                satisfied[char_] = false
+        if not _detect_triggers.get(char_, true):
+            satisfied[char_] = false
     
     if satisfied[char_] and (not enabled_ori or force):
         MsgHubChar.send_status_satisfied(char_, self.name)
