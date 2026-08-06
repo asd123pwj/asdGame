@@ -10,9 +10,15 @@ static func _format_ID(key: Variant, status: Enums.KeyStatus) -> String:
         return format_ID(["Input", str(key), str(status)])
 
 static func _send(key: Variant, status: Enums.KeyStatus) -> Enums.Code:
-    return send(_format_ID(key, status), [key, status])
-
+    var code =  send(_format_ID(key, status), [key, status])
+    # 这个写完我还没测试过，或者说，所有unlisten我都没测试过
+    if (code == Enums.Code.NOT_FOUND) and (typeof(key) == TYPE_ARRAY):
+        InputCombo.unlisten(key)
+    return code
+        
 static func _listen(key: Variant, status: Enums.KeyStatus, callback: Callable) -> String:
+    if typeof(key) == TYPE_ARRAY:
+        InputCombo.add_if_not_exist(key)
     return listen(_format_ID(key, status), callback)
 
 """ ---------- Single Key ---------- """
@@ -44,14 +50,3 @@ static func listen_key_first_up(key: Variant, callback: Callable) -> String:
 
 
 
-
-    
-""" ---------- Combo Key ---------- """
-# static func _format_keys(keys: Array) -> String:
-#     return format_ID(["Input", " ".join(keys)])
-
-# static func send_combo(keys: Array) -> Enums.Code:
-#     return send(_format_keys(keys), keys)
-
-# static func listen_combo(keys: Array, callback: Callable) -> String:
-#     return listen(_format_keys(keys), callback)

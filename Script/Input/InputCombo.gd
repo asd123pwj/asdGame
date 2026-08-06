@@ -1,4 +1,4 @@
-class_name ComboStatus
+class_name InputCombo
 extends RefCounted
 
 
@@ -8,14 +8,19 @@ var _last_input_msec: float = 0
 var _current_index: int = 0
 var _listen_ids: Array[String] = []
 
-static var _key_downing: Array[Variant] = []
-static var _we: Dictionary[Array, ComboStatus] = {}
+static var _we: Dictionary[Array, InputCombo] = {}
 
 func _init(sequence: Array[Variant], interval: float = 400) -> void:
     _we[sequence] = self
     _sequence = sequence
     _interval = interval
     _listen()
+
+static func add_if_not_exist(sequence: Array[Variant]) -> bool:
+    if not _we.has(sequence):
+        new(sequence)
+        return true
+    return false
 
 func _listen() -> void:
     var listen_keys: Array[String] = []
@@ -44,6 +49,10 @@ func _unlisten() -> void:
         MsgHubInput.unlisten(_listen_ids[i], _act)
     _listen_ids.clear()
 
+static func unlisten(sequence: Array[Variant]) -> void:
+    if _we.has(sequence):
+        _we[sequence]._unlisten()
+        _we.erase(sequence)
 
 func _add_input() -> void:
     _current_index += 1

@@ -9,15 +9,11 @@ var char_E: Character
 
 func _init() -> void:
     pass
-    ComboStatus.new([KEY_SHIFT, MOUSE_BUTTON_LEFT])
-    ComboStatus.new([KEY_A, KEY_A])
-    MsgHubInput.listen_key_down([KEY_A, KEY_A], down_a)
-    ComboStatus.new([KEY_S, KEY_S])
-    # MsgHubInput.listen_key_first_down([KEY_S, KEY_S], down_a)
-    ComboStatus.new([KEY_SHIFT, KEY_S])
-    MsgHubInput.listen_key_first_up([KEY_S, KEY_S], down_a)
+    MsgHubInput.listen_key_first_up([KEY_SHIFT, MOUSE_BUTTON_LEFT], down_a)
     MsgHubInput.listen_key_first_down([KEY_S, KEY_S], down_a)
     MsgHubInput.listen_key_down([KEY_S, KEY_S], down_a)
+    MsgHubInput.listen_key_first_down([KEY_SHIFT, KEY_D, KEY_D], down_a)
+
     # MsgHubInput.listen_combo([KEY_A, KEY_A], down_a)
     pass
 
