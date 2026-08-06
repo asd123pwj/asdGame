@@ -23,7 +23,7 @@ func _listen() -> void:
             var key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.FIRST_DOWN)
             if not key_and_key_status in listen_keys:
                 listen_keys.append(key_and_key_status)
-                var msg_ID = MsgHubInput.listen_key_FirstDown(_sequence[i], _act)
+                var msg_ID = MsgHubInput.listen_key_first_down(_sequence[i], _act)
                 _listen_ids.append(msg_ID)
         else:
             var key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.DOWN)

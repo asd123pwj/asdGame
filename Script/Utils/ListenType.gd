@@ -2,11 +2,11 @@ class_name ListenType
 extends RefCounted
 
 
-var name: String
+var name: Variant
 var match_type: String
 var thres: int
 
-func _init(name: String, match: String, thres: int = INT64_MIN) -> void:
+func _init(name: Variant, match: String, thres: int = INT64_MIN) -> void:
     self.name = name
     self.match_type = match
     self.thres = thres

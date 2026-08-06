@@ -27,9 +27,21 @@ func run() -> void:
     MsgHubChar.listen_status_satisfied(char_B, "Dead", char_died)
     MsgHubChar.listen_status_satisfied(char_A, "Rebirth", char_rebirth)
     MsgHubChar.listen_status_satisfied(char_B, "Rebirth", char_rebirth)
+    MsgHubChar.listen_status_satisfied(char_A, "Right", right)
+    MsgHubChar.listen_status_satisfied(char_A, "On Left", left)
+    MsgHubChar.listen_status_satisfied(char_A, "Up", up)
     print(Sys.sysCfg.random_seed)
     @warning_ignore("missing_await")
-    delay_loop_test()
+    # delay_loop_test()
+
+func right(_msg: Character) -> void:
+    print("角色 %s 向右移动" % _msg.name)
+
+func left(_msg: Character) -> void:
+    print("角色 %s 向左移动" % _msg.name)
+
+func up(_msg: Character) -> void:
+    print("角色 %s 向上移动" % _msg.name)
 
 func char_spawn(char_) -> void:
     print("角色 %s 生成" % char_.name)

@@ -16,25 +16,25 @@ static func _listen(key: Variant, status: Enums.KeyStatus, callback: Callable) -
 static func send_key_down(key: Variant) -> Enums.Code:
     return _send(key, Enums.KeyStatus.DOWN)
 
-static func send_key_FirstDown(key: Variant) -> Enums.Code:
+static func send_key_first_down(key: Variant) -> Enums.Code:
     return _send(key, Enums.KeyStatus.FIRST_DOWN)
 
-static func send_key_up(key: Variant) -> Enums.Code:
-    return _send(key, Enums.KeyStatus.UP)
+# static func send_key_up(key: Variant) -> Enums.Code:
+#     return _send(key, Enums.KeyStatus.UP)
 
-static func send_key_FirstUp(key: Variant) -> Enums.Code:
+static func send_key_first_up(key: Variant) -> Enums.Code:
     return _send(key, Enums.KeyStatus.FIRST_UP)
 
 static func listen_key_down(key: Variant, callback: Callable) -> String:
     return _listen(key, Enums.KeyStatus.DOWN, callback)
 
-static func listen_key_FirstDown(key: Variant, callback: Callable) -> String:
+static func listen_key_first_down(key: Variant, callback: Callable) -> String:
     return _listen(key, Enums.KeyStatus.FIRST_DOWN, callback)
 
-static func listen_key_up(key: Variant, callback: Callable) -> String:
-    return _listen(key, Enums.KeyStatus.UP, callback)
+# static func listen_key_up(key: Variant, callback: Callable) -> String:
+#     return _listen(key, Enums.KeyStatus.UP, callback)
 
-static func listen_key_FirstUp(key: Variant, callback: Callable) -> String:
+static func listen_key_first_up(key: Variant, callback: Callable) -> String:
     return _listen(key, Enums.KeyStatus.FIRST_UP, callback)
 
     

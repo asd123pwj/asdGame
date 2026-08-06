@@ -4,6 +4,7 @@ extends PresetRegister
 
 var name: String
 ## 为true时，每次变化完后自动重置，例如受伤后，发送一次受伤通知，然后恢复为未受伤
+## 不建议为true的状态被监控unsatififed，
 var auto_reset: bool
 var _attr_listeners: Array[ListenType] = []
 var _attr_triggers: Dictionary[Character, Dictionary] = {}
@@ -13,9 +14,13 @@ var _status_listeners: Array[ListenType] = []
 var _status_triggers: Dictionary[Character, Dictionary] = {}
 var _behavior_listeners: Array[ListenType] = []
 var _behavior_triggers: Dictionary[Character, Dictionary] = {}
+# 有按键监听器时，auto_reset也应为true
+var _key_listeners: Array[ListenType] = []
+var _key_triggers: Dictionary[Character, Dictionary] = {}
 var with_detect: bool
 var _detect_triggers: Dictionary[Character, bool] = {}
-var _init_done: Dictionary[Character, bool] = {}
+
+# var _init_done: Dictionary[Character, bool] = {}
 var satisfied: Dictionary[Character, bool] = {}
 
 ## 仅用于unlisten时取消对应消息接收器
@@ -25,38 +30,28 @@ var _trigger_funcs: Dictionary[Character, Dictionary] = {}
 # static var new_: Callable
 static var _we: Dictionary[String, Status] = {}
 
-## @param attr_type_listener_cfgs: 支持changed, over_limit, within_limit, >, >=, <, <=, ==, !=
-## @param attr_buff_listener_cfgs: 支持present, absent
-## @param status_listener_cfgs: 支持satisfied, unsatisfied
-## @param behavior_listener_cfgs: 支持present, absent, act
-## @param with_detect: 使用外部检测信号，用send_status_detected发送
+## attrs: 支持changed, over_limit, within_limit, >, >=, <, <=, ==, !=
+## buffs: 支持present, absent
+## statuses: 支持satisfied, unsatisfied
+## behaviors: 支持present, absent, act
+## keys: 支持down, first down, first up
+## with_detect: 使用外部检测信号，用send_status_detected发送
 ## cfgs为嵌套列表[[配置1],[配置2]]
-func _init(
-        name: String, 
-        auto_reset: bool, 
-        attr_listener_cfgs: Array=[], 
-        buff_listener_cfgs: Array=[],
-        status_listener_cfgs: Array=[],
-        behavior_listener_cfgs: Array=[],
-        with_detect: bool = false,
-        ) -> void:
+func _init(config: Dictionary) -> void:
+    name = config["name"]
     _we[name] = self
-    self.name = name
-    self.auto_reset = auto_reset
-
-    for cfg in attr_listener_cfgs:
+    auto_reset = Utils.find_dict(config, ["auto_reset"], false)
+    for cfg in Utils.find_dict(config, ["attrs"], []):
         self._attr_listeners.append(ListenType.new.callv(cfg))
-
-    for cfg in buff_listener_cfgs:
+    for cfg in Utils.find_dict(config, ["buffs"], []):
         self._buff_listeners.append(ListenType.new.callv(cfg))
-
-    for cfg in status_listener_cfgs:
+    for cfg in Utils.find_dict(config, ["statuses"], []):
         self._status_listeners.append(ListenType.new.callv(cfg))
-
-    for cfg in behavior_listener_cfgs:
+    for cfg in Utils.find_dict(config, ["behaviors"], []):
         self._behavior_listeners.append(ListenType.new.callv(cfg))
-
-    self.with_detect = with_detect
+    for cfg in Utils.find_dict(config, ["keys"], []):
+        self._key_listeners.append(ListenType.new.callv(cfg))
+    self.with_detect = Utils.find_dict(config, ["with_detect"], false)
 
 static func get_(name: String) -> Status:
     return _we[name]
@@ -70,14 +65,12 @@ func listen(char_: Character) -> void:
     var msg_ID: String
     _trigger_funcs[char_] = {}
     satisfied[char_] = false
-    _init_done[char_] = false
+    # _init_done[char_] = false
 
-    # ----- Type监听器 -----
+    # ----- Attribute监听器 -----
     _attr_triggers[char_] = {}
-    # for i in range(_attr_listeners.size()):
     for listener in _attr_listeners:
         trigger_cur = false
-        # listener = _attr_listeners[i]
 
         if listener.match_type == "changed":
             # 初始未改变
@@ -219,6 +212,48 @@ func listen(char_: Character) -> void:
             pass ## TODO: 报错
         _behavior_triggers[char_][listener.name] = trigger_cur
 
+    # ----- Key监听器 -----
+    _key_triggers[char_] = {}
+    for listener in _key_listeners:
+        trigger_cur = false
+        if listener.match_type == "down":
+            # 按键为单帧触发，因此不需要监听当前按键，我猜是这样
+            trigger_func = func(_msg):
+                _key_triggers[char_][listener.name] = true
+                execute(char_)
+            msg_ID = MsgHubInput.listen_key_down(listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+            
+            trigger_func = func(_msg):
+                _key_triggers[char_][listener.name] = false
+                execute(char_)
+            msg_ID = MsgHubInput.listen_key_first_up(listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+        elif listener.match_type == "first down":
+            # first down必然是瞬时事件，所以触发后直接重置
+            trigger_func = func(_msg):
+                _key_triggers[char_][listener.name] = true
+                execute(char_)
+                _key_triggers[char_][listener.name] = false
+                execute(char_)
+            msg_ID = MsgHubInput.listen_key_first_down(listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+        elif listener.match_type == "first up":
+            # first up必然是瞬时事件，所以触发后直接重置
+            trigger_func = func(_msg):
+                _key_triggers[char_][listener.name] = true
+                execute(char_)
+                _key_triggers[char_][listener.name] = false
+                execute(char_)
+            msg_ID = MsgHubInput.listen_key_first_up(listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+        else:
+            pass ## TODO: 报错
+        _key_triggers[char_][listener.name] = trigger_cur
+
     # ----- 外部信号记录 -----
     if with_detect:
         # 外部检测信号
@@ -228,16 +263,17 @@ func listen(char_: Character) -> void:
         msg_ID = MsgHubChar.listen_status_detected(char_, name, trigger_func)
         _trigger_funcs[char_][msg_ID] = trigger_func
         # 外部检测丢失信号
-        trigger_func = func(_msg):
-            self._detect_triggers[char_] = false
-            execute(char_)
-        msg_ID = MsgHubChar.listen_status_undetected(char_, name, trigger_func)
+        # trigger_func = func(_msg):
+        #     self._detect_triggers[char_] = false
+        #     execute(char_)
+        # msg_ID = MsgHubChar.listen_status_undetected(char_, name, trigger_func)
         # 默认未启用
         _detect_triggers[char_] = false
 
 
+
     # ----- 监听初始化完成 -----
-    _init_done[char_] = true
+    # _init_done[char_] = true
     # 初始化监听器后执行一次，发送最新状态，虽然我觉得它没有用
     execute(char_, true)
 
@@ -250,7 +286,7 @@ func unlisten(char_: Character) -> void:
     _buff_triggers.erase(char_)
     _status_triggers.erase(char_)
     _behavior_triggers.erase(char_)
-    _init_done.erase(char_)
+    # _init_done.erase(char_)
     
 
 func execute(char_: Character, force: bool = false) -> bool:
@@ -276,16 +312,21 @@ func execute(char_: Character, force: bool = false) -> bool:
             break
         if not isAllow:
             satisfied[char_] = false
+    for isAllow in _key_triggers[char_].values():
+        if not satisfied[char_]:
+            break
+        if not isAllow:
+            satisfied[char_] = false
     if not _detect_triggers.get(char_, true):
         satisfied[char_] = false
     
     if satisfied[char_] and (not enabled_ori or force):
         MsgHubChar.send_status_satisfied(char_, self.name)
-    # unsatisfied仅对auto_reset为false的生效，例如Live不满足，意味着死亡，需要触发unsatisfied
-    elif (not satisfied[char_]) and (enabled_ori or force):
-        MsgHubChar.send_status_unsatisfied(char_, self.name)
 
     if auto_reset:
         satisfied[char_] = false
+        MsgHubChar.send_status_unsatisfied(char_, self.name)
+    elif (not satisfied[char_]) and (enabled_ori or force):
+        MsgHubChar.send_status_unsatisfied(char_, self.name)
 
     return satisfied[char_]

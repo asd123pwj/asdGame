@@ -20,8 +20,8 @@ func _ready() -> void:
     sys = self
     init_sub_system()
     
-    # print("test")
-    # _test.run()
+    print("test")
+    _test.run()
 
 func _input(event: InputEvent) -> void:
     InputSys._input(event)

@@ -62,8 +62,8 @@ static func send_status_detected(char_: Character, status_name: String, target: 
     return _send(char_, "STATUS", status_name, "detected", target)
 
 ## 我觉得这玩意用不到
-static func send_status_undetected(char_: Character, status_name: String, target: Variant) -> Enums.Code:
-    return _send(char_, "STATUS", status_name, "undetected", target)
+# static func send_status_undetected(char_: Character, status_name: String, target: Variant) -> Enums.Code:
+#     return _send(char_, "STATUS", status_name, "undetected", target)
 
 static func listen_status_satisfied(char_: Character, status_name: String, callback: Callable) -> String:
     return _listen(char_, "STATUS", status_name, "satisfied", callback)
@@ -81,8 +81,8 @@ static func listen_status_detected(char_: Character, status_name: String, callba
     return _listen(char_, "STATUS", status_name, "detected", callback)
 
 ## 我觉得这玩意用不到
-static func listen_status_undetected(char_: Character, status_name: String, callback: Callable) -> String:
-    return _listen(char_, "STATUS", status_name, "undetected", callback)
+# static func listen_status_undetected(char_: Character, status_name: String, callback: Callable) -> String:
+#     return _listen(char_, "STATUS", status_name, "undetected", callback)
 
 static func get_status_detected(char_: Character, interaction_name: String) -> Variant:
     return _get_message(char_, "STATUS", interaction_name, "detected")
