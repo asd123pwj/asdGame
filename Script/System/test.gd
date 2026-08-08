@@ -32,6 +32,7 @@ func run() -> void:
     MsgHubChar.listen_status_satisfied(char_A, "Rebirth", char_rebirth)
     MsgHubChar.listen_status_satisfied(char_B, "Rebirth", char_rebirth)
     MsgHubChar.listen_status_satisfied(char_A, "Left", left)
+    MsgHubChar.listen_status_satisfied(char_A, "Right", right)
     MsgHubChar.listen_status_satisfied(char_A, "Shift + Left Click", right)
     MsgHubChar.listen_status_unsatisfied(char_A, "Shift + Left Click", right)
     print(Sys.sysCfg.random_seed)

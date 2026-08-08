@@ -129,3 +129,23 @@ static func listen_interaction_remove(char_: Character, interaction_name: String
 
 static func listen_interaction_interact(char_: Character, interaction_name: String, callback: Callable) -> String:
     return _listen(char_, "INTERACTION", interaction_name, "interact", callback)
+
+
+""" ---------- Character Skills ---------- """
+static func send_skill_add(char_: Character, skill_name: String) -> Enums.Code:
+    return _send(char_, "SKILL", skill_name, "add")
+
+static func send_skill_remove(char_: Character, skill_name: String) -> Enums.Code:
+    return _send(char_, "SKILL", skill_name, "remove")
+
+static func send_skill_act(char_: Character, skill_name: String) -> Enums.Code:
+    return _send(char_, "SKILL", skill_name, "act")
+
+static func listen_skill_add(char_: Character, skill_name: String, callback: Callable) -> String:
+    return _listen(char_, "SKILL", skill_name, "add", callback)
+
+static func listen_skill_remove(char_: Character, skill_name: String, callback: Callable) -> String:
+    return _listen(char_, "SKILL", skill_name, "remove", callback)
+
+static func listen_skill_act(char_: Character, skill_name: String, callback: Callable) -> String:
+    return _listen(char_, "SKILL", skill_name, "act", callback)

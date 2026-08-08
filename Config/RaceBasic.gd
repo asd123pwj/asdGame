@@ -9,6 +9,7 @@ statuses: Array[String]=[],
 behaviors: Array[String]=[],
 interactions: Array[String]=[],
 bodies: Array[String]=[],
+skills: Array[String]=[],
 """
 
 var values: Array[Dictionary] = [
@@ -19,7 +20,8 @@ var values: Array[Dictionary] = [
                      "Right", "Up", "Left", "On Left", "Shift + Left Click"],
         "behaviors": [],
         "interactions": ["Attack"],
-        "bodies": ["Human"]
+        "bodies": ["Human"],
+        "skills": ["WalkRight", "WalkLeft"]
     },
     {
         "name": "Rabbit",
@@ -46,41 +48,3 @@ var values: Array[Dictionary] = [
         "bodies": ["Yang"]
     },
 ]
-    # [
-    #     "Human",
-    #     # ["Strength", "Defense", "Health",],
-    #     ["Strength Base +3", "Defense Base +3", "Health Base +3", "人被杀就会死"],
-    #     ["Dead", "Live", "Injured", "Rebirth", "Touch"],
-    #     [],
-    #     ["Attack"],
-    #     ["Human"]
-    # ],
-    # [
-    #     "Rabbit",
-    #     # ["Strength", "Defense", "Health",],
-    #     ["Strength Base +2", "Defense Base +2", "Health Base +3", 
-    #      "人被杀就会死", "生命源于力量 Base", "力量源于生命 Base"],
-    #     ["Live", "Dead", "Injured", "Rebirth", "Touch"],
-    #     ["DropOnDeath", "Rebirth"],
-    #     ["Attack"],
-    #     ["Yang"]
-    # ],
-    # [
-    #     "Meat",
-    #     # ["Strength", "Defense", "Health",],
-    #     ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
-    #     ["Dead", "Live", "Injured", ],
-    #     [],
-    #     [],
-    #     ["Yang"]
-    # ],
-    # [
-    #     "Fur",
-    #     # ["Strength", "Defense", "Health",],
-    #     ["Strength Base +2", "Defense Base +2", "Health Base +3", "人被杀就会死"],
-    #     ["Dead", "Live", "Injured", ],
-    #     [],
-    #     [],
-    #     ["Yang"]
-    # ],
-# ]

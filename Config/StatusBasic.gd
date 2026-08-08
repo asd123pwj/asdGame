@@ -47,7 +47,7 @@ var values: Array[Dictionary] = [
         "with_detect": true,
     }, {   
         "name": "Right",
-        "keys": [[KEY_RIGHT, Enums.KeyStatus.FIRST_DOWN]],
+        "keys": [[KEY_RIGHT, Enums.KeyStatus.DOWN]],
     }, {   
         "name": "Up",
         "keys": [[KEY_UP, Enums.KeyStatus.FIRST_UP]],

@@ -4,27 +4,30 @@ extends PresetRegister
 
 
 var name: String
+var skill_name: String
 var dependence_status: String
 var config: Array
-var skill 
+var skill: SkillBase
 
 static var _we: Dictionary[String, Skill] = {}
 # {Char: {msg_ID: func}}
 var _trigger_funcs: Dictionary[Character, Dictionary] = {}
 
-func _init(name: String, dependence_status: String, config: Array = []) -> void:
+func _init(name: String, skill_name:String, dependence_status: String, config: Array = []) -> void:
     _we[name] = self
     self.name = name
+    self.skill_name = skill_name
     self.dependence_status = dependence_status
     self.config = config
     _get_skill_by_name()
 
 func _get_skill_by_name() -> void:
     for cls in ProjectSettings.get_global_class_list():
-        if cls["class"] == name:
-            skill = load(cls["path"])
+        if cls["class"] == skill_name:
+            @warning_ignore("unsafe_method_access")
+            skill = load(cls["path"]).new()
             return
-    push_error("找不到Skill: ", name)
+    push_error("找不到Skill: ", skill_name)
     skill = null
 
 static func get_(name: String) -> Skill:
@@ -33,10 +36,13 @@ static func get_(name: String) -> Skill:
 func listen(char_: Character) -> void:
     _trigger_funcs[char_] = {}
     var trigger_func = func (_msg) -> void:
-        @warning_ignore("unsafe_method_access")
-        skill.act(char_, config)
-        MsgHubChar.send_behavior_act(char_, name)
+        skill.in_queue(char_, config)
     var msg_ID = MsgHubChar.listen_status_satisfied(char_, dependence_status, trigger_func)
+    _trigger_funcs[char_][msg_ID] = trigger_func
+
+    trigger_func = func (_msg) -> void:
+        skill.out_queue(char_)
+    msg_ID = MsgHubChar.listen_status_unsatisfied(char_, dependence_status, trigger_func)
     _trigger_funcs[char_][msg_ID] = trigger_func
 
 func unlisten(char_: Character) -> void:

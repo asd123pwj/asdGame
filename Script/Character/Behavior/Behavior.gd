@@ -3,6 +3,7 @@ extends PresetRegister
 
 
 var name: String
+var behavior_name: String
 var dependence_status: String
 var config: Array
 var behavoir 
@@ -11,19 +12,20 @@ static var _we: Dictionary[String, Behavior] = {}
 # {Char: {msg_ID: func}}
 var _trigger_funcs: Dictionary[Character, Dictionary] = {}
 
-func _init(name: String, dependence_status: String, config: Array = []) -> void:
+func _init(name: String, behavior_name: String, dependence_status: String, config: Array = []) -> void:
     _we[name] = self
     self.name = name
+    self.behavior_name = behavior_name
     self.dependence_status = dependence_status
     self.config = config
     _get_behavoir_by_name()
 
 func _get_behavoir_by_name() -> void:
     for cls in ProjectSettings.get_global_class_list():
-        if cls["class"] == name:
+        if cls["class"] == behavior_name:
             behavoir = load(cls["path"])
             return
-    push_error("找不到类: ", name)
+    push_error("找不到类: ", behavior_name)
     behavoir = null
 
 static func get_(name: String) -> Behavior:

@@ -294,60 +294,60 @@ func execute(char_: Character, force: bool = false) -> bool:
     if match_any:
         # 任一条件满足则状态满足
         satisfied[char_] = false
-        for isAllow in _attr_triggers[char_].values():
+        for key in _attr_triggers[char_]:
             if satisfied[char_]:
                 break
-            if isAllow:
+            if _attr_triggers[char_][key]:
                 satisfied[char_] = true
-        for isAllow in _buff_triggers[char_].values():
+        for key in _buff_triggers[char_]:
             if satisfied[char_]:
                 break
-            if isAllow:
+            if _buff_triggers[char_][key]:
                 satisfied[char_] = true
-        for isAllow in _status_triggers[char_].values():
+        for key in _status_triggers[char_]:
             if satisfied[char_]:
                 break
-            if isAllow:
+            if _status_triggers[char_][key]:
                 satisfied[char_] = true
-        for isAllow in _behavior_triggers[char_].values():
+        for key in _behavior_triggers[char_]:
             if satisfied[char_]:
                 break
-            if isAllow:
+            if _behavior_triggers[char_][key]:
                 satisfied[char_] = true
-        for isAllow in _key_triggers[char_].values():
+        for key in _key_triggers[char_]:
             if satisfied[char_]:
                 break
-            if isAllow:
+            if _key_triggers[char_][key]:
                 satisfied[char_] = true
         if _detect_triggers.get(char_, false):
             satisfied[char_] = true
     else:
         # 所有条件满足则状态满足
         satisfied[char_] = true
-        for isAllow in _attr_triggers[char_].values():
+        for key in _attr_triggers[char_]:
             if not satisfied[char_]:
                 break
-            if not isAllow:
+            if not _attr_triggers[char_][key]:
                 satisfied[char_] = false
-        for isAllow in _buff_triggers[char_].values():
+        for key in _buff_triggers[char_]:
             if not satisfied[char_]:
                 break
-            if not isAllow:
+            if not _buff_triggers[char_][key]:
                 satisfied[char_] = false
-        for isAllow in _status_triggers[char_].values():
+        for key in _status_triggers[char_]:
             if not satisfied[char_]:
                 break
-            if not isAllow:
+            if not _status_triggers[char_][key]:
                 satisfied[char_] = false
-        for isAllow in _behavior_triggers[char_].values():
+        for key in _behavior_triggers[char_]:
             if not satisfied[char_]:
                 break
-            if not isAllow:
+            if not _behavior_triggers[char_][key]:
                 satisfied[char_] = false
-        for isAllow in _key_triggers[char_].values():
+        for key in _key_triggers[char_]:
             if not satisfied[char_]:
                 break
-            if not isAllow:
+            if not _key_triggers[char_][key]:
                 satisfied[char_] = false
         if not _detect_triggers.get(char_, true):
             satisfied[char_] = false
