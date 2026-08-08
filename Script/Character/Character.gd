@@ -9,6 +9,7 @@ var statuses: Statuses
 var behaviors: Behaviors
 var interactions: Interactions
 var skills: Skills
+var collisions: Collisions
 """ ----- Actor ----- """
 var body: CharacterBody2D
 
@@ -26,12 +27,13 @@ func physics_process(delta: float) -> void:
 
 func _init_as_race(race_name: String) -> void:
     var race: Race = Race.get_(race_name)
+    body = _init_body(race.bodies[0])
     attrs = Attributes.new(self, race.buffs)
     statuses = Statuses.new(self, race.statuses)
     behaviors = Behaviors.new(self, race.behaviors)
     interactions = Interactions.new(self, race.interactions)
     skills = Skills.new(self, race.skills)
-    body = _init_body(race.bodies[0])
+    collisions = Collisions.new(self, race.collisions)
 
 func _init_body(body_name: String) -> CharacterBody2D:
     var body = Body.get_(body_name).create()

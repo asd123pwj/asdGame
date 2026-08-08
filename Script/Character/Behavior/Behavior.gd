@@ -18,9 +18,9 @@ func _init(name: String, behavior_name: String, dependence_status: String, confi
     self.behavior_name = behavior_name
     self.dependence_status = dependence_status
     self.config = config
-    _get_behavoir_by_name()
+    _get_behavior_by_name()
 
-func _get_behavoir_by_name() -> void:
+func _get_behavior_by_name() -> void:
     for cls in ProjectSettings.get_global_class_list():
         if cls["class"] == behavior_name:
             behavoir = load(cls["path"])

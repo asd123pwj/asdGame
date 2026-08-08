@@ -10,6 +10,7 @@ behaviors: Array[String]=[],
 interactions: Array[String]=[],
 bodies: Array[String]=[],
 skills: Array[String]=[],
+collisions: Array[String]=[],
 """
 
 var values: Array[Dictionary] = [
@@ -21,7 +22,8 @@ var values: Array[Dictionary] = [
         "behaviors": [],
         "interactions": ["Attack"],
         "bodies": ["Human"],
-        "skills": ["WalkRight", "WalkLeft"]
+        "skills": ["WalkRight", "WalkLeft"],
+        "collisions": ["掉落物检测"]
     },
     {
         "name": "Rabbit",

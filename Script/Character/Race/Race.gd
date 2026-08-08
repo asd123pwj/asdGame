@@ -11,6 +11,7 @@ var behaviors: Array[String]
 var interactions: Array[String]
 var bodies: Array[String]
 var skills: Array[String]
+var collisions: Array[String]
 
 """ ----- Global ----- """
 static var _we: Dictionary[String, Race] = {}
@@ -25,6 +26,7 @@ func _init(config: Dictionary) -> void:
     self.interactions.assign(Utils.find_dict(config, ["interactions"], []))
     self.bodies.assign(Utils.find_dict(config, ["bodies"], []))
     self.skills.assign(Utils.find_dict(config, ["skills"], []))
+    self.collisions.assign(Utils.find_dict(config, ["collisions"], []))
 
 static func get_(name: String) -> Race:
     return _we[name]

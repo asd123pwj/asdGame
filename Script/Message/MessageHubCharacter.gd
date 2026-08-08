@@ -149,3 +149,29 @@ static func listen_skill_remove(char_: Character, skill_name: String, callback: 
 
 static func listen_skill_act(char_: Character, skill_name: String, callback: Callable) -> String:
     return _listen(char_, "SKILL", skill_name, "act", callback)
+
+
+""" ---------- Character Collision ---------- """
+static func send_collision_add(char_: Character, collision_name: String) -> Enums.Code:
+    return _send(char_, "COLLISION", collision_name, "add")
+
+static func send_collision_remove(char_: Character, collision_name: String) -> Enums.Code:
+    return _send(char_, "COLLISION", collision_name, "remove")
+
+static func send_collision_enter(char_: Character, collision_name: String, body: Node) -> Enums.Code:
+    return _send(char_, "COLLISION", collision_name, "enter", body)
+
+static func send_collision_exit(char_: Character, collision_name: String, body: Node) -> Enums.Code:
+    return _send(char_, "COLLISION", collision_name, "exit", body)
+
+static func listen_collision_add(char_: Character, collision_name: String, callback: Callable) -> String:
+    return _listen(char_, "COLLISION", collision_name, "add", callback)
+
+static func listen_collision_remove(char_: Character, collision_name: String, callback: Callable) -> String:
+    return _listen(char_, "COLLISION", collision_name, "remove", callback)
+
+static func listen_collision_enter(char_: Character, collision_name: String, callback: Callable) -> String:
+    return _listen(char_, "COLLISION", collision_name, "enter", callback)
+
+static func listen_collision_exit(char_: Character, collision_name: String, callback: Callable) -> String:
+    return _listen(char_, "COLLISION", collision_name, "exit", callback)
