@@ -37,6 +37,7 @@ func _init_as_race(race_name: String) -> void:
 
 func _init_body(body_name: String) -> CharacterBody2D:
     var body = Body.get_(body_name).create()
+    body.set_meta("character", self)
     if body_name == "Human":
         body.position = Vector2(64, 128)
     else:
