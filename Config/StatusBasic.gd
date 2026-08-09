@@ -46,15 +46,20 @@ var values: Array[Dictionary] = [
         "auto_reset": true,
         "with_detect": true,
     }, {   
-        "name": "Right",
-        "keys": [[KEY_RIGHT, Enums.KeyStatus.DOWN]],
+        "name": "Right", "match_any": true,
+        "keys": [[KEY_RIGHT, Enums.KeyStatus.DOWN], [KEY_D, Enums.KeyStatus.DOWN]],
     }, {   
-        "name": "Up",
-        "keys": [[KEY_UP, Enums.KeyStatus.FIRST_UP]],
+        "name": "Up", "match_any": true,
+        "keys": [[KEY_UP, Enums.KeyStatus.DOWN], [KEY_W, Enums.KeyStatus.DOWN]],
     }, {   
         "name": "Left", "match_any": true,
         "keys": [[KEY_LEFT, Enums.KeyStatus.DOWN], [KEY_A, Enums.KeyStatus.DOWN]],
-    }, {   
+    },  {   
+        "name": "Down", "match_any": true,
+        "keys": [[KEY_DOWN, Enums.KeyStatus.DOWN], [KEY_S, Enums.KeyStatus.DOWN]],
+    }, 
+    
+    {   
         "name": "On Left",
         "statuses": [["Right", "unsatisfied"]],
     }, {   

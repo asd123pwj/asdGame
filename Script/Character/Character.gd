@@ -26,14 +26,14 @@ func physics_process(delta: float) -> void:
     skills.physics_process(delta)
 
 func _init_as_race(race_name: String) -> void:
-    var race: Race = Race.get_(race_name)
-    body = _init_body(race.bodies[0])
-    attrs = Attributes.new(self, race.buffs)
-    statuses = Statuses.new(self, race.statuses)
-    behaviors = Behaviors.new(self, race.behaviors)
-    interactions = Interactions.new(self, race.interactions)
-    skills = Skills.new(self, race.skills)
-    collisions = Collisions.new(self, race.collisions)
+    var archetype: Archetype = Archetype.get_(race_name)
+    body = _init_body(archetype.bodies[0])
+    attrs = Attributes.new(self, archetype.buffs)
+    statuses = Statuses.new(self, archetype.statuses)
+    behaviors = Behaviors.new(self, archetype.behaviors)
+    interactions = Interactions.new(self, archetype.interactions)
+    skills = Skills.new(self, archetype.skills)
+    collisions = Collisions.new(self, archetype.collisions)
 
 func _init_body(body_name: String) -> CharacterBody2D:
     var body = Body.get_(body_name).create()
