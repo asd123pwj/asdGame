@@ -3,7 +3,7 @@ extends BehaviorBase
 
 
 func act(_char: Character, _config: Variant) -> Enums.Code:
-    var races: Array[String] = _config
+    var races: Array = _config
     for race in races:
         CharSys.spawn(race)
     return Enums.Code.OK

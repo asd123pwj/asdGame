@@ -38,7 +38,7 @@ var values: Array[Dictionary] = [
     },
     {
         "name": "草药",
-        "buffs": ["Health Base +3", "Health Base *10"],
+        "buffs": ["Health Base +3",],
         "bodies": ["Yang"],
         "packages": ["Healable"]
     }

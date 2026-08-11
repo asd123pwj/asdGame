@@ -1,15 +1,9 @@
 class_name Attack
 extends InteractionBase
 
-func _init() -> void:
-    source_attr_category = "Strength"
-    compare_attr_category = "Defense"
-    target_attr_category = "Health"
-    like_attack()
+func interact(source: Character, target: Character, _config: Variant) -> Array[Enums.Code]:
 
-func interact(source: Character, target: Character, _config: Variant) -> Enums.Code:
-
-    var result = impact(source, target, target)
+    var result = attack(source, target, target, "Strength", "Defense", "Health")
     if (result.code == Enums.Code.OK) or (result.code == Enums.Code.FORBIDDEN):
         print("%s 对 %s 造成了 %d 点伤害" % [source.name, target.name, abs(result.offset)])
         # get_char_info(char_A)
@@ -17,4 +11,4 @@ func interact(source: Character, target: Character, _config: Variant) -> Enums.C
     if (result.code == Enums.Code.FORBIDDEN):
         pass
         # print("%s 死亡" % [char_B.name])
-    return result.code
+    return [result.code]

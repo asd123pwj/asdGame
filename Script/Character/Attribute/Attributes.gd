@@ -78,8 +78,13 @@ func check_limitation(category: String, impact_type: Enums.ValueType = Enums.Val
     var value_min = get_(category, Enums.ValueType.MIN)
     return value > value_min
 
-func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR) -> int:
-    var value = Utils.find_dict(attributes, [category, impact_type], null)
+func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false) -> int:
+    var value
+    if from_before:
+        value = Utils.find_dict(attributes_before, [category, impact_type], null)
+        if value != null:
+            return value
+    value = Utils.find_dict(attributes, [category, impact_type], null)
     if value == null:
         value = init_attribute(category, impact_type)
     return value
