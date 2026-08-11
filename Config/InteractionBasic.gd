@@ -7,5 +7,7 @@ var dependence_status: String
 var config: Array
 """
 var values: Array[Array] = [
-    ["Attack", "Touch", ["Strength", "Defense", "Health"]],
+    ["Attack", "Detect=>Touch", ["Strength", "Defense", "Health"]],
+    ["Eat", "Detect=>Edible"],
+    ["Heal", "Detect=>Healable"],
 ]

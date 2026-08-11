@@ -23,7 +23,8 @@ func _init(name: String, behavior_name: String, dependence_status: String, confi
 func _get_behavior_by_name() -> void:
     for cls in ProjectSettings.get_global_class_list():
         if cls["class"] == behavior_name:
-            behavoir = load(cls["path"])
+            @warning_ignore("unsafe_method_access")
+            behavoir = load(cls["path"]).new()
             return
     push_error("找不到类: ", behavior_name)
     behavoir = null

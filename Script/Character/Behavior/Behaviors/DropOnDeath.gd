@@ -1,9 +1,10 @@
 class_name DropOnDeath
-extends RefCounted
+extends BehaviorBase
 
 
-static func act(_char: Character, _config: Array) -> void:
-    var races = _config
+func act(_char: Character, _config: Variant) -> Enums.Code:
+    var races: Array[String] = _config
     for race in races:
         CharSys.spawn(race)
+    return Enums.Code.OK
     

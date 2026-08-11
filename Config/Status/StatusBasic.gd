@@ -28,6 +28,19 @@ with_detect: bool=false
 
 var values: Array[Dictionary] = [
     {
+        "name": "Healable" # 仅name时默认为真，可以作为标识符
+    },
+    {
+        "name": "Detect=>Healable",
+        "auto_reset": true,
+        "with_detect": true,
+    },
+    {   
+        "name": "Detect=>Edible",
+        "auto_reset": true,
+        "with_detect": true,
+    },
+    {
         "name": "Dead",
         "attrs": [["Health", "over_limit"]],
     }, {
@@ -42,7 +55,7 @@ var values: Array[Dictionary] = [
         "auto_reset": true,
         "behaviors": [["Rebirth", "act"]],
     }, {   
-        "name": "Touch",
+        "name": "Detect=>Touch",
         "auto_reset": true,
         "with_detect": true,
     }, {   

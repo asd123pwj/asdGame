@@ -4,14 +4,14 @@ extends PresetRegister
 
 var name: String
 var dependence_status: String
-var config: Array
+var config: Variant
 var interaction 
 
 static var _we: Dictionary[String, Interaction] = {}
 # {Char: {msg_ID: func}}
 var _trigger_funcs: Dictionary[Character, Dictionary] = {}
 
-func _init(name: String, dependence_status: String, config: Array = []) -> void:
+func _init(name: String, dependence_status: String, config: Variant = null) -> void:
     _we[name] = self
     self.name = name
     self.dependence_status = dependence_status
@@ -21,7 +21,8 @@ func _init(name: String, dependence_status: String, config: Array = []) -> void:
 func _get_interaction_by_name() -> void:
     for cls in ProjectSettings.get_global_class_list():
         if cls["class"] == name:
-            interaction = load(cls["path"])
+            @warning_ignore("unsafe_method_access")
+            interaction = load(cls["path"]).new()
             return
     push_error("找不到类: ", name)
     interaction = null

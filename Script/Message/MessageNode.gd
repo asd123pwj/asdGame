@@ -7,3 +7,6 @@ var message: Variant
 func _init():
     receivers = []
     message = null
+
+func check_not_empty() -> bool:
+    return receivers.size() > 0

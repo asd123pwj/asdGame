@@ -1,6 +1,7 @@
 class_name ScanInventory
-extends RefCounted
+extends BehaviorBase
 
 
-static func act(_char: Character, _config: Array) -> void:
+func act(_char: Character, _config: Variant) -> Enums.Code:
     _char.attrs.init_attribute("Health")
+    return Enums.Code.OK

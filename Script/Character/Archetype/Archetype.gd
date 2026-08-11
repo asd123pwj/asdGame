@@ -47,7 +47,8 @@ static func get_(name: String) -> Archetype:
             archetype.skills.append_array(content.skills)
             archetype.collisions.append_array(content.collisions)
         # 去重
-        archetype.buffs.assign(_deduplicate(archetype.buffs))
+        # buff 不用去重
+        # archetype.buffs.assign(_deduplicate(archetype.buffs))
         archetype.statuses.assign(_deduplicate(archetype.statuses))
         archetype.behaviors.assign(_deduplicate(archetype.behaviors))
         archetype.interactions.assign(_deduplicate(archetype.interactions))

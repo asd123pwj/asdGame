@@ -36,7 +36,7 @@ var values: Array[Dictionary] = [
     },
     {
         "name": "触觉",
-        "statuses": ["Touch"],
+        "statuses": ["Detect=>Touch"],
     },
     {
         "name": "掉落物感知",
@@ -47,26 +47,14 @@ var values: Array[Dictionary] = [
         "interactions": ["Attack"],
     },
     {
-        "name": "Human",
-        "buffs": ["Strength Base +3", "Defense Base +3", "Health Base +3"],
-        "bodies": ["Human"],
-        "packages": ["通用活体", "移动状态", "重生", "死亡掉落", "触觉", "掉落物感知", "接触伤害"]
+        "name": "消化系统",
+        "statuses": ["Detect=>Edible"],
+        "interactions": ["Eat"],
     },
     {
-        "name": "Rabbit",
-        "buffs": ["Strength Base +2", "Defense Base +2", "Health Base +3", "生命源于力量 Base", "力量源于生命 Base"],
-        "bodies": ["Yang"],
-        "packages": ["通用活体", "重生", "死亡掉落", "触觉", "掉落物感知", "接触伤害"]
-    },
-    {
-        "name": "Meat",
-        "buffs": ["Strength Base +2", "Defense Base +2", "Health Base +3"],
-        "bodies": ["Yang"],
-    },
-    {
-        "name": "Fur",
-        "buffs": ["Strength Base +2", "Defense Base +2", "Health Base +3"],
-        "bodies": ["Yang"],
-    },
+        "name": "Healable",
+        "statuses": ["Detect=>Healable", "Healable"],
+        "interactions": ["Heal"],
+    }
 ]
 

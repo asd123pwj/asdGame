@@ -25,6 +25,7 @@ func run() -> void:
     MsgHubSys.listen_spawn(char_spawn)
     char_A = CharSys.spawn("Human")
     char_B = CharSys.spawn("Rabbit")
+    char_C = CharSys.spawn("草药")
     MsgHubChar.listen_status_satisfied(char_A, "Injured", char_injured)
     MsgHubChar.listen_status_satisfied(char_B, "Injured", char_injured)
     MsgHubChar.listen_status_satisfied(char_A, "Dead", char_died)
@@ -37,7 +38,7 @@ func run() -> void:
     MsgHubChar.listen_status_unsatisfied(char_A, "Shift + Left Click", right)
     print(Sys.sysCfg.random_seed)
     @warning_ignore("missing_await")
-    # delay_loop_test()
+    delay_loop_test()
 
 func right(_msg: Character) -> void:
     print("角色 %s 向右移动" % _msg.name)
@@ -77,7 +78,8 @@ func delay_loop_test() -> void:
         Sys.timeSys.advance()
         if RandSys.rand.randi_range(0, 1) == 0:
             print("A触摸B")
-            MsgHubChar.send_status_detected(char_A, "Touch", char_B)
+            MsgHubChar.send_status_detected(char_A, "Detect=>Touch", char_B)
+            MsgHubChar.send_status_detected(char_B, "Detect=>Edible", char_C)
         # if RandSys.rand.randi_range(0, 3) == 0:
         #     print("B触摸A")
         #     MsgHubChar.send_status_detected(char_B, "Touch", char_A)

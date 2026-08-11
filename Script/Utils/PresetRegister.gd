@@ -18,28 +18,33 @@ static func register(class_: GDScript) -> void:
     var scripts: Array[GDScript] = _scan(class_)
     _add_presets(class_, scripts)
 
-## 扫描指定目录下的所有 .gd 脚本
+## 递归扫描指定目录及其子目录下的所有 .gd 脚本
 static func _scan(class_: GDScript) -> Array[GDScript]:
     var class_name_ = class_.resource_path.get_file().get_basename()
     var scripts : Array[GDScript] = []
-    var dir = DirAccess.open(Sys.SYS_CONFIG_DIR)
+    _scan_dir(Sys.SYS_CONFIG_DIR, class_name_, scripts)
+    return scripts
+
+
+static func _scan_dir(path: String, class_name_: String, scripts: Array[GDScript]) -> void:
+    var dir = DirAccess.open(path)
     if not dir:
-        push_warning("ConfigScanner: 目录不存在: ", Sys.SYS_CONFIG_DIR)
-        return scripts
+        push_warning("ConfigScanner: 目录不存在: ", path)
+        return
     dir.list_dir_begin()
     var file_name = dir.get_next()
     while file_name != "":
-        if not file_name.begins_with(class_name_):
-            file_name = dir.get_next()
-            continue
-        if file_name.ends_with(".gd") and not file_name.begins_with("."):
-            var script_path = Sys.SYS_CONFIG_DIR.path_join(file_name)
-            var script : GDScript = load(script_path)
+        var full_path = path.path_join(file_name)
+        if file_name.begins_with("."):
+            pass  # 跳过隐藏文件/目录
+        elif dir.current_is_dir():
+            _scan_dir(full_path, class_name_, scripts)  # 递归子目录
+        elif file_name.begins_with(class_name_) and file_name.ends_with(".gd"):
+            var script : GDScript = load(full_path)
             if script and script is GDScript and script.can_instantiate():
                 scripts.append(script)
         file_name = dir.get_next()
     dir.list_dir_end()
-    return scripts
 
 static func _add_presets(class_: GDScript, scripts: Array[GDScript]) -> void:
     for script: GDScript in scripts:
