@@ -9,5 +9,6 @@ var config: Array
 """
 var values: Array[Array] = [
     ["DropOnDeath", "DropOnDeath", "Dead", ["Meat", "Fur"]],
-    ["Rebirth", "Rebirth", "Dead"]
+    ["Rebirth", "Rebirth", "Dead"],
+    ["SayInjured", "SayChanged", "Injured", ["Health"]]
 ]

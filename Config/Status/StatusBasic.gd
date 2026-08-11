@@ -28,15 +28,15 @@ with_detect: bool=false
 
 var values: Array[Dictionary] = [
     {
-        "name": "Healable" # 仅name时默认为真，可以作为标识符
+        "name": "Healable" # 仅name时默认为true，可以作为标识符，用satisfied检测标识
     },
     {
         "name": "Detect=>Healable",
         "auto_reset": true,
         "with_detect": true,
     },
-    {
-        "name": "Detect=>HurtedBy",
+    {   
+        "name": "Detect=>CostHeal",
         "auto_reset": true,
         "with_detect": true,
     },

@@ -18,6 +18,8 @@ var values: Array[Dictionary] = [
         "name": "通用活体",
         "buffs": ["人被杀就会死"],
         "statuses": ["Dead", "Live", "Injured"],
+        "behaviors": ["SayInjured"],
+        "packages": ["CanBeHealed"]
     },
     {
         "name": "移动状态",
@@ -50,6 +52,11 @@ var values: Array[Dictionary] = [
         "name": "消化系统",
         "statuses": ["Detect=>Edible"],
         "interactions": ["Eat"],
+    },
+    {
+        "name": "CanBeHealed",
+        "statuses": ["Detect=>CostHeal"],
+        "interactions": ["CostHeal"],
     },
     {
         "name": "Healable",

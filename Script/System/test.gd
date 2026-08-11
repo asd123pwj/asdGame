@@ -23,8 +23,8 @@ func down_a(_msg) -> void:
 
 func run() -> void:
     MsgHubSys.listen_spawn(char_spawn)
-    char_A = CharSys.spawn("Human")
-    char_B = CharSys.spawn("Rabbit")
+    char_A = CharSys.spawn("人类")
+    char_B = CharSys.spawn("兔子")
     char_C = CharSys.spawn("草药")
     MsgHubChar.listen_status_satisfied(char_A, "Injured", char_injured)
     MsgHubChar.listen_status_satisfied(char_B, "Injured", char_injured)

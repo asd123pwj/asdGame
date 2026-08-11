@@ -8,7 +8,8 @@ var buffs: Dictionary[String, Dictionary] = {}
 ## {Category: {ValueType: attr_value}}
 var attributes: Dictionary[String, Dictionary] = {}
 var attributes_before: Dictionary[String, Dictionary] = {} # 和recover()配套，暂时没用
-
+var attributes_changed_by_who: Dictionary[String, Character] = {}
+var attributes_changed_by_how: Dictionary[String, String] = {}
 
 func _init(me: Character, attr_type_names: Array[String]) -> void:
     self.me = me
@@ -89,6 +90,11 @@ func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, 
         value = init_attribute(category, impact_type)
     return value
 
+func get_changed_by_how(category: String) -> String:
+    return Utils.find_dict(attributes_changed_by_how, [category], "")
+func get_changed_by_who(category: String) -> Character:
+    return Utils.find_dict(attributes_changed_by_who, [category], null)
+
 func _get_dynamic_value(value: int, multiplier: int) -> int:
     """ 无限范围的近似等比随机 """
     var v: int = RandSys.rand.randi_range(0, multiplier)
@@ -108,11 +114,19 @@ func _get_dynamic_value(value: int, multiplier: int) -> int:
             break
     return value + value_changed
 
-func _set_(category: String, value_new: int, impact_type: Enums.ValueType = Enums.ValueType.CUR) -> int:
+func _set_(
+        category: String, 
+        value_new: int, 
+        impact_type: Enums.ValueType = Enums.ValueType.CUR, 
+        changed_by_how: String = "", 
+        changed_by_who: Character = me) -> int:
     var value_before = Utils.find_dict(attributes, [category, impact_type], value_new)
     Utils.set_dict(attributes_before, [category, impact_type], value_before)
     Utils.set_dict(attributes, [category, impact_type], value_new)
-    if value_new != value_before:
+    # 暂时只关注CUR
+    if value_new != value_before and impact_type == Enums.ValueType.CUR:
+        Utils.set_dict(attributes_changed_by_how, [category], changed_by_how)
+        Utils.set_dict(attributes_changed_by_who, [category], changed_by_who)
         MsgHubChar.send_attr_changed(me, category)
 
     return value_new - value_before
@@ -122,9 +136,13 @@ func _recover(category: String, impact_type: Enums.ValueType = Enums.ValueType.C
     var value_offset = _set_(category, value_ori, impact_type)
     return value_offset
 
-func set_level_cur(category: String, value_new: int) -> ChangeResult:
+func set_level_cur(
+        category: String, 
+        value_new: int, 
+        changed_by_how: String, 
+        changed_by_who: Character) -> ChangeResult:
     var value_ori = get_(category)
-    var value_offset = _set_(category, value_new)
+    var value_offset = _set_(category, value_new, Enums.ValueType.CUR, changed_by_how, changed_by_who)
     var code: Enums.Code
     if check_limitation(category):
         if value_offset != 0:

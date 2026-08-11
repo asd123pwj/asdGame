@@ -3,28 +3,30 @@ extends PresetRegister
 
 
 var name: String
+var interaction_name: String
 var dependence_status: String
-var config: Variant
+var config: Array
 var interaction 
 
 static var _we: Dictionary[String, Interaction] = {}
 # {Char: {msg_ID: func}}
 var _trigger_funcs: Dictionary[Character, Dictionary] = {}
 
-func _init(name: String, dependence_status: String, config: Variant = null) -> void:
+func _init(name: String, interaction_name: String, dependence_status: String, config: Array = []) -> void:
     _we[name] = self
     self.name = name
+    self.interaction_name = interaction_name
     self.dependence_status = dependence_status
     self.config = config
     _get_interaction_by_name()
 
 func _get_interaction_by_name() -> void:
     for cls in ProjectSettings.get_global_class_list():
-        if cls["class"] == name:
+        if cls["class"] == interaction_name:
             @warning_ignore("unsafe_method_access")
             interaction = load(cls["path"]).new()
             return
-    push_error("找不到类: ", name)
+    push_error("找不到类: ", interaction_name)
     interaction = null
 
 static func get_(name: String) -> Interaction:
