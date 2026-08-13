@@ -10,5 +10,6 @@ var config: Array
 var values: Array[Array] = [
     ["DropOnDeath", "DropOnDeath", "Dead", ["Meat", "Fur"]],
     ["Rebirth", "Rebirth", "Dead"],
-    ["SayInjured", "SayChanged", "Injured", ["Health"]]
+    ["SayInjured", "SayChanged", "Injured", ["Health"]],
+    ["TryHealSelf", "TryHealSelf", "Injured"],
 ]

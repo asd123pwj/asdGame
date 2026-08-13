@@ -24,8 +24,7 @@ var values: Array[Dictionary] = [
         "name": "兔子",
         "buffs": ["Strength Base +2", "Defense Base +2", "Health Base +3", "生命源于力量 Base", "力量源于生命 Base"],
         "bodies": ["Yang"],
-        "inventories": ["DeadDrop"],
-        "packages": ["通用活体", "重生", "死亡掉落", "触觉", "掉落物感知", "接触伤害", "消化系统"]
+        "packages": ["通用活体", "重生", "死亡掉落", "触觉", "掉落物感知", "接触伤害", "消化系统", "Inventory"]
     },
     {
         "name": "Meat",

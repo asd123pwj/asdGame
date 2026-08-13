@@ -18,7 +18,7 @@ var values: Array[Dictionary] = [
         "name": "通用活体",
         "buffs": ["人被杀就会死"],
         "statuses": ["Dead", "Live", "Injured"],
-        "behaviors": ["SayInjured"],
+        "behaviors": ["SayInjured", "TryHealSelf"],
         "packages": ["CanBeHealed"]
     },
     {
@@ -62,6 +62,11 @@ var values: Array[Dictionary] = [
         "name": "Healable",
         "statuses": ["Detect=>Healable", "Healable"],
         "interactions": ["Heal"],
+    },
+    {
+        "name": "Inventory",
+        "inventories": ["DeadDrop", "Backpack"],
+
     }
 ]
 

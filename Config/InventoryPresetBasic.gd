@@ -8,4 +8,5 @@ var config: Array
 """
 var values: Array[Array] = [
     ["DeadDrop", "DeadDrop", ["Meat", "Fur"]],
+    ["Backpack", "Backpack", ["草药"]]
 ]

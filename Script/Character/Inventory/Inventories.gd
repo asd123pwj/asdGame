@@ -11,9 +11,11 @@ func _init(me: Character, inventories_name: Array[String]) -> void:
     self.me = me
     add_inventories(inventories_name)
 
-func get_DeadDrop() -> Array:
-    return inventories["DeadDrop"].get_contents(me)
+func get_DeadDrop() -> Array: return get_contents("DeadDrop")
+func get_Backpack() -> Array: return get_contents("Backpack")
 func get_contents(inventory_name: String) -> Array:
+    if not inventories.has(inventory_name):
+        return []
     return inventories[inventory_name].get_contents(me)
 
 func print_contens(inventory: String) -> void:
