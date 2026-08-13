@@ -16,13 +16,13 @@ packages: Array[String]=[],
 var values: Array[Dictionary] = [
     {
         "name": "人类",
-        "buffs": ["Strength Base +3", "Defense Base +3", "Health Base +3"],
+        "buffs": ["Strength Base +3", "Defense Base +3", "Health Base +3", "Strength Multiplier =2"],
         "bodies": ["Human"],
         "packages": ["通用活体", "移动状态", "重生", "死亡掉落", "触觉", "掉落物感知", "接触伤害"]
     },
     {
         "name": "兔子",
-        "buffs": ["Strength Base +2", "Defense Base +2", "Health Base +3", "生命源于力量 Base", "力量源于生命 Base"],
+        "buffs": ["Strength Base +2", "Defense Base +3", "Health Base +3", "生命源于力量 Base", "力量源于生命 Base"],
         "bodies": ["Yang"],
         "packages": ["通用活体", "重生", "死亡掉落", "触觉", "掉落物感知", "接触伤害", "消化系统", "Inventory"]
     },

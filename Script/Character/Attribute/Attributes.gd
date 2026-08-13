@@ -56,20 +56,25 @@ func check_buff(buff_name: String) -> bool:
 func check_attribute(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR) -> bool:
     return Utils.find_dict(attributes, [category, impact_type], null) != null
 
-func init_attribute(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR) -> int:
+func init_attribute(
+        category: String, 
+        impact_type: Enums.ValueType = Enums.ValueType.CUR,
+        changed_by_how: String = "Init", 
+        changed_by_who: Character = me
+        ) -> int:
     var value: int
     if impact_type == Enums.ValueType.CUR:
         # CUR的值取决于BASE和MULTIPLIER
         var value_base = init_attribute(category, Enums.ValueType.BASE)
         var multiplier = init_attribute(category, Enums.ValueType.MULTIPLIER)
-        value = _get_dynamic_value(value_base, multiplier)
+        value = get_dynamic_value(value_base, multiplier)
     else:
         # 其它值的基准值从世界默认值开始叠加
         value = Sys.sysCfg.dao_init_value[impact_type]
     var dict: Dictionary = Utils.find_dict(buffs, [category, impact_type], {})
     for buff: Buff in dict.values():
         value = buff.apply(value, me)
-    _set_(category, value, impact_type)
+    _set_(category, value, impact_type, changed_by_how, changed_by_who)
     return value
 
 func check_limitation(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR) -> bool:
@@ -79,15 +84,16 @@ func check_limitation(category: String, impact_type: Enums.ValueType = Enums.Val
     var value_min = get_(category, Enums.ValueType.MIN)
     return value > value_min
 
-func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false) -> int:
+func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false, dynamic: bool = false) -> int:
     var value
     if from_before:
         value = Utils.find_dict(attributes_before, [category, impact_type], null)
-        if value != null:
-            return value
-    value = Utils.find_dict(attributes, [category, impact_type], null)
+    if value == null:
+        value = Utils.find_dict(attributes, [category, impact_type], null)
     if value == null:
         value = init_attribute(category, impact_type)
+    if dynamic:
+        value = get_dynamic_value(value, get_(category, Enums.ValueType.MULTIPLIER))
     return value
 
 func get_changed_by_how(category: String) -> String:
@@ -95,16 +101,16 @@ func get_changed_by_how(category: String) -> String:
 func get_changed_by_who(category: String) -> Character:
     return Utils.find_dict(attributes_changed_by_who, [category], null)
 
-func _get_dynamic_value(value: int, multiplier: int) -> int:
+func get_dynamic_value(value: int, multiplier: int) -> int:
     """ 无限范围的近似等比随机 """
     var v: int = RandSys.rand.randi_range(0, multiplier)
     if v != 0: # 抽到当前level
         return value
-    v = RandSys.rand.randi_range(0, multiplier + 1)
+    v = RandSys.rand.randi_range(0, 1)  # 抽方向
     var dir: int = 0
     if v == 0:                       # 抽到减少
         dir = -1
-    elif v == multiplier + 1:        # 抽到增加
+    elif v == 1:        # 抽到增加
         dir = 1
     var value_changed: int = 0
     while true:

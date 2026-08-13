@@ -31,6 +31,11 @@ var values: Array[Dictionary] = [
         "name": "Healable" # 仅name时默认为true，可以作为标识符，用satisfied检测标识
     },
     {
+        "name": "Detect=>熟能生巧",
+        "auto_reset": true,
+        "with_detect": true,
+    },
+    {
         "name": "Detect=>Healable",
         "auto_reset": true,
         "with_detect": true,

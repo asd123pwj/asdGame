@@ -12,7 +12,7 @@ method: Enums.ModificationMethod = Enums.ModificationMethod.ADD
 """
 var values: Array[Array] = [
     # ["Strength Base Base", "Strength", Enums.ValueType.BASE, 3],
-    ["Strength Multiplier =10", "Strength", Enums.ValueType.MULTIPLIER, 10, Enums.ModificationMethod.SET],
+    ["Strength Multiplier =2", "Strength", Enums.ValueType.MULTIPLIER, 2, Enums.ModificationMethod.SET],
     # ["Defense Base", "Defense", Enums.ValueType.BASE, 3],
     ["Defense Multiplier =10", "Defense", Enums.ValueType.MULTIPLIER, 10, Enums.ModificationMethod.SET],
     # ["Health Base", "Health", Enums.ValueType.BASE, 3],

@@ -11,4 +11,5 @@ var values: Array[Array] = [
     ["Eat", "Eat", "Detect=>Edible"],
     ["Heal", "Heal", "Detect=>Healable"],
     ["CostHeal", "CostHeal", "Detect=>CostHeal"],
+    ["熟能生巧", "熟能生巧", "Detect=>熟能生巧"],
 ]
