@@ -12,6 +12,7 @@ var interactions: Array[String]
 var bodies: Array[String]
 var skills: Array[String]
 var collisions: Array[String]
+var inventories: Array[String]
 var packages: Array[String]
 var _unpacked: bool = false
 
@@ -29,6 +30,7 @@ func _init(config: Dictionary) -> void:
     self.bodies.assign(Utils.find_dict(config, ["bodies"], []))
     self.skills.assign(Utils.find_dict(config, ["skills"], []))
     self.collisions.assign(Utils.find_dict(config, ["collisions"], []))
+    self.inventories.assign(Utils.find_dict(config, ["inventories"], []))
     self.packages.assign(Utils.find_dict(config, ["packages"], []))
 
 static func get_(name: String) -> Archetype:
@@ -46,6 +48,8 @@ static func get_(name: String) -> Archetype:
             archetype.bodies.append_array(content.bodies)
             archetype.skills.append_array(content.skills)
             archetype.collisions.append_array(content.collisions)
+            archetype.inventories.append_array(content.inventories)
+
         # 去重
         # buff 不用去重
         # archetype.buffs.assign(_deduplicate(archetype.buffs))
@@ -55,6 +59,8 @@ static func get_(name: String) -> Archetype:
         archetype.bodies.assign(_deduplicate(archetype.bodies))
         archetype.skills.assign(_deduplicate(archetype.skills))
         archetype.collisions.assign(_deduplicate(archetype.collisions))
+        archetype.inventories.assign(_deduplicate(archetype.inventories))
+
     return archetype
 
 

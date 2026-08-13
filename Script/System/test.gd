@@ -22,44 +22,14 @@ func down_a(_msg) -> void:
 
 
 func run() -> void:
-    MsgHubSys.listen_spawn(char_spawn)
     char_A = CharSys.spawn("人类")
     char_B = CharSys.spawn("兔子")
     char_C = CharSys.spawn("草药")
-    MsgHubChar.listen_status_satisfied(char_A, "Injured", char_injured)
-    MsgHubChar.listen_status_satisfied(char_B, "Injured", char_injured)
-    MsgHubChar.listen_status_satisfied(char_A, "Dead", char_died)
-    MsgHubChar.listen_status_satisfied(char_B, "Dead", char_died)
-    MsgHubChar.listen_status_satisfied(char_A, "Rebirth", char_rebirth)
-    MsgHubChar.listen_status_satisfied(char_B, "Rebirth", char_rebirth)
-    MsgHubChar.listen_status_satisfied(char_A, "Left", left)
-    MsgHubChar.listen_status_satisfied(char_A, "Right", right)
-    MsgHubChar.listen_status_satisfied(char_A, "Shift + Left Click", right)
-    MsgHubChar.listen_status_unsatisfied(char_A, "Shift + Left Click", right)
+    char_B.inventories.print_contens("DeadDrop")
     print(Sys.sysCfg.random_seed)
     @warning_ignore("missing_await")
     delay_loop_test()
 
-func right(_msg: Character) -> void:
-    print("角色 %s 向右移动" % _msg.name)
-
-func left(_msg: Character) -> void:
-    print("角色 %s 向左移动" % _msg.name)
-
-func up(_msg: Character) -> void:
-    print("角色 %s 向上移动" % _msg.name)
-
-func char_spawn(char_) -> void:
-    print("角色 %s 生成" % char_.name)
-
-func char_injured(_msg: Character) -> void:
-    get_char_info(_msg)
-
-func char_died(_msg: Character) -> void:
-    print(_msg.name + "死亡")
-
-func char_rebirth(_msg: Character) -> void:
-    print(_msg.name + "复活")
 
 func get_char_info(char_: Character) -> void:
     var info: String = char_.name
@@ -69,7 +39,7 @@ func get_char_info(char_: Character) -> void:
 
 
 func delay_loop_test() -> void:
-    Sys.msgBus.listen(TimeSys.msgID_advance, when_time_advance)
+    MsgHubTime.listen_advance(when_time_advance)
     get_char_info(char_A)
     get_char_info(char_B)
     

@@ -10,6 +10,7 @@ var behaviors: Behaviors
 var interactions: Interactions
 var skills: Skills
 var collisions: Collisions
+var inventories: Inventories
 """ ----- Actor ----- """
 var body: CharacterBody2D
 
@@ -17,26 +18,29 @@ static var _we: Dictionary[int, Character] = {}
 
 var ID: int = get_instance_id()
 
-func _init(race_name: String, name: String="") -> void:
+func _init(archetype_type: String, name: String="") -> void:
     _we[ID] = self
-    self.name = name if name != "" else race_name
-    _init_as_race(race_name)
+    self.name = name if name != "" else archetype_type
+    _init_from_archetype(archetype_type)
 
 func physics_process(delta: float) -> void:
     skills.physics_process(delta)
 
-func _init_as_race(race_name: String) -> void:
-    var archetype: Archetype = Archetype.get_(race_name)
-    body = _init_body(archetype.bodies[0])
+func _init_from_archetype(archetype_type: String) -> void:
+    var archetype: Archetype = Archetype.get_(archetype_type)
+    create_body(archetype_type)
     attrs = Attributes.new(self, archetype.buffs)
     statuses = Statuses.new(self, archetype.statuses)
     behaviors = Behaviors.new(self, archetype.behaviors)
     interactions = Interactions.new(self, archetype.interactions)
     skills = Skills.new(self, archetype.skills)
     collisions = Collisions.new(self, archetype.collisions)
+    inventories = Inventories.new(self, archetype.inventories)
 
-func _init_body(body_name: String) -> CharacterBody2D:
-    var body = Body.get_(body_name).create()
+
+func create_body(archetype_type: String) -> CharacterBody2D:
+    var body_name: String = Archetype.get_(archetype_type).bodies[0]
+    body = Body.get_(body_name).create()
     body.set_meta("character", self)
     if body_name == "Human":
         body.position = Vector2(64, 128)

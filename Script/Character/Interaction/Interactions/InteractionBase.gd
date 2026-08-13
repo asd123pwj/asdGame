@@ -1,11 +1,11 @@
 class_name InteractionBase
 extends RefCounted
 
-var class_name_: String
+@warning_ignore("unsafe_method_access")
+var CLASS_NAME: String = get_script().get_global_name()
 
 func _init() -> void:
-    var script: Script = get_script()
-    class_name_ = script.get_global_name()
+    pass
 
 
 func interact(_source: Character, _target: Character, _config: Array) -> Enums.Code:
@@ -57,4 +57,4 @@ func impact(
     offset = offset if isPositive else -offset
     var level_cur_C_new = value_target + offset 
 
-    return attr_target.set_level_cur(target_attr_category, level_cur_C_new, class_name_, char_source)
+    return attr_target.set_level_cur(target_attr_category, level_cur_C_new, CLASS_NAME, char_source)

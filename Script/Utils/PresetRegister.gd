@@ -53,6 +53,9 @@ static func _add_presets(class_: GDScript, scripts: Array[GDScript]) -> void:
             _add_preset(class_, value)
 
 static func _add_preset(class_: GDScript, args) -> void:
+    # if class_ is InventoryBase:
+    #     class_.presets[args[0]] = args
+
     if typeof(args) == TYPE_ARRAY:
         class_.new.callv(args)
     elif typeof(args) == TYPE_DICTIONARY:

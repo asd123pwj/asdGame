@@ -175,3 +175,19 @@ static func listen_collision_enter(char_: Character, collision_name: String, cal
 
 static func listen_collision_exit(char_: Character, collision_name: String, callback: Callable) -> String:
     return _listen(char_, "COLLISION", collision_name, "exit", callback)
+
+
+    
+""" ---------- Character Inventory ---------- """
+static func send_inventory_add(char_: Character, inventory_name: String) -> Enums.Code:
+    return _send(char_, "INVENTORY", inventory_name, "add")
+
+static func send_inventory_remove(char_: Character, inventory_name: String) -> Enums.Code:
+    return _send(char_, "INVENTORY", inventory_name, "remove")
+
+
+static func listen_inventory_add(char_: Character, inventory_name: String, callback: Callable) -> String:
+    return _listen(char_, "INVENTORY", inventory_name, "add", callback)
+
+static func listen_inventory_remove(char_: Character, inventory_name: String, callback: Callable) -> String:
+    return _listen(char_, "INVENTORY", inventory_name, "remove", callback)

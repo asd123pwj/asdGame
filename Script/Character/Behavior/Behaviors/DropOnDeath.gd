@@ -3,8 +3,8 @@ extends BehaviorBase
 
 
 func act(_char: Character, _config: Array) -> Enums.Code:
-    var races: Array = _config
-    for race in races:
-        CharSys.spawn(race)
+    for race in _char.inventories.get_DeadDrop():
+        # CharSys.spawn(race)
+        print("DropOnDeath: ", race.name)
     return Enums.Code.OK
     

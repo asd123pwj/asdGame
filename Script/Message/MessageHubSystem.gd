@@ -17,12 +17,18 @@ static func send_command(message: Variant) -> Enums.Code:
     return _send("COMMAND", message)
 
 """ ---------- Spawn or Destory ---------- """
+static func send_char_create(char_: Character) -> Enums.Code:
+    return _send("CHAR_CREATE", char_)
+
 static func send_spawn(char_: Character) -> Enums.Code:
     return _send("SPAWN", char_)
 
 static func send_destory(char_: Character) -> Enums.Code:
     return _send("DESTORY", char_)
 
+
+static func listen_char_create(callback: Callable) -> String:
+    return _listen("CHAR_CREATE", callback)
 
 static func listen_spawn(callback: Callable) -> String:
     return _listen("SPAWN", callback)
