@@ -7,7 +7,13 @@ auto_reset: bool = false,
 match_any: bool = false,
 attrs: Array[Array[ListenType]]=[]   
     [["name", "condition", value], ["name", "condition", value]]
-    condition: changed, not_modified, out_of_limited, >, >=, <, <=, ==, !=
+    condition: changed, not_modified, out_of_limited, 
+    #  >,        >=,        <,        <=,        ==,        !=
+    # ">Base",  ">=Base",  "<Base",  "<=Base",  "==Base",  "!=Base",
+    # ">Base+", ">=Base+", "<Base+", "<=Base+", "==Base+", "!=Base+",
+    # ">Base-", ">=Base-", "<Base-", "<=Base-", "==Base-", "!=Base-",
+    # ">Base*", ">=Base*", "<Base*", "<=Base*", "==Base*", "!=Base*",
+    # ">Base/", ">=Base/", "<Base/", "<=Base/", "==Base/", "!=Base/",
 buffs: Array[Array[ListenType]]=[],
     [["name", "condition"], ["name", "condition"]]
     condition: present, absent
@@ -27,6 +33,10 @@ with_detect: bool=false
 """
 
 var values: Array[Dictionary] = [
+    {
+        "name": "Health<=Base/2",
+        "attrs": [["Health", "<=Base/", 2]]
+    },
     {
         "name": "Healable" # 仅name时默认为true，可以作为标识符，用satisfied检测标识
     },

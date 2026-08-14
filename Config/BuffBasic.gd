@@ -36,7 +36,7 @@ var values: Array[Array] = [
     ["Defense Base -2", "Defense", Enums.ValueType.BASE, -2],
     ["Defense Base -3", "Defense", Enums.ValueType.BASE, -3],
 
-    ["Health Base +1", "Health", Enums.ValueType.BASE, 1],
+    ["Health Base +10", "Health", Enums.ValueType.BASE, 10],
     ["Health Base +2", "Health", Enums.ValueType.BASE, 2],
     ["Health Base +3", "Health", Enums.ValueType.BASE, 3],
     ["Health Base *10", "Health", Enums.ValueType.BASE, 10, Enums.ModificationMethod.MULTIPLY],

@@ -11,5 +11,5 @@ var values: Array[Array] = [
     ["DropOnDeath", "DropOnDeath", "Dead", ["Meat", "Fur"]],
     ["Rebirth", "Rebirth", "Dead"],
     ["SayInjured", "SayChanged", "Injured", ["Health"]],
-    ["TryHealSelf", "TryHealSelf", "Injured"],
+    ["TryHealSelf", "TryHealSelf", "Health<=Base/2"],
 ]

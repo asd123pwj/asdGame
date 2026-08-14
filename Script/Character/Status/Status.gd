@@ -31,7 +31,13 @@ var _trigger_funcs: Dictionary[Character, Dictionary] = {}
 # static var new_: Callable
 static var _we: Dictionary[String, Status] = {}
 
-## attrs: 支持changed, over_limit, within_limit, >, >=, <, <=, ==, !=
+## attrs: 支持changed, over_limit, within_limit, 
+    #  >,        >=,        <,        <=,        ==,        !=
+    # ">Base",  ">=Base",  "<Base",  "<=Base",  "==Base",  "!=Base",
+    # ">Base+", ">=Base+", "<Base+", "<=Base+", "==Base+", "!=Base+",
+    # ">Base-", ">=Base-", "<Base-", "<=Base-", "==Base-", "!=Base-",
+    # ">Base*", ">=Base*", "<Base*", "<=Base*", "==Base*", "!=Base*",
+    # ">Base/", ">=Base/", "<Base/", "<=Base/", "==Base/", "!=Base/",
 ## buffs: 支持present, absent
 ## statuses: 支持satisfied, unsatisfied
 ## behaviors: 支持present, absent, act
@@ -100,6 +106,47 @@ func listen(char_: Character) -> void:
             trigger_func = func(_msg): 
                 var level_cur = char_.attrs.get_(listener.name)
                 self._attr_triggers[char_][listener.name] = listener.check(level_cur)
+                execute(char_)
+            msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
+        elif listener.match_type in [
+            ">Base", ">=Base", "<Base", "<=Base", "==Base", "!=Base",
+            ">Base+", ">=Base+", "<Base+", "<=Base+", "==Base+", "!=Base+",
+            ">Base-", ">=Base-", "<Base-", "<=Base-", "==Base-", "!=Base-",
+            ">Base*", ">=Base*", "<Base*", "<=Base*", "==Base*", "!=Base*",
+            ">Base/", ">=Base/", "<Base/", "<=Base/", "==Base/", "!=Base/",
+            ]:
+            # 获取当前type是否满足条件
+            # if char_.attrs.check_attr_type(listener.name):
+            var b = char_.attrs.get_(listener.name, Enums.ValueType.BASE)
+            var cur = char_.attrs.get_(listener.name)
+            @warning_ignore_start("unsafe_method_access")
+            if listener.match_type.ends_with("+"):
+                b += listener.thres
+            elif listener.match_type.ends_with("-"):
+                b -= listener.thres
+            elif listener.match_type.ends_with("*"):
+                b *= listener.thres
+            elif listener.match_type.ends_with("/"):
+                b /= listener.thres
+            @warning_ignore_restore("unsafe_method_access")
+            trigger_cur = listener.check(cur, b)
+            # 同样是两个监听器，上面用于监控值变化后是否满足条件，下面用于监控type被移除
+            trigger_func = func(_msg): 
+                var b_ = char_.attrs.get_(listener.name, Enums.ValueType.BASE)
+                var cur_ = char_.attrs.get_(listener.name)
+                @warning_ignore_start("unsafe_method_access")
+                if listener.match_type.ends_with("+"):
+                    b_ += listener.thres
+                elif listener.match_type.ends_with("-"):
+                    b_ -= listener.thres
+                elif listener.match_type.ends_with("*"):
+                    b_ *= listener.thres
+                elif listener.match_type.ends_with("/"):
+                    b_ /= listener.thres
+                @warning_ignore_restore("unsafe_method_access")
+                self._attr_triggers[char_][listener.name] = listener.check(cur_, b_)
                 execute(char_)
             msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func

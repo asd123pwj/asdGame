@@ -11,18 +11,24 @@ func _init(name: Variant, match: Variant = null, thres: int = INT64_MIN) -> void
     self.match_type = match
     self.thres = thres
 
-func check(value: int) -> bool:
-    if match_type == "==":
-        return value == thres
-    elif match_type == "!=":
-        return value != thres
-    elif match_type == ">=":
-        return value >= thres
-    elif match_type == "<=":
-        return value <= thres
-    elif match_type == ">":
-        return value > thres
-    elif match_type == "<":
-        return value < thres
+func check(a: int, b = null) -> bool:
+    var compare: int = thres
+    if typeof(b) == TYPE_INT:
+        compare = b
+    else:
+        print("TODO: 报错check")
+    @warning_ignore_start("unsafe_method_access")
+    if match_type.begins_with("=="):
+        return a == compare
+    elif match_type.begins_with("!="):
+        return a != compare
+    elif match_type.begins_with(">="):
+        return a >= compare
+    elif match_type.begins_with("<="):
+        return a <= compare
+    elif match_type.begins_with(">"):
+        return a > compare
+    elif match_type.begins_with("<"):
+        return a < compare
     else:
         return false
