@@ -71,7 +71,7 @@ func impact(
     return attr_target.set_level_cur(target_attr_category, level_cur_new, CLASS_NAME, char_source)
 
     
-func 熟能生巧(char_: Character, attr_category: String) -> ChangeResult:
+func practice(char_: Character, attr_category: String) -> ChangeResult:
     var attr = char_.attrs
     var level_cur = attr.get_(attr_category)
     var level_base = attr.get_(attr_category, Enums.ValueType.BASE, false, true)

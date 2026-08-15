@@ -39,7 +39,7 @@ func get_char_info(char_: Character) -> void:
 
 
 func delay_loop_test() -> void:
-    MsgHubTime.listen_advance(when_time_advance)
+    MsgHubTime.listen_advance_hour(when_time_advance)
     get_char_info(char_A)
     get_char_info(char_B)
     

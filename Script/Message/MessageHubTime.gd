@@ -28,8 +28,8 @@ static func send_advance_day(message: Variant) -> Enums.Code:
 static func send_advance_hour(message: Variant) -> Enums.Code:
     return _send("ADVANCE_HOUR", message)
 
-static func send_advance(message: Variant) -> Enums.Code:
-    return _send("ADVANCE", message)
+# static func send_advance(message: Variant) -> Enums.Code:
+#     return _send("ADVANCE", message)
 
 static func listen_advance_year(callback: Callable) -> String:
     return _listen("ADVANCE_YEAR", callback)
@@ -46,5 +46,5 @@ static func listen_advance_day(callback: Callable) -> String:
 static func listen_advance_hour(callback: Callable) -> String:
     return _listen("ADVANCE_HOUR", callback)
 
-static func listen_advance(callback: Callable) -> String:
-    return _listen("ADVANCE", callback)
+# static func listen_advance(callback: Callable) -> String:
+#     return _listen("ADVANCE", callback)

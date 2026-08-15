@@ -40,7 +40,7 @@ func _init_from_archetype(archetype_type: String) -> void:
 
 func create_body(archetype_type: String) -> CharacterBody2D:
     var body_name: String = Archetype.get_(archetype_type).bodies[0]
-    body = Body.get_(body_name).create()
+    body = BodyPreset.get_(body_name).create()
     body.set_meta("character", self)
     if body_name == "Human":
         body.position = Vector2(64, 128)

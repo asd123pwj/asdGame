@@ -3,7 +3,7 @@ extends RefCounted
 
 
 var me: Character
-var statuses: Dictionary[String, Status] = {}
+var statuses: Dictionary[String, StatusPreset] = {}
 
 func _init(me: Character, status_name: Array[String]) -> void:
     self.me = me
@@ -25,7 +25,7 @@ func add_statuses(status_name: Array[String]) -> Array[Enums.Code]:
 func add_status(status_name: String) -> Enums.Code:
     if statuses.has(status_name):
         return Enums.Code.NOT_MODIFIED
-    var status: Status = Status.get_(status_name)
+    var status: StatusPreset = StatusPreset.get_(status_name)
     statuses[status_name] = status
     status.listen(me)
     MsgHubChar.send_status_add(me, status_name)

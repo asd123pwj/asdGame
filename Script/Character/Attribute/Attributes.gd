@@ -3,7 +3,7 @@ extends RefCounted
 
 var me: Character
 ## Category指的是Buff的所属类别，例如攻击加成A与攻击加成B共同影响攻击值
-## {Category: {ValueType: {BuffName: Buff}}}
+## {Category: {ValueType: {BuffName: BuffPreset}}}
 var buffs: Dictionary[String, Dictionary] = {}
 ## {Category: {ValueType: attr_value}}
 var attributes: Dictionary[String, Dictionary] = {}
@@ -24,7 +24,7 @@ func add_buffs(buff_names: Array[String]) -> Array[Enums.Code]:
     return codes
 
 func add_buff(buff_name: String) -> Enums.Code:
-    var buff = Buff.get_(buff_name)
+    var buff = BuffPreset.get_(buff_name)
     if Utils.find_dict(buffs, [buff.category, buff.value_type, buff.name], null) != null:
         return Enums.Code.NOT_MODIFIED
     Utils.set_dict(buffs, [buff.category, buff.value_type, buff.name], buff)
@@ -40,7 +40,7 @@ func remove_buffs(buff_names: Array[String]) -> Array[Enums.Code]:
     return codes
 
 func remove_buff(buff_name: String) -> Enums.Code:
-    var buff = Buff.get_(buff_name)
+    var buff = BuffPreset.get_(buff_name)
     var dict:Dictionary = Utils.find_dict(buffs, [buff.category, buff.value_type], {})
     if not dict.erase(buff.name):
         return Enums.Code.NOT_MODIFIED
@@ -50,7 +50,7 @@ func remove_buff(buff_name: String) -> Enums.Code:
     return Enums.Code.OK
 
 func check_buff(buff_name: String) -> bool:
-    var buff = Buff.get_(buff_name)
+    var buff = BuffPreset.get_(buff_name)
     return Utils.find_dict(buffs, [buff.category, buff.value_type, buff.name], null) != null
 
 func check_attribute(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR) -> bool:
@@ -72,7 +72,7 @@ func init_attribute(
         # 其它值的基准值从世界默认值开始叠加
         value = Sys.sysCfg.dao_init_value[impact_type]
     var dict: Dictionary = Utils.find_dict(buffs, [category, impact_type], {})
-    for buff: Buff in dict.values():
+    for buff: BuffPreset in dict.values():
         value = buff.apply(value, me)
     _set_(category, value, impact_type, changed_by_how, changed_by_who)
     return value

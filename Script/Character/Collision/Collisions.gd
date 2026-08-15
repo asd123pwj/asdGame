@@ -3,7 +3,7 @@ extends RefCounted
 
 
 var me: Character
-var collisions: Dictionary[String, Collision] = {}
+var collisions: Dictionary[String, CollisionPreset] = {}
 
 
 func _init(me: Character, collision_name: Array[String]) -> void:
@@ -22,7 +22,7 @@ func add_collisions(collision_name: Array[String]) -> Array[Enums.Code]:
 func add_collision(collision_name: String) -> Enums.Code:
     if collision_name in collisions:
         return Enums.Code.NOT_MODIFIED
-    var collision = Collision.get_(collision_name)
+    var collision = CollisionPreset.get_(collision_name)
     collisions[collision_name] = collision
     collision.listen(me)
     MsgHubChar.send_collision_add(me, collision_name)

@@ -28,7 +28,7 @@ static func send_attr_changed(char_: Character, type_name: String) -> Enums.Code
 static func listen_attr_changed(char_: Character, type_name: String, callback: Callable) -> String:
     return _listen(char_, "ATTR", type_name, "changed", callback)
 
-""" ---------- Buff ---------- """
+""" ---------- BuffPreset ---------- """
 static func send_buff_add(char_: Character, buff_name: String) -> Enums.Code:
     return _send(char_, "BUFF", buff_name, "add")
 
@@ -111,7 +111,7 @@ static func listen_behavior_act(char_: Character, behavior_name: String, callbac
     return _listen(char_, "BEHAVIOR", behavior_name, "act", callback)
 
     
-""" ---------- Character Interaction ---------- """
+""" ---------- Character InteractionPreset ---------- """
 static func send_interaction_add(char_: Character, interaction_name: String) -> Enums.Code:
     return _send(char_, "INTERACTION", interaction_name, "add")
 
@@ -151,7 +151,7 @@ static func listen_skill_act(char_: Character, skill_name: String, callback: Cal
     return _listen(char_, "SKILL", skill_name, "act", callback)
 
 
-""" ---------- Character Collision ---------- """
+""" ---------- Character CollisionPreset ---------- """
 static func send_collision_add(char_: Character, collision_name: String) -> Enums.Code:
     return _send(char_, "COLLISION", collision_name, "add")
 

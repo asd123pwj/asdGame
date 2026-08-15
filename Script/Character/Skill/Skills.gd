@@ -3,7 +3,7 @@ extends RefCounted
 
 
 var me: Character
-var skills: Dictionary[String, Skill] = {}
+var skills: Dictionary[String, SkillPreset] = {}
 
 ## {act_func: config}
 var skill_queue: Dictionary[SkillBase, Array] = {}
@@ -29,7 +29,7 @@ func add_skills(skill_name: Array[String]) -> Array[Enums.Code]:
 func add_skill(skill_name: String) -> Enums.Code:
     if skill_name in skills:
         return Enums.Code.NOT_MODIFIED
-    var skill = Skill.get_(skill_name)
+    var skill = SkillPreset.get_(skill_name)
     skills[skill_name] = skill
     skill.listen(me)
     MsgHubChar.send_skill_add(me, skill_name)

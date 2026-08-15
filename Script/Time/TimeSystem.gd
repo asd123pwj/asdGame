@@ -43,7 +43,6 @@ func advance() -> void:
                     year += 1
                     year_changed = true
     TimeFormat.update()
-    MsgHubTime.send_advance("")
     if year_changed:
         MsgHubTime.send_advance_year(year)
     if month_changed:
@@ -52,3 +51,4 @@ func advance() -> void:
         MsgHubTime.send_advance_xun(xun)
     if day_changed:
         MsgHubTime.send_advance_day(day)
+    MsgHubTime.send_advance_hour(hour)
