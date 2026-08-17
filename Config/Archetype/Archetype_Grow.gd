@@ -30,5 +30,10 @@ var values: Array[Dictionary] = [
         "statuses": ["Detect=>Practice"],
         "interactions": ["Practice"],
     },
+    {
+        "name": "Nourish",
+        "statuses": ["Detect=>Nourish"],
+        "interactions": ["Nourish"],
+    }
 ]
 

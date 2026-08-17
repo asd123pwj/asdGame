@@ -46,4 +46,9 @@ var values: Array[Dictionary] = [
         "auto_reset": true,
         "with_detect": true,
     },
+    {
+        "name": "Detect=>Nourish",
+        "auto_reset": true,
+        "with_detect": true,
+    }
 ]

@@ -3,9 +3,9 @@ extends RefCounted
 
 var me: Character
 var name: String
-var hitbox: CollisionObject2D
+var hitbox: Area2D
 
-func _init(char_: Character, name_: String, config: Array):
+func _init(char_: Character, name_: String, _config: Array):
     me = char_
     name = name_
 

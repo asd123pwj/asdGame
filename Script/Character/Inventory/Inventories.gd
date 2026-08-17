@@ -18,7 +18,7 @@ func get_contents(inventory_name: String) -> Array:
         return []
     return inventories[inventory_name].get_contents(me)
 
-func print_contens(inventory: String) -> void:
+func print_contents(inventory: String) -> void:
     if not inventories.has(inventory):
         return
     inventories[inventory].print_contents(me)

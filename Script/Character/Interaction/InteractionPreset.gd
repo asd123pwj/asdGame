@@ -5,14 +5,14 @@ extends PresetRegister
 var name: String
 var interaction_name: String
 var dependence_status: String
-var config: Array
+var config
 var interaction 
 
 static var _we: Dictionary[String, InteractionPreset] = {}
 # {Char: {msg_ID: func}}
 var _trigger_funcs: Dictionary[Character, Dictionary] = {}
 
-func _init(name: String, interaction_name: String, dependence_status: String, config: Array = []) -> void:
+func _init(name: String, interaction_name: String, dependence_status: String, config = null) -> void:
     _we[name] = self
     self.name = name
     self.interaction_name = interaction_name

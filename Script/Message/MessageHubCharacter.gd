@@ -35,11 +35,23 @@ static func send_buff_add(char_: Character, buff_name: String) -> Enums.Code:
 static func send_buff_remove(char_: Character, buff_name: String) -> Enums.Code:
     return _send(char_, "BUFF", buff_name, "remove")
 
+static func send_buff_consume(char_: Character, buff_name: String) -> Enums.Code:
+    return _send(char_, "BUFF", buff_name, "consume")
+
+static func send_buff_depleted(char_: Character, buff_name: String) -> Enums.Code:
+    return _send(char_, "BUFF", buff_name, "depleted")
+
 static func listen_buff_add(char_: Character, buff_name: String, callback: Callable) -> String:
     return _listen(char_, "BUFF", buff_name, "add", callback)
 
 static func listen_buff_remove(char_: Character, buff_name: String, callback: Callable) -> String:
     return _listen(char_, "BUFF", buff_name, "remove", callback)
+
+static func listen_buff_consume(char_: Character, buff_name: String, callback: Callable) -> String:
+    return _listen(char_, "BUFF", buff_name, "consume", callback)
+
+static func listen_buff_depleted(char_: Character, buff_name: String, callback: Callable) -> String:
+    return _listen(char_, "BUFF", buff_name, "depleted", callback)
 
 """ ---------- Character Statuses Listener ---------- """
 static func send_status_satisfied(char_: Character, status_name: String) -> Enums.Code:
@@ -58,7 +70,7 @@ static func send_status_remove(char_: Character, status_name: String) -> Enums.C
 ## 再发送前面的send_status_enable令Touch状态为真，进而触发interaction，
 ## 而interaction内部用get_interaction_target去消息节点里面读取目标，
 ## 这样把target和status分开，不然不知道怎么target怎么告诉对应交互
-static func send_status_detected(char_: Character, status_name: String, target: Variant) -> Enums.Code:
+static func send_status_detected(char_: Character, status_name: String, target: Variant = null) -> Enums.Code:
     return _send(char_, "STATUS", status_name, "detected", target)
 
 ## 我觉得这玩意用不到

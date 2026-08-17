@@ -45,6 +45,7 @@ func remove_buff(buff_name: String) -> Enums.Code:
     if not dict.erase(buff.name):
         return Enums.Code.NOT_MODIFIED
     # TODO: 每次删除Buff都会计算，这必然冗余，但不一定浪费性能，先放着
+    print(me.name, " remove_buff: ", buff.category, buff.value_type, buff.name)
     init_attribute(buff.category, buff.value_type)
     MsgHubChar.send_buff_remove(me, buff.name)
     return Enums.Code.OK
@@ -84,16 +85,24 @@ func check_limitation(category: String, impact_type: Enums.ValueType = Enums.Val
     var value_min = get_(category, Enums.ValueType.MIN)
     return value > value_min
 
-func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false, dynamic: bool = false) -> int:
+func get_and_consume(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false, dynamic: bool = false) -> int:
+    return get_(category, impact_type, from_before, dynamic, true)
+func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false, dynamic: bool = false, consume: bool = false) -> int:
     var value
     if from_before:
         value = Utils.find_dict(attributes_before, [category, impact_type], null)
+    else:
+        if consume:
+            var dict: Dictionary = Utils.find_dict(buffs, [category, impact_type], {})
+            # print("取", me.name, "的", category, "的", Enums.StrValueType[impact_type], "值")
+            for buff: BuffPreset in dict.values():
+                buff.consume(me)
     if value == null:
         value = Utils.find_dict(attributes, [category, impact_type], null)
     if value == null:
         value = init_attribute(category, impact_type)
     if dynamic:
-        value = get_dynamic_value(value, get_(category, Enums.ValueType.MULTIPLIER))
+        value = get_dynamic_value(value, get_and_consume(category, Enums.ValueType.MULTIPLIER))
     return value
 
 func get_changed_by_how(category: String) -> String:
@@ -101,23 +110,54 @@ func get_changed_by_how(category: String) -> String:
 func get_changed_by_who(category: String) -> Character:
     return Utils.find_dict(attributes_changed_by_who, [category], null)
 
-func get_dynamic_value(value: int, multiplier: int) -> int:
+
+# func get_dynamic_value(value: int, multiplier: int) -> int:
+#     """ 无限范围的近似等比随机 """
+#     var v: int = RandSys.rand.randi_range(0, multiplier)
+#     if v != 0: # 抽到当前level
+#         return value
+#     v = RandSys.rand.randi_range(0, 1)  # 抽方向
+#     var dir: int = 0
+#     if v == 0:                       # 抽到减少
+#         dir = -1
+#     elif v == 1:        # 抽到增加
+#         dir = 1
+#     var value_changed: int = 0
+#     while true:
+#         value_changed += dir         # 记录变化量
+#         v = RandSys.rand.randi_range(0, multiplier)  # 重新抽，但只往1个方向抽
+#         if v > 0:                    # 抽到偏移后的当前值
+#             break
+#     return value + value_changed
+func scale_value(n: int) -> int:
+    return n * 2
+func get_dynamic_value(value: int, multiplier: int, center_distance: int = 0, allow_add: bool = true, allow_subtract: bool = true) -> int:
     """ 无限范围的近似等比随机 """
-    var v: int = RandSys.rand.randi_range(0, multiplier)
-    if v != 0: # 抽到当前level
+    # 距离中心越远，抽到当前值概率越小
+    multiplier = scale_value(multiplier)
+    var dir: int
+    if center_distance > 0:
+        dir = -1 if RandSys.rand.randi_range(0, center_distance + 1) <= 0 else 1
+    else:
+        dir = -1 if RandSys.rand.randi_range(0 + center_distance, 1) <= 0 else 1
+
+    if dir == 1 and not allow_add:
         return value
-    v = RandSys.rand.randi_range(0, 1)  # 抽方向
-    var dir: int = 0
-    if v == 0:                       # 抽到减少
-        dir = -1
-    elif v == 1:        # 抽到增加
-        dir = 1
+    elif dir == -1 and not allow_subtract:
+        return value
+
     var value_changed: int = 0
+    var from
+    var to
+    var offset
     while true:
-        value_changed += dir         # 记录变化量
-        v = RandSys.rand.randi_range(0, multiplier)  # 重新抽，但只往1个方向抽
-        if v > 0:                    # 抽到偏移后的当前值
+        offset = scale_value(value_changed)
+        from = min(0, -center_distance * dir + offset)
+        to = max(multiplier, multiplier - center_distance * dir + offset)
+        if RandSys.rand.randi_range(from, to) > 0:
             break
+        value_changed += dir         # 记录变化量
+
     return value + value_changed
 
 func _set_(

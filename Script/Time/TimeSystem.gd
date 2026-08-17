@@ -31,17 +31,18 @@ func advance() -> void:
         day += 1
         day_changed = true
         if day > 10:
-            day = 1
             xun += 1
             xun_changed = true
-            if xun > 3:
-                xun = 1
-                month += 1
-                month_changed = true
-                if month > 12:
-                    month = 1
-                    year += 1
-                    year_changed = true
+            if day > 30:
+                day = 1
+                if xun > 3:
+                    xun = 1
+                    month += 1
+                    month_changed = true
+                    if month > 12:
+                        month = 1
+                        year += 1
+                        year_changed = true
     TimeFormat.update()
     if year_changed:
         MsgHubTime.send_advance_year(year)

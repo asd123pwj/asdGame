@@ -9,7 +9,10 @@ var category: String
 var value_type: Enums.ValueType
 var value #: int | String
 var method: Enums.ModificationMethod
+var max_uses: int
+var uses : Dictionary[Character, int] = {}
 
+var _trigger_funcs: Dictionary[Character, String] = {}
 
 """ ----- Global ----- """
 static var _we: Dictionary[String, BuffPreset] = {}
@@ -22,7 +25,8 @@ func _init(
         category: String,
         value_type: Enums.ValueType,
         value,#: int | String
-        method: Enums.ModificationMethod = Enums.ModificationMethod.ADD
+        method: Enums.ModificationMethod = Enums.ModificationMethod.ADD,
+        max_uses: int = -1
         ) -> void:
     _we[name] = self
     self.name = name
@@ -30,9 +34,19 @@ func _init(
     self.value_type = value_type
     self.value = value
     self.method = method
+    self.max_uses = max_uses
 
 static func get_(name: String) -> BuffPreset:
     return _we[name]
+
+func consume(char_: Character) -> void:
+    if max_uses > 0:
+        if not char_ in uses:
+            uses[char_] = 0
+        if uses[char_] >= max_uses:
+            char_.attrs.remove_buff(name)
+        uses[char_] += 1
+        MsgHubChar.send_buff_consume(char_, name) # 注意消息发送在计算前
 
 func apply(value: int, char_: Character) -> int:
     var value_offset: int

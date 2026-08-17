@@ -9,6 +9,8 @@ value: int | String
     为String时，取char_.attrs.get_(value)的值，value需属于任一category
 method: Enums.ModificationMethod = Enums.ModificationMethod.ADD
     ADD, SUBTRACT, MULTIPLY, DIVIDE, SET
+max_uses: int = -1
+    -1表示无限使用次数
 """
 var values: Array[Array] = [
     # ["Strength Base Base", "Strength", Enums.ValueType.BASE, 3],

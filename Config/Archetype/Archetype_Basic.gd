@@ -20,7 +20,7 @@ var values: Array[Dictionary] = [
         "statuses": ["Dead", "Live", "Injured", "Detect=>Practice", "Health<=Base/2"],
         "interactions": ["Practice"],
         "behaviors": ["SayInjured", "TryHealSelf"],
-        "packages": ["CanBeHealed"]
+        "packages": ["CanBeHealed", "Nourish"]
     },
     
 ]

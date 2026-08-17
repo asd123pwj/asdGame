@@ -9,6 +9,8 @@ enum Code {
     NOT_FOUND = 404,    
 }
 
+
+static var StrValueType = ["BASE", "CUR", "MIN", "FINAL", "MULTIPLIER"]
 enum ValueType {
     BASE,
     CUR,

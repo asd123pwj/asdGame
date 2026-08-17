@@ -372,29 +372,18 @@ func unlisten(char_: Character) -> void:
 
 func execute(char_: Character, force: bool = false) -> bool:
     var enabled_ori: bool = satisfied[char_]
-    if match_any:
-        # 任一条件满足则状态满足
-        satisfied[char_] = false
-        for triggers in _triggers:
-            for key in triggers[char_]:
-                if satisfied[char_]:
-                    break
-                if triggers[char_][key]:
-                    satisfied[char_] = true
-        if _detect_triggers.get(char_, false):
-            satisfied[char_] = true
-    else:
-        # 所有条件满足则状态满足
-        satisfied[char_] = true
-        for triggers in _triggers:
-            for key in triggers[char_]:
-                if not satisfied[char_]:
-                    break
-                if not triggers[char_][key]:
-                    satisfied[char_] = false
-
-        if not _detect_triggers.get(char_, true):
-            satisfied[char_] = false
+    # match_any: 任一条件满足则满足; 否则需全部满足
+    satisfied[char_] = not match_any
+    for triggers in _triggers:
+        for key in triggers[char_]:
+            if satisfied[char_] == match_any:
+                break
+            if triggers[char_][key] == match_any:
+                satisfied[char_] = match_any
+                break
+    if with_detect:
+        if _detect_triggers[char_] == match_any:
+            satisfied[char_] = match_any
     
     if satisfied[char_] and (not enabled_ori or force):
         MsgHubChar.send_status_satisfied(char_, self.name)
