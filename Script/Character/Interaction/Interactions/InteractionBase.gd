@@ -1,14 +1,16 @@
 class_name InteractionBase
 extends RefCounted
 
-@warning_ignore("unsafe_method_access")
-var CLASS_NAME: String = get_script().get_global_name()
+var name: String
+var config
 
-func _init() -> void:
-    pass
+func _init(name: String, config) -> void:
+    self.name = name
+    self.config = config
 
 
-func interact(_source: Character, _target, _config) -> Enums.Code:
+
+func interact(_source: Character, _target) -> Enums.Code:
     return Enums.Code.NULL
 
 ## 攻击比防御高(isMax=True)，则降低(isPositive=False)生命，降低值为攻击防御差值
@@ -60,10 +62,15 @@ func impact(
     var attr_compare = char_compare.attrs
     var attr_target := char_target.attrs
 
-    var value_source = attr_source.get_(source_attr_category, source_value_type, source_from_before, source_dynamic, source_consume)
-    var value_compare = attr_compare.get_(compare_attr_category, compare_value_type, compare_from_before, compare_dynamic, compare_consume)
-    var value_target = attr_target.get_(target_attr_category, target_value_type, target_from_before, target_dynamic, target_consume)
-
+    var value_source = attr_source.get_(source_attr_category, source_value_type, source_from_before, source_dynamic)
+    var value_compare = attr_compare.get_(compare_attr_category, compare_value_type, compare_from_before, compare_dynamic)
+    var value_target = attr_target.get_(target_attr_category, target_value_type, target_from_before, target_dynamic)
+    if source_consume:
+        attr_source.consume_buffs(source_attr_category, source_value_type)
+    if compare_consume:
+        attr_compare.consume_buffs(compare_attr_category, compare_value_type)
+    if target_consume:
+        attr_target.consume_buffs(target_attr_category, target_value_type)
 
     # 关系
     # 计算变化量，是否为单面变化(非负数)
@@ -72,17 +79,20 @@ func impact(
     offset = offset if isPositive else -offset
     var level_cur_new = value_target + offset 
 
-    return attr_target.set_level_cur(target_attr_category, level_cur_new, CLASS_NAME, char_source)
+    return attr_target.set_level_cur(target_attr_category, level_cur_new, name, char_source)
 
     
 func practice(char_: Character, attr_category: String) -> ChangeResult:
     var attr = char_.attrs
-    var level_cur = attr.get_and_consume(attr_category)
-    var level_base = attr.get_and_consume(attr_category, Enums.ValueType.BASE)
-    var level_multiplier = attr.get_and_consume(attr_category, Enums.ValueType.MULTIPLIER)
+    var level_cur = attr.get_(attr_category, Enums.ValueType.CUR)
+    var level_base = attr.get_(attr_category, Enums.ValueType.BASE)
+    var level_multiplier = attr.get_(attr_category, Enums.ValueType.MULTIPLIER)
+    attr.consume_buffs(attr_category, Enums.ValueType.CUR)
+    attr.consume_buffs(attr_category, Enums.ValueType.BASE)
+    attr.consume_buffs(attr_category, Enums.ValueType.MULTIPLIER)
 
     var center_distance = level_base - level_cur
     var level_cur_practice = attr.get_dynamic_value(level_cur, level_multiplier, center_distance, true, false)
-    print(char_.name, " practice: ", attr_category, " cur:", level_cur, " base: ", level_base, " multiplier: ", level_multiplier, " center_distance: ", center_distance, " cur_practice: ", level_cur_practice)
-    return attr.set_level_cur(attr_category, level_cur_practice, CLASS_NAME, char_)
+    # print(char_.name, " practice: ", attr_category, " cur:", level_cur, " base: ", level_base, " multiplier: ", level_multiplier, " center_distance: ", center_distance, " cur_practice: ", level_cur_practice)
+    return attr.set_level_cur(attr_category, level_cur_practice, name, char_)
 

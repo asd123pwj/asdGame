@@ -38,5 +38,5 @@ func remove_interaction(interaction_name: String) -> Enums.Code:
     MsgHubChar.send_interaction_remove(me, interaction_name)
     return Enums.Code.OK
 
-func check_interaction(interaction_name: String) -> bool:
+func check_exist(interaction_name: String) -> bool:
     return interactions.has(interaction_name)

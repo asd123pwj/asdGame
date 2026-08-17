@@ -46,14 +46,14 @@ func delay_loop_test() -> void:
 
     # for i in range(1000):
     while true:
-        await Sys.sys.get_tree().create_timer(0.1).timeout
+        await Sys.sys.get_tree().create_timer(1).timeout
         Sys.timeSys.advance()
         # if RandSys.rand.randi_range(0, 1) == 0:
         #     print("A触摸B")
-        # MsgHubChar.send_status_detected(char_A, "Detect=>Touch", char_B)
-        MsgHubChar.send_status_detected(char_A, "Detect=>Practice", "Strength")
-        MsgHubChar.send_status_detected(char_A, "Detect=>Practice", "Health")
-        MsgHubChar.send_status_detected(char_A, "Detect=>Practice", "Defense")
+        MsgHubChar.send_status_detected(char_A, "Detect=>Touch", char_B)
+        # MsgHubChar.send_status_detected(char_A, "Detect=>Practice", "Strength")
+        # MsgHubChar.send_status_detected(char_A, "Detect=>Practice", "Health")
+        # MsgHubChar.send_status_detected(char_A, "Detect=>Practice", "Defense")
 
             # MsgHubChar.send_status_detected(char_B, "Detect=>Edible", char_C)
         # if RandSys.rand.randi_range(0, 3) == 0:

@@ -7,7 +7,7 @@ extends PresetRegister
 var name: String
 var buffs: Array[String]
 var statuses: Array[String]
-var behaviors: Array[String]
+# var behaviors: Array[String]
 var interactions: Array[String]
 var bodies: Array[String]
 var skills: Array[String]
@@ -25,7 +25,7 @@ func _init(config: Dictionary) -> void:
     
     self.buffs.assign(Utils.find_dict(config, ["buffs"], []))
     self.statuses.assign(Utils.find_dict(config, ["statuses"], []))
-    self.behaviors.assign(Utils.find_dict(config, ["behaviors"], []))
+    # self.behaviors.assign(Utils.find_dict(config, ["behaviors"], []))
     self.interactions.assign(Utils.find_dict(config, ["interactions"], []))
     self.bodies.assign(Utils.find_dict(config, ["bodies"], []))
     self.skills.assign(Utils.find_dict(config, ["skills"], []))
@@ -43,7 +43,7 @@ static func get_(name: String) -> Archetype:
             var content = get_(package)
             archetype.buffs.append_array(content.buffs)
             archetype.statuses.append_array(content.statuses)
-            archetype.behaviors.append_array(content.behaviors)
+            # archetype.behaviors.append_array(content.behaviors)
             archetype.interactions.append_array(content.interactions)
             archetype.bodies.append_array(content.bodies)
             archetype.skills.append_array(content.skills)
@@ -54,7 +54,7 @@ static func get_(name: String) -> Archetype:
         # buff 不用去重
         # archetype.buffs.assign(_deduplicate(archetype.buffs))
         archetype.statuses.assign(_deduplicate(archetype.statuses))
-        archetype.behaviors.assign(_deduplicate(archetype.behaviors))
+        # archetype.behaviors.assign(_deduplicate(archetype.behaviors))
         archetype.interactions.assign(_deduplicate(archetype.interactions))
         archetype.bodies.assign(_deduplicate(archetype.bodies))
         archetype.skills.assign(_deduplicate(archetype.skills))

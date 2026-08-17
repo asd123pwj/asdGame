@@ -30,6 +30,7 @@ func add_buff(buff_name: String) -> Enums.Code:
     Utils.set_dict(buffs, [buff.category, buff.value_type, buff.name], buff)
     # TODO: 每次添加Buff都会计算，这必然冗余，但不一定浪费性能，先放着
     init_attribute(buff.category, buff.value_type)
+    consume_buff(buff) # 添加buff时会使用buff对属性初始化，因此需要consume
     MsgHubChar.send_buff_add(me, buff_name)
     return Enums.Code.OK
 
@@ -45,7 +46,7 @@ func remove_buff(buff_name: String) -> Enums.Code:
     if not dict.erase(buff.name):
         return Enums.Code.NOT_MODIFIED
     # TODO: 每次删除Buff都会计算，这必然冗余，但不一定浪费性能，先放着
-    print(me.name, " remove_buff: ", buff.category, buff.value_type, buff.name)
+    # print(me.name, " remove_buff: ", buff.category, buff.value_type, buff.name)
     init_attribute(buff.category, buff.value_type)
     MsgHubChar.send_buff_remove(me, buff.name)
     return Enums.Code.OK
@@ -85,24 +86,25 @@ func check_limitation(category: String, impact_type: Enums.ValueType = Enums.Val
     var value_min = get_(category, Enums.ValueType.MIN)
     return value > value_min
 
-func get_and_consume(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false, dynamic: bool = false) -> int:
-    return get_(category, impact_type, from_before, dynamic, true)
-func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false, dynamic: bool = false, consume: bool = false) -> int:
+func consume_buff(buff: BuffPreset) -> void:
+    buff.consume(me)
+func consume_buffs(category: String, impact_type: Enums.ValueType) -> void:
+    var dict: Dictionary = Utils.find_dict(buffs, [category, impact_type], {})
+    # print("取", me.name, "的", category, "的", Enums.StrValueType[impact_type], "值")
+    for buff: BuffPreset in dict.values():
+        buff.consume(me)
+
+func get_(category: String, impact_type: Enums.ValueType = Enums.ValueType.CUR, from_before: bool = false, dynamic: bool = false) -> int:
     var value
     if from_before:
         value = Utils.find_dict(attributes_before, [category, impact_type], null)
-    else:
-        if consume:
-            var dict: Dictionary = Utils.find_dict(buffs, [category, impact_type], {})
-            # print("取", me.name, "的", category, "的", Enums.StrValueType[impact_type], "值")
-            for buff: BuffPreset in dict.values():
-                buff.consume(me)
     if value == null:
         value = Utils.find_dict(attributes, [category, impact_type], null)
     if value == null:
         value = init_attribute(category, impact_type)
     if dynamic:
-        value = get_dynamic_value(value, get_and_consume(category, Enums.ValueType.MULTIPLIER))
+        value = get_dynamic_value(value, get_(category, Enums.ValueType.MULTIPLIER))
+        consume_buffs(category, Enums.ValueType.MULTIPLIER)
     return value
 
 func get_changed_by_how(category: String) -> String:

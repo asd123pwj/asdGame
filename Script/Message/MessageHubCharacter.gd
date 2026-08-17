@@ -23,10 +23,17 @@ static func _get_message(char_: Character, type: String, type_name: String, acti
 
 """ ---------- Attributes ---------- """
 static func send_attr_changed(char_: Character, type_name: String) -> Enums.Code:
+    send_any_attr_changed(char_, type_name)
     return _send(char_, "ATTR", type_name, "changed")
+
+static func send_any_attr_changed(char_: Character, type_name: String) -> Enums.Code:
+    return _send(char_, "ANY_ATTR", "ANY", "changed", type_name)
 
 static func listen_attr_changed(char_: Character, type_name: String, callback: Callable) -> String:
     return _listen(char_, "ATTR", type_name, "changed", callback)
+
+static func listen_any_attr_changed(char_: Character, callback: Callable) -> String:
+    return _listen(char_, "ANY_ATTR", "ANY", "changed", callback)
 
 """ ---------- BuffPreset ---------- """
 static func send_buff_add(char_: Character, buff_name: String) -> Enums.Code:
@@ -70,6 +77,8 @@ static func send_status_remove(char_: Character, status_name: String) -> Enums.C
 ## 再发送前面的send_status_enable令Touch状态为真，进而触发interaction，
 ## 而interaction内部用get_interaction_target去消息节点里面读取目标，
 ## 这样把target和status分开，不然不知道怎么target怎么告诉对应交互
+##
+## 现在状态可以监听交互了，我简直天才，当然它还是可以用于发消息
 static func send_status_detected(char_: Character, status_name: String, target: Variant = null) -> Enums.Code:
     return _send(char_, "STATUS", status_name, "detected", target)
 
@@ -130,8 +139,8 @@ static func send_interaction_add(char_: Character, interaction_name: String) -> 
 static func send_interaction_remove(char_: Character, interaction_name: String) -> Enums.Code:
     return _send(char_, "INTERACTION", interaction_name, "remove")
     
-static func send_interaction_interact(char_: Character, interaction_name: String) -> Enums.Code:
-    return _send(char_, "INTERACTION", interaction_name, "interact")
+static func send_interaction_act(char_: Character, interaction_name: String) -> Enums.Code:
+    return _send(char_, "INTERACTION", interaction_name, "act")
     
 static func listen_interaction_add(char_: Character, interaction_name: String, callback: Callable) -> String:
     return _listen(char_, "INTERACTION", interaction_name, "add", callback)
@@ -139,8 +148,8 @@ static func listen_interaction_add(char_: Character, interaction_name: String, c
 static func listen_interaction_remove(char_: Character, interaction_name: String, callback: Callable) -> String:
     return _listen(char_, "INTERACTION", interaction_name, "remove", callback)
 
-static func listen_interaction_interact(char_: Character, interaction_name: String, callback: Callable) -> String:
-    return _listen(char_, "INTERACTION", interaction_name, "interact", callback)
+static func listen_interaction_act(char_: Character, interaction_name: String, callback: Callable) -> String:
+    return _listen(char_, "INTERACTION", interaction_name, "act", callback)
 
 
 """ ---------- Character Skills ---------- """

@@ -1,2 +1,0 @@
-class_name Interaction_Grow
-extends Interaction_Practice

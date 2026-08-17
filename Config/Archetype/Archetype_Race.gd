@@ -1,24 +1,13 @@
 class_name Archetype_Race
 extends ConfigBase
 
-"""
-name: String, 
-buffs: Array[String]=[], 
-statuses: Array[String]=[],
-behaviors: Array[String]=[],
-interactions: Array[String]=[],
-bodies: Array[String]=[],
-skills: Array[String]=[],
-collisions: Array[String]=[],
-packages: Array[String]=[],
-"""
 
 var values: Array[Dictionary] = [
     {
         "name": "人类",
         "buffs": ["Strength Base +3", "Defense Base +3", "Health Base +10", "Strength Multiplier =2"],
         "bodies": ["Human"],
-        "packages": ["通用活体", "移动状态", "Rebirth", "死亡掉落", "触觉", "掉落物感知", "接触伤害", ]
+        "packages": ["通用活体","Grow when hour advance", "移动状态", "Rebirth", "死亡掉落", "触觉", "掉落物感知", "接触伤害", ]
     },
     {
         "name": "兔子",

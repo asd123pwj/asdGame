@@ -1,7 +1,7 @@
 class_name Interaction_Attack
 extends InteractionBase
 
-func interact(attacker: Character, defender: Character, _config) -> Enums.Code:
+func interact(attacker: Character, defender: Character) -> Enums.Code:
     # print(attacker.name, "攻击", defender.name)
 
     var result = attack(attacker, defender, defender, "Strength", "Defense", "Health")

@@ -17,7 +17,6 @@ static var _时辰: Array = ["子时", "丑时", "寅时", "卯时", "辰时", "
 static func update() -> void:
     year = year_to_chinese(Sys.timeSys.year)
     month = _月[Sys.timeSys.month - 1]
-    xun = _旬[Sys.timeSys.xun - 1]
     day = _日[Sys.timeSys.day - 1]
     hour = _时辰[Sys.timeSys.hour - 1]
 

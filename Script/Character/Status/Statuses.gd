@@ -11,9 +11,15 @@ func _init(me: Character, status_name: Array[String]) -> void:
 
 
 func check_satisfied(status_name: String) -> bool:
-    if not check_status(status_name):
+    if not check_exist(status_name):
         return false
     return statuses[status_name].satisfied[me]
+
+
+func get_latest_message(status_name: String) -> Variant:
+    if not check_exist(status_name):
+        return null
+    return statuses[status_name].get_latest_message(me)
 
 """ ---------- Listeners ---------- """
 func add_statuses(status_name: Array[String]) -> Array[Enums.Code]:
@@ -45,5 +51,5 @@ func remove_status(status_name: String) -> Enums.Code:
     MsgHubChar.send_status_remove(me, status_name)
     return Enums.Code.OK
 
-func check_status(status_name: String) -> bool:
+func check_exist(status_name: String) -> bool:
     return statuses.has(status_name)

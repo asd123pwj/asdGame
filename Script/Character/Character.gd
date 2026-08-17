@@ -6,7 +6,7 @@ var name: String
 """ ----- Logic ----- """
 var attrs: Attributes
 var statuses: Statuses
-var behaviors: Behaviors
+# var behaviors: Behaviors
 var interactions: Interactions
 var skills: Skills
 var collisions: Collisions
@@ -31,7 +31,7 @@ func _init_from_archetype(archetype_type: String) -> void:
     create_body(archetype_type)
     attrs = Attributes.new(self, archetype.buffs)
     statuses = Statuses.new(self, archetype.statuses)
-    behaviors = Behaviors.new(self, archetype.behaviors)
+    # behaviors = Behaviors.new(self, archetype.behaviors)
     interactions = Interactions.new(self, archetype.interactions)
     skills = Skills.new(self, archetype.skills)
     collisions = Collisions.new(self, archetype.collisions)

@@ -7,7 +7,7 @@ auto_reset: bool = false,
 match_any: bool = false,
 attrs: Array[Array[ListenType]]=[]   
     [["name", "condition", value], ["name", "condition", value]]
-    condition: Changed, Within Limited, Over Limited, 
+    condition: AnyChanged, Changed, Within Limited, Over Limited, 
     #  >,        >=,        <,        <=,        ==,        !=
     # ">Base",  ">=Base",  "<Base",  "<=Base",  "==Base",  "!=Base",
     # ">Base+", ">=Base+", "<Base+", "<=Base+", "==Base+", "!=Base+",
@@ -20,7 +20,7 @@ buffs: Array[Array[ListenType]]=[],
 statuses: Array[Array[ListenType]]=[]
     [["name", "condition"], ["name", "condition"]]
     condition: Satisfied, Unsatisfied
-behaviors: Array[Array[ListenType]]=[]
+interactions: Array[Array[ListenType]]=[]
     [["name", "condition"], ["name", "condition"]]
     condition: Satisfied, Unsatisfied, Act
 keys: Array[Array[ListenType]]=[]
