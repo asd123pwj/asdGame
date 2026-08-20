@@ -45,7 +45,7 @@ func delay_loop_test() -> void:
     MsgHubChar.send_status_detected(char_A, "Detect=>Nourish")
 
     # for i in range(1000):
-    while true:
+    while false:
         await Sys.sys.get_tree().create_timer(1).timeout
         Sys.timeSys.advance()
         # if RandSys.rand.randi_range(0, 1) == 0:
