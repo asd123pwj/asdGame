@@ -34,6 +34,7 @@ enum KeyStatus{
     FIRST_UP
 }
 
+static var StrLayerType = ["Middle_P3D", "Middle"]
 enum LayerType{
     MIDDLE_P3D,
     MIDDLE,

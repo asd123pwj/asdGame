@@ -49,6 +49,21 @@ static func get_source_id_P3D(name: String) -> int:
     return _we[name].source_id_P3D
 
 
+# 为指定瓦片创建伪3D精灵（Sprite2D + AtlasTexture）
+# 用 Node2D 的 y_sort 控制遮挡，避免 TileMap 排序限制
+static func create_p3d_sprite(name: String, atlas_coords: Vector2i) -> Sprite2D:
+    var preset := _we[name]
+    var texture: Texture2D = load(preset.path_P3D)
+    var atlas := AtlasTexture.new()
+    atlas.atlas = texture
+    var region := Rect2(TILE_MARGINS + atlas_coords * (REGION_SIZE + TILE_SEPARATION), REGION_SIZE)
+    atlas.region = region
+    var sprite := Sprite2D.new()
+    sprite.texture = atlas
+    sprite.centered = false  # 锚点左上角，便于按瓦片网格定位
+    return sprite
+
+
 static func _create_tileset() -> TileSet:
     var ts := TileSet.new()
     ts.tile_size = GRID_SIZE  # 格子按 32x32 定位

@@ -11,7 +11,8 @@ var _values: Array[Array] = [
     ["Brown Brick", "Block_Brick_Brown.png", "Block_Brick_Brown_P3D.png"],
     ["White Wall", "Block_Brick.png"],
     ["白墙青瓦", "Block_Brick_WhiteWallGrayTile.png",],
-    ["P3D", "Tilemap_Placeholder.png", "Tilemap_Placeholder.png"]
+    ["P3D", "Tilemap_Placeholder.png", "Tilemap_Placeholder.png"],
+    ["透明玻璃", "Block_Transparent_Glass.png",]
 ]
 var values: Array[Array] = []
 
