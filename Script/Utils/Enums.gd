@@ -33,3 +33,9 @@ enum KeyStatus{
     UP,
     FIRST_UP
 }
+
+enum LayerType{
+    MIDDLE_P3D,
+    MIDDLE,
+    COUNT # 最后一个的序号刚好为长度
+}
