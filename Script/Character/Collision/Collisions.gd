@@ -37,7 +37,7 @@ func remove_collisions(collision_name: Array[String]) -> Array[Enums.Code]:
 func remove_collision(collision_name: String) -> Enums.Code:
     if not collision_name in collisions:
         return Enums.Code.NOT_MODIFIED
-    collisions[collision_name].unlisten(me)
+    # collisions[collision_name].unlisten(me)
     collisions.erase(collision_name)
     MsgHubChar.send_collision_remove(me, collision_name)
     return Enums.Code.OK

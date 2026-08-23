@@ -7,7 +7,7 @@ func _init() -> void:
     pass
 
 static func _physics_process(delta: float) -> void:
-    for char_ in Character._we.values():
+    for char_: Character in Character._we.values():
         char_.physics_process(delta)
 
 static func spawn(race_name: String, name: String="") -> Character:

@@ -13,6 +13,8 @@ var source_id_P3D: int
 static var _we: Dictionary[String, TileSetPreset] = {}
 static var tileset: TileSet = _create_tileset()
 static var _collision_cache: Dictionary = {}
+# 内容矩阵缓存：按 source_name 缓存 tile 图集 (0,2) 区域的 alpha 位图
+static var _content_cache: Dictionary[String, BitMap] = {}
 
 # 图集切割尺寸（48x48 网格，含伪3D外部16像素）
 const REGION_SIZE := Vector2i(48, 48)
@@ -47,6 +49,19 @@ static func get_source_id(name: String) -> int:
 
 static func get_source_id_P3D(name: String) -> int:
     return _we[name].source_id_P3D
+
+
+# 获取指定 source 的内容矩阵（48x48 alpha 位图，有内容处为 true）
+# 基于 source 图集 (0,2) 区域计算，按 source_name 缓存复用
+static func get_content_matrix(source_name: String, atlas_coords := Vector2i(0, 2)) -> BitMap:
+    if _content_cache.has(source_name):
+        return _content_cache[source_name]
+    var preset := _we[source_name]
+    var region := Rect2i(TILE_MARGINS + atlas_coords * (REGION_SIZE + TILE_SEPARATION), REGION_SIZE)
+    var img := preset.source.texture.get_image().get_region(region)
+    var bit_map := build_alpha_bitmap(img)
+    _content_cache[source_name] = bit_map
+    return bit_map
 
 
 # 为指定瓦片创建伪3D精灵（Sprite2D + AtlasTexture）
@@ -104,6 +119,10 @@ static func _create_tiles(source: TileSetAtlasSource, source_name: String, with_
         for x in _count(tex_size.x, TILE_MARGINS.x, TILE_SEPARATION.x):
             var coords := Vector2i(x, y)
             source.create_tile(coords)
+            # 图集 48x48，地面内容在左下角 32x32。texture_origin 默认居中导致错位。
+            # 统一对齐左下角：让 region 左下角对齐格子左下角。
+            var tile_data := source.get_tile_data(coords, 0)
+            tile_data.texture_origin = Vector2i(-8, 8)
             if with_collision:
                 _set_tile_collision(source, texture, coords, source_name)
 
@@ -121,20 +140,20 @@ static func _set_tile_collision(source: TileSetAtlasSource, texture: Texture2D, 
 
 
 # 基于 alpha 生成多边形，按哈希缓存复用
-static func _get_or_build_polygons(image: Image, source_name: String) -> Array:
+static func _get_or_build_polygons(image: Image, _source_name: String) -> Array:
     var key := _hash_alpha(image)
     if _collision_cache.has(key):
         return _collision_cache[key]
     var polygons := _build_polygons(image)
-    print("[TileSetPreset] 缓存未命中, source=", source_name, ", 瓦片哈希: ", key)
+    # print("[TileSetPreset] 缓存未命中, source=", _source_name, ", 瓦片哈希: ", key)
     _collision_cache[key] = polygons
     return polygons
 
 
-static func _build_polygons(image: Image) -> Array:
+# 根据瓦片图像生成 alpha>0 的位图（48x48），供掩码/碰撞复用
+static func build_alpha_bitmap(image: Image) -> BitMap:
     var bit_map := BitMap.new()
     bit_map.create(Vector2i(REGION_SIZE.x, REGION_SIZE.y))
-    # 阈值设为 alpha > 0：只要有内容就阻挡（半透明玻璃也生成碰撞）
     var alpha_img: Image = image.duplicate()
     alpha_img.convert(Image.FORMAT_LA8)
     var data := alpha_img.get_data()
@@ -142,6 +161,11 @@ static func _build_polygons(image: Image) -> Array:
     for idx in data.size() / 2:
         if data[idx * 2 + 1] > 0:
             bit_map.set_bit(idx % REGION_SIZE.x, floori(float(idx) / REGION_SIZE.x), true)
+    return bit_map
+
+
+static func _build_polygons(image: Image) -> Array:
+    var bit_map := build_alpha_bitmap(image)
     var result: Array = []
     var half := Vector2(REGION_SIZE) / 2.0
     for raw in bit_map.opaque_to_polygons(Rect2(Vector2.ZERO, REGION_SIZE)):

@@ -12,8 +12,6 @@ var method: Enums.ModificationMethod
 var max_uses: int
 var uses : Dictionary[Character, int] = {}
 
-var _trigger_funcs: Dictionary[Character, String] = {}
-
 """ ----- Global ----- """
 static var _we: Dictionary[String, BuffPreset] = {}
 

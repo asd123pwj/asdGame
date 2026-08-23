@@ -25,7 +25,7 @@ func run() -> void:
     char_A = CharSys.spawn("人类")
     char_B = CharSys.spawn("兔子")
     char_C = CharSys.spawn("草药")
-    char_B.inventories.print_contents("DeadDrop")
+    # char_B.inventories.print_contents("DeadDrop")
     print(Sys.sysCfg.random_seed)
     @warning_ignore("missing_await")
     delay_loop_test()
