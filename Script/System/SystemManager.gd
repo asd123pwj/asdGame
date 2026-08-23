@@ -5,6 +5,7 @@ static var sys: Sys
 static var sysCfg: SysCfg
 static var randSys: RandSys
 static var msgBus: MsgBus
+static var shaders: ShaderManager
 static var timeSys: TimeSys
 static var charSys: CharSys
 static var presets: PresetRegister
@@ -37,6 +38,7 @@ func init_sub_system() -> void:
     sysCfg = SysCfg.new()
     randSys = RandSys.new()
     msgBus = MsgBus.new()
+    shaders = ShaderManager.new()
     timeSys = TimeSys.new()
     charSys = CharSys.new()
     presets = PresetRegister.new()

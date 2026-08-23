@@ -13,16 +13,14 @@ var source_id_P3D: int
 static var _we: Dictionary[String, TileSetPreset] = {}
 static var tileset: TileSet = _create_tileset()
 static var _collision_cache: Dictionary = {}
-# 内容矩阵缓存：按 source_name 缓存 tile 图集 (0,2) 区域的 alpha 位图
-static var _content_cache: Dictionary[String, BitMap] = {}
+# P3D 图集缓存："name|atlas_coords" -> AtlasTexture（纯资源可共享）
+static var _atlas_cache: Dictionary = {}
 
-# 图集切割尺寸（48x48 网格，含伪3D外部16像素）
-const REGION_SIZE := Vector2i(48, 48)
-# 显示格子尺寸（32x32 定位，伪3D溢出到相邻格）
-const GRID_SIZE := Vector2i(32, 32)
-const TILE_MARGINS := Vector2i(0, 0)
-const TILE_SEPARATION := Vector2i(0, 0)
-
+# ---- tile id 注册表 ----
+# 列表：序号即 tile id，每个元素为 [source_name, atlas_coords]
+static var _tile_id_list: Array = []
+# 映射："source_name|coords" -> tile id(序号)
+static var _tile_id_map: Dictionary = {}
 
 func _init(name: String, path: String, path_P3D: String) -> void:
     _we[name] = self
@@ -51,37 +49,52 @@ static func get_source_id_P3D(name: String) -> int:
     return _we[name].source_id_P3D
 
 
-# 获取指定 source 的内容矩阵（48x48 alpha 位图，有内容处为 true）
-# 基于 source 图集 (0,2) 区域计算，按 source_name 缓存复用
-static func get_content_matrix(source_name: String, atlas_coords := Vector2i(0, 2)) -> BitMap:
-    if _content_cache.has(source_name):
-        return _content_cache[source_name]
+# 获取/注册 (source_name, atlas_coords) 的 tile id（列表序号）。tile 与 P3D 共用一个 id。
+static func get_or_register_tile_id(source_name: String, atlas_coords: Vector2i) -> int:
+    var key := source_name + "|" + str(atlas_coords)
+    if _tile_id_map.has(key):
+        return _tile_id_map[key]
+    var id := _tile_id_list.size()
+    _tile_id_list.append([source_name, atlas_coords])
+    _tile_id_map[key] = id
+    return id
+
+
+# 按 tile id 获取 [source_name, atlas_coords]
+static func get_tile_id_info(id: int) -> Array:
+    return _tile_id_list[id]
+
+
+# 获取指定 source 的图集 region 图像（48x48）。
+# is_p3d 为 true 取 P3D 图集(source_P3D)，否则取 tile 图集(source)。
+static func get_region_image(source_name: String, atlas_coords: Vector2i, is_p3d: bool) -> Image:
     var preset := _we[source_name]
-    var region := Rect2i(TILE_MARGINS + atlas_coords * (REGION_SIZE + TILE_SEPARATION), REGION_SIZE)
-    var img := preset.source.texture.get_image().get_region(region)
-    var bit_map := build_alpha_bitmap(img)
-    _content_cache[source_name] = bit_map
-    return bit_map
+    var src := preset.source_P3D if is_p3d else preset.source
+    var region := Rect2i(SysCfg.TILE_MARGINS + atlas_coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
+    return src.texture.get_image().get_region(region)
 
 
 # 为指定瓦片创建伪3D精灵（Sprite2D + AtlasTexture）
 # 用 Node2D 的 y_sort 控制遮挡，避免 TileMap 排序限制
 static func create_p3d_sprite(name: String, atlas_coords: Vector2i) -> Sprite2D:
     var preset := _we[name]
-    var texture: Texture2D = load(preset.path_P3D)
-    var atlas := AtlasTexture.new()
-    atlas.atlas = texture
-    var region := Rect2(TILE_MARGINS + atlas_coords * (REGION_SIZE + TILE_SEPARATION), REGION_SIZE)
-    atlas.region = region
+    # AtlasTexture 是纯资源，可缓存共享；Sprite2D 实例需独立创建
+    var atlas_key := name + "|" + str(atlas_coords)
+    if not _atlas_cache.has(atlas_key):
+        var texture: Texture2D = load(preset.path_P3D)
+        var atlas := AtlasTexture.new()
+        atlas.atlas = texture
+        atlas.region = Rect2(SysCfg.TILE_MARGINS + atlas_coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
+        _atlas_cache[atlas_key] = atlas
     var sprite := Sprite2D.new()
-    sprite.texture = atlas
+    sprite.texture = _atlas_cache[atlas_key]
     sprite.centered = false  # 锚点左上角，便于按瓦片网格定位
     return sprite
 
 
 static func _create_tileset() -> TileSet:
     var ts := TileSet.new()
-    ts.tile_size = GRID_SIZE  # 格子按 32x32 定位
+    ts.tile_size = SysCfg.GRID_SIZE  # 格子按 32x32 定位
     ts.add_physics_layer()
     ts.set_physics_layer_collision_layer(0, 1)
     ts.set_physics_layer_collision_mask(0, 1)
@@ -97,16 +110,16 @@ static func _create_source(path: String) -> TileSetAtlasSource:
 
     var source := TileSetAtlasSource.new()
     source.texture = texture
-    source.texture_region_size = REGION_SIZE
-    source.margins = TILE_MARGINS
-    source.separation = TILE_SEPARATION
+    source.texture_region_size = SysCfg.REGION_SIZE
+    source.margins = SysCfg.TILE_MARGINS
+    source.separation = SysCfg.TILE_SEPARATION
     return source
 
 
 # 为一轴上的瓦片数量
 static func _count(tex_len: int, margin: int, separation: int) -> int:
     var n := 0
-    while margin + n * (REGION_SIZE.x + separation) + REGION_SIZE.x <= tex_len:
+    while margin + n * (SysCfg.REGION_SIZE.x + separation) + SysCfg.REGION_SIZE.x <= tex_len:
         n += 1
     return n
 
@@ -115,8 +128,8 @@ static func _count(tex_len: int, margin: int, separation: int) -> int:
 static func _create_tiles(source: TileSetAtlasSource, source_name: String, with_collision: bool = true) -> void:
     var texture: Texture2D = source.texture
     var tex_size: Vector2i = texture.get_image().get_size()
-    for y in _count(tex_size.y, TILE_MARGINS.y, TILE_SEPARATION.y):
-        for x in _count(tex_size.x, TILE_MARGINS.x, TILE_SEPARATION.x):
+    for y in _count(tex_size.y, SysCfg.TILE_MARGINS.y, SysCfg.TILE_SEPARATION.y):
+        for x in _count(tex_size.x, SysCfg.TILE_MARGINS.x, SysCfg.TILE_SEPARATION.x):
             var coords := Vector2i(x, y)
             source.create_tile(coords)
             # 图集 48x48，地面内容在左下角 32x32。texture_origin 默认居中导致错位。
@@ -128,7 +141,7 @@ static func _create_tiles(source: TileSetAtlasSource, source_name: String, with_
 
 
 static func _set_tile_collision(source: TileSetAtlasSource, texture: Texture2D, coords: Vector2i, source_name: String) -> void:
-    var region := Rect2i(TILE_MARGINS + coords * (REGION_SIZE + TILE_SEPARATION), REGION_SIZE)
+    var region := Rect2i(SysCfg.TILE_MARGINS + coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
     var polygons := _get_or_build_polygons(texture.get_image().get_region(region), source_name)
     if polygons.is_empty():
         return
@@ -153,22 +166,22 @@ static func _get_or_build_polygons(image: Image, _source_name: String) -> Array:
 # 根据瓦片图像生成 alpha>0 的位图（48x48），供掩码/碰撞复用
 static func build_alpha_bitmap(image: Image) -> BitMap:
     var bit_map := BitMap.new()
-    bit_map.create(Vector2i(REGION_SIZE.x, REGION_SIZE.y))
+    bit_map.create(Vector2i(SysCfg.REGION_SIZE.x, SysCfg.REGION_SIZE.y))
     var alpha_img: Image = image.duplicate()
     alpha_img.convert(Image.FORMAT_LA8)
     var data := alpha_img.get_data()
     @warning_ignore("integer_division")
     for idx in data.size() / 2:
         if data[idx * 2 + 1] > 0:
-            bit_map.set_bit(idx % REGION_SIZE.x, floori(float(idx) / REGION_SIZE.x), true)
+            bit_map.set_bit(idx % SysCfg.REGION_SIZE.x, floori(float(idx) / SysCfg.REGION_SIZE.x), true)
     return bit_map
 
 
 static func _build_polygons(image: Image) -> Array:
     var bit_map := build_alpha_bitmap(image)
     var result: Array = []
-    var half := Vector2(REGION_SIZE) / 2.0
-    for raw in bit_map.opaque_to_polygons(Rect2(Vector2.ZERO, REGION_SIZE)):
+    var half := Vector2(SysCfg.REGION_SIZE) / 2.0
+    for raw in bit_map.opaque_to_polygons(Rect2(Vector2.ZERO, SysCfg.REGION_SIZE)):
         var points: PackedVector2Array = raw
         if points.size() > 3 and points[0] == points[points.size() - 1]:
             points.remove_at(points.size() - 1)

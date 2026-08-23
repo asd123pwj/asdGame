@@ -2,7 +2,7 @@
 .godot/
 /android/
 .vscode/
-**/*.gd.uid
+**/*.uid
 **/*.tscn
 .editorconfig
 .gitattributes
@@ -12,3 +12,4 @@ project.godot
 icon.svg
 **/Material/
 Plugins/
+Debug/
