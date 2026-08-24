@@ -15,13 +15,13 @@ func _init() -> void:
     var layer := MapLayer.new(0, maps_parent_node)
     layers[0] = layer
     # 循环1：记录待放置的 tile（place 用 tile_name 选择 tile，找不到回退到 (0,0) 位置的 tile）
-    for i in range(0, 10):
-        for j in range(-1, -10, -1):
-            # place(0, Enums.LayerType.MIDDLE, i, j, "P3D", "FULL")
-            place(0, Enums.LayerType.MIDDLE, i, j, "White Wall", "FULL")
-            # place(0, Enums.LayerType.MIDDLE, i+1, j+5+1, "透明玻璃", "FULL")
-            # place(0, Enums.LayerType.MIDDLE, i+5+1, j+5+1, "完整玻璃", "FULL")
-            # place(0, Enums.LayerType.MIDDLE, i+10+1, j+5+1, "完整玻璃-反", "FULL")
+    for i in range(0, 4):
+        for j in range(-6, -10, -1):
+            place(0, Enums.LayerType.MIDDLE, i, j, "P3D", "FULL")
+            place(0, Enums.LayerType.MIDDLE, i, j+5, "White Wall", "FULL")
+            place(0, Enums.LayerType.MIDDLE, i+1, j+5+1, "透明玻璃", "FULL")
+            place(0, Enums.LayerType.MIDDLE, i+5+1, j+5+1, "完整玻璃", "FULL")
+            place(0, Enums.LayerType.MIDDLE, i+10+1, j+5+1, "完整玻璃-反", "FULL")
     # 循环2：根据 map_content 放置 tile 和 P3D
     layer.build()
 

@@ -120,7 +120,7 @@ static func get_erase_mask(get_neighbor: Callable, x: int, y: int,
         return _erase_cache[key]
     var img := _build_erase_mask(x, y, neighbors, p3d_offset)
     # 可视化：需要检查掩码时改为 if true，会把擦除掩码保存为 PNG（文件名用 tile_name）
-    if true:
+    if false:
         var red_count := 0
         for py in 48:
             for px in 48:

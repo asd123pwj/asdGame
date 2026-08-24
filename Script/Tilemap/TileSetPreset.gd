@@ -59,11 +59,11 @@ static func get_source_id_P3D(name: String) -> int:
 
 # 基于匹配规则的 tiles_name 建立 tile_name -> atlas_coords 映射
 static func _build_tile_name_map(source_name: String) -> void:
-    var rule := TileMatchRulePreset.get_rule(_we[source_name].tile_match_rule_name)
+    var rule := TileMatchRulePreset.get_(_we[source_name].tile_match_rule_name)
     if rule == null:
         return
     var map: Dictionary = {}
-    var names: Array[Array] = rule.tiles_name
+    var names: Array = rule.tiles_name
     for row in names.size():
         for col in names[row].size():
             var tile_name: String = names[row][col]
@@ -94,10 +94,13 @@ static func has_tile_name(source_name: String, tile_name: String) -> bool:
 
 # 获取 source 的默认 tile 名称（tiles_name 的 (0,0) 位置）
 static func get_default_tile_name(source_name: String) -> String:
-    var rule := TileMatchRulePreset.get_rule(_we[source_name].tile_match_rule_name)
-    if rule == null or rule.tiles_name.is_empty() or rule.tiles_name[0].is_empty():
+    var rule: TileMatchRulePreset = TileMatchRulePreset.get_(_we[source_name].tile_match_rule_name)
+    if rule == null or rule.tiles_name.is_empty():
         return ""
-    return rule.tiles_name[0][0]
+    var first_row: Array = rule.tiles_name[0]
+    if first_row.is_empty():
+        return ""
+    return first_row[0]
 
 
 # 获取/注册 (source_name, tile_name) 的 tile id（列表序号）。tile 与 P3D 共用一个 id。

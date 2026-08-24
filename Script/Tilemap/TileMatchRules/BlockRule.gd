@@ -1,106 +1,101 @@
-class_name BlockRule
-extends TileMatchRuleBase
+# class_name BlockRule
+# extends TileMatchRuleBase
 
 
-func _init() -> void:
-    tiles_name = [
-        ["M", "L3210", "R3210", "DL3210", "DR3210"],
-        ["DM", "L10", "L21", "L32", "L43"],
-        ["FULL", "R43", "R32", "R21", "R10"],
-    ]
-    reference_pos = [
-        Vector2i(-3, 1), Vector2i(-2, 1), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1),
-        Vector2i(-4, 0), Vector2i(-3, 0), Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0),
-        Vector2i(0, -1),
-    ]
-    match_rules = _build_rules()
-
-
-func _build_rules() -> Array:
-    var rules: Array = []
-    rules.append(_rule("L43", {
-        RuleType.IS_NULL: [Vector2i(-4, 0), Vector2i(-3, 1), Vector2i(-2, 1), Vector2i(-1, 1), Vector2i(0, 1)],
-        RuleType.NOT_NULL: [Vector2i(-3, 0), Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0)],
-    }))
-    rules.append(_rule("L32", {
-        RuleType.IS_NULL: [Vector2i(-3, 0), Vector2i(-2, 1), Vector2i(-1, 1), Vector2i(0, 1)],
-        RuleType.NOT_NULL: [Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)],
-    }))
-    rules.append(_rule("L32", {
-        RuleType.IS_NULL: [Vector2i(-2, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1), Vector2i(3, 0)],
-        RuleType.NOT_NULL: [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0)],
-    }))
-    rules.append(_rule("L32", {
-        RuleType.IS_NULL: [Vector2i(-2, 0), Vector2i(-1, 1), Vector2i(0, 1)],
-        RuleType.NOT_NULL: [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(1, 1)],
-    }))
-    rules.append(_rule("L32", {
-        RuleType.IS_NULL: [Vector2i(-2, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(4, 0)],
-        RuleType.NOT_NULL: [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)],
-    }))
-    rules.append(_rule("L21", {
-        RuleType.IS_NULL: [Vector2i(-2, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)],
-        RuleType.NOT_NULL: [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0)],
-    }))
-    rules.append(_rule("L10", {
-        RuleType.IS_NULL: [Vector2i(-1, 0), Vector2i(0, 1), Vector2i(1, 1)],
-        RuleType.NOT_NULL: [Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)],
-    }))
-    rules.append(_rule("L3210", {
-        RuleType.IS_NULL: [Vector2i(-1, 0), Vector2i(0, 1)],
-        RuleType.NOT_NULL: [Vector2i(1, 0)],
-    }))
-    rules.append(_rule("M", {
-        RuleType.IS_NULL: [Vector2i(-1, 0), Vector2i(0, 1), Vector2i(1, 0)],
-    }))
-    rules.append(_rule("R43", {
-        RuleType.IS_NULL: [Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1), Vector2i(4, 0)],
-        RuleType.NOT_NULL: [Vector2i(-4, 0), Vector2i(-3, 0), Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)],
-    }))
-    rules.append(_rule("R32", {
-        RuleType.IS_NULL: [Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 0)],
-        RuleType.NOT_NULL: [Vector2i(-3, 0), Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0)],
-    }))
-    rules.append(_rule("R32", {
-        RuleType.IS_NULL: [Vector2i(-2, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 0)],
-        RuleType.NOT_NULL: [Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0)],
-    }))
-    rules.append(_rule("R32", {
-        RuleType.IS_NULL: [Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 0)],
-        RuleType.NOT_NULL: [Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(-1, 1), Vector2i(1, 0)],
-    }))
-    rules.append(_rule("R32", {
-        RuleType.IS_NULL: [Vector2i(-4, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 0)],
-        RuleType.NOT_NULL: [Vector2i(-3, 0), Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0)],
-    }))
-    rules.append(_rule("R21", {
-        RuleType.IS_NULL: [Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 0)],
-        RuleType.NOT_NULL: [Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0)],
-    }))
-    rules.append(_rule("R10", {
-        RuleType.IS_NULL: [Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 0)],
-        RuleType.NOT_NULL: [Vector2i(-3, 0), Vector2i(-2, 0), Vector2i(-1, 0)],
-    }))
-    rules.append(_rule("R3210", {
-        RuleType.IS_NULL: [Vector2i(0, 1), Vector2i(1, 0)],
-        RuleType.NOT_NULL: [Vector2i(-1, 0)],
-    }))
-    rules.append(_rule("DL3210", {
-        RuleType.IS_NULL: [Vector2i(-1, 0), Vector2i(0, -1)],
-        RuleType.NOT_NULL: [Vector2i(0, 1), Vector2i(1, 0)],
-    }))
-    rules.append(_rule("DR3210", {
-        RuleType.IS_NULL: [Vector2i(0, -1), Vector2i(1, 0)],
-        RuleType.NOT_NULL: [Vector2i(-1, 0), Vector2i(0, 1)],
-    }))
-    rules.append(_rule("DM", {
-        RuleType.IS_NULL: [Vector2i(-1, 0), Vector2i(0, -1), Vector2i(1, 0)],
-        RuleType.NOT_NULL: [Vector2i(0, 1)],
-    }))
-    rules.append(_rule("FULL", {}))
-    return rules
-
-
-# 构造单条规则：[sub_ID, Dictionary[RuleType, Array[Vector2i]]]
-func _rule(sub_id: String, rule_map: Dictionary) -> Array:
-    return [sub_id, rule_map]
+# func _init() -> void:
+#     tiles_name = [
+#         ["M", "L3210", "R3210", "DL3210", "DR3210"],
+#         ["DM", "L10", "L21", "L32", "L43"],
+#         ["FULL", "R43", "R32", "R21", "R10"],
+#     ]
+#     # 可视化匹配矩阵：以 9 为中心，去掉全 0 行/列（值精确对应 Unity 版偏移）
+#     # 值：0=无要求(冗余，会被丢弃)，1=要求该位置为空，2=要求该位置非空
+#     match_matrix = [
+#         ["L43", [ # 1
+#             [0, 1, 1, 1, 1, 0, 0, 0, 0],
+#             [1, 2, 2, 2, 9, 2, 2, 2, 2],
+#         ]],
+#         ["L32", [ # 2
+#             [0, 1, 1, 1, 0, 0, 0],
+#             [1, 2, 2, 9, 2, 2, 2],
+#         ]],
+#         ["L32", [ # 3
+#             [0, 1, 1, 1, 0, 0],
+#             [1, 2, 9, 2, 2, 1],
+#         ]],
+#         ["L32", [ # 4
+#             [0, 1, 1, 2, 0],
+#             [1, 2, 9, 2, 2],
+#         ]],
+#         ["L32", [ # 5
+#             [0, 1, 1, 0, 0, 0, 0],
+#             [1, 2, 9, 2, 2, 2, 1],
+#         ]],
+#         ["L21", [ # 6
+#             [0, 1, 1, 1, 0, 0, 0],
+#             [1, 2, 9, 2, 2, 2, 2],
+#         ]],
+#         ["L10", [   # 7
+#             [0, 1, 1, 0, 0],
+#             [1, 9, 2, 2, 2],
+#         ]],
+#         ["L3210", [ # 8
+#             [0, 1, 0],
+#             [1, 9, 2],
+#         ]],
+#         ["M", [ # 9
+#             [0, 1, 0],
+#             [1, 9, 1],
+#         ]],
+#         ["R43", [ # 10
+#             [0, 0, 0, 0, 1, 1, 1, 1, 0],
+#             [2, 2, 2, 2, 9, 2, 2, 2, 1],
+#         ]],
+#         ["R32", [ # 11
+#             [0, 0, 0, 1, 1, 1, 0],
+#             [2, 2, 2, 9, 2, 2, 1],
+#         ]],
+#         ["R32", [ # 12
+#             [0, 0, 1, 1, 1, 0],
+#             [1, 2, 2, 9, 2, 1],
+#         ]],
+#         ["R32", [ # 13
+#             [0, 2, 1, 1, 0],
+#             [2, 2, 9, 2, 1],
+#         ]],
+#         ["R32", [ # 14
+#             [0, 0, 0, 0, 1, 1, 0],
+#             [1, 2, 2, 2, 9, 2, 1],
+#         ]],
+#         ["R21", [ # 15
+#             [0, 1, 1, 1, 0],
+#             [2, 2, 9, 2, 1],
+#         ]],
+#         ["R10", [ # 16
+#             [0, 0, 1, 1, 0],
+#             [2, 2, 2, 9, 1],
+#         ]],
+#         ["R3210", [ # 17
+#             [0, 1, 0],
+#             [2, 9, 1],
+#         ]],
+#         ["DL3210", [ # 18
+#             [0, 2, 0],
+#             [1, 9, 2],
+#             [0, 1, 0],
+#         ]],
+#         ["DR3210", [ # 19
+#             [0, 2, 0],
+#             [2, 9, 1],
+#             [0, 1, 0],
+#         ]],
+#         ["DM", [ # 20
+#             [0, 2, 0],
+#             [1, 9, 1],
+#             [0, 1, 0],
+#         ]],
+#         ["FULL", [ # 21
+#             [9],
+#         ]],
+#     ]
+#     build_from_matrix()

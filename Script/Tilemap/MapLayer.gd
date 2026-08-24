@@ -125,18 +125,18 @@ func _pending_group_keys() -> Array:
 
 
 # 获取 group 内 tile 使用的匹配规则（取 group 里第一个有规则的 source）
-func _get_rule_for_group(g: int) -> TileMatchRuleBase:
+func _get_rule_for_group(g: int) -> TileMatchRulePreset:
     for entry in _pending:
         if entry[0] != g:
             continue
         var info: Array = TileSetPreset.get_tile_id_info(entry[3])
         if TileSetPreset.has_match_rule(info[0]):
-            return TileMatchRulePreset.get_rule(TileSetPreset.get_(info[0]).tile_match_rule_name)
+            return TileMatchRulePreset.get_(TileSetPreset.get_(info[0]).tile_match_rule_name)
     return null
 
 
 # 收集所有需匹配位置：_pending 位置 + 每个位置在 reference_pos 范围内的邻居
-func _collect_match_queue(g: int, rule: TileMatchRuleBase) -> Array:
+func _collect_match_queue(g: int, rule: TileMatchRulePreset) -> Array:
     var queue: Array = []
     var visited: Dictionary = {}
     for entry in _pending:
@@ -157,7 +157,7 @@ func _add_match_pos(queue: Array, visited: Dictionary, pos: Vector2i) -> void:
 
 
 # 构建邻居非空映射：检查 reference_pos 各偏移的格子是否在 map_content 中
-func _build_neighbor_map(g: int, rule: TileMatchRuleBase, x: int, y: int) -> Dictionary:
+func _build_neighbor_map(g: int, rule: TileMatchRulePreset, x: int, y: int) -> Dictionary:
     var neighbor_map: Dictionary = {}
     for offset in rule.reference_pos:
         var nx := x + offset.x
