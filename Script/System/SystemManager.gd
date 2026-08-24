@@ -10,7 +10,7 @@ static var timeSys: TimeSys
 static var charSys: CharSys
 static var presets: PresetRegister
 static var inputSys: InputSys
-static var tmapSys: TMapSys
+static var tmapSys: MapSys
 
 static var USER_CONFIG_DIR := "user://Config/"
 static var SYS_CONFIG_DIR := "res://Config/"
@@ -43,5 +43,5 @@ func init_sub_system() -> void:
     charSys = CharSys.new()
     presets = PresetRegister.new()
     inputSys = InputSys.new()
-    tmapSys = TMapSys.new()
+    tmapSys = MapSys.new()
     # print("init_done")

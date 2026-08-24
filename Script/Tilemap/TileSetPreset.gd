@@ -2,6 +2,7 @@ class_name TileSetPreset
 extends PresetRegister
 
 var name: String
+var tile_match_rule_name: String
 var path: String
 var path_P3D: String
 
@@ -21,10 +22,13 @@ static var _atlas_cache: Dictionary = {}
 static var _tile_id_list: Array = []
 # 映射："source_name|coords" -> tile id(序号)
 static var _tile_id_map: Dictionary = {}
+# tile 名称映射：source_name -> tile_name -> atlas_coords（基于 rule.tiles_name）
+static var _tile_name_coords: Dictionary = {}
 
-func _init(name: String, path: String, path_P3D: String) -> void:
+func _init(name: String, tile_match_rule_name: String, path: String, path_P3D: String) -> void:
     _we[name] = self
     self.name = name
+    self.tile_match_rule_name = tile_match_rule_name
     self.path = path
     self.path_P3D = path_P3D
 
@@ -35,6 +39,10 @@ func _init(name: String, path: String, path_P3D: String) -> void:
     source_P3D = _create_source(path_P3D)
     source_id_P3D = tileset.add_source(source_P3D)
     _create_tiles(source_P3D, name, false)  # P3D source：只显示图像，无碰撞体
+
+    # 若有匹配规则，基于 tiles_name 为各位置 tile 命名
+    if tile_match_rule_name != "":
+        _build_tile_name_map(name)
 
 
 static func get_(name: String) -> TileSetPreset:
@@ -49,20 +57,68 @@ static func get_source_id_P3D(name: String) -> int:
     return _we[name].source_id_P3D
 
 
-# 获取/注册 (source_name, atlas_coords) 的 tile id（列表序号）。tile 与 P3D 共用一个 id。
-static func get_or_register_tile_id(source_name: String, atlas_coords: Vector2i) -> int:
-    var key := source_name + "|" + str(atlas_coords)
+# 基于匹配规则的 tiles_name 建立 tile_name -> atlas_coords 映射
+static func _build_tile_name_map(source_name: String) -> void:
+    var rule := TileMatchRulePreset.get_rule(_we[source_name].tile_match_rule_name)
+    if rule == null:
+        return
+    var map: Dictionary = {}
+    var names: Array[Array] = rule.tiles_name
+    for row in names.size():
+        for col in names[row].size():
+            var tile_name: String = names[row][col]
+            if not tile_name.is_empty():
+                # tiles_name[row][col] 对应 atlas_coords(col, row)
+                map[tile_name] = Vector2i(col, row)
+    _tile_name_coords[source_name] = map
+
+
+# 按 tile 名称获取 atlas_coords，找不到返回 Vector2i(-1, -1)
+static func get_tile_coords_by_name(source_name: String, tile_name: String) -> Vector2i:
+    var map: Dictionary = _tile_name_coords.get(source_name)
+    if map == null:
+        return Vector2i(-1, -1)
+    return map.get(tile_name, Vector2i(-1, -1))
+
+
+# 获取 source 是否配置了匹配规则名
+static func has_match_rule(source_name: String) -> bool:
+    return _we[source_name].tile_match_rule_name != ""
+
+
+# 判断 source 是否存在指定 tile 名称
+static func has_tile_name(source_name: String, tile_name: String) -> bool:
+    var map: Dictionary = _tile_name_coords.get(source_name)
+    return map != null and map.has(tile_name)
+
+
+# 获取 source 的默认 tile 名称（tiles_name 的 (0,0) 位置）
+static func get_default_tile_name(source_name: String) -> String:
+    var rule := TileMatchRulePreset.get_rule(_we[source_name].tile_match_rule_name)
+    if rule == null or rule.tiles_name.is_empty() or rule.tiles_name[0].is_empty():
+        return ""
+    return rule.tiles_name[0][0]
+
+
+# 获取/注册 (source_name, tile_name) 的 tile id（列表序号）。tile 与 P3D 共用一个 id。
+static func get_or_register_tile_id(source_name: String, tile_name: String) -> int:
+    var key := source_name + "|" + tile_name
     if _tile_id_map.has(key):
         return _tile_id_map[key]
     var id := _tile_id_list.size()
-    _tile_id_list.append([source_name, atlas_coords])
+    _tile_id_list.append([source_name, tile_name])
     _tile_id_map[key] = id
     return id
 
 
-# 按 tile id 获取 [source_name, atlas_coords]
+# 按 tile id 获取 [source_name, tile_name]
 static func get_tile_id_info(id: int) -> Array:
     return _tile_id_list[id]
+
+
+# 把 [source_name, tile_name] 转为 atlas_coords（需要 atlas 时用）
+static func get_tile_info_coords(info: Array) -> Vector2i:
+    return get_tile_coords_by_name(info[0], info[1])
 
 
 # 获取指定 source 的图集 region 图像（48x48）。
@@ -181,13 +237,15 @@ static func _build_polygons(image: Image) -> Array:
     var bit_map := build_alpha_bitmap(image)
     var result: Array = []
     var half := Vector2(SysCfg.REGION_SIZE) / 2.0
+    # 碰撞体需与渲染对齐：渲染用 texture_origin=(-8,8)，碰撞体以其反向偏移校正(向右上移 8,8)
+    var offset := Vector2(8, -8)
     for raw in bit_map.opaque_to_polygons(Rect2(Vector2.ZERO, SysCfg.REGION_SIZE)):
         var points: PackedVector2Array = raw
         if points.size() > 3 and points[0] == points[points.size() - 1]:
             points.remove_at(points.size() - 1)
         if points.size() >= 3:
             for i in points.size():
-                points[i] -= half
+                points[i] = points[i] - half + offset
             result.append(points)
     return result
 

@@ -80,19 +80,112 @@ func place(layer_type: int, x: int, y: int, tile_id: int) -> void:
 
 # 循环2：根据 map_content 放置所有 tile 和 P3D（每个位置同时放 tile 到普通层 + P3D 到配套 P3D 层）
 func build() -> void:
-    # 先放置所有 tile（到普通层 layer_type）
+    # 先基于邻居进行 tile 匹配，更新 map_content（可能改变各位置 tile）
+    _apply_tile_match()
+    # 再放置所有 tile（到普通层 layer_type）
     for entry in _pending:
-        _place_tile(entry[0], entry[1], entry[2], entry[3])
+        var g: int = entry[0]
+        _place_tile(g, entry[1], entry[2], _get_cell_id(g, entry[1], entry[2]))
     # 再放置所有 P3D（到配套 P3D 层 layer_type-1，此时所有 tile 已记录可查擦除矩阵）
     for entry in _pending:
-        _place_p3d(entry[0] - 1, entry[1], entry[2], entry[3])
+        _place_p3d(entry[0] - 1, entry[1], entry[2], _get_cell_id(entry[0], entry[1], entry[2]))
+
+
+# 基于邻居情况对已放置的 tile 进行匹配，更新 map_content（可能改变各位置 tile）
+func _apply_tile_match() -> void:
+    for g in _pending_group_keys():
+        var rule := _get_rule_for_group(g)
+        if rule == null:
+            continue
+        # 1. 收集所有需要匹配的位置（_pending 位置 + reference_pos 邻居）
+        var match_queue := _collect_match_queue(g, rule)
+        # 2. 遍历匹配，若 tile_name 变化则更新 map_content
+        for pos in match_queue:
+            var tile_id := _get_cell_id(g, pos.x, pos.y)
+            if tile_id < 0:
+                continue
+            var info: Array = TileSetPreset.get_tile_id_info(tile_id)
+            var neighbor_map := _build_neighbor_map(g, rule, pos.x, pos.y)
+            var new_name := rule.match(neighbor_map)
+            if new_name.is_empty():
+                continue
+            if TileSetPreset.has_tile_name(info[0], new_name):
+                var new_id := TileSetPreset.get_or_register_tile_id(info[0], new_name)
+                _set_cell_id(g, pos.x, pos.y, new_id)
+
+
+# 收集所有出现过的 group key
+func _pending_group_keys() -> Array:
+    var keys: Array = []
+    for entry in _pending:
+        var g: int = entry[0]
+        if not keys.has(g):
+            keys.append(g)
+    return keys
+
+
+# 获取 group 内 tile 使用的匹配规则（取 group 里第一个有规则的 source）
+func _get_rule_for_group(g: int) -> TileMatchRuleBase:
+    for entry in _pending:
+        if entry[0] != g:
+            continue
+        var info: Array = TileSetPreset.get_tile_id_info(entry[3])
+        if TileSetPreset.has_match_rule(info[0]):
+            return TileMatchRulePreset.get_rule(TileSetPreset.get_(info[0]).tile_match_rule_name)
+    return null
+
+
+# 收集所有需匹配位置：_pending 位置 + 每个位置在 reference_pos 范围内的邻居
+func _collect_match_queue(g: int, rule: TileMatchRuleBase) -> Array:
+    var queue: Array = []
+    var visited: Dictionary = {}
+    for entry in _pending:
+        if entry[0] != g:
+            continue
+        var base := Vector2i(entry[1], entry[2])
+        _add_match_pos(queue, visited, base)
+        for offset in rule.reference_pos:
+            _add_match_pos(queue, visited, base + offset)
+    return queue
+
+
+func _add_match_pos(queue: Array, visited: Dictionary, pos: Vector2i) -> void:
+    if visited.has(pos):
+        return
+    visited[pos] = true
+    queue.append(pos)
+
+
+# 构建邻居非空映射：检查 reference_pos 各偏移的格子是否在 map_content 中
+func _build_neighbor_map(g: int, rule: TileMatchRuleBase, x: int, y: int) -> Dictionary:
+    var neighbor_map: Dictionary = {}
+    for offset in rule.reference_pos:
+        var nx := x + offset.x
+        var ny := y + offset.y
+        neighbor_map[offset] = _get_cell_id(g, nx, ny) >= 0
+    return neighbor_map
+
+
+func _set_cell_id(g: int, x: int, y: int, tile_id: int) -> void:
+    var blocks: Dictionary = _map_content.get(g)
+    if blocks == null:
+        return
+    var block_coord := Vector2i(floori(float(x) / SysCfg.BLOCK_SIZE), floori(float(y) / SysCfg.BLOCK_SIZE))
+    var matrix: Array = blocks.get(block_coord)
+    if matrix == null:
+        return
+    var lx := x - block_coord.x * SysCfg.BLOCK_SIZE
+    var ly := y - block_coord.y * SysCfg.BLOCK_SIZE
+    if lx >= 0 and lx < SysCfg.BLOCK_SIZE and ly >= 0 and ly < SysCfg.BLOCK_SIZE:
+        matrix[ly * SysCfg.BLOCK_SIZE + lx] = tile_id
 
 
 # 查询 (x,y) 在组 g 内三个邻居(上/右上/右)的 tile id，供擦除矩阵使用
+# 逻辑坐标 y 向上为正：y+1 为上
 func get_neighbor(g: int, x: int, y: int) -> Array:
     return [
-        _get_cell_id(g, x, y - 1),       # 上
-        _get_cell_id(g, x + 1, y - 1),   # 右上
+        _get_cell_id(g, x, y + 1),       # 上
+        _get_cell_id(g, x + 1, y + 1),   # 右上
         _get_cell_id(g, x + 1, y),       # 右
     ]
 
@@ -115,23 +208,26 @@ func _get_cell_id(g: int, x: int, y: int) -> int:
 func _place_tile(layer_type: int, x: int, y: int, tile_id: int) -> void:
     var info: Array = TileSetPreset.get_tile_id_info(tile_id)
     var source_id: int = TileSetPreset.get_source_id(info[0])
-    _tile_maps[sub_layer_id(_layer_id, layer_type)].set_cell(Vector2i(x, y), source_id, info[1])
+    var coords := TileSetPreset.get_tile_info_coords(info)
+    # Godot y 轴向下为正，逻辑坐标 y 向上为正，放置时对 y 取反
+    _tile_maps[sub_layer_id(_layer_id, layer_type)].set_cell(Vector2i(x, -y), source_id, coords)
 
 
 func _place_p3d(layer_type: int, x: int, y: int, tile_id: int) -> void:
     var info: Array = TileSetPreset.get_tile_id_info(tile_id)
     var source_name: String = info[0]
-    var atlas_coords: Vector2i = info[1]
+    var atlas_coords := TileSetPreset.get_tile_info_coords(info)
     var sprite := TileSetPreset.create_p3d_sprite(source_name, atlas_coords)
-    sprite.position = Vector2(x * 32, y * 32) - _p3d_offset
+    # Godot y 轴向下为正，逻辑坐标 y 向上为正，位置对 y 取反（与 tile 一致）
+    sprite.position = Vector2(x * 32, -y * 32) - _p3d_offset
     sprite.name = str(x) + "," + str(y)
     sprite.z_index = x - y
     # P3D 遮挡擦除：查询同组邻居，生成擦除掩码纹理传给 shader
     var g := group_key(layer_type)
     var mat := ShaderMaterial.new()
-    mat.shader = TMapSys.erase_shader
+    mat.shader = MapSys.erase_shader
     mat.set_shader_parameter("erase_mask",
-        TilemapP3DEraseMask.get_erase_mask(
+        TileP3DEraseMask.get_erase_mask(
             func(px: int, py: int) -> Array: return get_neighbor(g, px, py),
             x, y, tile_id, _p3d_offset))
     mat.set_shader_parameter("mode", 1)  # 0=置红可视化，1=删除挖空
