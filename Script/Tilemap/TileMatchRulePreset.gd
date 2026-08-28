@@ -2,13 +2,15 @@ class_name TileMatchRulePreset
 extends PresetRegister
 
 # 匹配邻居的类型
-enum RuleType { IS_NULL, NOT_NULL }
+# 1=空 2=非空 3=非空但规则不同 4=非空且规则相同
+enum RuleType { IS_NULL, NOT_NULL, DIFF_RULE, SAME_RULE }
 
 # 规则名
 var name: String
+var auto_expand: bool
 # 各位置 tile 的名称矩阵（source 分片后的 tile 名称，也是匹配规则检索的名称）
 var tiles_name: Array = []
-# 匹配矩阵：Array of [tile_name, 匹配矩阵]（中心 9，空 1，非空 2，无要求 0）
+# 匹配矩阵：Array of [tile_name, 匹配矩阵]（中心 9，空 1，非空 2，规则不同 3，规则相同 4，无要求 0）
 var match_matrix: Array = []
 # 匹配时检查的邻居偏移列表（左右四格 + 上下各一格）
 var reference_pos: Array[Vector2i] = []
@@ -18,9 +20,10 @@ var match_rules: Array = []
 static var _we: Dictionary[String, TileMatchRulePreset] = {}
 
 
-func _init(rule_name: String, tiles_name: Array, match_matrix: Array) -> void:
+func _init(rule_name: String, auto_expand: bool, tiles_name: Array, match_matrix: Array) -> void:
     _we[rule_name] = self
     self.name = rule_name
+    self.auto_expand = auto_expand
     self.tiles_name = tiles_name
     self.match_matrix = match_matrix
     build_from_matrix()
@@ -75,20 +78,29 @@ func _rules_from_matrix() -> Array:
         var rule_name: String = entry[0]
         var matrix: Array = entry[1]
         var center := _find_center(matrix)
-        var is_null: Array = []
-        var not_null: Array = []
+        var type_map: Dictionary = {
+            RuleType.IS_NULL: [],
+            RuleType.NOT_NULL: [],
+            RuleType.DIFF_RULE: [],
+            RuleType.SAME_RULE: [],
+        }
         for row in matrix.size():
             var mrow: Array = matrix[row]
             for col in mrow.size():
                 var v: int = mrow[col]
+                var rule_type: int = -1
                 if v == 1:
-                    is_null.append(_cell_to_offset(row, col, center))
+                    rule_type = RuleType.IS_NULL
                 elif v == 2:
-                    not_null.append(_cell_to_offset(row, col, center))
-        rules.append([rule_name, {
-            RuleType.IS_NULL: is_null,
-            RuleType.NOT_NULL: not_null,
-        }])
+                    rule_type = RuleType.NOT_NULL
+                elif v == 3:
+                    rule_type = RuleType.DIFF_RULE
+                elif v == 4:
+                    rule_type = RuleType.SAME_RULE
+                if rule_type >= 0:
+                    var arr: Array = type_map[rule_type]
+                    arr.append(_cell_to_offset(row, col, center))
+        rules.append([rule_name, type_map])
     return rules
 
 
@@ -118,10 +130,17 @@ func _is_match(rule: Array, neighbor_map: Dictionary) -> bool:
     return true
 
 
-# 判断单个邻居偏移是否满足类型要求
+# 判断单个邻居偏移是否满足类型要求。
+# neighbor_map 值：1=空，3=非空但规则不同，4=非空且规则相同。
 func _match_single(rule_type: int, offset: Vector2i, neighbor_map: Dictionary) -> bool:
-    var not_empty: bool = neighbor_map.get(offset, false)
-    if rule_type == RuleType.IS_NULL:
-        return not not_empty
-    else:  # NOT_NULL
-        return not_empty
+    var v: int = neighbor_map.get(offset, RuleType.IS_NULL)
+    match rule_type:
+        RuleType.IS_NULL:
+            return v == RuleType.IS_NULL
+        RuleType.NOT_NULL:
+            return v != RuleType.IS_NULL
+        RuleType.DIFF_RULE:
+            return v == RuleType.DIFF_RULE
+        RuleType.SAME_RULE:
+            return v == RuleType.SAME_RULE
+    return false

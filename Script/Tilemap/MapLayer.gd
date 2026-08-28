@@ -6,14 +6,34 @@ static func sub_layer_id(layer_id: int, layer_type: int) -> int:
     return layer_id * Enums.LayerType.COUNT + layer_type
 
 
-# 判断 layer_type 是否为 P3D 类型（偶数为 P3D：BACK_P3D/MIDDLE_P3D/FRONT_P3D）
+# 判断 layer_type 是否为 P3D 类型（仅 MIDDLE_P3D 有 P3D 素材）
 static func is_p3d_type(layer_type: int) -> bool:
-    return layer_type % 2 == 0
+    return layer_type == Enums.LayerType.MIDDLE_P3D
 
 
-# 映射 layer_type 到组 key（普通类型：BACK/MIDDLE/FRONT），tile 与 P3D 配套共用
+# 映射 layer_type 到组 key。MIDDLE_P3D 与 MIDDLE 配套共用一组；PLANT 独立一组。
 static func group_key(layer_type: int) -> int:
-    return layer_type + 1 if layer_type % 2 == 0 else layer_type
+    match layer_type:
+        Enums.LayerType.MIDDLE_P3D, Enums.LayerType.MIDDLE:
+            return 0
+        Enums.LayerType.PLANT:
+            return 1
+    return layer_type
+
+
+# 组 key -> 该组放置普通 tile 的 layer_type
+static func group_to_tile_layer(g: int) -> int:
+    match g:
+        0:
+            return Enums.LayerType.MIDDLE
+        1:
+            return Enums.LayerType.PLANT
+    return g
+
+
+# 组 key 是否有 P3D 素材（仅 Middle 组有）
+static func group_has_p3d(g: int) -> bool:
+    return g == 0
 
 
 var _layer_id: int
@@ -26,7 +46,7 @@ var _p3d_maps: Dictionary[int, TileMapLayer] = {}
 # Dictionary[int /* 组key: BACK/MIDDLE/FRONT */, Dictionary[Vector2i /* 区块 */, Array /* 16x16 矩阵(int tile id) */]]
 var _map_content: Dictionary[int, Dictionary] = {}
 # 记录放置位置 -> tile_id（key: Vector3i(g, x, y)），同一位置重复放置直接覆盖
-var _pending: Dictionary[Vector3i, int] = {}
+var _pending: Dictionary[Vector3i, Dictionary] = {}
 var _p3d_offset := SysCfg.P3D_OFFSET
 
 
@@ -68,7 +88,7 @@ func _create_sub_layers() -> void:
 # 记录 tile 到 map_content（tile 与 P3D 配套共用，key 用普通类型 BACK/MIDDLE/FRONT）
 # layer_type 传普通组类型（BACK/MIDDLE/FRONT），同时放置配套的 tile 和 P3D
 # 循环1：只记录，不放置
-func place(layer_type: int, x: int, y: int, tile_id: int) -> void:
+func place(layer_type: int, x: int, y: int, tile_id: int, is_fix: bool = false) -> void:
     var g := group_key(layer_type)
     if not _map_content.has(g):
         _map_content[g] = {}
@@ -80,20 +100,23 @@ func place(layer_type: int, x: int, y: int, tile_id: int) -> void:
     var lx := x - block_coord.x * SysCfg.BLOCK_SIZE
     var ly := y - block_coord.y * SysCfg.BLOCK_SIZE
     matrix[ly * SysCfg.BLOCK_SIZE + lx] = tile_id
-    _pending[Vector3i(g, x, y)] = tile_id
+    _pending[Vector3i(g, x, y)] = {"tile_id": tile_id, "isFix": is_fix}
 
 
-# 循环2：根据 map_content 放置所有 tile 和 P3D（每个位置同时放 tile 到普通层 + P3D 到配套 P3D 层）
+# 循环2：根据 map_content 放置所有 tile 和 P3D。
+# tile 放到对应普通层；仅 Middle 组放置 P3D 到 MIDDLE_P3D 层。
 func build() -> void:
     # 先基于邻居进行 tile 匹配，更新 map_content（可能改变各位置 tile）
     _apply_tile_match()
-    # 再放置所有 tile（到普通层 layer_type）
+    # 放置所有 tile（到普通层）
     for pos: Vector3i in _pending:
         var g: int = pos.x
         _place_tile(g, pos.y, pos.z, _get_cell_id(g, pos.y, pos.z))
-    # 再放置所有 P3D（到配套 P3D 层 layer_type-1，此时所有 tile 已记录可查擦除矩阵）
+    # 仅 Middle 组放置 P3D（此时所有 tile 已记录可查擦除矩阵）
     for pos: Vector3i in _pending:
-        _place_p3d(pos.x - 1, pos.y, pos.z, _get_cell_id(pos.x, pos.y, pos.z))
+        var g: int = pos.x
+        if group_has_p3d(g):
+            _place_p3d(g, pos.y, pos.z, _get_cell_id(g, pos.y, pos.z))
 
 
 # 基于邻居情况对已放置的 tile 进行匹配，更新 map_content（可能改变各位置 tile）
@@ -104,8 +127,13 @@ func _apply_tile_match() -> void:
             continue
         # 1. 收集所有需要匹配的位置（_pending 位置 + reference_pos 邻居）
         var match_queue := _collect_match_queue(g, rule)
-        # 2. 遍历匹配，若 tile_name 变化则更新 map_content
+        # 2. 遍历匹配，若 tile_name 变化则更新 map_content（isFix 固定位置跳过）
         for pos in match_queue:
+            # 固定位置（place 时指定了 tile_name）不参与匹配
+            if _pending.has(Vector3i(g, pos.x, pos.y)):
+                var pend: Dictionary = _pending[Vector3i(g, pos.x, pos.y)]
+                if pend.isFix:
+                    continue
             var tile_id := _get_cell_id(g, pos.x, pos.y)
             if tile_id < 0:
                 continue
@@ -114,6 +142,8 @@ func _apply_tile_match() -> void:
             var new_name := rule.match(neighbor_map)
             if new_name.is_empty():
                 continue
+            # auto_expand 时 match 可能返回 base_name，需解析成完整 tile_name（随机变种）
+            new_name = TileSetPreset.resolve_tile_name(info[0], new_name)
             if TileSetPreset.has_tile_name(info[0], new_name):
                 var new_id := TileSetPreset.get_or_register_tile_id(info[0], new_name)
                 _set_cell_id(g, pos.x, pos.y, new_id)
@@ -134,7 +164,8 @@ func _get_rule_for_group(g: int) -> TileMatchRulePreset:
     for pos: Vector3i in _pending:
         if pos.x != g:
             continue
-        var info: Array = TileSetPreset.get_tile_id_info(_pending[pos])
+        var pend: Dictionary = _pending[pos]
+        var info: Array = TileSetPreset.get_tile_id_info(pend.tile_id)
         if TileSetPreset.has_match_rule(info[0]):
             return TileMatchRulePreset.get_(TileSetPreset.get_(info[0]).tile_match_rule_name)
     return null
@@ -161,13 +192,32 @@ func _add_match_pos(queue: Array, visited: Dictionary, pos: Vector2i) -> void:
     queue.append(pos)
 
 
-# 构建邻居非空映射：检查 reference_pos 各偏移的格子是否在 map_content 中
+# 构建邻居规则值映射：检查 reference_pos 各偏移在可检查层中是否有 tile，并按规则异同返回。
+# 值：1=空，3=非空但规则不同，4=非空且规则相同。
+# 可检查的层由 Enums.layer_can_match 决定；若未配置则默认只检查自身层。
 func _build_neighbor_map(g: int, rule: TileMatchRulePreset, x: int, y: int) -> Dictionary:
     var neighbor_map: Dictionary = {}
+    var layer_type := group_to_tile_layer(g)
+    var check_layers: Array = Enums.layer_can_match.get(layer_type, [layer_type])
+    # 需要检查的 group 集合（去重）
+    var check_groups: Array = []
+    for lt in check_layers:
+        var gg := group_key(lt)
+        if not check_groups.has(gg):
+            check_groups.append(gg)
     for offset in rule.reference_pos:
         var nx := x + offset.x
         var ny := y + offset.y
-        neighbor_map[offset] = _get_cell_id(g, nx, ny) >= 0
+        var value: int = TileMatchRulePreset.RuleType.IS_NULL  # 默认空
+        for gg in check_groups:
+            var tid := _get_cell_id(gg, nx, ny)
+            if tid >= 0:
+                # 非空：判断邻居规则是否与当前相同
+                var info: Array = TileSetPreset.get_tile_id_info(tid)
+                var neighbor_rule: String = TileSetPreset.get_(info[0]).tile_match_rule_name
+                value = TileMatchRulePreset.RuleType.SAME_RULE if neighbor_rule == rule.name else TileMatchRulePreset.RuleType.DIFF_RULE
+                break
+        neighbor_map[offset] = value
     return neighbor_map
 
 
@@ -210,24 +260,28 @@ func _get_cell_id(g: int, x: int, y: int) -> int:
     return matrix[ly * SysCfg.BLOCK_SIZE + lx]
 
 
-func _place_tile(layer_type: int, x: int, y: int, tile_id: int) -> void:
+func _place_tile(g: int, x: int, y: int, tile_id: int) -> void:
+    if tile_id < 0:
+        return
     var info: Array = TileSetPreset.get_tile_id_info(tile_id)
     var source_id: int = TileSetPreset.get_source_id(info[0])
     var coords := TileSetPreset.get_tile_info_coords(info)
+    var layer_type := group_to_tile_layer(g)
     # Godot y 轴向下为正，逻辑坐标 y 向上为正，放置时对 y 取反
     _tile_maps[sub_layer_id(_layer_id, layer_type)].set_cell(Vector2i(x, -y), source_id, coords)
 
 
-func _place_p3d(layer_type: int, x: int, y: int, tile_id: int) -> void:
+func _place_p3d(g: int, x: int, y: int, tile_id: int) -> void:
+    if tile_id < 0:
+        return
     var info: Array = TileSetPreset.get_tile_id_info(tile_id)
     var source_name: String = info[0]
     var atlas_coords := TileSetPreset.get_tile_info_coords(info)
     # P3D 遮挡擦除：查询同组邻居，注册/获取掩码后的 P3D 变体 tile，用 tilemap 放置
-    var g := group_key(layer_type)
     var neighbors: Array = get_neighbor(g, x, y)
     var masked: Dictionary = TileSetPreset.get_or_register_masked_p3d(
         source_name, atlas_coords, neighbors, _p3d_offset)
-    var p3d_map: TileMapLayer = _p3d_maps[sub_layer_id(_layer_id, layer_type)]
+    var p3d_map: TileMapLayer = _p3d_maps[sub_layer_id(_layer_id, Enums.LayerType.MIDDLE_P3D)]
     p3d_map.set_cell(Vector2i(x, -y), masked.source_id, masked.atlas_coords)
 
 

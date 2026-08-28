@@ -2,6 +2,7 @@ class_name TileSetPreset
 extends PresetRegister
 
 var name: String
+var layer: Enums.LayerType
 var tile_match_rule_name: String
 var path: String
 var path_P3D: String
@@ -38,24 +39,28 @@ static var _shape_seq_counter: int = 0
 static var _p3d_mask_variant_cache: Dictionary = {}
 # neighbor_hash_key -> 掩码后的 P3D 图像（跨 tile 共享掩码，但图像依赖当前 P3D，故按 tile 缓存）
 
-func _init(name: String, tile_match_rule_name: String, path: String, path_P3D: String) -> void:
+func _init(name: String, layer: Enums.LayerType, tile_match_rule_name: String, path: String) -> void:
     _we[name] = self
     self.name = name
+    self.layer = layer
     self.tile_match_rule_name = tile_match_rule_name
     self.path = path
-    self.path_P3D = path_P3D
-
+    if layer == Enums.LayerType.MIDDLE:
+        self.path_P3D = path.get_basename() + "_P3D." + path.get_extension()
+ 
     source = _create_source(path)
     source_id = tileset.add_source(source)
-    _create_tiles(source, name, true)  # 正常 source：有碰撞体
+    # 仅 Middle 层有碰撞体
+    _create_tiles(source, name, layer == Enums.LayerType.MIDDLE)
 
-    source_P3D = _create_source(path_P3D)
-    source_id_P3D = tileset.add_source(source_P3D)
-    _create_tiles(source_P3D, name, false)  # P3D source：只显示图像，无碰撞体
+    # 仅 Middle 层有 P3D 素材
+    if layer == Enums.LayerType.MIDDLE:
+        source_P3D = _create_source(path_P3D)
+        source_id_P3D = tileset.add_source(source_P3D)
+        _create_tiles(source_P3D, name, false)  # P3D source：只显示图像，无碰撞体
 
-    # 若有匹配规则，基于 tiles_name 为各位置 tile 命名
-    if tile_match_rule_name != "":
-        _build_tile_name_map(name)
+    # 为各位置 tile 命名（有规则用 tiles_name；无规则用 "x,y"）
+    _build_tile_name_map(name)
 
 
 static func get_(name: String) -> TileSetPreset:
@@ -73,17 +78,53 @@ static func get_source_id_P3D(name: String) -> int:
 # 基于匹配规则的 tiles_name 建立 tile_name -> atlas_coords 映射
 static func _build_tile_name_map(source_name: String) -> void:
     var rule := TileMatchRulePreset.get_(_we[source_name].tile_match_rule_name)
-    if rule == null:
-        return
     var map: Dictionary = {}
-    var names: Array = rule.tiles_name
-    for row in names.size():
-        for col in names[row].size():
-            var tile_name: String = names[row][col]
-            if not tile_name.is_empty():
-                # tiles_name[row][col] 对应 atlas_coords(col, row)
-                map[tile_name] = Vector2i(col, row)
+    if rule == null or rule.tiles_name.is_empty():
+        # 无规则：用 "x,y" 命名所有图集位置
+        _map_all_coords_as_xy(source_name, map)
+    elif rule.auto_expand:
+        # auto_expand：按图集列数把每行 base_name 扩展为 base_name_1..base_name_N
+        var cols := _get_source_column_count(source_name)
+        var names: Array = rule.tiles_name
+        for row in names.size():
+            var row_names: Array = names[row]
+            for col in row_names.size():
+                var base_name: String = row_names[col]
+                if base_name.is_empty():
+                    continue
+                for v in cols:
+                    map[base_name + "_" + str(v + 1)] = Vector2i(v, row)
+    else:
+        # 非 auto_expand：tiles_name[row][col] 对应 atlas_coords(col, row)
+        var names: Array = rule.tiles_name
+        for row in names.size():
+            var row_names: Array = names[row]
+            for col in row_names.size():
+                var tile_name: String = row_names[col]
+                if not tile_name.is_empty():
+                    map[tile_name] = Vector2i(col, row)
     _tile_name_coords[source_name] = map
+
+
+# 无规则 source：按图集行列数用 "x,y" 命名
+static func _map_all_coords_as_xy(source_name: String, map: Dictionary) -> void:
+    var tex := _we[source_name].source.texture
+    if tex == null:
+        return
+    var tex_size: Vector2i = tex.get_image().get_size()
+    var cols := _count(tex_size.x, SysCfg.TILE_MARGINS.x, SysCfg.TILE_SEPARATION.x)
+    var rows := _count(tex_size.y, SysCfg.TILE_MARGINS.y, SysCfg.TILE_SEPARATION.y)
+    for row in rows:
+        for col in cols:
+            map[str(col) + "," + str(row)] = Vector2i(col, row)
+
+
+# 获取 source 图集的列数（按 REGION_SIZE 网格分块）
+static func _get_source_column_count(source_name: String) -> int:
+    var tex := _we[source_name].source.texture
+    if tex == null:
+        return 1
+    return _count(tex.get_image().get_size().x, SysCfg.TILE_MARGINS.x, SysCfg.TILE_SEPARATION.x)
 
 
 # 按 tile 名称获取 atlas_coords，找不到返回 Vector2i(-1, -1)
@@ -105,14 +146,40 @@ static func has_tile_name(source_name: String, tile_name: String) -> bool:
     return map != null and map.has(tile_name)
 
 
-# 获取 source 的默认 tile 名称（tiles_name 的 (0,0) 位置）
+# 解析匹配到的名称到完整可用的 tile_name。
+# - name 已是完整 tile_name（存在于 _tile_name_coords）→ 直接用
+# - 否则（auto_expand 的 base_name）→ 从所有 base_name 匹配的完整 tile_name 随机挑一个
+# - 都找不到 → 返回原名（调用方用 has_tile_name 判断）
+static func resolve_tile_name(source_name: String, name: String) -> String:
+    var map: Dictionary = _tile_name_coords.get(source_name, {})
+    if map.has(name):
+        return name
+    var candidates: Array = []
+    for tn in map.keys():
+        if _base_name_of(tn) == name:
+            candidates.append(tn)
+    if candidates.is_empty():
+        return name
+    return candidates[randi() % candidates.size()]
+
+
+# 提取 tile_name 的 base_name（第二个 "_" 前的部分）。如 "1_1_1" -> "1_1"，"FULL" -> "FULL"。
+static func _base_name_of(tile_name: String) -> String:
+    var parts := tile_name.split("_")
+    if parts.size() <= 2:
+        return tile_name
+    return parts[0] + "_" + parts[1]
+
+
+# 获取 source 的默认 tile 名称（tiles_name 的 (0,0) 位置；无规则则用 "0,0"）
 static func get_default_tile_name(source_name: String) -> String:
     var rule: TileMatchRulePreset = TileMatchRulePreset.get_(_we[source_name].tile_match_rule_name)
     if rule == null or rule.tiles_name.is_empty():
-        return ""
+        # 无规则 source：默认 "x,y" 命名的 (0,0)
+        return str(0) + "," + str(0)
     var first_row: Array = rule.tiles_name[0]
     if first_row.is_empty():
-        return ""
+        return str(0) + "," + str(0)
     return first_row[0]
 
 
@@ -176,29 +243,35 @@ static func get_tile_info_coords(info: Array) -> Vector2i:
 
 # 获取指定 source 的图集 region 图像（48x48）。
 # is_p3d 为 true 取 P3D 图集(source_P3D)，否则取 tile 图集(source)。
+# 若 source 无 P3D（如 Plant 组素材），is_p3d 时返回全透明图像（安全）。
 static func get_region_image(source_name: String, atlas_coords: Vector2i, is_p3d: bool) -> Image:
     var preset := _we[source_name]
     var src := preset.source_P3D if is_p3d else preset.source
+    if src == null:
+        # 无该图集（尤其 P3D 不存在）：返回全透明 48x48 图像
+        var empty := Image.create(SysCfg.REGION_SIZE.x, SysCfg.REGION_SIZE.y, false, Image.FORMAT_RGBA8)
+        empty.fill(Color(0, 0, 0, 0))
+        return empty
     var region := Rect2i(SysCfg.TILE_MARGINS + atlas_coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
     return src.texture.get_image().get_region(region)
 
 
 # 为指定瓦片创建伪3D精灵（Sprite2D + AtlasTexture）
 # 用 Node2D 的 y_sort 控制遮挡，避免 TileMap 排序限制
-static func create_p3d_sprite(name: String, atlas_coords: Vector2i) -> Sprite2D:
-    var preset := _we[name]
-    # AtlasTexture 是纯资源，可缓存共享；Sprite2D 实例需独立创建
-    var atlas_key := name + "|" + str(atlas_coords)
-    if not _atlas_cache.has(atlas_key):
-        var texture: Texture2D = load(preset.path_P3D)
-        var atlas := AtlasTexture.new()
-        atlas.atlas = texture
-        atlas.region = Rect2(SysCfg.TILE_MARGINS + atlas_coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
-        _atlas_cache[atlas_key] = atlas
-    var sprite := Sprite2D.new()
-    sprite.texture = _atlas_cache[atlas_key]
-    sprite.centered = false  # 锚点左上角，便于按瓦片网格定位
-    return sprite
+# static func create_p3d_sprite(name: String, atlas_coords: Vector2i) -> Sprite2D:
+#     var preset := _we[name]
+#     # AtlasTexture 是纯资源，可缓存共享；Sprite2D 实例需独立创建
+#     var atlas_key := name + "|" + str(atlas_coords)
+#     if not _atlas_cache.has(atlas_key):
+#         var texture: Texture2D = load(preset.path_P3D)
+#         var atlas := AtlasTexture.new()
+#         atlas.atlas = texture
+#         atlas.region = Rect2(SysCfg.TILE_MARGINS + atlas_coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
+#         _atlas_cache[atlas_key] = atlas
+#     var sprite := Sprite2D.new()
+#     sprite.texture = _atlas_cache[atlas_key]
+#     sprite.centered = false  # 锚点左上角，便于按瓦片网格定位
+#     return sprite
 
 
 # 获取/注册掩码后的 P3D tile（独立的 AtlasSource 变体）。

@@ -2,16 +2,18 @@ class_name TileMatchRulePreset_Basic
 extends ConfigBase
 
 """
+name
+auto_expand
 values 每条对应一个 TileMatchRulePreset 实例：
     [rule_name, tiles_name, match_matrix]
 match_matrix：Array of [tile_name, 匹配矩阵]（中心 9，空 1，非空 2，无要求 0）
 """
 var values: Array[Array] = [
-    ["BlockRule", [
+    ["BlockRule", false, [
         ["M", "L3210", "R3210", "DL3210", "DR3210"],
         ["DM", "L10", "L21", "L32", "L43"],
         ["FULL", "R43", "R32", "R21", "R10"],
-    ], [
+        ], [    
         ["L43", [ # 1
             [0, 1, 1, 1, 1, 0, 0, 0, 0],
             [1, 2, 2, 2, 9, 2, 2, 2, 2],
@@ -96,6 +98,33 @@ var values: Array[Array] = [
             [0, 1, 0],
         ]],
         ["FULL", [ # 21
+            [9],
+        ]],
+    ]],
+    
+    ["PlantRule", true, [
+        ["1_1"],
+        ["2_1"],
+        ["3_1"],
+        ["4_1"],
+        ["5_1"],
+        ["5_2"],
+        ["6_1"],
+        ["6_2"],
+        ], [    
+        ["1_1", [ # 1
+            [4,9],
+        ]],
+        ["2_1", [ # 2
+            [3,9],
+        ]],
+        ["3_1", [ # 2
+            [2,9],
+        ]],
+        ["4_1", [ # 2
+            [1,9],
+        ]],
+        ["5_1", [ # 2
             [9],
         ]],
     ]],
