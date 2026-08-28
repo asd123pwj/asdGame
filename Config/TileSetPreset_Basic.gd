@@ -6,15 +6,16 @@ name: String
 path: String
 path_P3D: String
 """
-var _prefix = "res://Material/Texture/"
+var _prefix = "res://Material/Texture/Tile/"
 var _values: Array[Array] = [
     ["Brown Brick", "BlockRule", "Block_Brick_Brown.png", "Block_Brick_Brown_P3D.png"],
     ["White Wall", "BlockRule", "Block_Brick.png"],
     ["白墙青瓦", "", "Block_Brick_WhiteWallGrayTile.png",],
-    ["P3D", "BlockRule", "Tilemap_Placeholder.png", "Tilemap_Placeholder.png"],
+    # ["P3D", "BlockRule", "Tilemap_Placeholder.png", "Tilemap_Placeholder.png"],
     ["透明玻璃", "BlockRule", "Block_Transparent_Glass.png",],
-    ["完整玻璃", "BlockRule", "完整玻璃.png"],
-    ["完整玻璃-反", "BlockRule", "完整玻璃_P3D.png", "完整玻璃.png"],
+    ["泥土", "BlockRule", "Block_Soil.png",],
+    # ["完整玻璃", "BlockRule", "完整玻璃.png"],
+    # ["完整玻璃-反", "BlockRule", "完整玻璃_P3D.png", "完整玻璃.png"],
 ]
 var values: Array[Array] = []
 

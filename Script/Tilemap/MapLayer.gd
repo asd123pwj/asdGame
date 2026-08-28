@@ -24,9 +24,8 @@ var _p3d_canvases: Dictionary[int, CanvasLayer] = {}
 # 多区块（Godot 不支持三层嵌套类型化，只写前两层，完整结构见注释）
 # Dictionary[int /* 组key: BACK/MIDDLE/FRONT */, Dictionary[Vector2i /* 区块 */, Array /* 16x16 矩阵(int tile id) */]]
 var _map_content: Dictionary[int, Dictionary] = {}
-# 记录放置顺序（Godot 不支持嵌套类型化，写前一层，完整结构见注释）
-# Array[Array /* [group_type, x, y, tile_id] */]
-var _pending: Array[Array] = []
+# 记录放置位置 -> tile_id（key: Vector3i(g, x, y)），同一位置重复放置直接覆盖
+var _pending: Dictionary[Vector3i, int] = {}
 var _p3d_offset := SysCfg.P3D_OFFSET
 
 
@@ -75,7 +74,7 @@ func place(layer_type: int, x: int, y: int, tile_id: int) -> void:
     var lx := x - block_coord.x * SysCfg.BLOCK_SIZE
     var ly := y - block_coord.y * SysCfg.BLOCK_SIZE
     matrix[ly * SysCfg.BLOCK_SIZE + lx] = tile_id
-    _pending.append([g, x, y, tile_id])
+    _pending[Vector3i(g, x, y)] = tile_id
 
 
 # 循环2：根据 map_content 放置所有 tile 和 P3D（每个位置同时放 tile 到普通层 + P3D 到配套 P3D 层）
@@ -83,12 +82,12 @@ func build() -> void:
     # 先基于邻居进行 tile 匹配，更新 map_content（可能改变各位置 tile）
     _apply_tile_match()
     # 再放置所有 tile（到普通层 layer_type）
-    for entry in _pending:
-        var g: int = entry[0]
-        _place_tile(g, entry[1], entry[2], _get_cell_id(g, entry[1], entry[2]))
+    for pos: Vector3i in _pending:
+        var g: int = pos.x
+        _place_tile(g, pos.y, pos.z, _get_cell_id(g, pos.y, pos.z))
     # 再放置所有 P3D（到配套 P3D 层 layer_type-1，此时所有 tile 已记录可查擦除矩阵）
-    for entry in _pending:
-        _place_p3d(entry[0] - 1, entry[1], entry[2], _get_cell_id(entry[0], entry[1], entry[2]))
+    for pos: Vector3i in _pending:
+        _place_p3d(pos.x - 1, pos.y, pos.z, _get_cell_id(pos.x, pos.y, pos.z))
 
 
 # 基于邻居情况对已放置的 tile 进行匹配，更新 map_content（可能改变各位置 tile）
@@ -117,8 +116,8 @@ func _apply_tile_match() -> void:
 # 收集所有出现过的 group key
 func _pending_group_keys() -> Array:
     var keys: Array = []
-    for entry in _pending:
-        var g: int = entry[0]
+    for pos: Vector3i in _pending:
+        var g: int = pos.x
         if not keys.has(g):
             keys.append(g)
     return keys
@@ -126,10 +125,10 @@ func _pending_group_keys() -> Array:
 
 # 获取 group 内 tile 使用的匹配规则（取 group 里第一个有规则的 source）
 func _get_rule_for_group(g: int) -> TileMatchRulePreset:
-    for entry in _pending:
-        if entry[0] != g:
+    for pos: Vector3i in _pending:
+        if pos.x != g:
             continue
-        var info: Array = TileSetPreset.get_tile_id_info(entry[3])
+        var info: Array = TileSetPreset.get_tile_id_info(_pending[pos])
         if TileSetPreset.has_match_rule(info[0]):
             return TileMatchRulePreset.get_(TileSetPreset.get_(info[0]).tile_match_rule_name)
     return null
@@ -139,10 +138,10 @@ func _get_rule_for_group(g: int) -> TileMatchRulePreset:
 func _collect_match_queue(g: int, rule: TileMatchRulePreset) -> Array:
     var queue: Array = []
     var visited: Dictionary = {}
-    for entry in _pending:
-        if entry[0] != g:
+    for pos: Vector3i in _pending:
+        if pos.x != g:
             continue
-        var base := Vector2i(entry[1], entry[2])
+        var base := Vector2i(pos.y, pos.z)
         _add_match_pos(queue, visited, base)
         for offset in rule.reference_pos:
             _add_match_pos(queue, visited, base + offset)
