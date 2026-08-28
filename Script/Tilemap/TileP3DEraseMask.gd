@@ -1,9 +1,6 @@
 class_name TileP3DEraseMask
 extends RefCounted
 
-# 擦除掩码缓存：key = 当前+三邻居的擦除 ID 组合，value = 擦除掩码纹理
-static var _erase_cache: Dictionary = {}
-
 # ---- 内容矩阵缓存 ----
 # key("T|source|coords" / "P|source|coords") -> BitMap(48x48)
 static var _content_cache: Dictionary = {}
@@ -11,15 +8,18 @@ static var _content_cache: Dictionary = {}
 # ---- 擦除矩阵注册表 ----
 # 形状哈希 -> 擦除 ID（相同形状共享 ID）
 static var _erase_id_by_hash: Dictionary = {}
-# 擦除 ID -> 内容矩阵(BitMap 48x48)
+# 擦除 ID -> 内容矩阵(BitMap 48x48)（擦除矩阵 = tile∪P3D 完整轮廓）
 static var _erase_matrix_by_id: Dictionary = {}
-# "source|atlas_coords" -> 擦除 ID（擦除矩阵 = tile∪P3D 完整轮廓）
+# "source|atlas_coords" -> 擦除 ID
 static var _erase_id_map: Dictionary = {}
 static var _next_erase_id: int = 0
 
+# ---- 掩码缓存 ----
+# 邻居 hash 组合 key -> 掩码 BitMap(48x48, true=被邻居遮挡)
+static var _mask_cache: Dictionary = {}
+
 
 # 获取指定 source 的内容矩阵（48x48 alpha 位图，有内容处为 true）
-# 基于 source 图集指定 atlas_coords 区域计算，按 "T|source|coords" 缓存复用
 static func get_content_matrix(source_name: String, atlas_coords := Vector2i(0, 2)) -> BitMap:
     var key := "T|" + source_name + "|" + str(atlas_coords)
     if _content_cache.has(key):
@@ -31,7 +31,6 @@ static func get_content_matrix(source_name: String, atlas_coords := Vector2i(0, 
 
 
 # 获取指定 source 的 P3D 内容矩阵（48x48 alpha 位图）
-# 基于 P3D 图集(source_P3D)指定 atlas_coords 区域计算，按 "P|source|coords" 缓存
 static func get_p3d_content_matrix(source_name: String, atlas_coords: Vector2i) -> BitMap:
     var key := "P|" + source_name + "|" + str(atlas_coords)
     if _content_cache.has(key):
@@ -48,7 +47,6 @@ static func get_erase_id(source_name: String, atlas_coords: Vector2i) -> int:
     var key := source_name + "|" + str(atlas_coords)
     if _erase_id_map.has(key):
         return _erase_id_map[key]
-    # 计算 tile∪P3D 并集矩阵，按形状哈希分配 ID
     var bit_map := _union_bitmap(
         get_content_matrix(source_name, atlas_coords),
         get_p3d_content_matrix(source_name, atlas_coords))
@@ -96,52 +94,34 @@ static func _hash_bitmap(bit_map: BitMap) -> String:
     return ctx.finish().hex_encode()
 
 
-# 获取当前 tile 及其三个遮挡邻居(上/右上/右)的擦除掩码纹理(48x48)
-# get_neighbor: Callable，接收 (x, y)，返回三个邻居 [上, 右上, 右] 的 int tile id（无 tile 为 -1）
-# tile_id: 当前 tile 的注册 id（tile 与 P3D 共用）
-# p3d_offset: P3D 精灵相对格子的偏移，用于计算邻居 region 位置
-static func get_erase_mask(get_neighbor: Callable, x: int, y: int,
-        tile_id: int, p3d_offset: Vector2) -> ImageTexture:
-    var neighbors: Array = get_neighbor.call(x, y)
-    var current_info: Array = TileSetPreset.get_tile_id_info(tile_id)
-    # 擦除矩阵只依赖上/右上/右三个邻居，key 只由邻居擦除 ID 组成（不含当前 tile），相同邻居组合共享缓存
+# 由三个邻居 tile id 组成掩码缓存键（用邻居 tile 的形状哈希，不含当前 tile）
+static func get_neighbor_mask_key(neighbors: Array) -> String:
     var key := ""
-    # 可视化用 tile_name 组合做文件名（便于识别，含当前 tile）
-    var name_key := _tile_name_key(current_info)
     for id in neighbors:
         if id < 0:
             key += "|_"
-            name_key += "|_"
         else:
-            var info: Array = TileSetPreset.get_tile_id_info(id)
-            key += "|" + str(get_erase_id(info[0], TileSetPreset.get_tile_info_coords(info)))
-            name_key += "|" + info[1]
-    if _erase_cache.has(key):
-        return _erase_cache[key]
-    var img := _build_erase_mask(x, y, neighbors, p3d_offset)
-    # 可视化：需要检查掩码时改为 if true，会把擦除掩码保存为 PNG（文件名用 tile_name）
-    if false:
-        var red_count := 0
-        for py in 48:
-            for px in 48:
-                var c := img.get_pixel(px, py)
-                if c.r > 0.5:
-                    red_count += 1
-        print("[debug] 掩码 name=", name_key, " 红色像素=", red_count, " 尺寸=", img.get_size())
-        var dir := "res://Debug"
-        DirAccess.make_dir_recursive_absolute(dir)
-        img.save_png(dir + "/" + _safe_filename(name_key) + ".png")
-    var tex := ImageTexture.create_from_image(img)
-    _erase_cache[key] = tex
-    return tex
+            key += "|" + TileSetPreset.get_tile_hash(id)
+    return key
 
 
-# 把三个邻居内容矩阵合并成 48x48 的擦除掩码，偏移到当前 P3D 精灵局部坐标系
-static func _build_erase_mask(x: int, y: int, neighbors: Array, p3d_offset: Vector2) -> Image:
-    var img := Image.create(48, 48, false, Image.FORMAT_RGB8)
-    img.fill(Color(0, 0, 0))
-    var origin := Vector2(x * 32, y * 32) - p3d_offset  # P3D 精灵左上角世界坐标
-    # 逻辑坐标 y 向上为正：y+1 为上
+# 获取/生成掩码 BitMap（true=该位置被邻居遮挡）。掩码只依赖三邻居组合，共享缓存。
+# get_neighbor: Callable (x,y) -> [上,右上,右] 的 int tile id
+static func get_or_build_mask(get_neighbor: Callable, x: int, y: int, p3d_offset: Vector2) -> BitMap:
+    var neighbors: Array = get_neighbor.call(x, y)
+    var key := get_neighbor_mask_key(neighbors)
+    if _mask_cache.has(key):
+        return _mask_cache[key]
+    var mask := _build_erase_bitmap(x, y, neighbors, p3d_offset)
+    _mask_cache[key] = mask
+    return mask
+
+
+# 把三个邻居内容矩阵合并成 48x48 掩码 BitMap，偏移到当前 P3D 局部坐标系
+static func _build_erase_bitmap(x: int, y: int, neighbors: Array, p3d_offset: Vector2) -> BitMap:
+    var mask := BitMap.new()
+    mask.create(Vector2i(SysCfg.REGION_SIZE.x, SysCfg.REGION_SIZE.y))
+    var origin := Vector2(x * 32, y * 32) - p3d_offset  # P3D 左上角世界坐标
     var neighbor_cells: Array[Vector2i] = [
         Vector2i(x, y + 1),       # 上
         Vector2i(x + 1, y + 1),   # 右上
@@ -154,33 +134,30 @@ static func _build_erase_mask(x: int, y: int, neighbors: Array, p3d_offset: Vect
         var info: Array = TileSetPreset.get_tile_id_info(id)
         var nsrc: String = info[0]
         var ncoords := TileSetPreset.get_tile_info_coords(info)
-        # 邻居经 texture_origin 左下角对齐后，region 左上角与 P3D 精灵一致：= (格子*32) - p3d_offset
         var nc: Vector2i = neighbor_cells[i]
         var nbase := Vector2(nc.x * 32, nc.y * 32) - p3d_offset
-        # 邻居擦除矩阵 = tile∪P3D 完整轮廓，作为整体绘制
-        _blit_matrix_to_mask(get_erase_matrix_by_id(get_erase_id(nsrc, ncoords)), nbase, origin, img)
-    return img
+        _blit_matrix_to_mask(get_erase_matrix_by_id(get_erase_id(nsrc, ncoords)), nbase, origin, mask)
+    return mask
 
 
-# 生成可视化文件名的 tile_name key：source:tile_name
-static func _tile_name_key(info: Array) -> String:
-    return str(info[0]) + ":" + str(info[1])
-
-
-# 把一个内容矩阵(48x48)按 nbase 偏移绘制到擦除掩码 img（P3D 局部坐标系 origin 基准）
-static func _blit_matrix_to_mask(matrix: BitMap, nbase: Vector2, origin: Vector2, img: Image) -> void:
+# 把一个内容矩阵(48x48)按 nbase 偏移绘制到掩码 BitMap（P3D 局部坐标系 origin 基准）
+static func _blit_matrix_to_mask(matrix: BitMap, nbase: Vector2, origin: Vector2, mask: BitMap) -> void:
     for my in 48:
         for mx in 48:
             if not matrix.get_bit(mx, my):
                 continue
             var lx := int(nbase.x + mx - origin.x)
-            # 逻辑坐标 y 向上为正：邻居相对当前 P3D 的垂直偏移取反，使上邻居画到掩码顶部
-            var ly := int(origin.y - nbase.y + my)
+            var ly := int(origin.y - nbase.y + my)  # 逻辑坐标 y 向上为正
             if lx >= 0 and lx < 48 and ly >= 0 and ly < 48:
-                img.set_pixel(lx, ly, Color(1, 0, 0))
+                mask.set_bit(lx, ly, true)
 
 
-# 把缓存名转为安全文件名（替换路径中不合法的字符）
-static func _safe_filename(name: String) -> String:
-    return name.replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_") \
-        .replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("|", "_")
+# 生成掩码后的 P3D 图像（P3D 原图，被邻居遮挡处挖空 alpha=0）
+static func build_masked_p3d_image(source_name: String, atlas_coords: Vector2i,
+        mask: BitMap) -> Image:
+    var p3d := TileSetPreset.get_region_image(source_name, atlas_coords, true)
+    for y in 48:
+        for x in 48:
+            if mask.get_bit(x, y):
+                p3d.set_pixel(x, y, Color(0, 0, 0, 0))
+    return p3d

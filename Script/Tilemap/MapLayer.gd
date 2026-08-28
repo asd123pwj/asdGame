@@ -21,6 +21,7 @@ var _parent: Node2D
 # 子层 id -> TileMapLayer（普通类型）和 CanvasLayer（P3D 类型）
 var _tile_maps: Dictionary[int, TileMapLayer] = {}
 var _p3d_canvases: Dictionary[int, CanvasLayer] = {}
+var _p3d_maps: Dictionary[int, TileMapLayer] = {}
 # 多区块（Godot 不支持三层嵌套类型化，只写前两层，完整结构见注释）
 # Dictionary[int /* 组key: BACK/MIDDLE/FRONT */, Dictionary[Vector2i /* 区块 */, Array /* 16x16 矩阵(int tile id) */]]
 var _map_content: Dictionary[int, Dictionary] = {}
@@ -40,12 +41,17 @@ func _create_sub_layers() -> void:
     for t in Enums.LayerType.COUNT:
         var sub_id := sub_layer_id(_layer_id, t)
         if is_p3d_type(t):
-            # P3D 层：空 CanvasLayer，精灵稍后添加
+            # P3D 层：TileMapLayer（用共享 tileset 放置掩码变体）+ CanvasLayer
+            var map := TileMapLayer.new()
+            map.name = "P3D " + Enums.StrLayerType[t]
+            map.tile_set = TileSetPreset.tileset
             var canvas := CanvasLayer.new()
-            canvas.name = "P3D " + Enums.StrLayerType[t]
+            canvas.name = "Canvas P3D " + Enums.StrLayerType[t]
             canvas.layer = sub_id
+            canvas.add_child(map)
             _parent.add_child(canvas)
             _p3d_canvases[sub_id] = canvas
+            _p3d_maps[sub_id] = map
         else:
             # tile 层：TileMapLayer + CanvasLayer
             var map := TileMapLayer.new()
@@ -216,27 +222,13 @@ func _place_p3d(layer_type: int, x: int, y: int, tile_id: int) -> void:
     var info: Array = TileSetPreset.get_tile_id_info(tile_id)
     var source_name: String = info[0]
     var atlas_coords := TileSetPreset.get_tile_info_coords(info)
-    var sprite := TileSetPreset.create_p3d_sprite(source_name, atlas_coords)
-    # Godot y 轴向下为正，逻辑坐标 y 向上为正，位置对 y 取反（与 tile 一致）
-    sprite.position = Vector2(x * 32, -y * 32) - _p3d_offset
-    sprite.name = str(x) + "," + str(y)
-    sprite.z_index = x - y
-    # P3D 遮挡擦除：查询同组邻居，生成擦除掩码纹理传给 shader
+    # P3D 遮挡擦除：查询同组邻居，注册/获取掩码后的 P3D 变体 tile，用 tilemap 放置
     var g := group_key(layer_type)
-    var mat := ShaderMaterial.new()
-    mat.shader = MapSys.erase_shader
-    mat.set_shader_parameter("erase_mask",
-        TileP3DEraseMask.get_erase_mask(
-            func(px: int, py: int) -> Array: return get_neighbor(g, px, py),
-            x, y, tile_id, _p3d_offset))
-    mat.set_shader_parameter("mode", 1)  # 0=置红可视化，1=删除挖空
-    var atlas := sprite.texture as AtlasTexture
-    if atlas != null and atlas.atlas != null:
-        var atlas_size := atlas.atlas.get_size()
-        mat.set_shader_parameter("region_offset", atlas.region.position / atlas_size)
-        mat.set_shader_parameter("region_scale", atlas.region.size / atlas_size)
-    sprite.material = mat
-    _p3d_canvases[sub_layer_id(_layer_id, layer_type)].add_child(sprite)
+    var neighbors: Array = get_neighbor(g, x, y)
+    var masked: Dictionary = TileSetPreset.get_or_register_masked_p3d(
+        source_name, atlas_coords, neighbors, _p3d_offset)
+    var p3d_map: TileMapLayer = _p3d_maps[sub_layer_id(_layer_id, layer_type)]
+    p3d_map.set_cell(Vector2i(x, -y), masked.source_id, masked.atlas_coords)
 
 
 func _create_block() -> Array:
