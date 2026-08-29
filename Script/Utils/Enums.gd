@@ -47,5 +47,6 @@ enum LayerType{
 }
 static var layer_can_match: Dictionary[LayerType, Array] = {
     LayerType.MIDDLE: [LayerType.MIDDLE, LayerType.PLANT],
+    LayerType.PLANT: [LayerType.MIDDLE, LayerType.PLANT],
 
 }

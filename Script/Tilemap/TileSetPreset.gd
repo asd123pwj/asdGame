@@ -3,6 +3,7 @@ extends PresetRegister
 
 var name: String
 var layer: Enums.LayerType
+var region_size: int
 var tile_match_rule_name: String
 var path: String
 var path_P3D: String
@@ -15,9 +16,7 @@ var source_id_P3D: int
 static var _we: Dictionary[String, TileSetPreset] = {}
 static var tileset: TileSet = _create_tileset()
 # P3D 瓦片定位校正（texture_origin）。初始值反推自"P3D 显示偏移"，运行后可微调。
-static var P3D_TILE_ORIGIN := Vector2i(-8, 8)
-# P3D 图集缓存："name|atlas_coords" -> AtlasTexture（纯资源可共享）
-static var _atlas_cache: Dictionary = {}
+# static var P3D_TILE_ORIGIN := Vector2i(-8, 8)
 
 # ---- tile id 注册表 ----
 # 列表：序号即 tile id，每个元素为 [source_name, tile_name]
@@ -39,23 +38,24 @@ static var _shape_seq_counter: int = 0
 static var _p3d_mask_variant_cache: Dictionary = {}
 # neighbor_hash_key -> 掩码后的 P3D 图像（跨 tile 共享掩码，但图像依赖当前 P3D，故按 tile 缓存）
 
-func _init(name: String, layer: Enums.LayerType, tile_match_rule_name: String, path: String) -> void:
+func _init(name: String, layer: Enums.LayerType, region_size:int, tile_match_rule_name: String, path: String) -> void:
     _we[name] = self
     self.name = name
     self.layer = layer
+    self.region_size = region_size
     self.tile_match_rule_name = tile_match_rule_name
     self.path = path
     if layer == Enums.LayerType.MIDDLE:
         self.path_P3D = path.get_basename() + "_P3D." + path.get_extension()
  
-    source = _create_source(path)
+    source = _create_source(path, region_size)
     source_id = tileset.add_source(source)
     # 仅 Middle 层有碰撞体
     _create_tiles(source, name, layer == Enums.LayerType.MIDDLE)
 
     # 仅 Middle 层有 P3D 素材
     if layer == Enums.LayerType.MIDDLE:
-        source_P3D = _create_source(path_P3D)
+        source_P3D = _create_source(path_P3D, region_size)
         source_id_P3D = tileset.add_source(source_P3D)
         _create_tiles(source_P3D, name, false)  # P3D source：只显示图像，无碰撞体
 
@@ -256,24 +256,6 @@ static func get_region_image(source_name: String, atlas_coords: Vector2i, is_p3d
     return src.texture.get_image().get_region(region)
 
 
-# 为指定瓦片创建伪3D精灵（Sprite2D + AtlasTexture）
-# 用 Node2D 的 y_sort 控制遮挡，避免 TileMap 排序限制
-# static func create_p3d_sprite(name: String, atlas_coords: Vector2i) -> Sprite2D:
-#     var preset := _we[name]
-#     # AtlasTexture 是纯资源，可缓存共享；Sprite2D 实例需独立创建
-#     var atlas_key := name + "|" + str(atlas_coords)
-#     if not _atlas_cache.has(atlas_key):
-#         var texture: Texture2D = load(preset.path_P3D)
-#         var atlas := AtlasTexture.new()
-#         atlas.atlas = texture
-#         atlas.region = Rect2(SysCfg.TILE_MARGINS + atlas_coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
-#         _atlas_cache[atlas_key] = atlas
-#     var sprite := Sprite2D.new()
-#     sprite.texture = _atlas_cache[atlas_key]
-#     sprite.centered = false  # 锚点左上角，便于按瓦片网格定位
-#     return sprite
-
-
 # 获取/注册掩码后的 P3D tile（独立的 AtlasSource 变体）。
 # neighbors: 三个邻居 [上,右上,右] 的 tile id（无 tile 为 -1）。
 # 返回 {source_id, atlas_coords}；缓存于 {P3D_tile_id: {neighbor_hash_key: masked_tile_info}}。
@@ -305,7 +287,7 @@ static func get_or_register_masked_p3d(source_name: String, atlas_coords: Vector
     # 初始值基于"P3D 显示偏移"反推，可运行后微调。
     var td: TileData = src.get_tile_data(Vector2i(0, 0), 0)
     @warning_ignore("unsafe_property_access")
-    td.texture_origin = P3D_TILE_ORIGIN
+    td.texture_origin = SysCfg.P3D_TILE_ORIGIN
 
     var info := {"source_id": source_id, "atlas_coords": Vector2i(0, 0)}
     if not _p3d_mask_variant_cache.has(tile_id):
@@ -332,18 +314,55 @@ static func _create_tileset() -> TileSet:
 
 
 # 创建 source（仅配置，不含瓦片）
-static func _create_source(path: String) -> TileSetAtlasSource:
+# region_size 与原图一致（48）则直接用；若小于 48（如 32），先把图集预处理成 48x48 版本再使用。
+static func _create_source(path: String, region_size: int) -> TileSetAtlasSource:
     var texture: Texture2D = load(path)
     if texture == null:
         push_error("TileSetPreset: 无法加载贴图: ", path)
         return TileSetAtlasSource.new()
 
+    var img: Image = texture.get_image()
+    if region_size != SysCfg.REGION_SIZE.x:
+        # 预处理：按 region_size 切分，重排为 48x48 网格（内容放 48x48 左下角）
+        img = _to_48_atlas(img, region_size)
+        if false:
+            _save_debug_image(img, path)
+
     var source := TileSetAtlasSource.new()
-    source.texture = texture
+    source.texture = ImageTexture.create_from_image(img)
     source.texture_region_size = SysCfg.REGION_SIZE
     source.margins = SysCfg.TILE_MARGINS
     source.separation = SysCfg.TILE_SEPARATION
     return source
+
+
+# 把按 region_size 网格切分的原图重排为 48x48 网格图集：每块 region_size 内容放到 48x48 左下角。
+# 这样后续所有处理（碰撞、掩码、texture_origin 等）都能按 48x48 统一进行。
+static func _to_48_atlas(image: Image, region_size: int) -> Image:
+    var rsize := region_size
+    @warning_ignore("integer_division")
+    var cols := image.get_width() / rsize
+    @warning_ignore("integer_division")
+    var rows := image.get_height() / rsize
+    var out := Image.create(
+        cols * SysCfg.REGION_SIZE.x, rows * SysCfg.REGION_SIZE.y,
+        false, image.get_format())
+    var dy := SysCfg.REGION_SIZE.y - rsize  # 48x48 内左下角对齐的 y 偏移
+    for cy in rows:
+        for cx in cols:
+            var src_rect := Rect2i(cx * rsize, cy * rsize, rsize, rsize)
+            out.blit_rect(image, src_rect,
+                Vector2i(cx * SysCfg.REGION_SIZE.x, cy * SysCfg.REGION_SIZE.y + dy))
+    return out
+
+
+# 把预处理后的 48x48 图集保存到 Debug 目录，便于人工检查切分/重排结果
+static func _save_debug_image(image: Image, src_path: String) -> void:
+    var file_name: String = src_path.get_file().get_basename() + "_48.png"
+    var debug_path: String = SysCfg.DEBUG_DIR + file_name
+    DirAccess.make_dir_recursive_absolute(SysCfg.DEBUG_DIR)
+    if image.save_png(debug_path) != OK:
+        push_error("TileSetPreset: 保存调试图集失败: ", debug_path)
 
 
 # 为一轴上的瓦片数量
@@ -403,7 +422,8 @@ static func _get_or_build_shape(image: Image, source_name: String) -> Dictionary
         "rect": _build_bounding_rect(image),
     }
     _shape_cache[key] = entry
-    print("[TileSetPreset] 生成新形状 seq=", seq, " hash=", key, " source=", source_name)
+    if false:
+        print("[TileSetPreset] 生成新形状 seq=", seq, " hash=", key, " source=", source_name)
     return entry
 
 
