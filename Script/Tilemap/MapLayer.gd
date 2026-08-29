@@ -222,13 +222,13 @@ func _build_neighbor_map(g: int, rule: TileMatchRulePreset, x: int, y: int) -> D
 
 
 func _set_cell_id(g: int, x: int, y: int, tile_id: int) -> void:
-    var blocks: Dictionary = _map_content.get(g)
-    if blocks == null:
+    if not _map_content.has(g):
         return
+    var blocks: Dictionary = _map_content[g]
     var block_coord := Vector2i(floori(float(x) / SysCfg.BLOCK_SIZE), floori(float(y) / SysCfg.BLOCK_SIZE))
-    var matrix: Array = blocks.get(block_coord)
-    if matrix == null:
+    if not blocks.has(block_coord):
         return
+    var matrix: Array = blocks[block_coord]
     var lx := x - block_coord.x * SysCfg.BLOCK_SIZE
     var ly := y - block_coord.y * SysCfg.BLOCK_SIZE
     if lx >= 0 and lx < SysCfg.BLOCK_SIZE and ly >= 0 and ly < SysCfg.BLOCK_SIZE:
@@ -245,10 +245,24 @@ func get_neighbor(g: int, x: int, y: int) -> Array:
     ]
 
 
+# 查询某 layer_type 在 (x,y) 是否已有 tile（供放置规则查询空间/兼容）
+func has_tile(layer_type: int, x: int, y: int) -> bool:
+    return _get_cell_id(group_key(layer_type), x, y) >= 0
+
+
+# 查询某 layer_type 在 (x,y) 的 tile 是否具有 tag（供放置规则查询九宫格）
+func tile_has_tag(layer_type: int, x: int, y: int, tag: String) -> bool:
+    var tid := _get_cell_id(group_key(layer_type), x, y)
+    if tid < 0:
+        return false
+    var info: Array = TileSetPreset.get_tile_id_info(tid)
+    return TileSetPreset.has_tag(info[0], info[1], tag)
+
+
 func _get_cell_id(g: int, x: int, y: int) -> int:
-    var blocks: Dictionary = _map_content.get(g)
-    if blocks == null:
+    if not _map_content.has(g):
         return -1
+    var blocks: Dictionary = _map_content[g]
     var block_coord := Vector2i(floori(float(x) / SysCfg.BLOCK_SIZE), floori(float(y) / SysCfg.BLOCK_SIZE))
     var matrix = blocks.get(block_coord)
     if matrix == null:

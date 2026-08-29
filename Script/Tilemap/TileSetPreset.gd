@@ -7,6 +7,8 @@ var region_size: int
 var tile_match_rule_name: String
 var path: String
 var path_P3D: String
+# 放置规则：该 source 放置时需满足的需求九宫格名称列表（多个为 and）
+var place_rule_names: Array = []
 
 var source: TileSetAtlasSource
 var source_id: int
@@ -38,13 +40,14 @@ static var _shape_seq_counter: int = 0
 static var _p3d_mask_variant_cache: Dictionary = {}
 # neighbor_hash_key -> 掩码后的 P3D 图像（跨 tile 共享掩码，但图像依赖当前 P3D，故按 tile 缓存）
 
-func _init(name: String, layer: Enums.LayerType, region_size:int, tile_match_rule_name: String, path: String) -> void:
+func _init(name: String, layer: Enums.LayerType, region_size:int, tile_match_rule_name: String, path: String, place_rule_names: Array = []) -> void:
     _we[name] = self
     self.name = name
     self.layer = layer
     self.region_size = region_size
     self.tile_match_rule_name = tile_match_rule_name
     self.path = path
+    self.place_rule_names = place_rule_names
     if layer == Enums.LayerType.MIDDLE:
         self.path_P3D = path.get_basename() + "_P3D." + path.get_extension()
  
@@ -144,6 +147,16 @@ static func has_match_rule(source_name: String) -> bool:
 static func has_tile_name(source_name: String, tile_name: String) -> bool:
     var map: Dictionary = _tile_name_coords.get(source_name)
     return map != null and map.has(tile_name)
+
+
+# 判断某 source 的某 tile 是否具有指定 tag（tag 匹配 tile_name 或 source_name）
+static func has_tag(source_name: String, tile_name: String, tag: String) -> bool:
+    return tile_name == tag or source_name == tag
+
+
+# 获取 source 放置时需满足的需求九宫格名称列表
+static func get_place_rule_names(source_name: String) -> Array:
+    return _we[source_name].place_rule_names
 
 
 # 解析匹配到的名称到完整可用的 tile_name。
