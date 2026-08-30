@@ -20,12 +20,18 @@ func _init() -> void:
     for i in range(1, 10):
         var j = -16
         # place(0, i+9, j+1, "白墙青瓦")
+        # place(0, i, j, "泥土")
+        # place(0, i+9, j, "砖头")
+        # place(0, i+18, j, "透明玻璃")
+        # place(0, i, j-1, "泥土")
+        # place(0, i+9, j-1, "砖头")
+        # place(0, i+18, j-1, "透明玻璃")
         place(0, i, j, "泥土")
         place(0, i+9, j, "砖头")
-        place(0, i+18, j, "透明玻璃")
-        place(0, i, j-1, "泥土")
+        place(0, i+18, j, "砖头")
+        place(0, i, j-1, "砖头")
         place(0, i+9, j-1, "砖头")
-        place(0, i+18, j-1, "透明玻璃")
+        place(0, i+18, j-1, "砖头")
     
     place(0, 1, -15, "水稻", "6")
     place(0, 2, -15, "水稻", "6")
@@ -56,6 +62,10 @@ func _init() -> void:
     # Debug：输出所有 tile 到 Debug 目录（用时把 if false 改为 if true）
     if false:
         TileSetPreset.save_all_tiles_debug()
+    # Debug：定位跨素材变种随机性问题（打印各素材的变种数）
+    if false:
+        TileSetPreset.debug_variant_counts("砖头", "M")
+        TileSetPreset.debug_variant_counts("砖头", "FULL")
 
 
 # 放置 tile/P3D：layer_id 世界层号；layer_type 用 tile 初始化时指定的层。
@@ -75,7 +85,8 @@ static func place(layer_id: int, x: int, y: int, source_name: String,
         push_error("MapSystem.place: source[", source_name, "] 中找不到 tile 名称: ", target_name)
         return
     # 随机选一个变种列（所有子tile 用同一变种）
-    var variant = randi() % TileSetPreset.get_tile_group(source_name, target_name).variant_count
+    var vcount := TileSetPreset.get_tile_variant_count(source_name, target_name)
+    var variant = randi() % maxi(1, vcount)
     var tile_id := TileSetPreset.get_or_register_tile_id(source_name, target_name, variant)
     var parts := TileSetPreset.get_tile_parts_by_id(tile_id)
     if parts.is_empty():

@@ -64,7 +64,7 @@ func _create_sub_layers() -> void:
             # P3D 层：TileMapLayer（用共享 tileset 放置掩码变体）+ CanvasLayer
             var map := TileMapLayer.new()
             map.name = "P3D " + Enums.StrLayerType[t]
-            map.tile_set = TileSetPreset.tileset
+            map.tile_set = TileSpritePreset.tileset
             var canvas := CanvasLayer.new()
             canvas.name = "Canvas P3D " + Enums.StrLayerType[t]
             canvas.layer = sub_id
@@ -76,7 +76,7 @@ func _create_sub_layers() -> void:
             # tile 层：TileMapLayer + CanvasLayer
             var map := TileMapLayer.new()
             map.name = "Tile " + Enums.StrLayerType[t]
-            map.tile_set = TileSetPreset.tileset
+            map.tile_set = TileSpritePreset.tileset
             var canvas := CanvasLayer.new()
             canvas.name = "Canvas " + Enums.StrLayerType[t]
             canvas.layer = sub_id
@@ -157,7 +157,10 @@ func _apply_tile_match() -> void:
             if new_name.is_empty():
                 continue
             if TileSetPreset.has_tile_name(info[0], new_name):
-                var new_id := TileSetPreset.get_or_register_tile_id(info[0], new_name)
+                # 匹配生成的新 tile 也随机选变种（跨素材随机）
+                var vcount := TileSetPreset.get_tile_variant_count(info[0], new_name)
+                var new_id := TileSetPreset.get_or_register_tile_id(
+                    info[0], new_name, randi() % maxi(1, vcount))
                 _set_cell_id(g, pos.x, pos.y, new_id)
 
 
@@ -289,32 +292,29 @@ func _get_cell_id(g: int, x: int, y: int) -> int:
 func _place_tile(g: int, x: int, y: int, tile_id: int) -> void:
     if tile_id < 0:
         return
-    var info: Array = TileSetPreset.get_tile_id_info(tile_id)
-    var source_id: int = TileSetPreset.get_source_id(info[0])
     var parts := TileSetPreset.get_tile_parts_by_id(tile_id)
     if parts.is_empty():
         return
     var layer_type := group_to_tile_layer(g)
     var map := _tile_maps[sub_layer_id(_layer_id, layer_type)]
-    var cells: Array = []
     for part in parts:
         # Godot y 轴向下为正，逻辑坐标 y 向上为正，放置时对 y 取反
-        map.set_cell(Vector2i(x + part.dx, -(y + part.dy)), source_id, part.coords)
-        cells.append([x + part.dx, y + part.dy, part.coords])
-    if false:
-        print("[MapLayer] place_tile g=", g, " anchor=(", x, ",", y, ") id=", tile_id, " cells=", cells)
+        map.set_cell(Vector2i(x + part.dx, -(y + part.dy)), part.source_id, part.coords)
 
 
 func _place_p3d(g: int, x: int, y: int, tile_id: int) -> void:
     if tile_id < 0:
         return
     var info: Array = TileSetPreset.get_tile_id_info(tile_id)
-    var source_name: String = info[0]
-    var atlas_coords := TileSetPreset.get_tile_info_coords(info)
-    # P3D 遮挡擦除：查询同组邻居，注册/获取掩码后的 P3D 变体 tile，用 tilemap 放置
-    var neighbors: Array = get_neighbor(g, x, y)
+    # 解析该 tile 变种对应的素材与坐标（擦除矩阵基于素材）
+    var vinfo: Array = TileSetPreset.get_tile_variant_info(info[0], info[1], info[2])
+    var sprite_name: String = vinfo[0]
+    var atlas_coords: Vector2i = vinfo[1]
+    # P3D 遮挡擦除：查询同组邻居，生成掩码，注册/获取掩码后的 P3D 变体 tile，用 tilemap 放置
+    var mask: BitMap = TileP3DEraseMask.get_or_build_mask(
+        func(px: int, py: int) -> Array: return get_neighbor(g, px, py), x, y, _p3d_offset)
     var masked: Dictionary = TileSetPreset.get_or_register_masked_p3d(
-        source_name, atlas_coords, neighbors, _p3d_offset)
+        sprite_name, atlas_coords, mask)
     var p3d_map: TileMapLayer = _p3d_maps[sub_layer_id(_layer_id, Enums.LayerType.MIDDLE_P3D)]
     p3d_map.set_cell(Vector2i(x, -y), masked.source_id, masked.atlas_coords)
 

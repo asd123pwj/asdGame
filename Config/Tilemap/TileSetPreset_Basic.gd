@@ -3,29 +3,21 @@ extends ConfigBase
 
 """
 name: String
-path: String
+layer: Enums.LayerType
+tile_match_rule_name: String
+sprites_name: Array[String]  （指向 TileSpritePreset 的各 name，作为该 tile 集合的变种）
+place_rule_names: Array[String]
+
+values 每条对应一个 TileSetPreset 实例：
+    [name, layer, tile_match_rule_name, sprites_name, place_rule_names]
 """
-var _prefix = "res://Material/Texture/Tile/"
-var _values: Array[Array] = [
-    ["砖头", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Brick.png"],
-    ["水稻", Enums.LayerType.PLANT, 32, "PlantRule", "Plant_Rice.png", ["test1", "test2"]],
-    ["门", Enums.LayerType.FURNITURE, 32, "DoorRule", "Furniture_Door.png"],
-    # ["Brown Brick", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Brick_Brown.png"],
-    # ["白墙青瓦", Enums.LayerType.MIDDLE, 48, "", "Block_Brick_WhiteWallGrayTile.png",],
-    ["透明玻璃", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Transparent_Glass.png",],
-    ["泥土", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Soil.png",],
-    # ["完整玻璃", Enums.LayerType.MIDDLE, 48, "BlockRule", "完整玻璃.png"]
+var values: Array[Array] = [
+    # 砖头：砖头 + Brown Brick 两个素材共同作为砖头的变种
+    ["砖头", Enums.LayerType.MIDDLE, "BlockRule", ["砖头", "Brown Brick"]],
+
+    ["水稻", Enums.LayerType.PLANT, "PlantRule", ["水稻"], ["test1", "test2"]],
+    ["门", Enums.LayerType.FURNITURE, "DoorRule", ["门"]],
+    ["透明玻璃", Enums.LayerType.MIDDLE, "BlockRule", ["透明玻璃"]],
+    ["泥土", Enums.LayerType.MIDDLE, "BlockRule", ["泥土"]],
 ]
-var values: Array[Array] = []
 
-
-func _init() -> void:
-    for row in _values:
-        var name_: String = row[0]
-        var layer: Enums.LayerType = row[1]
-        var region_size: int = row[2]
-        var tile_match_rule_name: String = row[3]
-        var path_: String = _prefix + row[4]
-        var place_rules: Array = row[5] if row.size() > 5 else []
-        values.append([name_, layer, region_size, tile_match_rule_name, path_, place_rules])
-    super._init()
