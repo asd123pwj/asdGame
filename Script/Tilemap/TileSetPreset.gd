@@ -64,6 +64,8 @@ func _init(name: String, layer: Enums.LayerType, region_size:int, tile_match_rul
 
     # 为各位置 tile 命名（有规则用 tiles_name；无规则用 "x,y"）
     _build_tile_name_map(name)
+    if false:
+        save_all_tiles_debug()
 
 
 static func get_(name: String) -> TileSetPreset:
@@ -78,38 +80,90 @@ static func get_source_id_P3D(name: String) -> int:
     return _we[name].source_id_P3D
 
 
-# 基于匹配规则的 tiles_name 建立 tile_name -> atlas_coords 映射
+# 基于匹配规则的 tiles_name 建立 tile_name -> 子tile组结构 映射。
+# 结构：{base_cols:int, variant_count:int, parts:[{grow,gcol,coords}, ...]}
 static func _build_tile_name_map(source_name: String) -> void:
     var rule := TileMatchRulePreset.get_(_we[source_name].tile_match_rule_name)
     var map: Dictionary = {}
     if rule == null or rule.tiles_name.is_empty():
         # 无规则：用 "x,y" 命名所有图集位置
         _map_all_coords_as_xy(source_name, map)
-    elif rule.auto_expand:
-        # auto_expand：按图集列数把每行 base_name 扩展为 base_name_1..base_name_N
-        var cols := _get_source_column_count(source_name)
-        var names: Array = rule.tiles_name
-        for row in names.size():
-            var row_names: Array = names[row]
-            for col in row_names.size():
-                var base_name: String = row_names[col]
-                if base_name.is_empty():
-                    continue
-                for v in cols:
-                    map[base_name + "_" + str(v + 1)] = Vector2i(v, row)
     else:
-        # 非 auto_expand：tiles_name[row][col] 对应 atlas_coords(col, row)
-        var names: Array = rule.tiles_name
-        for row in names.size():
-            var row_names: Array = names[row]
-            for col in row_names.size():
-                var tile_name: String = row_names[col]
-                if not tile_name.is_empty():
-                    map[tile_name] = Vector2i(col, row)
+        _parse_tiles_name(source_name, rule.tiles_name, map)
     _tile_name_coords[source_name] = map
 
 
-# 无规则 source：按图集行列数用 "x,y" 命名
+# 解析 tiles_name 生成 tile_name -> 子tile组 映射。
+# 元素可为 String（该位置 tile 名）或 Array（[组名, [组内行, 组内列]]，一组多格共用组名）。
+# 变种：该组基础列数为一行元素数，图片多出的列按基础列循环作为变种。
+# 空格跳过：整个 tile 的所有子tile 对应格都为空则跳过该 tile。
+static func _parse_tiles_name(source_name: String, tiles_name: Array, map: Dictionary) -> void:
+    var total_cols := _get_source_column_count(source_name)
+    var groups: Dictionary = {}
+    for row in tiles_name.size():
+        var row_names: Array = tiles_name[row]
+        var base_cols := row_names.size()
+        if base_cols == 0:
+            continue
+        for col in base_cols:
+            var cell = row_names[col]
+            var tile_name: String
+            var grow: int = 1
+            var gcol: int = 1
+            if cell is Array:
+                tile_name = cell[0]
+                grow = cell[1][0]
+                gcol = cell[1][1]
+            else:
+                tile_name = str(cell)
+            if tile_name.is_empty():
+                continue
+            if not groups.has(tile_name):
+                groups[tile_name] = {"base_cols": base_cols, "cells": []}
+            var gd: Dictionary = groups[tile_name]
+            var cells: Array = gd.cells
+            cells.append({
+                "grow": grow, "gcol": gcol,
+                "coords": Vector2i(col, row),
+            })
+    # 一次性取 source 图像（避免每个格都 get_image 复制整图，降低加载耗时）
+    var src_img := _we[source_name].source.texture.get_image()
+    for tile_name in groups:
+        var g: Dictionary = groups[tile_name]
+        var base_cols: int = g.base_cols
+        @warning_ignore("integer_division")
+        var total_variants := maxi(1, total_cols / base_cols)
+        # 逐变种列判空：只保留整列（所有子tile）都不空的变种，空变种跳过
+        var valid_variants: Array = []
+        for v in total_variants:
+            if not _is_variant_empty(src_img, g.cells, v, base_cols):
+                valid_variants.append(v)
+        if valid_variants.is_empty():
+            continue
+        map[tile_name] = {
+            "base_cols": base_cols,
+            "variant_count": valid_variants.size(),
+            "variant_cols": valid_variants,
+            "parts": g.cells,
+        }
+
+
+# 判断某变种列（v）的所有子tile 格是否全空（该变种无效则跳过）。src_img 为整个图集图像。
+static func _is_variant_empty(src_img: Image, cells: Array, v: int, base_cols: int) -> bool:
+    for cell in cells:
+        var coords: Vector2i = cell.coords + Vector2i(v * base_cols, 0)
+        if not _is_cell_empty(src_img, coords):
+            return false
+    return true
+
+
+# 判断某 atlas 格是否为空（alpha 全空）。src_img 为整个图集图像。
+static func _is_cell_empty(src_img: Image, coords: Vector2i) -> bool:
+    var region := Rect2i(SysCfg.TILE_MARGINS + coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
+    return src_img.get_region(region).get_used_rect().size == Vector2i.ZERO
+
+
+# 无规则 source：按图集行列数用 "x,y" 命名（每格单 tile，无变种）
 static func _map_all_coords_as_xy(source_name: String, map: Dictionary) -> void:
     var tex := _we[source_name].source.texture
     if tex == null:
@@ -119,7 +173,11 @@ static func _map_all_coords_as_xy(source_name: String, map: Dictionary) -> void:
     var rows := _count(tex_size.y, SysCfg.TILE_MARGINS.y, SysCfg.TILE_SEPARATION.y)
     for row in rows:
         for col in cols:
-            map[str(col) + "," + str(row)] = Vector2i(col, row)
+            map[str(col) + "," + str(row)] = {
+                "base_cols": 1,
+                "variant_count": 1,
+                "parts": [{"grow": 1, "gcol": 1, "coords": Vector2i(col, row)}],
+            }
 
 
 # 获取 source 图集的列数（按 REGION_SIZE 网格分块）
@@ -130,12 +188,43 @@ static func _get_source_column_count(source_name: String) -> int:
     return _count(tex.get_image().get_size().x, SysCfg.TILE_MARGINS.x, SysCfg.TILE_SEPARATION.x)
 
 
-# 按 tile 名称获取 atlas_coords，找不到返回 Vector2i(-1, -1)
+# 按 tile 名称获取基础变种第一个子tile 的 atlas_coords，找不到返回 Vector2i(-1, -1)
 static func get_tile_coords_by_name(source_name: String, tile_name: String) -> Vector2i:
-    var map: Dictionary = _tile_name_coords.get(source_name)
-    if map == null:
+    var group: Dictionary = get_tile_group(source_name, tile_name)
+    if group.is_empty():
         return Vector2i(-1, -1)
-    return map.get(tile_name, Vector2i(-1, -1))
+    return group.parts[0].coords
+
+
+# 获取 source 下某 tile 名称的子tile 组结构 {base_cols, variant_count, parts}；不存在返回空字典
+static func get_tile_group(source_name: String, tile_name: String) -> Dictionary:
+    var map: Dictionary = _tile_name_coords.get(source_name, {})
+    var g = map.get(tile_name)
+    return g if g is Dictionary else {}
+
+
+# 获取某 tile 名称在指定变种下的所有子tile。
+# 每个子tile：{coords: Vector2i, dx: int, dy: int}（dx/dy 为相对组左下角(1,1)的偏移，逻辑 y 向上为正）
+# variant 是有效变种索引（variant_cols 中的序号），越界时回退到基础变种 0。
+static func get_tile_parts(source_name: String, tile_name: String, variant: int = 0) -> Array:
+    var group: Dictionary = get_tile_group(source_name, tile_name)
+    if group.is_empty():
+        return []
+    var base_cols: int = group.base_cols
+    var vcols: Array = group.get("variant_cols", [])
+    if vcols.is_empty():
+        vcols = [0]
+    var vi := clampi(variant, 0, vcols.size() - 1)
+    var vcol: int = vcols[vi]
+    var parts: Array = []
+    for p in group.parts:
+        var coords: Vector2i = p.coords + Vector2i(vcol * base_cols, 0)
+        parts.append({
+            "coords": coords,
+            "dx": p.gcol - 1,
+            "dy": p.grow - 1,
+        })
+    return parts
 
 
 # 获取 source 是否配置了匹配规则名
@@ -159,32 +248,7 @@ static func get_place_rule_names(source_name: String) -> Array:
     return _we[source_name].place_rule_names
 
 
-# 解析匹配到的名称到完整可用的 tile_name。
-# - name 已是完整 tile_name（存在于 _tile_name_coords）→ 直接用
-# - 否则（auto_expand 的 base_name）→ 从所有 base_name 匹配的完整 tile_name 随机挑一个
-# - 都找不到 → 返回原名（调用方用 has_tile_name 判断）
-static func resolve_tile_name(source_name: String, name: String) -> String:
-    var map: Dictionary = _tile_name_coords.get(source_name, {})
-    if map.has(name):
-        return name
-    var candidates: Array = []
-    for tn in map.keys():
-        if _base_name_of(tn) == name:
-            candidates.append(tn)
-    if candidates.is_empty():
-        return name
-    return candidates[randi() % candidates.size()]
-
-
-# 提取 tile_name 的 base_name（第二个 "_" 前的部分）。如 "1_1_1" -> "1_1"，"FULL" -> "FULL"。
-static func _base_name_of(tile_name: String) -> String:
-    var parts := tile_name.split("_")
-    if parts.size() <= 2:
-        return tile_name
-    return parts[0] + "_" + parts[1]
-
-
-# 获取 source 的默认 tile 名称（tiles_name 的 (0,0) 位置；无规则则用 "0,0"）
+# 获取 source 的默认 tile 名称（tiles_name 的 (0,0) 位置的 tile 名；无规则则用 "0,0"）
 static func get_default_tile_name(source_name: String) -> String:
     var rule: TileMatchRulePreset = TileMatchRulePreset.get_(_we[source_name].tile_match_rule_name)
     if rule == null or rule.tiles_name.is_empty():
@@ -193,28 +257,35 @@ static func get_default_tile_name(source_name: String) -> String:
     var first_row: Array = rule.tiles_name[0]
     if first_row.is_empty():
         return str(0) + "," + str(0)
-    return first_row[0]
+    var cell = first_row[0]
+    # cell 可能为 Array（[组名, [行, 列]]）或 String
+    return cell[0] if cell is Array else str(cell)
 
 
-# 获取/注册 (source_name, tile_name) 的 tile id（列表序号）。tile 与 P3D 共用一个 id。
-static func get_or_register_tile_id(source_name: String, tile_name: String) -> int:
-    var key := source_name + "|" + tile_name
+# 获取/注册 (source_name, tile_name, variant) 的 tile id（列表序号）。tile 与 P3D 共用一个 id。
+# variant 越界时自动取该 tile 的变种数范围内，保证唯一注册。
+static func get_or_register_tile_id(source_name: String, tile_name: String, variant: int = 0) -> int:
+    var group := get_tile_group(source_name, tile_name)
+    var v := 0
+    if not group.is_empty():
+        v = clampi(variant, 0, group.variant_count - 1)
+    var key := source_name + "|" + tile_name + "|" + str(v)
     if _tile_id_map.has(key):
         return _tile_id_map[key]
     var id := _tile_id_list.size()
-    _tile_id_list.append([source_name, tile_name])
+    _tile_id_list.append([source_name, tile_name, v])
     _tile_id_map[key] = id
     # 记录该 tile 的形状哈希（tile 与 P3D 共用 id，这里记录的是 tile 图集形状）
-    _tile_hash_cache[id] = get_tile_shape_hash(source_name, tile_name)
+    _tile_hash_cache[id] = get_tile_shape_hash(source_name, tile_name, v)
     return id
 
 
-# 获取指定 tile（source_name + tile_name）的形状哈希（基于 tile 图集 alpha）
-static func get_tile_shape_hash(source_name: String, tile_name: String) -> String:
-    var coords := get_tile_coords_by_name(source_name, tile_name)
-    if coords == Vector2i(-1, -1):
+# 获取指定 tile（source_name + tile_name + variant）的形状哈希（基于 tile 图集 alpha 首个子tile）。
+static func get_tile_shape_hash(source_name: String, tile_name: String, variant: int = 0) -> String:
+    var parts := get_tile_parts(source_name, tile_name, variant)
+    if parts.is_empty():
         return ""
-    return _hash_alpha(get_region_image(source_name, coords, false))
+    return _hash_alpha(get_region_image(source_name, parts[0].coords, false))
 
 
 # 按 tile id 获取该 tile 的形状哈希（未注册则为空）
@@ -244,14 +315,30 @@ static func get_tile_shape_data(tile_id: int) -> Dictionary:
     return _get_or_build_shape(get_region_image(info[0], coords, false), info[0])
 
 
-# 按 tile id 获取 [source_name, tile_name]
+# 按 tile id 获取 [source_name, tile_name, variant]
 static func get_tile_id_info(id: int) -> Array:
     return _tile_id_list[id]
 
 
-# 把 [source_name, tile_name] 转为 atlas_coords（需要 atlas 时用）
+# 把 [source_name, tile_name, variant] 转为 atlas_coords（取该变种第一个子tile，需要 atlas 时用）
 static func get_tile_info_coords(info: Array) -> Vector2i:
-    return get_tile_coords_by_name(info[0], info[1])
+    var parts := get_tile_parts_by_info(info)
+    if parts.is_empty():
+        return Vector2i(-1, -1)
+    return parts[0].coords
+
+
+# 按 tile id 获取该 tile 所有子tile（含 dx/dy 组内偏移与 coords）；未注册或无效返回空
+static func get_tile_parts_by_id(tile_id: int) -> Array:
+    if tile_id < 0 or tile_id >= _tile_id_list.size():
+        return []
+    return get_tile_parts_by_info(_tile_id_list[tile_id])
+
+
+# 按 info [source_name, tile_name, variant] 获取所有子tile（含 dx/dy 组内偏移与 coords）
+static func get_tile_parts_by_info(info: Array) -> Array:
+    var variant: int = info[2] if info.size() > 2 else 0
+    return get_tile_parts(info[0], info[1], variant)
 
 
 # 获取指定 source 的图集 region 图像（48x48）。
@@ -312,8 +399,10 @@ static func get_or_register_masked_p3d(source_name: String, atlas_coords: Vector
 # 从 atlas_coords 反查 tile_name（用于掩码变体注册时的 tile_id）
 static func tile_name_from_coords(source_name: String, atlas_coords: Vector2i) -> String:
     for tile_name in _tile_name_coords.get(source_name, {}):
-        if _tile_name_coords[source_name][tile_name] == atlas_coords:
-            return tile_name
+        var group: Dictionary = _tile_name_coords[source_name][tile_name]
+        for p in group.parts:
+            if p.coords == atlas_coords:
+                return tile_name
     return str(atlas_coords)
 
 
@@ -338,8 +427,9 @@ static func _create_source(path: String, region_size: int) -> TileSetAtlasSource
     if region_size != SysCfg.REGION_SIZE.x:
         # 预处理：按 region_size 切分，重排为 48x48 网格（内容放 48x48 左下角）
         img = _to_48_atlas(img, region_size)
+        # Debug：保存预处理后的 48x48 图集，便于检查 32→48 重排是否正确（用时改 if true）
         if false:
-            _save_debug_image(img, path)
+            _save_debug_png(img, path.get_file().get_basename() + "_48.png")
 
     var source := TileSetAtlasSource.new()
     source.texture = ImageTexture.create_from_image(img)
@@ -360,6 +450,7 @@ static func _to_48_atlas(image: Image, region_size: int) -> Image:
     var out := Image.create(
         cols * SysCfg.REGION_SIZE.x, rows * SysCfg.REGION_SIZE.y,
         false, image.get_format())
+    out.fill(Color(0, 0, 0, 0))  # 必须先填充全透明，否则未覆盖区域不透明，判空会误判
     var dy := SysCfg.REGION_SIZE.y - rsize  # 48x48 内左下角对齐的 y 偏移
     for cy in rows:
         for cx in cols:
@@ -369,13 +460,33 @@ static func _to_48_atlas(image: Image, region_size: int) -> Image:
     return out
 
 
-# 把预处理后的 48x48 图集保存到 Debug 目录，便于人工检查切分/重排结果
-static func _save_debug_image(image: Image, src_path: String) -> void:
-    var file_name: String = src_path.get_file().get_basename() + "_48.png"
+# 把图像保存到 Debug 目录（file_name 为完整文件名，含 .png），便于人工检查
+static func _save_debug_png(image: Image, file_name: String) -> void:
     var debug_path: String = SysCfg.DEBUG_DIR + file_name
     DirAccess.make_dir_recursive_absolute(SysCfg.DEBUG_DIR)
     if image.save_png(debug_path) != OK:
-        push_error("TileSetPreset: 保存调试图集失败: ", debug_path)
+        push_error("TileSetPreset: 保存调试图像失败: ", debug_path)
+
+
+# 把所有 tile（所有 source、所有 tile 名、所有变种、所有子tile）保存到 Debug 目录。
+# 文件名包含：source、tile 名、组内位置（行,列）、变种号。
+static func save_all_tiles_debug() -> void:
+    for source_name in _tile_name_coords:
+        var map: Dictionary = _tile_name_coords[source_name]
+        for tile_name in map:
+            var group: Dictionary = map[tile_name]
+            var base_cols: int = group.base_cols
+            var vcols: Array = group.get("variant_cols", [0])
+            var parts: Array = group.parts
+            for i in vcols.size():
+                var vcol: int = vcols[i]
+                for part in parts:
+                    var pd: Dictionary = part
+                    var coords: Vector2i = pd.coords + Vector2i(vcol * base_cols, 0)
+                    var img := get_region_image(source_name, coords, false)
+                    var file_name := "%s_%s_g%d_%d_v%d.png" % [
+                        source_name, tile_name, pd.grow, pd.gcol, i]
+                    _save_debug_png(img, file_name)
 
 
 # 为一轴上的瓦片数量

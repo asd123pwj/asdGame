@@ -85,11 +85,26 @@ func _create_sub_layers() -> void:
             _tile_maps[sub_id] = map
 
 
-# 记录 tile 到 map_content（tile 与 P3D 配套共用，key 用普通类型 BACK/MIDDLE/FRONT）
-# layer_type 传普通组类型（BACK/MIDDLE/FRONT），同时放置配套的 tile 和 P3D
-# 循环1：只记录，不放置
+# 记录单格 tile 到 map_content 与 pending（循环1：只记录，不放置）
 func place(layer_type: int, x: int, y: int, tile_id: int, is_fix: bool = false) -> void:
     var g := group_key(layer_type)
+    _set_content_cell(g, x, y, tile_id)
+    _pending[Vector3i(g, x, y)] = {"tile_id": tile_id, "isFix": is_fix}
+
+
+# 记录一组多格 tile：锚点 (x,y) 记录到 pending（build 时展开整组），整组所有子tile 位置都写入 map_content。
+func place_group(layer_type: int, x: int, y: int, tile_id: int, is_fix: bool = false) -> void:
+    var g := group_key(layer_type)
+    var parts := TileSetPreset.get_tile_parts_by_id(tile_id)
+    for part in parts:
+        _set_content_cell(g, x + part.dx, y + part.dy, tile_id)
+    _pending[Vector3i(g, x, y)] = {"tile_id": tile_id, "isFix": is_fix}
+    if false:
+        print("[MapLayer] place_group layer=", layer_type, " g=", g, " anchor=(", x, ",", y, ") id=", tile_id)
+
+
+# 把 tile_id 写入 group 对应区块 matrix（自动创建缺失的组/区块）
+func _set_content_cell(g: int, x: int, y: int, tile_id: int) -> void:
     if not _map_content.has(g):
         _map_content[g] = {}
     var blocks: Dictionary = _map_content[g]
@@ -100,7 +115,6 @@ func place(layer_type: int, x: int, y: int, tile_id: int, is_fix: bool = false) 
     var lx := x - block_coord.x * SysCfg.BLOCK_SIZE
     var ly := y - block_coord.y * SysCfg.BLOCK_SIZE
     matrix[ly * SysCfg.BLOCK_SIZE + lx] = tile_id
-    _pending[Vector3i(g, x, y)] = {"tile_id": tile_id, "isFix": is_fix}
 
 
 # 循环2：根据 map_content 放置所有 tile 和 P3D。
@@ -142,8 +156,6 @@ func _apply_tile_match() -> void:
             var new_name := rule.match(neighbor_map)
             if new_name.is_empty():
                 continue
-            # auto_expand 时 match 可能返回 base_name，需解析成完整 tile_name（随机变种）
-            new_name = TileSetPreset.resolve_tile_name(info[0], new_name)
             if TileSetPreset.has_tile_name(info[0], new_name):
                 var new_id := TileSetPreset.get_or_register_tile_id(info[0], new_name)
                 _set_cell_id(g, pos.x, pos.y, new_id)
@@ -279,10 +291,18 @@ func _place_tile(g: int, x: int, y: int, tile_id: int) -> void:
         return
     var info: Array = TileSetPreset.get_tile_id_info(tile_id)
     var source_id: int = TileSetPreset.get_source_id(info[0])
-    var coords := TileSetPreset.get_tile_info_coords(info)
+    var parts := TileSetPreset.get_tile_parts_by_id(tile_id)
+    if parts.is_empty():
+        return
     var layer_type := group_to_tile_layer(g)
-    # Godot y 轴向下为正，逻辑坐标 y 向上为正，放置时对 y 取反
-    _tile_maps[sub_layer_id(_layer_id, layer_type)].set_cell(Vector2i(x, -y), source_id, coords)
+    var map := _tile_maps[sub_layer_id(_layer_id, layer_type)]
+    var cells: Array = []
+    for part in parts:
+        # Godot y 轴向下为正，逻辑坐标 y 向上为正，放置时对 y 取反
+        map.set_cell(Vector2i(x + part.dx, -(y + part.dy)), source_id, part.coords)
+        cells.append([x + part.dx, y + part.dy, part.coords])
+    if false:
+        print("[MapLayer] place_tile g=", g, " anchor=(", x, ",", y, ") id=", tile_id, " cells=", cells)
 
 
 func _place_p3d(g: int, x: int, y: int, tile_id: int) -> void:

@@ -7,15 +7,14 @@ path: String
 """
 var _prefix = "res://Material/Texture/Tile/"
 var _values: Array[Array] = [
-    ["Brown Brick", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Brick_Brown.png"],
-    ["White Wall", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Brick.png"],
-    ["白墙青瓦", Enums.LayerType.MIDDLE, 48, "", "Block_Brick_WhiteWallGrayTile.png",],
-    # ["P3D", Enums.LayerType.MIDDLE, 48, "BlockRule", "Tilemap_Placeholder.png", "Tilemap_Placeholder.png"],
+    ["砖头", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Brick.png"],
+    ["水稻", Enums.LayerType.PLANT, 32, "PlantRule", "Plant_Rice.png", ["test1", "test2"]],
+    ["门", Enums.LayerType.FURNITURE, 32, "DoorRule", "Furniture_Door.png"],
+    # ["Brown Brick", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Brick_Brown.png"],
+    # ["白墙青瓦", Enums.LayerType.MIDDLE, 48, "", "Block_Brick_WhiteWallGrayTile.png",],
     ["透明玻璃", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Transparent_Glass.png",],
     ["泥土", Enums.LayerType.MIDDLE, 48, "BlockRule", "Block_Soil.png",],
-    # ["完整玻璃", Enums.LayerType.MIDDLE, 48, "BlockRule", "完整玻璃.png"],
-    # ["完整玻璃-反", Enums.LayerType.MIDDLE, 48, "BlockRule", "完整玻璃_P3D.png", "完整玻璃.png"],
-    ["水稻", Enums.LayerType.PLANT, 32, "PlantRule", "Plant_Rice.png", ["test1", "test2"]],
+    # ["完整玻璃", Enums.LayerType.MIDDLE, 48, "BlockRule", "完整玻璃.png"]
 ]
 var values: Array[Array] = []
 

@@ -37,21 +37,24 @@ enum KeyStatus{
 static var StrLayerType = [
     "Middle_P3D", 
     "Middle",
-    "Plant"
+    "Plant",
+    "Furniture",
     ]
 enum LayerType{
     MIDDLE_P3D,
     MIDDLE,
     PLANT,
+    FURNITURE,
     COUNT # 最后一个的序号刚好为长度
 }
 static var layer_can_match: Dictionary[LayerType, Array] = {
-    LayerType.MIDDLE: [LayerType.MIDDLE, LayerType.PLANT],
-    LayerType.PLANT: [LayerType.MIDDLE, LayerType.PLANT],
+    LayerType.MIDDLE: [LayerType.MIDDLE, LayerType.PLANT, LayerType.FURNITURE],
+    # LayerType.PLANT: [LayerType.MIDDLE, LayerType.PLANT], # 测试用
 
 }
 static var layer_incompatible: Dictionary[LayerType, Array] = {
-    LayerType.MIDDLE: [LayerType.MIDDLE, LayerType.PLANT],
+    LayerType.MIDDLE: [LayerType.MIDDLE, LayerType.PLANT, LayerType.FURNITURE],
     LayerType.PLANT: [LayerType.MIDDLE, LayerType.PLANT],
+    LayerType.FURNITURE: [LayerType.MIDDLE, LayerType.FURNITURE],
 
 }

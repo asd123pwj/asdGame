@@ -32,11 +32,10 @@ static func get_(name: String) -> MapPlaceRulePreset:
 
 
 # 判断该层该格是否有放置空间。
-# 若该格当前已放置了 Enums.layer_incompatible[target_layer] 中任一层的物体，则无空间返回 false。
+# 若该格当前已放置了 Enums.layer_incompatible[target_layer] 中任一层的物体（用户手动指定的排除层，含自身层），则无空间返回 false。
 # query_tile: Callable(layer:int, x:int, y:int) -> bool  该层该格是否已有物体
 static func check_can_place(target_layer: int, x: int, y: int, query_tile: Callable) -> bool:
-    var incompatible: Array = Enums.layer_incompatible.get(target_layer, [])
-    for layer in incompatible:
+    for layer in Enums.layer_incompatible.get(target_layer, []):
         if query_tile.call(layer, x, y):
             return false
     return true

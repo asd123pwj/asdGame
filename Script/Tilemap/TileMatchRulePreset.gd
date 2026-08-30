@@ -7,8 +7,8 @@ enum RuleType { IS_NULL, NOT_NULL, DIFF_RULE, SAME_RULE }
 
 # 规则名
 var name: String
-var auto_expand: bool
-# 各位置 tile 的名称矩阵（source 分片后的 tile 名称，也是匹配规则检索的名称）
+# 各位置 tile 的名称矩阵（source 分片后的 tile 名称，也是匹配规则检索的名称）。
+# 元素可为 String（该位置 tile 名）或 Array（[组名, [组内行, 组内列]]，一组多格共用组名）。
 var tiles_name: Array = []
 # 匹配矩阵：Array of [tile_name, 匹配矩阵]（中心 9，空 1，非空 2，规则不同 3，规则相同 4，无要求 0）
 var match_matrix: Array = []
@@ -20,10 +20,9 @@ var match_rules: Array = []
 static var _we: Dictionary[String, TileMatchRulePreset] = {}
 
 
-func _init(rule_name: String, auto_expand: bool, tiles_name: Array, match_matrix: Array) -> void:
+func _init(rule_name: String, tiles_name: Array, match_matrix: Array) -> void:
     _we[rule_name] = self
     self.name = rule_name
-    self.auto_expand = auto_expand
     self.tiles_name = tiles_name
     self.match_matrix = match_matrix
     build_from_matrix()
