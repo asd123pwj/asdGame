@@ -20,12 +20,12 @@ func _init() -> void:
     for i in range(1, 10):
         var j = -16
         # place(0, i+9, j+1, "白墙青瓦")
-        # place(0, i, j, "泥土")
-        # place(0, i+9, j, "砖头")
-        # place(0, i+18, j, "透明玻璃")
-        # place(0, i, j-1, "泥土")
-        # place(0, i+9, j-1, "砖头")
-        # place(0, i+18, j-1, "透明玻璃")
+        place(0, i, j, "泥土")
+        place(0, i+9, j, "砖头")
+        place(0, i+18, j, "透明玻璃")
+        place(0, i, j-1, "泥土")
+        place(0, i+9, j-1, "砖头")
+        place(0, i+18, j-1, "透明玻璃")
         place(0, i, j, "泥土")
         place(0, i+9, j, "砖头")
         place(0, i+18, j, "砖头")
@@ -33,9 +33,9 @@ func _init() -> void:
         place(0, i+9, j-1, "砖头")
         place(0, i+18, j-1, "砖头")
     
-    place(0, 1, -15, "水稻", "6")
-    place(0, 2, -15, "水稻", "6")
-    place(0, 4, -15, "水稻", "6")
+    place(0, 1, -15, "水稻")
+    place(0, 2, -15, "水稻")
+    place(0, 4, -15, "水稻")
     place(0, 5, -15, "门", "2")
     place(0, 6, -15, "门", "1")
     place(0, 7, -14, "门", "1")
@@ -109,12 +109,14 @@ static func place(layer_id: int, x: int, y: int, source_name: String,
     var place_rules := TileSetPreset.get_place_rule_names(source_name)
     if not MapPlaceRulePreset.check_can_place(layer_type, ax, ay,
             func(l: int, px: int, py: int) -> bool: return layer.has_tile(l, px, py)):
-        print("[MapSystem] ", source_name, " 锚点(", ax, ",", ay, ") 无空间，不放置")
+        if false:
+            print("[MapSystem] ", source_name, " 锚点(", ax, ",", ay, ") 无空间，不放置")
         return
     if not MapPlaceRulePreset.check_compatible(place_rules, ax, ay,
             func(l: int, px: int, py: int, tag: String) -> bool:
                 return layer.tile_has_tag(l, px, py, tag)):
-        print("[MapSystem] ", source_name, " 锚点(", ax, ",", ay, ") 不兼容，不放置")
+        if false:
+            print("[MapSystem] ", source_name, " 锚点(", ax, ",", ay, ") 不兼容，不放置")
         return
 
     # 组内其它子tile 位置：只判断该位置是否有位置（直接查目标层，不判断兼容）

@@ -12,7 +12,7 @@ var sprites_name: Array = []
 var place_rule_names: Array = []
 
 static var _we: Dictionary[String, TileSetPreset] = {}
-# tile 定义：set_name -> tile_name -> {base_cols, parts:[{grow,gcol,coords}]}
+# tile 定义：set_name -> tile_name -> {base_cols, parts:[{dx,dy,coords,size}]}
 static var _tile_defs: Dictionary = {}
 # tile_id 注册：_tile_id_list[id] = [set_name, tile_name, variant]；variant 是跨素材变种索引
 static var _tile_id_list: Array = []
@@ -47,32 +47,51 @@ static func _build_tile_defs(set_name: String) -> void:
 
 
 static func _parse_tiles_name(_set_name: String, tiles_name: Array, defs: Dictionary) -> void:
+    # 第一遍：收集每个名称的所有出现 (col, row, size)
+    var occurrences: Dictionary = {}  # tile_name -> [{col,row,size}]
     for row in tiles_name.size():
-        var row_names: Array = tiles_name[row]
-        var base_cols := row_names.size()
-        if base_cols == 0:
-            continue
-        for col in base_cols:
-            var cell = row_names[col]
+        var row_cells: Array = tiles_name[row]
+        for col in row_cells.size():
+            var cell = row_cells[col]
             var tile_name: String
-            var grow: int = 1
-            var gcol: int = 1
+            var size := SysCfg.REGION_SIZE
             if cell is Array:
-                tile_name = cell[0]
-                grow = cell[1][0]
-                gcol = cell[1][1]
+                var cell_arr: Array = cell
+                tile_name = str(cell_arr[0])
+                if cell_arr.size() > 1 and cell_arr[1] is Array:
+                    var size_arr: Array = cell_arr[1]
+                    if size_arr.size() >= 2:
+                        size = Vector2i(size_arr[1], size_arr[0])  # [H,W] -> (w,h)
             else:
                 tile_name = str(cell)
             if tile_name.is_empty():
                 continue
-            if not defs.has(tile_name):
-                defs[tile_name] = {"base_cols": base_cols, "parts": []}
-            var d: Dictionary = defs[tile_name]
-            var parts: Array = d.parts
+            if not occurrences.has(tile_name):
+                occurrences[tile_name] = []
+            var occ_list: Array = occurrences[tile_name]
+            occ_list.append({"col": col, "row": row, "size": size})
+    # 第二遍：同名 tile 的所有出现合成一个多格组；锚点 = 最左下角（min_col, max_row）。
+    # 组内位置 dx/dy（锚点为 1,1）；变种 = 组整体水平偏移 base_cols 列。
+    for tile_name in occurrences:
+        var occs: Array = occurrences[tile_name]
+        var min_col := 0x7FFFFFFF
+        var max_row := -0x7FFFFFFF
+        var max_col := -0x7FFFFFFF
+        for o in occs:
+            min_col = mini(min_col, o.col)
+            max_row = maxi(max_row, o.row)
+            max_col = maxi(max_col, o.col)
+        var base_cols := max_col - min_col + 1
+        var parts: Array = []
+        for o in occs:
             parts.append({
-                "grow": grow, "gcol": gcol,
-                "coords": Vector2i(col, row),
+                "dx": o.col - min_col,   # 向右为正
+                "dy": max_row - o.row,   # 向上为正
+                "coords": Vector2i(o.col, o.row),
+                "size": o.size,
             })
+        # variants 懒展开：每组（完整多格）作为一个列表元素，随机时从整个列表选一组
+        defs[tile_name] = {"base_cols": base_cols, "parts": parts, "variants": [], "variants_ready": false}
 
 
 # tile_name 是否存在（解析自 match_rule 的 tiles_name）
@@ -91,35 +110,52 @@ static func get_tile_def(set_name: String, tile_name: String) -> Dictionary:
     return d if d is Dictionary else {}
 
 
-# 某素材下该 tile_name 的有效变种列（判空跳过全空的变种列）
-static func _sprite_variant_cols(set_name: String, tile_name: String, sprite_name: String) -> Array:
-    var def := get_tile_def(set_name, tile_name)
-    if def.is_empty():
+# 某素材下该 tile_name 的有效变种列（索引）。变种数由 TileSpritePreset._to_48_atlas 基于图像内容计算，
+# TileSetPreset 只关心"该素材该 tile 有几个变种"，不关心具体内容。
+static func _sprite_variant_cols(_set_name: String, tile_name: String, sprite_name: String) -> Array:
+    var count: int = TileSpritePreset.get_group_variant_count(sprite_name, tile_name)
+    if count <= 0:
         return []
-    var base_cols: int = def.base_cols
-    @warning_ignore("integer_division")
-    var total_v := maxi(1, TileSpritePreset.get_column_count(sprite_name) / base_cols)
     var vcols: Array = []
-    for v in total_v:
-        if not _is_variant_empty(sprite_name, def.parts, v, base_cols):
-            vcols.append(v)
+    for v in count:
+        vcols.append(v)
     return vcols
 
 
-static func _is_variant_empty(sprite_name: String, parts: Array, v: int, base_cols: int) -> bool:
-    for p in parts:
-        var coords: Vector2i = p.coords + Vector2i(v * base_cols, 0)
-        if not TileSpritePreset.is_cell_empty(sprite_name, coords, false):
-            return false
-    return true
-
-
-# 该 tile_name 跨素材的总变种数
-static func get_tile_variant_count(set_name: String, tile_name: String) -> int:
-    var c := 0
+# 懒展开该 tile 的变种列表：遍历所有素材(PNG)，对每个 PNG 内每个有效变种，生成一个完整多格组元素。
+# 每组作为一个列表元素，随机时从整个列表选一组（不关心来自哪个 PNG）。
+static func _ensure_variants(set_name: String, tile_name: String, def: Dictionary) -> void:
+    if def.variants_ready:
+        return
+    var base_cols: int = def.base_cols
+    var variants: Array = []
     for sp in _we[set_name].sprites_name:
-        c += _sprite_variant_cols(set_name, tile_name, sp).size()
-    return c
+        var vcols := _sprite_variant_cols(set_name, tile_name, sp)
+        for vcol in vcols:
+            # 该变种的完整多格组 parts（coords 已含列偏移）
+            var vparts: Array = []
+            for p in def.parts:
+                vparts.append({
+                    "dx": p.dx,
+                    "dy": p.dy,
+                    "coords": p.coords + Vector2i(vcol * base_cols, 0),
+                    "size": p.size,
+                })
+            variants.append({"sprite": sp, "vcol": vcol, "parts": vparts})
+    def.variants = variants
+    # 只有展开出至少一个变种才标记就绪；为空说明素材尚未就绪，允许下次重试
+    if not variants.is_empty():
+        def.variants_ready = true
+
+
+# 该 tile_name 的总变种数（= 所有 PNG 内变种之和，扁平列表长度）
+static func get_tile_variant_count(set_name: String, tile_name: String) -> int:
+    var def := get_tile_def(set_name, tile_name)
+    if def.is_empty():
+        return 0
+    _ensure_variants(set_name, tile_name, def)
+    var variants: Array = def.variants
+    return variants.size()
 
 
 # Debug：打印各素材下某 tile 的变种数（定位跨素材随机性问题）
@@ -131,17 +167,17 @@ static func debug_variant_counts(set_name: String, tile_name: String) -> void:
             " vcols=", vcols)
 
 
-# 变种索引 → [sprite_name, 该素材内的实际列号]
-static func _resolve_variant(set_name: String, tile_name: String, variant: int) -> Array:
-    var v := variant
-    for sp in _we[set_name].sprites_name:
-        var vcols := _sprite_variant_cols(set_name, tile_name, sp)
-        if v < vcols.size():
-            return [sp, vcols[v]]
-        v -= vcols.size()
-    var sp_last: String = _we[set_name].sprites_name[-1]
-    var last_cols := _sprite_variant_cols(set_name, tile_name, sp_last)
-    return [sp_last, last_cols[maxi(0, last_cols.size() - 1)]]
+# 变种索引 → 变种元素 {sprite, vcol}（直接索引扁平变种列表，跨 PNG 与 PNG 内变种同权）
+static func _resolve_variant(set_name: String, tile_name: String, variant: int) -> Dictionary:
+    var def := get_tile_def(set_name, tile_name)
+    if def.is_empty():
+        return {}
+    _ensure_variants(set_name, tile_name, def)
+    var variants: Array = def.variants
+    if variants.is_empty():
+        return {}
+    var vi := clampi(variant, 0, variants.size() - 1)
+    return variants[vi]
 
 
 # 获取某 tile 变种的所有子tile（含 source_id）。供渲染放置用。
@@ -150,18 +186,18 @@ static func get_tile_parts(set_name: String, tile_name: String, variant: int) ->
     if def.is_empty():
         return []
     var rv := _resolve_variant(set_name, tile_name, variant)
-    var sprite_name: String = rv[0]
-    var vcol: int = rv[1]
-    var base_cols: int = def.base_cols
+    if rv.is_empty():
+        return []
+    var sprite_name: String = rv.sprite
+    var vparts: Array = rv.parts
     var source_id: int = TileSpritePreset.get_source_id(sprite_name)
     var out: Array = []
-    for p in def.parts:
-        var coords: Vector2i = p.coords + Vector2i(vcol * base_cols, 0)
+    for p in vparts:
         out.append({
             "source_id": source_id,
-            "coords": coords,
-            "dx": p.gcol - 1,
-            "dy": p.grow - 1,
+            "coords": p.coords,
+            "dx": p.dx,
+            "dy": p.dy,
         })
     return out
 
@@ -172,11 +208,12 @@ static func get_tile_variant_info(set_name: String, tile_name: String, variant: 
     if def.is_empty():
         return []
     var rv := _resolve_variant(set_name, tile_name, variant)
-    var sprite_name: String = rv[0]
-    var vcol: int = rv[1]
-    var base_cols: int = def.base_cols
-    var coords: Vector2i = def.parts[0].coords + Vector2i(vcol * base_cols, 0)
-    return [sprite_name, coords]
+    if rv.is_empty():
+        return []
+    var vparts: Array = rv.parts
+    if vparts.is_empty():
+        return []
+    return [rv.sprite, vparts[0].coords]
 
 
 # 注册/获取掩码后的 P3D 变体（基于素材生成独立 AtlasSource 加到共享 tileset）。
@@ -253,12 +290,12 @@ static func get_tile_info_coords(info: Array) -> Vector2i:
 static func get_tile_hash_by_id(tile_id: int) -> String:
     var info: Array = _tile_id_list[tile_id]
     var rv := _resolve_variant(info[0], info[1], info[2])
-    var def := get_tile_def(info[0], info[1])
-    if def.is_empty():
+    if rv.is_empty():
         return ""
-    var base_cols: int = def.base_cols
-    var coords: Vector2i = def.parts[0].coords + Vector2i(rv[1] * base_cols, 0)
-    return TileSpritePreset.get_tile_shape_hash(rv[0], coords)
+    var vparts: Array = rv.parts
+    if vparts.is_empty():
+        return ""
+    return TileSpritePreset.get_tile_shape_hash(rv.sprite, vparts[0].coords)
 
 
 static func get_tile_hash(tile_id: int) -> String:
@@ -302,17 +339,38 @@ static func tileset() -> TileSet:
     return TileSpritePreset.tileset
 
 
-# Debug：把所有 tile 的所有变种保存到 Debug 目录（文件名含 集合名/tile名/变种/素材），便于检查
+# Debug：把所有 tile 的所有变种保存到 Debug 目录。
+# 对多格 tile，把整组按 dx/dy 拼成一张完整图保存（文件名含 集合/tile/变种/素材）。
 static func save_all_tiles_debug() -> void:
     for set_name in _tile_defs:
         var defs: Dictionary = _tile_defs[set_name]
         for tile_name in defs:
             var total := get_tile_variant_count(set_name, tile_name)
             for v in total:
-                var vinfo: Array = get_tile_variant_info(set_name, tile_name, v)
-                var sprite_name: String = vinfo[0]
-                var coords: Vector2i = vinfo[1]
-                var img := TileSpritePreset.get_region_image(sprite_name, coords, false)
+                var parts := get_tile_parts(set_name, tile_name, v)
+                if parts.is_empty():
+                    continue
+                var sprite_name: String = _resolve_variant(set_name, tile_name, v).sprite
+                # 确定整组画布：dx/dy 范围
+                var max_dx := 0
+                var max_dy := 0
+                for p in parts:
+                    max_dx = maxi(max_dx, p.dx)
+                    max_dy = maxi(max_dy, p.dy)
+                var img := Image.create(
+                    (max_dx + 1) * SysCfg.REGION_SIZE.x,
+                    (max_dy + 1) * SysCfg.REGION_SIZE.y,
+                    false, Image.FORMAT_RGBA8)
+                img.fill(Color(0, 0, 0, 0))
+                for p in parts:
+                    var cell := TileSpritePreset.get_region_image(sprite_name, p.coords, false)
+                    img.blit_rect(cell, Rect2i(0, 0, cell.get_width(), cell.get_height()),
+                        Vector2i(p.dx * SysCfg.REGION_SIZE.x,
+                            (max_dy - p.dy) * SysCfg.REGION_SIZE.y))
+                    # 同时保存该位置的单个格子素材，命名含位置（锚点左下为 1,1）
+                    var pos_file := "%s_%s_v%d_%d,%d_%s.png" % [
+                        set_name, tile_name, v, p.dx + 1, p.dy + 1, sprite_name]
+                    _save_debug_png(cell, pos_file)
                 var file_name := "%s_%s_v%d_%s.png" % [set_name, tile_name, v, sprite_name]
                 _save_debug_png(img, file_name)
 
