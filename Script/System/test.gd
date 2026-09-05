@@ -45,8 +45,11 @@ func delay_loop_test() -> void:
     MsgHubChar.send_status_detected(char_A, "Detect=>Nourish")
 
     # for i in range(1000):
-    while false:
+    while true:
         await Sys.sys.get_tree().create_timer(1).timeout
+        
+        MapSys.place(0, 5, -15, "门", "2", -1, true)
+        MapSys.build()
         Sys.timeSys.advance()
         # if RandSys.rand.randi_range(0, 1) == 0:
         #     print("A触摸B")

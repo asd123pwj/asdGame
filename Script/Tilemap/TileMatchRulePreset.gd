@@ -5,11 +5,8 @@ extends PresetRegister
 # 1=空 2=非空 3=非空但规则不同 4=非空且规则相同
 enum RuleType { IS_NULL, NOT_NULL, DIFF_RULE, SAME_RULE }
 
-# 规则名
+# 规则名（与 TileNameRulePreset 同名关联，tiles_name 已迁移到 TileNameRulePreset）
 var name: String
-# 各位置 tile 的名称矩阵（source 分片后的 tile 名称，也是匹配规则检索的名称）。
-# 元素可为 String（该位置 tile 名）或 Array（[组名, [组内行, 组内列]]，一组多格共用组名）。
-var tiles_name: Array = []
 # 匹配矩阵：Array of [tile_name, 匹配矩阵]（中心 9，空 1，非空 2，规则不同 3，规则相同 4，无要求 0）
 var match_matrix: Array = []
 # 匹配时检查的邻居偏移列表（左右四格 + 上下各一格）
@@ -18,44 +15,13 @@ var reference_pos: Array[Vector2i] = []
 var match_rules: Array = []
 
 static var _we: Dictionary[String, TileMatchRulePreset] = {}
-# 每格原始尺寸矩阵：rule_name -> Array[Array]（每格 Vector2i(w,h)，未配置默认 48x48）。供素材预处理成 48x48 使用。
-static var _cell_sizes: Dictionary = {}
 
 
-func _init(rule_name: String, tiles_name: Array, match_matrix: Array) -> void:
+func _init(rule_name: String, match_matrix: Array) -> void:
     _we[rule_name] = self
     self.name = rule_name
-    self.tiles_name = tiles_name
     self.match_matrix = match_matrix
     build_from_matrix()
-    _parse_cell_sizes(rule_name, tiles_name)
-
-
-# 解析 tiles_name 每格尺寸：元素为 [名称, [H, W]] 时尺寸为 (W,H)，纯字符串默认 48x48。
-static func _parse_cell_sizes(rule_name: String, tiles_name: Array) -> void:
-    var sizes: Array = []
-    for row in tiles_name:
-        var row_sizes: Array = []
-        for cell in row:
-            var size := SysCfg.REGION_SIZE
-            if cell is Array:
-                var cell_arr: Array = cell
-                if cell_arr.size() > 1 and cell_arr[1] is Array:
-                    var size_arr: Array = cell_arr[1]
-                    if size_arr.size() >= 2:
-                        size = Vector2i(size_arr[1], size_arr[0])  # [H,W] -> (w,h)
-            row_sizes.append(size)
-        sizes.append(row_sizes)
-    _cell_sizes[rule_name] = sizes
-
-
-# 获取某规则的每格尺寸矩阵（二维，每格 Vector2i(w,h)）
-static func get_cell_sizes(rule_name: String) -> Array[Array]:
-    var sizes: Array = _cell_sizes.get(rule_name, [])
-    var result: Array[Array] = []
-    for row in sizes:
-        result.append(row)
-    return result
 
 
 static func get_(rule_name: String) -> TileMatchRulePreset:

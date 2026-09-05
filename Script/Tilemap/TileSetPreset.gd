@@ -39,7 +39,7 @@ static func get_(name: String) -> TileSetPreset:
 
 # 解析 match_rule 的 tiles_name，建立 tile_name -> 行列定义（不依赖具体素材）
 static func _build_tile_defs(set_name: String) -> void:
-    var rule := TileMatchRulePreset.get_(_we[set_name].tile_match_rule_name)
+    var rule := TileNameRulePreset.get_(_we[set_name].tile_match_rule_name)
     var defs: Dictionary = {}
     if rule != null and not rule.tiles_name.is_empty():
         _parse_tiles_name(set_name, rule.tiles_name, defs)
@@ -103,7 +103,7 @@ static func has_tile_name(set_name: String, tile_name: String) -> bool:
 static func get_tile_def(set_name: String, tile_name: String) -> Dictionary:
     var defs: Dictionary = _tile_defs.get(set_name, {})
     # 懒重建：若首次注册时 match_rule 尚未就绪导致 defs 为空，且现在规则已可用则重建
-    if defs.is_empty() and TileMatchRulePreset.get_(_we[set_name].tile_match_rule_name) != null:
+    if defs.is_empty() and TileNameRulePreset.get_(_we[set_name].tile_match_rule_name) != null:
         _build_tile_defs(set_name)
         defs = _tile_defs.get(set_name, {})
     var d = defs.get(tile_name)
@@ -270,6 +270,13 @@ static func get_tile_id_info(id: int) -> Array:
     return _tile_id_list[id]
 
 
+# 按 tile_id 反查其所属集合名（source_name），供"使用当前位置已放置的 source"场景
+static func get_set_name_by_id(tile_id: int) -> String:
+    if tile_id < 0 or tile_id >= _tile_id_list.size():
+        return ""
+    return _tile_id_list[tile_id][0]
+
+
 # 按 id 获取该 tile 所有子tile（含 source_id/coords/dx/dy）
 static func get_tile_parts_by_id(tile_id: int) -> Array:
     if tile_id < 0 or tile_id >= _tile_id_list.size():
@@ -324,7 +331,7 @@ static func get_place_rule_names(set_name: String) -> Array:
 
 # 默认 tile 名（match_rule 的 tiles_name (0,0) 位置）
 static func get_default_tile_name(set_name: String) -> String:
-    var rule := TileMatchRulePreset.get_(_we[set_name].tile_match_rule_name)
+    var rule := TileNameRulePreset.get_(_we[set_name].tile_match_rule_name)
     if rule == null or rule.tiles_name.is_empty():
         return ""
     var first_row: Array = rule.tiles_name[0]

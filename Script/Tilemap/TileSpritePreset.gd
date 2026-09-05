@@ -47,8 +47,8 @@ func _init(name: String, match_rule_name: String, path: String) -> void:
         path_P3D = p3d_path
         has_p3d = true
 
-    var cell_sizes := TileMatchRulePreset.get_cell_sizes(match_rule_name)
-    var tiles_name: Array = TileMatchRulePreset.get_(match_rule_name).tiles_name
+    var cell_sizes := TileNameRulePreset.get_cell_sizes(match_rule_name)
+    var tiles_name: Array = TileNameRulePreset.get_(match_rule_name).tiles_name
     source = _create_source(path, cell_sizes, tiles_name, name)
     source_id = tileset.add_source(source)
     _create_tiles(source, true)

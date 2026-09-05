@@ -119,22 +119,35 @@ func _set_content_cell(g: int, x: int, y: int, tile_id: int) -> void:
 
 # 循环2：根据 map_content 放置所有 tile 和 P3D。
 # tile 放到对应普通层；仅 Middle 组放置 P3D 到 MIDDLE_P3D 层。
+# 本轮待放置位置 = _pending + 匹配过程中被改动的历史邻居；处理完清空 _pending。
 func build() -> void:
-    # 先基于邻居进行 tile 匹配，更新 map_content（可能改变各位置 tile）
-    _apply_tile_match()
-    # 放置所有 tile（到普通层）
+    if _pending.is_empty():
+        return
+    var to_place: Dictionary = {}  # Vector3i(pos) -> true（本轮需放置/更新的位置）
     for pos: Vector3i in _pending:
+        to_place[pos] = true
+    # 先基于邻居进行 tile 匹配，更新 map_content，并把匹配改动的历史邻居也纳入重放
+    _apply_tile_match(to_place)
+    # 放置所有 tile（到普通层）
+    for pos: Vector3i in to_place:
         var g: int = pos.x
         _place_tile(g, pos.y, pos.z, _get_cell_id(g, pos.y, pos.z))
     # 仅 Middle 组放置 P3D（此时所有 tile 已记录可查擦除矩阵）
-    for pos: Vector3i in _pending:
+    for pos: Vector3i in to_place:
         var g: int = pos.x
         if group_has_p3d(g):
             _place_p3d(g, pos.y, pos.z, _get_cell_id(g, pos.y, pos.z))
+    _pending.clear()
 
 
-# 基于邻居情况对已放置的 tile 进行匹配，更新 map_content（可能改变各位置 tile）
-func _apply_tile_match() -> void:
+# 是否有待放置（未 build）的 tile，供 MapSys 判断该层是否需要更新
+func has_pending() -> bool:
+    return not _pending.is_empty()
+
+
+# 基于邻居情况对已放置的 tile 进行匹配，更新 map_content（可能改变各位置 tile）。
+# 匹配改动的历史邻居会加入 to_place，确保 build 能重放到 Godot TileMap。
+func _apply_tile_match(to_place: Dictionary) -> void:
     for g in _pending_group_keys():
         var rule := _get_rule_for_group(g)
         if rule == null:
@@ -162,6 +175,8 @@ func _apply_tile_match() -> void:
                 var new_id := TileSetPreset.get_or_register_tile_id(
                     info[0], new_name, randi() % maxi(1, vcount))
                 _set_cell_id(g, pos.x, pos.y, new_id)
+                # 匹配改变了该位置 tile（可能是历史邻居），纳入本轮重放以同步 Godot TileMap
+                to_place[Vector3i(g, pos.x, pos.y)] = true
 
 
 # 收集所有出现过的 group key
@@ -263,6 +278,16 @@ func get_neighbor(g: int, x: int, y: int) -> Array:
 # 查询某 layer_type 在 (x,y) 是否已有 tile（供放置规则查询空间/兼容）
 func has_tile(layer_type: int, x: int, y: int) -> bool:
     return _get_cell_id(group_key(layer_type), x, y) >= 0
+
+
+# 查询 (x,y) 已放置 tile 的集合名（遍历所有组），供"source_name 未指定时沿用当前位置"使用。
+# 该位置没有任何已放置 tile 时返回空串。
+func get_source_at(x: int, y: int) -> String:
+    for g: int in _map_content.keys():
+        var tid := _get_cell_id(g, x, y)
+        if tid >= 0:
+            return TileSetPreset.get_set_name_by_id(tid)
+    return ""
 
 
 # 查询某 layer_type 在 (x,y) 的 tile 是否具有 tag（供放置规则查询九宫格）
