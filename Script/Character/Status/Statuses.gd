@@ -10,6 +10,10 @@ func _init(me: Character, status_name: Array[String]) -> void:
     add_statuses(status_name)
 
 
+func char_init_done() -> void:
+    for status: StatusPreset in statuses.values():
+        status.char_init_done(me)
+
 func check_satisfied(status_name: String) -> bool:
     if not check_exist(status_name):
         return false

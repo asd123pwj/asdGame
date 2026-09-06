@@ -3,6 +3,9 @@ extends ConfigBase
 
 var values: Array[Dictionary] = [
     {
+        "name": "Tick",
+    },
+    {
         "name": "Hour Advance",
         "time": [["Hour", "Advance"]],
     },

@@ -13,11 +13,25 @@ static var month: int = 1
 static var day: int = 1
 static var hour: int = 1
 
+""" ----- 内部计时 ----- """
+static var elapse: float = 0.0        # 累计真实经过时间（秒）
+static var _period_accum: float = 0.0 # 距离上次推进时辰的累计时间（秒）
 
 func _init() -> void:
     pass
 
-func advance() -> void:
+
+static func _process(delta: float) -> void:
+    elapse += delta
+    _period_accum += delta
+    var period: float = Sys.sysCfg.hour_period
+    if period > 0.0 and _period_accum >= period:
+        _period_accum -= period   # 保留余量，避免多帧累积丢时间
+        advance()
+    MsgHubTime.send_tick()
+    
+
+static func advance() -> void:
     var year_changed: bool = false
     var month_changed: bool = false
     var day_changed: bool = false

@@ -13,6 +13,13 @@ static func _listen(type: String, callback: Callable) -> String:
     return listen(_format_ID(type), callback)
 
 """ ---------- ADVANCE ---------- """
+static func send_tick(message: Variant = null) -> Enums.Code:
+    return _send("TICK", message)
+
+static func listen_tick(callback: Callable) -> String:
+    return _listen("TICK", callback)
+
+""" ---------- ADVANCE ---------- """
 static func send_advance_year(message: Variant) -> Enums.Code:
     return _send("ADVANCE_YEAR", message)
 

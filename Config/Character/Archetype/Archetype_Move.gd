@@ -4,8 +4,8 @@ extends ConfigBase
 var values: Array[Dictionary] = [
     {
         "name": "移动状态",
-        "statuses": ["Right", "Up", "Left", "Down"],
-        "skills": ["WalkRight", "WalkLeft"],
+        "statuses": ["Right", "Up", "Left", "Down", "Tick"],
+        "skills": ["WalkRight", "WalkLeft", "FreeFall"],
     },
 ]
 

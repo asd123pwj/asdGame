@@ -25,7 +25,7 @@ static func _parse_cell_sizes(rule_name: String, tiles_name: Array) -> void:
     for row in tiles_name:
         var row_sizes: Array = []
         for cell in row:
-            var size := SysCfg.REGION_SIZE
+            var size := Sys.sysCfg.REGION_SIZE
             if cell is Array:
                 var cell_arr: Array = cell
                 if cell_arr.size() > 1 and cell_arr[1] is Array:

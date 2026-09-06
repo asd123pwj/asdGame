@@ -22,6 +22,7 @@ func _init(archetype_type: String, name: String="") -> void:
     _we[ID] = self
     self.name = name if name != "" else archetype_type
     _init_from_archetype(archetype_type)
+    init_done()
 
 func physics_process(delta: float) -> void:
     skills.physics_process(delta)
@@ -37,6 +38,8 @@ func _init_from_archetype(archetype_type: String) -> void:
     collisions = Collisions.new(self, archetype.collisions)
     inventories = Inventories.new(self, archetype.inventories)
 
+func init_done() -> void:
+    statuses.char_init_done()
 
 func create_body(archetype_type: String) -> CharacterBody2D:
     var body_name: String = Archetype.get_(archetype_type).bodies[0]

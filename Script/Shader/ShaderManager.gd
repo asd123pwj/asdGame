@@ -12,16 +12,16 @@ func _init() -> void:
 static func _load_shaders() -> void:
     if not _shaders.is_empty():
         return
-    var dir := DirAccess.open(SysCfg.SHADERS_DIR)
+    var dir := DirAccess.open(Sys.sysCfg.SHADERS_DIR)
     if dir == null:
-        push_error("无法打开 shader 目录: " + SysCfg.SHADERS_DIR)
+        push_error("无法打开 shader 目录: " + Sys.sysCfg.SHADERS_DIR)
         return
     dir.list_dir_begin()
     var file := dir.get_next()
     while file != "":
         if file.ends_with(".gdshader") and not dir.current_is_dir():
             var name := file.get_basename()  # 文件名，不含扩展名
-            _shaders[name] = load(SysCfg.SHADERS_DIR + "/" + file)
+            _shaders[name] = load(Sys.sysCfg.SHADERS_DIR + "/" + file)
         file = dir.get_next()
     dir.list_dir_end()
 

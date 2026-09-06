@@ -54,7 +54,7 @@ static func _parse_tiles_name(_set_name: String, tiles_name: Array, defs: Dictio
         for col in row_cells.size():
             var cell = row_cells[col]
             var tile_name: String
-            var size := SysCfg.REGION_SIZE
+            var size := Sys.sysCfg.REGION_SIZE
             if cell is Array:
                 var cell_arr: Array = cell
                 tile_name = str(cell_arr[0])
@@ -227,9 +227,9 @@ static func get_or_register_masked_p3d(sprite_name: String, atlas_coords: Vector
     var masked_img := TileP3DEraseMask.build_masked_p3d_image(sprite_name, atlas_coords, mask)
     var src := TileSetAtlasSource.new()
     src.texture = ImageTexture.create_from_image(masked_img)
-    src.texture_region_size = SysCfg.REGION_SIZE
-    src.margins = SysCfg.TILE_MARGINS
-    src.separation = SysCfg.TILE_SEPARATION
+    src.texture_region_size = Sys.sysCfg.REGION_SIZE
+    src.margins = Sys.sysCfg.TILE_MARGINS
+    src.separation = Sys.sysCfg.TILE_SEPARATION
     src.create_tile(Vector2i(0, 0))
     var source_id: int = TileSpritePreset.tileset.add_source(src)
     var td: TileData = src.get_tile_data(Vector2i(0, 0), 0)
@@ -241,10 +241,10 @@ static func get_or_register_masked_p3d(sprite_name: String, atlas_coords: Vector
 
 static func _hash_mask(bit_map: BitMap) -> String:
     var alpha := PackedByteArray()
-    alpha.resize(SysCfg.REGION_SIZE.x * SysCfg.REGION_SIZE.y)
+    alpha.resize(Sys.sysCfg.REGION_SIZE.x * Sys.sysCfg.REGION_SIZE.y)
     var n := 0
-    for y in SysCfg.REGION_SIZE.y:
-        for x in SysCfg.REGION_SIZE.x:
+    for y in Sys.sysCfg.REGION_SIZE.y:
+        for x in Sys.sysCfg.REGION_SIZE.x:
             alpha[n] = 1 if bit_map.get_bit(x, y) else 0
             n += 1
     var ctx := HashingContext.new()
@@ -365,15 +365,15 @@ static func save_all_tiles_debug() -> void:
                     max_dx = maxi(max_dx, p.dx)
                     max_dy = maxi(max_dy, p.dy)
                 var img := Image.create(
-                    (max_dx + 1) * SysCfg.REGION_SIZE.x,
-                    (max_dy + 1) * SysCfg.REGION_SIZE.y,
+                    (max_dx + 1) * Sys.sysCfg.REGION_SIZE.x,
+                    (max_dy + 1) * Sys.sysCfg.REGION_SIZE.y,
                     false, Image.FORMAT_RGBA8)
                 img.fill(Color(0, 0, 0, 0))
                 for p in parts:
                     var cell := TileSpritePreset.get_region_image(sprite_name, p.coords, false)
                     img.blit_rect(cell, Rect2i(0, 0, cell.get_width(), cell.get_height()),
-                        Vector2i(p.dx * SysCfg.REGION_SIZE.x,
-                            (max_dy - p.dy) * SysCfg.REGION_SIZE.y))
+                        Vector2i(p.dx * Sys.sysCfg.REGION_SIZE.x,
+                            (max_dy - p.dy) * Sys.sysCfg.REGION_SIZE.y))
                     # 同时保存该位置的单个格子素材，命名含位置（锚点左下为 1,1）
                     var pos_file := "%s_%s_v%d_%d,%d_%s.png" % [
                         set_name, tile_name, v, p.dx + 1, p.dy + 1, sprite_name]
@@ -383,7 +383,7 @@ static func save_all_tiles_debug() -> void:
 
 
 static func _save_debug_png(image: Image, file_name: String) -> void:
-    var debug_path: String = SysCfg.DEBUG_DIR + file_name
-    DirAccess.make_dir_recursive_absolute(SysCfg.DEBUG_DIR)
+    var debug_path: String = Sys.sysCfg.DEBUG_DIR + file_name
+    DirAccess.make_dir_recursive_absolute(Sys.sysCfg.DEBUG_DIR)
     if image.save_png(debug_path) != OK:
         push_error("TileSetPreset: 保存调试图像失败: ", debug_path)

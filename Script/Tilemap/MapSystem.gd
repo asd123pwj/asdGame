@@ -5,7 +5,7 @@ static var maps_parent_node: Node2D = Node2D.new()
 # 世界层：layer_id -> MapLayer（每个 MapLayer 管理六个子层）
 static var layers: Dictionary[int, MapLayer] = {}
 # P3D 擦除掩码 shader（供 MapLayer 使用），通过 ShaderManager 按文件名访问
-static var erase_shader: Shader = ShaderManager.get_shader("p3d_mask")
+# static var erase_shader: Shader = ShaderManager.get_shader("p3d_mask")
 
 
 func _init() -> void:

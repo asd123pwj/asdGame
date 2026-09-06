@@ -423,7 +423,7 @@ func listen(char_: Character) -> void:
         else:
             print("时间监听器类型错误: ", listener.match_type)
         _time_triggers[char_][listener.name] = trigger_cur
-
+        
 
     # ----- 外部信号记录 -----
     if with_detect:
@@ -447,8 +447,11 @@ func listen(char_: Character) -> void:
 
 
 
-    # ----- 监听初始化完成 -----
-    # 初始化监听器后执行一次，发送最新状态，虽然我觉得它没有用
+    # # ----- 监听初始化完成 -----
+    # # 初始化监听器后执行一次，发送最新状态，虽然我觉得它没有用
+    # execute(char_, true)
+
+func char_init_done(char_: Character) -> void:
     execute(char_, true)
 
 func unlisten(char_: Character) -> void:
@@ -459,8 +462,6 @@ func unlisten(char_: Character) -> void:
     latest_message.erase(char_)
     for triggers in _triggers:
         triggers.erase(char_)
-
-    
 
 func execute(char_: Character, force: bool = false) -> bool:
     var enabled_ori: bool = satisfied[char_]

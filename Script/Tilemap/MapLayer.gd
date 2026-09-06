@@ -47,7 +47,7 @@ var _p3d_maps: Dictionary[int, TileMapLayer] = {}
 var _map_content: Dictionary[int, Dictionary] = {}
 # 记录放置位置 -> tile_id（key: Vector3i(g, x, y)），同一位置重复放置直接覆盖
 var _pending: Dictionary[Vector3i, Dictionary] = {}
-var _p3d_offset := SysCfg.P3D_OFFSET
+var _p3d_offset := Sys.sysCfg.P3D_OFFSET
 
 
 func _init(layer_id: int, parent: Node2D) -> void:
@@ -108,13 +108,13 @@ func _set_content_cell(g: int, x: int, y: int, tile_id: int) -> void:
     if not _map_content.has(g):
         _map_content[g] = {}
     var blocks: Dictionary = _map_content[g]
-    var block_coord := Vector2i(floori(float(x) / SysCfg.BLOCK_SIZE), floori(float(y) / SysCfg.BLOCK_SIZE))
+    var block_coord := Vector2i(floori(float(x) / Sys.sysCfg.BLOCK_SIZE), floori(float(y) / Sys.sysCfg.BLOCK_SIZE))
     if not blocks.has(block_coord):
         blocks[block_coord] = _create_block()
     var matrix: Array = blocks[block_coord]
-    var lx := x - block_coord.x * SysCfg.BLOCK_SIZE
-    var ly := y - block_coord.y * SysCfg.BLOCK_SIZE
-    matrix[ly * SysCfg.BLOCK_SIZE + lx] = tile_id
+    var lx := x - block_coord.x * Sys.sysCfg.BLOCK_SIZE
+    var ly := y - block_coord.y * Sys.sysCfg.BLOCK_SIZE
+    matrix[ly * Sys.sysCfg.BLOCK_SIZE + lx] = tile_id
 
 
 # 循环2：根据 map_content 放置所有 tile 和 P3D。
@@ -255,14 +255,14 @@ func _set_cell_id(g: int, x: int, y: int, tile_id: int) -> void:
     if not _map_content.has(g):
         return
     var blocks: Dictionary = _map_content[g]
-    var block_coord := Vector2i(floori(float(x) / SysCfg.BLOCK_SIZE), floori(float(y) / SysCfg.BLOCK_SIZE))
+    var block_coord := Vector2i(floori(float(x) / Sys.sysCfg.BLOCK_SIZE), floori(float(y) / Sys.sysCfg.BLOCK_SIZE))
     if not blocks.has(block_coord):
         return
     var matrix: Array = blocks[block_coord]
-    var lx := x - block_coord.x * SysCfg.BLOCK_SIZE
-    var ly := y - block_coord.y * SysCfg.BLOCK_SIZE
-    if lx >= 0 and lx < SysCfg.BLOCK_SIZE and ly >= 0 and ly < SysCfg.BLOCK_SIZE:
-        matrix[ly * SysCfg.BLOCK_SIZE + lx] = tile_id
+    var lx := x - block_coord.x * Sys.sysCfg.BLOCK_SIZE
+    var ly := y - block_coord.y * Sys.sysCfg.BLOCK_SIZE
+    if lx >= 0 and lx < Sys.sysCfg.BLOCK_SIZE and ly >= 0 and ly < Sys.sysCfg.BLOCK_SIZE:
+        matrix[ly * Sys.sysCfg.BLOCK_SIZE + lx] = tile_id
 
 
 # 查询 (x,y) 在组 g 内三个邻居(上/右上/右)的 tile id，供擦除矩阵使用
@@ -303,15 +303,15 @@ func _get_cell_id(g: int, x: int, y: int) -> int:
     if not _map_content.has(g):
         return -1
     var blocks: Dictionary = _map_content[g]
-    var block_coord := Vector2i(floori(float(x) / SysCfg.BLOCK_SIZE), floori(float(y) / SysCfg.BLOCK_SIZE))
+    var block_coord := Vector2i(floori(float(x) / Sys.sysCfg.BLOCK_SIZE), floori(float(y) / Sys.sysCfg.BLOCK_SIZE))
     var matrix = blocks.get(block_coord)
     if matrix == null:
         return -1
-    var lx := x - block_coord.x * SysCfg.BLOCK_SIZE
-    var ly := y - block_coord.y * SysCfg.BLOCK_SIZE
-    if lx < 0 or lx >= SysCfg.BLOCK_SIZE or ly < 0 or ly >= SysCfg.BLOCK_SIZE:
+    var lx := x - block_coord.x * Sys.sysCfg.BLOCK_SIZE
+    var ly := y - block_coord.y * Sys.sysCfg.BLOCK_SIZE
+    if lx < 0 or lx >= Sys.sysCfg.BLOCK_SIZE or ly < 0 or ly >= Sys.sysCfg.BLOCK_SIZE:
         return -1
-    return matrix[ly * SysCfg.BLOCK_SIZE + lx]
+    return matrix[ly * Sys.sysCfg.BLOCK_SIZE + lx]
 
 
 func _place_tile(g: int, x: int, y: int, tile_id: int) -> void:
@@ -346,7 +346,7 @@ func _place_p3d(g: int, x: int, y: int, tile_id: int) -> void:
 
 func _create_block() -> Array:
     var matrix: Array = []
-    matrix.resize(SysCfg.BLOCK_SIZE * SysCfg.BLOCK_SIZE)
-    for i in SysCfg.BLOCK_SIZE * SysCfg.BLOCK_SIZE:
+    matrix.resize(Sys.sysCfg.BLOCK_SIZE * Sys.sysCfg.BLOCK_SIZE)
+    for i in Sys.sysCfg.BLOCK_SIZE * Sys.sysCfg.BLOCK_SIZE:
         matrix[i] = -1
     return matrix

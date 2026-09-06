@@ -35,7 +35,7 @@ static func get_or_build_mask(get_neighbor: Callable, x: int, y: int, p3d_offset
 # 把三个邻居内容矩阵合并成 48x48 掩码 BitMap，偏移到当前 P3D 局部坐标系
 static func _build_erase_bitmap(x: int, y: int, neighbors: Array, p3d_offset: Vector2) -> BitMap:
     var mask := BitMap.new()
-    mask.create(Vector2i(SysCfg.REGION_SIZE.x, SysCfg.REGION_SIZE.y))
+    mask.create(Vector2i(Sys.sysCfg.REGION_SIZE.x, Sys.sysCfg.REGION_SIZE.y))
     var origin := Vector2(x * 32, y * 32) - p3d_offset  # P3D 左上角世界坐标
     var neighbor_cells: Array[Vector2i] = [
         Vector2i(x, y + 1),       # 上

@@ -30,6 +30,7 @@ func _input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
     InputSys._process(delta)
+    TimeSys._process(delta)
 
 func _physics_process(delta: float) -> void:
     CharSys._physics_process(delta)

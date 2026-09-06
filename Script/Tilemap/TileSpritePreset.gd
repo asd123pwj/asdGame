@@ -105,7 +105,7 @@ static func get_column_count(name: String) -> int:
     var tex := _we[name].source.texture
     if tex == null:
         return 1
-    return _count(tex.get_image().get_size().x, SysCfg.TILE_MARGINS.x, SysCfg.TILE_SEPARATION.x)
+    return _count(tex.get_image().get_size().x, Sys.sysCfg.TILE_MARGINS.x, Sys.sysCfg.TILE_SEPARATION.x)
 
 
 # 素材图集行数（48x48 网格）
@@ -113,7 +113,7 @@ static func get_row_count(name: String) -> int:
     var tex := _we[name].source.texture
     if tex == null:
         return 1
-    return _count(tex.get_image().get_size().y, SysCfg.TILE_MARGINS.y, SysCfg.TILE_SEPARATION.y)
+    return _count(tex.get_image().get_size().y, Sys.sysCfg.TILE_MARGINS.y, Sys.sysCfg.TILE_SEPARATION.y)
 
 
 # 获取素材整张图集图像（缓存，避免重复 get_image）。is_p3d 为 true 取 P3D 图集。
@@ -135,10 +135,10 @@ static func get_atlas_image(name: String, is_p3d: bool) -> Image:
 static func get_region_image(name: String, atlas_coords: Vector2i, is_p3d: bool) -> Image:
     var img := get_atlas_image(name, is_p3d)
     if img == null:
-        var empty := Image.create(SysCfg.REGION_SIZE.x, SysCfg.REGION_SIZE.y, false, Image.FORMAT_RGBA8)
+        var empty := Image.create(Sys.sysCfg.REGION_SIZE.x, Sys.sysCfg.REGION_SIZE.y, false, Image.FORMAT_RGBA8)
         empty.fill(Color(0, 0, 0, 0))
         return empty
-    var region := Rect2i(SysCfg.TILE_MARGINS + atlas_coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
+    var region := Rect2i(Sys.sysCfg.TILE_MARGINS + atlas_coords * (Sys.sysCfg.REGION_SIZE + Sys.sysCfg.TILE_SEPARATION), Sys.sysCfg.REGION_SIZE)
     return img.get_region(region)
 
 
@@ -147,7 +147,7 @@ static func is_cell_empty(name: String, atlas_coords: Vector2i, is_p3d: bool) ->
     var img := get_atlas_image(name, is_p3d)
     if img == null:
         return true
-    var region := Rect2i(SysCfg.TILE_MARGINS + atlas_coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
+    var region := Rect2i(Sys.sysCfg.TILE_MARGINS + atlas_coords * (Sys.sysCfg.REGION_SIZE + Sys.sysCfg.TILE_SEPARATION), Sys.sysCfg.REGION_SIZE)
     return img.get_region(region).get_used_rect().size == Vector2i.ZERO
 
 
@@ -159,14 +159,14 @@ static func get_tile_shape_hash(name: String, atlas_coords: Vector2i) -> String:
 # 根据瓦片图像生成 alpha>0 的位图（48x48）
 static func build_alpha_bitmap(image: Image) -> BitMap:
     var bit_map := BitMap.new()
-    bit_map.create(Vector2i(SysCfg.REGION_SIZE.x, SysCfg.REGION_SIZE.y))
+    bit_map.create(Vector2i(Sys.sysCfg.REGION_SIZE.x, Sys.sysCfg.REGION_SIZE.y))
     var alpha_img: Image = image.duplicate()
     alpha_img.convert(Image.FORMAT_LA8)
     var data := alpha_img.get_data()
     @warning_ignore("integer_division")
     for idx in data.size() / 2:
         if data[idx * 2 + 1] > 0:
-            bit_map.set_bit(idx % SysCfg.REGION_SIZE.x, floori(float(idx) / SysCfg.REGION_SIZE.x), true)
+            bit_map.set_bit(idx % Sys.sysCfg.REGION_SIZE.x, floori(float(idx) / Sys.sysCfg.REGION_SIZE.x), true)
     return bit_map
 
 
@@ -219,9 +219,9 @@ static func get_erase_matrix_by_id(id: int) -> BitMap:
 # 两个 48x48 位图取并集
 static func _union_bitmap(a: BitMap, b: BitMap) -> BitMap:
     var result := BitMap.new()
-    result.create(Vector2i(SysCfg.REGION_SIZE.x, SysCfg.REGION_SIZE.y))
-    for y in SysCfg.REGION_SIZE.y:
-        for x in SysCfg.REGION_SIZE.x:
+    result.create(Vector2i(Sys.sysCfg.REGION_SIZE.x, Sys.sysCfg.REGION_SIZE.y))
+    for y in Sys.sysCfg.REGION_SIZE.y:
+        for x in Sys.sysCfg.REGION_SIZE.x:
             if a.get_bit(x, y) or b.get_bit(x, y):
                 result.set_bit(x, y, true)
     return result
@@ -230,10 +230,10 @@ static func _union_bitmap(a: BitMap, b: BitMap) -> BitMap:
 # 对内容矩阵(BitMap)做哈希，相同形状共享
 static func _hash_bitmap(bit_map: BitMap) -> String:
     var alpha := PackedByteArray()
-    alpha.resize(SysCfg.REGION_SIZE.x * SysCfg.REGION_SIZE.y)
+    alpha.resize(Sys.sysCfg.REGION_SIZE.x * Sys.sysCfg.REGION_SIZE.y)
     var n := 0
-    for y in SysCfg.REGION_SIZE.y:
-        for x in SysCfg.REGION_SIZE.x:
+    for y in Sys.sysCfg.REGION_SIZE.y:
+        for x in Sys.sysCfg.REGION_SIZE.x:
             alpha[n] = 1 if bit_map.get_bit(x, y) else 0
             n += 1
     var ctx := HashingContext.new()
@@ -265,9 +265,9 @@ static func _create_source(path: String, cell_sizes: Array[Array], tiles_name: A
         _save_debug_png(img, path.get_file().get_basename() + "_48.png")
     var source := TileSetAtlasSource.new()
     source.texture = ImageTexture.create_from_image(img)
-    source.texture_region_size = SysCfg.REGION_SIZE
-    source.margins = SysCfg.TILE_MARGINS
-    source.separation = SysCfg.TILE_SEPARATION
+    source.texture_region_size = Sys.sysCfg.REGION_SIZE
+    source.margins = Sys.sysCfg.TILE_MARGINS
+    source.separation = Sys.sysCfg.TILE_SEPARATION
     return source
 
 
@@ -277,7 +277,7 @@ static func _need_reflow(cell_sizes: Array[Array]) -> bool:
         return false
     for row_sizes in cell_sizes:
         for size in row_sizes:
-            if size != SysCfg.REGION_SIZE:
+            if size != Sys.sysCfg.REGION_SIZE:
                 return true
     return false
 
@@ -369,7 +369,7 @@ static func _to_48_atlas(image: Image, cell_sizes: Array[Array], tiles_name: Arr
     for name in group_cols:
         cols = maxi(cols, group_cols[name] * group_variant_count[name])
     var out := Image.create(
-        cols * SysCfg.REGION_SIZE.x, rows * SysCfg.REGION_SIZE.y,
+        cols * Sys.sysCfg.REGION_SIZE.x, rows * Sys.sysCfg.REGION_SIZE.y,
         false, image.get_format())
     out.fill(Color(0, 0, 0, 0))
     # 生成剪裁掩码并保存（任何素材都生成）
@@ -396,8 +396,8 @@ static func _to_48_atlas(image: Image, cell_sizes: Array[Array], tiles_name: Arr
                 # 目标列 = 本组内列 gcol + v * 本组列数
                 var gcol: int = c.gcol
                 var dst := Vector2i(
-                    (gcol + v * col_count) * SysCfg.REGION_SIZE.x,
-                    r * SysCfg.REGION_SIZE.y + (SysCfg.REGION_SIZE.y - size.y))
+                    (gcol + v * col_count) * Sys.sysCfg.REGION_SIZE.x,
+                    r * Sys.sysCfg.REGION_SIZE.y + (Sys.sysCfg.REGION_SIZE.y - size.y))
                 out.blit_rect(image, src_rect, dst)
     return out
 
@@ -485,7 +485,7 @@ static func _mask_outline(mask: Image, x: int, y: int, w: int, h: int, color: Co
 
 static func _count(tex_len: int, margin: int, separation: int) -> int:
     var n := 0
-    while margin + n * (SysCfg.REGION_SIZE.x + separation) + SysCfg.REGION_SIZE.x <= tex_len:
+    while margin + n * (Sys.sysCfg.REGION_SIZE.x + separation) + Sys.sysCfg.REGION_SIZE.x <= tex_len:
         n += 1
     return n
 
@@ -494,8 +494,8 @@ static func _count(tex_len: int, margin: int, separation: int) -> int:
 static func _create_tiles(source: TileSetAtlasSource, with_collision: bool = true) -> void:
     var texture: Texture2D = source.texture
     var tex_size: Vector2i = texture.get_image().get_size()
-    for y in _count(tex_size.y, SysCfg.TILE_MARGINS.y, SysCfg.TILE_SEPARATION.y):
-        for x in _count(tex_size.x, SysCfg.TILE_MARGINS.x, SysCfg.TILE_SEPARATION.x):
+    for y in _count(tex_size.y, Sys.sysCfg.TILE_MARGINS.y, Sys.sysCfg.TILE_SEPARATION.y):
+        for x in _count(tex_size.x, Sys.sysCfg.TILE_MARGINS.x, Sys.sysCfg.TILE_SEPARATION.x):
             var coords := Vector2i(x, y)
             source.create_tile(coords)
             var tile_data := source.get_tile_data(coords, 0)
@@ -505,7 +505,7 @@ static func _create_tiles(source: TileSetAtlasSource, with_collision: bool = tru
 
 
 static func _set_tile_collision(source: TileSetAtlasSource, texture: Texture2D, coords: Vector2i) -> void:
-    var region := Rect2i(SysCfg.TILE_MARGINS + coords * (SysCfg.REGION_SIZE + SysCfg.TILE_SEPARATION), SysCfg.REGION_SIZE)
+    var region := Rect2i(Sys.sysCfg.TILE_MARGINS + coords * (Sys.sysCfg.REGION_SIZE + Sys.sysCfg.TILE_SEPARATION), Sys.sysCfg.REGION_SIZE)
     var image := texture.get_image().get_region(region)
     var entry := _get_or_build_shape(image)
     if entry.is_empty():
@@ -536,7 +536,7 @@ static func _build_bounding_rect(image: Image) -> Array:
     var rect: Rect2i = image.get_used_rect()
     if rect.size == Vector2i.ZERO:
         return []
-    var half := Vector2(SysCfg.REGION_SIZE) / 2.0
+    var half := Vector2(Sys.sysCfg.REGION_SIZE) / 2.0
     var offset := Vector2(8, -8)
     var top_left := Vector2(rect.position) - half + offset
     var size := Vector2(rect.size)
@@ -551,9 +551,9 @@ static func _build_bounding_rect(image: Image) -> Array:
 static func _build_polygons(image: Image) -> Array:
     var bit_map := build_alpha_bitmap(image)
     var result: Array = []
-    var half := Vector2(SysCfg.REGION_SIZE) / 2.0
+    var half := Vector2(Sys.sysCfg.REGION_SIZE) / 2.0
     var offset := Vector2(8, -8)
-    for raw in bit_map.opaque_to_polygons(Rect2(Vector2.ZERO, SysCfg.REGION_SIZE)):
+    for raw in bit_map.opaque_to_polygons(Rect2(Vector2.ZERO, Sys.sysCfg.REGION_SIZE)):
         var points: PackedVector2Array = raw
         if points.size() > 3 and points[0] == points[points.size() - 1]:
             points.remove_at(points.size() - 1)
@@ -580,7 +580,7 @@ static func _hash_alpha(image: Image) -> String:
 
 
 static func _save_debug_png(image: Image, file_name: String) -> void:
-    var debug_path: String = SysCfg.DEBUG_DIR + file_name
-    DirAccess.make_dir_recursive_absolute(SysCfg.DEBUG_DIR)
+    var debug_path: String = Sys.sysCfg.DEBUG_DIR + file_name
+    DirAccess.make_dir_recursive_absolute(Sys.sysCfg.DEBUG_DIR)
     if image.save_png(debug_path) != OK:
         push_error("TileSpritePreset: 保存调试图像失败: ", debug_path)

@@ -50,7 +50,7 @@ func delay_loop_test() -> void:
         
         MapSys.place(0, 5, -15, "门", "2", -1, true)
         MapSys.build()
-        Sys.timeSys.advance()
+        # Sys.timeSys.advance()
         # if RandSys.rand.randi_range(0, 1) == 0:
         #     print("A触摸B")
         MsgHubChar.send_status_detected(char_A, "Detect=>Touch", char_B)
