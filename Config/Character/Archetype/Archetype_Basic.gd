@@ -19,7 +19,7 @@ var values: Array[Dictionary] = [
         "buffs": ["人被杀就会死"],
         "statuses": ["Dead", "Live", "Injured", "Detect=>Practice", "Health<=Base/2"],
         "interactions": ["Practice", "SayInjured", "TryHealSelf"],
-        "packages": ["CanBeHealed", "Nourish"]
+        "packages": ["CanBeHealed", "Nourish", "重力与阻力"]
     },
     
 ]

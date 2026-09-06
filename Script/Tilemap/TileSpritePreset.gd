@@ -296,7 +296,9 @@ static func _to_48_atlas(image: Image, cell_sizes: Array[Array], tiles_name: Arr
         if r < tiles_name.size():
             var row_cells: Array = tiles_name[r]
             for cell in row_cells:
+                @warning_ignore("unsafe_cast")
                 if cell is Array and not (cell as Array).is_empty():
+                    @warning_ignore("unsafe_cast")
                     rn.append(str((cell as Array)[0]))
                 else:
                     rn.append(str(cell))

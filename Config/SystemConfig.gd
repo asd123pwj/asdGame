@@ -13,6 +13,7 @@ var DEBUG_DIR := "res://Debug/"       # 调试输出目录（图集预处理结�
 var P3D_TILE_ORIGIN := Vector2i(-8, 8) # # P3D 瓦片定位校正（texture_origin）。
 
 var gravity := 1000
+var min_damping_velocity := Vector2(100.0, 100.0)
 
 # 游戏时间周期：每经过 hour_period 秒，TimeSys 推进一个时辰
 var hour_period := 2.0
