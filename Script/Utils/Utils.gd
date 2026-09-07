@@ -1,5 +1,5 @@
 class_name Utils
-extends RefCounted
+extends BaseClass
 
 
 static func find_dict(dict: Dictionary, keys: Array, default: Variant = {}):

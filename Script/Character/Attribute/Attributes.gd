@@ -1,5 +1,5 @@
 class_name Attributes
-extends RefCounted
+extends BaseClass
 
 var me: Character
 ## Category指的是Buff的所属类别，例如攻击加成A与攻击加成B共同影响攻击值

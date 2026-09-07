@@ -11,6 +11,7 @@ static var charSys: CharSys
 static var presets: PresetRegister
 static var inputSys: InputSys
 static var tmapSys: MapSys
+static var cmdSys: CmdSys
 
 static var USER_CONFIG_DIR := "user://Config/"
 static var SYS_CONFIG_DIR := "res://Config/"
@@ -37,6 +38,7 @@ func _physics_process(delta: float) -> void:
 
 func init_sub_system() -> void:
     sysCfg = SysCfg.new()
+    cmdSys = CmdSys.new()
     randSys = RandSys.new()
     msgBus = MsgBus.new()
     shaders = ShaderManager.new()

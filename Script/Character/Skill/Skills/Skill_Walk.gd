@@ -1,8 +1,6 @@
 class_name Skill_Walk
 extends SkillBase
 
-# ----- Config -----
-
 func _act(me: Character, _delta: float, _config: Array) -> bool:
     me.body.velocity.x = _config[0]
     return true

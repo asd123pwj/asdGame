@@ -1,5 +1,5 @@
 class_name MsgBus
-extends RefCounted
+extends BaseClass
 
 static var _nodes: Dictionary[String, MessageNode] = {}   
 

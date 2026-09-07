@@ -1,5 +1,5 @@
 class_name MessageNode
-extends RefCounted
+extends BaseClass
 
 var receivers: Array[Callable]
 var message: Variant

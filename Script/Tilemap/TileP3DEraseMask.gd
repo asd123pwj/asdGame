@@ -1,5 +1,5 @@
 class_name TileP3DEraseMask
-extends RefCounted
+extends BaseClass
 
 # P3D 遮挡擦除：把三个邻居的内容矩阵（来自 TileSpritePreset 的擦除矩阵）合并成掩码，
 # 挖空当前 P3D 被邻居遮挡的部分。擦除矩阵（内容矩阵/erase id）已由 TileSpritePreset 提供。

@@ -1,5 +1,5 @@
 class_name Character
-extends RefCounted
+extends BaseClass
 
 
 var name: String

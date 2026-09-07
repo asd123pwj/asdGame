@@ -1,5 +1,5 @@
 class_name ConfigBase
-extends RefCounted
+extends BaseClass
 
 
 func _init() -> void:

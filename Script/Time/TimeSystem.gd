@@ -1,5 +1,5 @@
 class_name TimeSys
-extends RefCounted
+extends BaseClass
 
 """ -----  ----- """
 static var msgID_advance: String = "TIME_ADVANCE"

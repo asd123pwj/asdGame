@@ -1,5 +1,5 @@
 class_name SkillBase
-extends RefCounted
+extends BaseClass
 
 @warning_ignore("unsafe_method_access")
 var CLASS_NAME: String = get_script().get_global_name()

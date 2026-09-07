@@ -1,5 +1,5 @@
 class_name ShaderManager
-extends RefCounted
+extends BaseClass
 
 # 文件名(不含扩展名) -> Shader
 static var _shaders: Dictionary = {}

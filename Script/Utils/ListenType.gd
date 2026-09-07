@@ -1,5 +1,5 @@
 class_name ListenType
-extends RefCounted
+extends BaseClass
 
 
 var name: Variant

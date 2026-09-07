@@ -1,5 +1,5 @@
 class_name Test
-extends RefCounted
+extends BaseClass
 
 var char_A: Character
 var char_B: Character
@@ -44,11 +44,16 @@ func delay_loop_test() -> void:
     # get_char_info(char_B)
     MsgHubChar.send_status_detected(char_A, "Detect=>Nourish")
 
+    await Sys.sys.get_tree().create_timer(1).timeout
+    MsgHubCmd.send_cmd("CharSys.spawn 人类")
     # for i in range(1000):
     while true:
         await Sys.sys.get_tree().create_timer(1).timeout
         
         MapSys.place(0, 5, -15, "门", "2", -1, true)
+        # --- 指令系统测试（消息驱动） ---
+        MsgHubCmd.send_cmd("MapSys.place 0 5 -10 门 2 -1 true")
+        MsgHubCmd.send_cmd("MapSys.place --layer_id 0 --x 10 --y -10 --source_name 门 --tile_name 2 --force_space")
         MapSys.build()
         # Sys.timeSys.advance()
         # if RandSys.rand.randi_range(0, 1) == 0:

@@ -1,5 +1,5 @@
 class_name Collisions
-extends RefCounted
+extends BaseClass
 
 
 var me: Character

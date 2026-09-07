@@ -1,5 +1,5 @@
 class_name InputSys
-extends RefCounted
+extends BaseClass
 
 static var mouse_position: Vector2 = Vector2.ZERO
 static var on_edit: bool = false

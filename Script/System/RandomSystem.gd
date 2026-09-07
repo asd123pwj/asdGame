@@ -1,5 +1,5 @@
 class_name RandSys
-extends RefCounted
+extends BaseClass
 
 static var rand: RandomNumberGenerator = RandomNumberGenerator.new()
 

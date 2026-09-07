@@ -1,5 +1,5 @@
 class_name MapLayer
-extends RefCounted
+extends BaseClass
 
 # 子层 id = layer_id * COUNT + layer_type
 static func sub_layer_id(layer_id: int, layer_type: int) -> int:

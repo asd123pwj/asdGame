@@ -1,5 +1,5 @@
 class_name CharSys
-extends RefCounted
+extends BaseClass
 
 var pool: Array = []
 

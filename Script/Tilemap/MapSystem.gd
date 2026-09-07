@@ -1,5 +1,5 @@
 class_name MapSys
-extends RefCounted
+extends BaseClass
 
 static var maps_parent_node: Node2D = Node2D.new()
 # 世界层：layer_id -> MapLayer（每个 MapLayer 管理六个子层）
@@ -49,13 +49,13 @@ func _init() -> void:
     place(0, 14, -14, "门", "1")
     place(0, 15, -14, "门", "1")
 
-    for i in range(0, 4):
-        for j in range(-6, -10, -1):
-            # place(0, i, j, "P3D")
-            place(0, i, j+5, "砖头")
-            place(0, i+1, j+5+1, "透明玻璃")
-            # place(0, i+5+1, j+5+1, "完整玻璃")
-            # place(0, i+10+1, j+5+1, "完整玻璃-反")
+    # for i in range(0, 4):
+    #     for j in range(-6, -10, -1):
+    #         # place(0, i, j, "P3D")
+    #         place(0, i, j+5, "砖头")
+    #         place(0, i+1, j+5+1, "透明玻璃")
+    #         # place(0, i+5+1, j+5+1, "完整玻璃")
+    #         # place(0, i+10+1, j+5+1, "完整玻璃-反")
     # 循环2：根据 map_content 放置 tile 和 P3D（增量 build：只更新有 _pending 的层）
     build()
 

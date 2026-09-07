@@ -1,5 +1,5 @@
 class_name InteractionBase
-extends RefCounted
+extends BaseClass
 
 var name: String
 var config

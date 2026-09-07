@@ -1,5 +1,5 @@
 class_name Collision_Area
-extends RefCounted
+extends BaseClass
 
 var me: Character
 var name: String
@@ -24,15 +24,17 @@ func _init(char_: Character, name_: String, _config: Array):
 
 
 func _on_body_entered(body: Node):
-    var char_: Character = body.get_meta("character", null)
-    if char_:
-        # print(char_.name)
-        pass  
+    if body.has_meta("character"):
+        var char_: Character = body.get_meta("character", null)
+        if char_:
+            # print(char_.name)
+            pass  
     MsgHubChar.send_collision_enter(me, name, body)
 
 func _on_body_exited(body: Node):
-    var char_: Character = body.get_meta("character", null)
-    if char_:
-        # print(char_.name)
-        pass  
+    if body.has_meta("character"):
+        var char_: Character = body.get_meta("character", null)
+        if char_:
+            # print(char_.name)
+            pass  
     MsgHubChar.send_collision_exit(me, name, body)

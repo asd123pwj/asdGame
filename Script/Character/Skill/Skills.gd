@@ -1,5 +1,5 @@
 class_name Skills
-extends RefCounted
+extends BaseClass
 
 
 var me: Character

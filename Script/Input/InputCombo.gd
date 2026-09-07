@@ -1,5 +1,5 @@
 class_name InputCombo
-extends RefCounted
+extends BaseClass
 
 
 var _sequence: Array[Variant]

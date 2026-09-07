@@ -1,6 +1,6 @@
 ## 初始化时自动加载子类，子类为预设类
 class_name PresetRegister
-extends RefCounted
+extends BaseClass
 
 
 # 可以简化，现在是每个类都扫描一遍，N个类N遍重复扫描

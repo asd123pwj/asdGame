@@ -1,5 +1,5 @@
 class_name TimeFormat
-extends RefCounted
+extends BaseClass
 
 static var year: String
 static var month: String

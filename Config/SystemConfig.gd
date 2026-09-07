@@ -15,6 +15,11 @@ var P3D_TILE_ORIGIN := Vector2i(-8, 8) # # P3D 瓦片定位校正（texture_orig
 var gravity := 1000
 var min_damping_velocity := Vector2(100.0, 100.0)
 
+# 命令系统懒注册，
+# 为false时，在游戏启动时注册所有命令，这个会拖慢启动速度和内存占用，但这点资源也许无关紧要
+# 为true时，在第一次调用命令时注册命令，随用随取，带缓存
+var lazy_command_registration := false
+
 # 游戏时间周期：每经过 hour_period 秒，TimeSys 推进一个时辰
 var hour_period := 2.0
 

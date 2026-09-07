@@ -1,5 +1,5 @@
 class_name Interactions
-extends RefCounted
+extends BaseClass
 
 
 var me: Character

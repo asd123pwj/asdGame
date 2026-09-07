@@ -1,5 +1,5 @@
 class_name ChangeResult
-extends RefCounted
+extends BaseClass
 
 
 var code: Enums.Code

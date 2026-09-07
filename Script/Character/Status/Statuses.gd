@@ -1,5 +1,5 @@
 class_name Statuses
-extends RefCounted
+extends BaseClass
 
 
 var me: Character
