@@ -1,12 +1,13 @@
 ## 继承BaseClass的类，其静态方法可以用"类名.方法名 参数"作为命令调用。
 ##     MapSys.place 0 5 -10 门 2 -1 true
 ##     MapSys.place --layer_id 0 --x 10 --source_name 门 --tile_name 2 --force_space
+## 支持使用静态变量
+##
 class_name CmdSys
 extends BaseClass
 
 
 static var _commands: Dictionary = {}   # cmd_name -> { callable, arg_meta }
-# static var _sources_loaded := {}         # 懒注册时记录已动态加载过的宿主类（key: 类名）
 
 
 # 初始化（幂等）：注册命令 + 监听消息总线的 "COMMAND"。
@@ -107,8 +108,6 @@ static func _lazy_load(cmd_name: String) -> void:
 	if dot <= 0:
 		return
 	var class_name_: String = cmd_name.substr(0, dot)
-	if class_name_ == "CmdSys":
-		return
 	var entries := ProjectSettings.get_global_class_list()
 	var by_name := {}
 	for e in entries:
