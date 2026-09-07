@@ -15,8 +15,10 @@ extends BaseClass
 #   - String  : 其余全部按字符串处理；含空格的字符串可用双引号包裹，如 "a b c"
 #
 # 引用与转义（shell 风格）:
-#   $Test.test_int$    -> 解析成 Test.test_int 的静态值
-#   \$Test.test_int\$  -> 普通字符串 "$Test.test_int$"（\$ 表示字面 $，不作包裹符）
+#   $Test.test_int$        -> 解析成 Test.test_int 的静态值
+#   $Test.test_int.value$  -> Test.test_int 是字典时取 .value
+#   $Test.test_int2.value[0]$ -> 再对列表取下标 0
+#   \$Test.test_int\$      -> 普通字符串 "$Test.test_int$"（\$ 表示字面 $，不作包裹符）
 #   未成对包裹的普通字符串里的 \$ 也会还原成 $
 #
 # 参数形式:
@@ -101,22 +103,79 @@ static func _convert(raw: String):
 	return raw.replace("\\$", "$")
 
 
-# 尝试读取 "类名.成员" 的值，返回 [ok: bool, value: Variant]。
-# 先 script.get（static var），再试 const 表（const）。
-static func _try_resolve_member(qualified: String) -> Array:
-	var dot := qualified.find(".")
-	var class_name_ := qualified.substr(0, dot)
-	var member := qualified.substr(dot + 1)
+# 解析引用链，返回 [ok: bool, value: Variant]。
+# 支持 类名.静态成员  后跟一串访问器：
+#   .键       取 Dictionary 的键（如 .value）
+#   [数字]    取 Array 的下标（如 [0]）
+# 例：Test.test_int.value[0]  -> 读 Test.test_int，再 .value 再 [0]
+static func _try_resolve_member(expr: String) -> Array:
+	var dot := expr.find(".")
+	if dot <= 0:
+		return [false, null]
+	var class_name_ := expr.substr(0, dot)
+	var chain := expr.substr(dot + 1)   # 形如 "test_int.value[0]"
+
+	# 第一个成员名：读到下一个 "." 或 "[" 之前
+	var member := ""
+	var i := 0
+	while i < chain.length() and chain[i] != "." and chain[i] != "[":
+		member += chain[i]
+		i += 1
+	if member.is_empty():
+		return [false, null]
+	var rest := chain.substr(i)         # 剩余访问器，如 ".value[0]" 或 ""
+
 	var script: GDScript = _find_class_script(class_name_)
 	if script == null:
 		return [false, null]
 	var v: Variant = script.get(member)
-	if v != null:
-		return [true, v]
-	var consts: Dictionary = script.get_script_constant_map()
-	if consts.has(member):
-		return [true, consts[member]]
-	return [false, null]
+	if v == null:
+		var consts: Dictionary = script.get_script_constant_map()
+		if not consts.has(member):
+			return [false, null]
+		v = consts[member]
+	return _apply_accessors(v, rest)
+
+
+# 依次应用 ".键" 与 "[数字]" 访问器，返回 [ok, value]。
+static func _apply_accessors(v: Variant, rest: String) -> Array:
+	var i := 0
+	while i < rest.length():
+		if rest[i] == ".":
+			i += 1
+			var key := ""
+			while i < rest.length() and _is_key_char(rest[i]):
+				key += rest[i]
+				i += 1
+			if key.is_empty() or not (v is Dictionary):
+				return [false, null]
+			var dict: Dictionary = v
+			if not dict.has(key):
+				return [false, null]
+			v = dict[key]
+		elif rest[i] == "[":
+			i += 1
+			var num := ""
+			while i < rest.length() and rest[i] >= "0" and rest[i] <= "9":
+				num += rest[i]
+				i += 1
+			if i >= rest.length() or rest[i] != "]":
+				return [false, null]
+			i += 1
+			if not (v is Array) or num.is_empty():
+				return [false, null]
+			var arr: Array = v
+			var n := num.to_int()
+			if n < 0 or n >= arr.size():
+				return [false, null]
+			v = arr[n]
+		else:
+			return [false, null]
+	return [true, v]
+
+
+static func _is_key_char(c: String) -> bool:
+	return c == "_" or (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or (c >= "0" and c <= "9")
 
 
 # 按 class_name 找全局类脚本，结果懒缓存（找不到的类缓存 null，避免反复查）。

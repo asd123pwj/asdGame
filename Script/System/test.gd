@@ -1,7 +1,9 @@
 class_name Test
 extends BaseClass
 
-static var test_int: int = 5
+static var test_int := [{"value": [{"value": 5}]}] # [0].value[0].value
+static var test_int2 := {"value": [-10]}
+
 
 var char_A: Character
 var char_B: Character
@@ -53,7 +55,7 @@ func delay_loop_test() -> void:
         await Sys.sys.get_tree().create_timer(1).timeout
         
         MapSys.place(0, 5, -15, "门", "2", -1, true)
-        MsgHubCmd.send_cmd("MapSys.place 0 $Test.test_int$ -10 门 2 -1 true")
+        MsgHubCmd.send_cmd("MapSys.place 0 $Test.test_int[0].value[0].value$ $Test.test_int2.value[0]$ 门 2 -1 true")
         MsgHubCmd.send_cmd("MapSys.place --layer_id 0 --x 10 --y -10 --source_name 门 --tile_name 2 --force_space")
         MapSys.build()
         # Sys.timeSys.advance()
