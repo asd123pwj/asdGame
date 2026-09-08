@@ -1,9 +1,9 @@
-class_name MsgHubCmd
-extends MsgBus
+# class_name Msg
+# extends MsgBus
 
 
-static func send_cmd(message: Variant) -> Array:
-    return super.send("COMMAND", message)
+# static func send_cmd(message: Variant) -> Array:
+#     return super.send("COMMAND", message)
 
-static func listen_cmd(callback: Callable) -> String:
-    return super.listen("COMMAND", callback)
+# static func listen_cmd(callback: Callable) -> String:
+#     return super.listen("COMMAND", callback)

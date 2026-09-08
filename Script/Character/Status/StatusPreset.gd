@@ -104,7 +104,7 @@ func listen(char_: Character) -> void:
                 execute(char_)
                 self._attr_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type in ["Over Limit", "Within Limit"]:
@@ -115,7 +115,7 @@ func listen(char_: Character) -> void:
                 latest_message[char_] = _msg
                 self._attr_triggers[char_][listener.name] = char_.attrs.check_limitation(listener.name) == (listener.match_type == "Within Limit")
                 execute(char_)
-            msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type in [">", ">=", "<", "<=", "==", "!="]:
@@ -128,7 +128,7 @@ func listen(char_: Character) -> void:
                 var level_cur = char_.attrs.get_(listener.name)
                 self._attr_triggers[char_][listener.name] = listener.check(level_cur)
                 execute(char_)
-            msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type in [
@@ -170,7 +170,7 @@ func listen(char_: Character) -> void:
                 @warning_ignore_restore("unsafe_method_access")
                 self._attr_triggers[char_][listener.name] = listener.check(cur_, b_)
                 execute(char_)
-            msg_ID = MsgHubChar.listen_attr_changed(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
             
         elif listener.match_type == "AnyChanged":
@@ -184,7 +184,7 @@ func listen(char_: Character) -> void:
                 execute(char_)
                 self._attr_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = MsgHubChar.listen_any_attr_changed(char_, trigger_func)
+            msg_ID = Msg.listen_any_attr_changed(char_, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
         else:
             print("属性监听器类型错误: ", listener.match_type)  
@@ -203,7 +203,7 @@ func listen(char_: Character) -> void:
                 latest_message[char_] = _msg
                 self._buff_triggers[char_][listener.name] = isPresent
                 execute(char_)
-            msg_ID = MsgHubChar.listen_buff_add(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_buff_add(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
 
@@ -211,7 +211,7 @@ func listen(char_: Character) -> void:
                 latest_message[char_] = _msg
                 self._buff_triggers[char_][listener.name] = !isPresent
                 execute(char_)
-            msg_ID = MsgHubChar.listen_buff_remove(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_buff_remove(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         else:
@@ -236,7 +236,7 @@ func listen(char_: Character) -> void:
                     latest_message[char_] = _msg
                     _status_triggers[char_][listener.name] = (isSatisfied == get_(listener.name).satisfied[char_])
                     execute(char_)
-                msg_ID = MsgHubChar.listen_status_add(char_, listener.name, trigger_func)
+                msg_ID = Msg.listen_status_add(char_, listener.name, trigger_func)
                 _trigger_funcs[char_][msg_ID] = trigger_func
 
             # 两个叠加的监听器用于实时监控。
@@ -244,14 +244,14 @@ func listen(char_: Character) -> void:
                 latest_message[char_] = _msg
                 self._status_triggers[char_][listener.name] = isSatisfied
                 execute(char_)
-            msg_ID = MsgHubChar.listen_status_satisfied(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_status_satisfied(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
                 self._status_triggers[char_][listener.name] = !isSatisfied
                 execute(char_)
-            msg_ID = MsgHubChar.listen_status_unsatisfied(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_status_unsatisfied(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         else:
@@ -270,13 +270,13 @@ func listen(char_: Character) -> void:
     #         trigger_func = func(_msg): 
     #             _interaction_triggers[char_][listener.name] = isPresent
     #             execute(char_)
-    #         msg_ID = MsgHubChar.listen_behavior_add(char_, listener.name, trigger_func)
+    #         msg_ID = Msg.listen_behavior_add(char_, listener.name, trigger_func)
     #         _trigger_funcs[char_][msg_ID] = trigger_func
 
     #         trigger_func = func(_msg): 
     #             _interaction_triggers[char_][listener.name] = !isPresent
     #             execute(char_)
-    #         msg_ID = MsgHubChar.listen_behavior_remove(char_, listener.name, trigger_func)
+    #         msg_ID = Msg.listen_behavior_remove(char_, listener.name, trigger_func)
     #         _trigger_funcs[char_][msg_ID] = trigger_func
     
     #     elif listener.match_type == "Act":
@@ -285,13 +285,13 @@ func listen(char_: Character) -> void:
     #         trigger_func = func(_msg): 
     #             self._interaction_triggers[char_][listener.name] = true
     #             execute(char_)
-    #         msg_ID = MsgHubChar.listen_behavior_act(char_, listener.name, trigger_func)
+    #         msg_ID = Msg.listen_behavior_act(char_, listener.name, trigger_func)
     #         _trigger_funcs[char_][msg_ID] = trigger_func
 
     #         trigger_func = func(_msg): 
     #             self._interaction_triggers[char_][listener.name] = false;
     #             execute(char_)
-    #         msg_ID = MsgHubChar.listen_behavior_remove(char_, listener.name, trigger_func)
+    #         msg_ID = Msg.listen_behavior_remove(char_, listener.name, trigger_func)
     #         _trigger_funcs[char_][msg_ID] = trigger_func
 
 
@@ -313,14 +313,14 @@ func listen(char_: Character) -> void:
                 latest_message[char_] = _msg
                 _interaction_triggers[char_][listener.name] = isPresent
                 execute(char_)
-            msg_ID = MsgHubChar.listen_interaction_add(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_interaction_add(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
                 _interaction_triggers[char_][listener.name] = !isPresent
                 execute(char_)
-            msg_ID = MsgHubChar.listen_interaction_remove(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_interaction_remove(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
     
         elif listener.match_type == "Act":
@@ -333,14 +333,14 @@ func listen(char_: Character) -> void:
                 execute(char_)
                 self._interaction_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = MsgHubChar.listen_interaction_act(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_interaction_act(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
                 self._interaction_triggers[char_][listener.name] = false;
                 execute(char_)
-            msg_ID = MsgHubChar.listen_interaction_remove(char_, listener.name, trigger_func)
+            msg_ID = Msg.listen_interaction_remove(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
 
@@ -358,14 +358,14 @@ func listen(char_: Character) -> void:
                 latest_message[char_] = _msg
                 _key_triggers[char_][listener.name] = true
                 execute(char_)
-            msg_ID = MsgHubInput.listen_key_down(listener.name, trigger_func)
+            msg_ID = Msg.listen_key_down(listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
             
             trigger_func = func(_msg):
                 latest_message[char_] = _msg
                 _key_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = MsgHubInput.listen_key_first_up(listener.name, trigger_func)
+            msg_ID = Msg.listen_key_first_up(listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type == Enums.KeyStatus.FIRST_DOWN:
@@ -376,7 +376,7 @@ func listen(char_: Character) -> void:
                 execute(char_)
                 _key_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = MsgHubInput.listen_key_first_down(listener.name, trigger_func)
+            msg_ID = Msg.listen_key_first_down(listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type == Enums.KeyStatus.FIRST_UP:
@@ -387,7 +387,7 @@ func listen(char_: Character) -> void:
                 execute(char_)
                 _key_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = MsgHubInput.listen_key_first_up(listener.name, trigger_func)
+            msg_ID = Msg.listen_key_first_up(listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         else:
@@ -407,15 +407,15 @@ func listen(char_: Character) -> void:
                 _time_triggers[char_][listener.name] = false
                 execute(char_)
             if listener.name == "Year":
-                msg_ID = MsgHubTime.listen_advance_year(trigger_func)
+                msg_ID = Msg.listen_advance_year(trigger_func)
             elif listener.name == "Month":
-                msg_ID = MsgHubTime.listen_advance_xun(trigger_func)
+                msg_ID = Msg.listen_advance_xun(trigger_func)
             elif listener.name == "Xun":
-                msg_ID = MsgHubTime.listen_advance_xun(trigger_func)
+                msg_ID = Msg.listen_advance_xun(trigger_func)
             elif listener.name == "Day":
-                msg_ID = MsgHubTime.listen_advance_day(trigger_func)
+                msg_ID = Msg.listen_advance_day(trigger_func)
             elif listener.name == "Hour":
-                msg_ID = MsgHubTime.listen_advance_hour(trigger_func)
+                msg_ID = Msg.listen_advance_hour(trigger_func)
             else:
                 print("时间监听器名称错误: ", listener.name)
 
@@ -435,13 +435,13 @@ func listen(char_: Character) -> void:
             execute(char_)
             self._detect_triggers[char_] = false
             execute(char_)
-        msg_ID = MsgHubChar.listen_status_detected(char_, name, trigger_func)
+        msg_ID = Msg.listen_status_detected(char_, name, trigger_func)
         _trigger_funcs[char_][msg_ID] = trigger_func
         # 外部检测丢失信号
         # trigger_func = func(_msg):
         #     self._detect_triggers[char_] = false
         #     execute(char_)
-        # msg_ID = MsgHubChar.listen_status_undetected(char_, name, trigger_func)
+        # msg_ID = Msg.listen_status_undetected(char_, name, trigger_func)
         # 默认未启用
         _detect_triggers[char_] = false
 
@@ -479,12 +479,12 @@ func execute(char_: Character, force: bool = false) -> bool:
             satisfied[char_] = match_any
     
     if satisfied[char_] and (not enabled_ori or force):
-        MsgHubChar.send_status_satisfied(char_, self.name)
+        Msg.send_status_satisfied(char_, self.name)
 
     if auto_reset:
         satisfied[char_] = false
-        MsgHubChar.send_status_unsatisfied(char_, self.name)
+        Msg.send_status_unsatisfied(char_, self.name)
     elif (not satisfied[char_]) and (enabled_ori or force):
-        MsgHubChar.send_status_unsatisfied(char_, self.name)
+        Msg.send_status_unsatisfied(char_, self.name)
 
     return satisfied[char_]

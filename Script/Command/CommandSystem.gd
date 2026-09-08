@@ -15,7 +15,7 @@ static var _commands: Dictionary = {}   # cmd_name -> { callable, arg_meta }
 func _init() -> void:
 	if not Sys.sysCfg.lazy_command_registration:
 		_scan_all_sources()
-	MsgHubCmd.listen_cmd(
+	Msg.listen_cmd(
 		func(message: Variant) -> Variant:
 			return execute(str(message))
 	)

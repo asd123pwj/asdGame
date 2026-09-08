@@ -29,7 +29,7 @@ func _on_body_entered(body: Node):
         if char_:
             # print(char_.name)
             pass  
-    MsgHubChar.send_collision_enter(me, name, body)
+    Msg.send_collision_enter(me, name, body)
 
 func _on_body_exited(body: Node):
     if body.has_meta("character"):
@@ -37,4 +37,4 @@ func _on_body_exited(body: Node):
         if char_:
             # print(char_.name)
             pass  
-    MsgHubChar.send_collision_exit(me, name, body)
+    Msg.send_collision_exit(me, name, body)

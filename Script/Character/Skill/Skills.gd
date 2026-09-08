@@ -33,7 +33,7 @@ func add_skill(skill_name: String) -> Enums.Code:
     var skill = SkillPreset.get_(skill_name)
     skills[skill_name] = skill
     skill.listen(me)
-    MsgHubChar.send_skill_add(me, skill_name)
+    Msg.send_skill_add(me, skill_name)
     return Enums.Code.OK
 
 func remove_skills(skill_name: Array[String]) -> Array[Enums.Code]:
@@ -47,7 +47,7 @@ func remove_skill(skill_name: String) -> Enums.Code:
         return Enums.Code.NOT_MODIFIED
     skills[skill_name].unlisten(me)
     skills.erase(skill_name)
-    MsgHubChar.send_skill_remove(me, skill_name)
+    Msg.send_skill_remove(me, skill_name)
     return Enums.Code.OK
 
 func check_skill(skill_name: String) -> bool:

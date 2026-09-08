@@ -31,7 +31,7 @@ func add_buff(buff_name: String) -> Enums.Code:
     # TODO: 每次添加Buff都会计算，这必然冗余，但不一定浪费性能，先放着
     init_attribute(buff.category, buff.value_type)
     consume_buff(buff) # 添加buff时会使用buff对属性初始化，因此需要consume
-    MsgHubChar.send_buff_add(me, buff_name)
+    Msg.send_buff_add(me, buff_name)
     return Enums.Code.OK
 
 func remove_buffs(buff_names: Array[String]) -> Array[Enums.Code]:
@@ -48,7 +48,7 @@ func remove_buff(buff_name: String) -> Enums.Code:
     # TODO: 每次删除Buff都会计算，这必然冗余，但不一定浪费性能，先放着
     # print(me.name, " remove_buff: ", buff.category, buff.value_type, buff.name)
     init_attribute(buff.category, buff.value_type)
-    MsgHubChar.send_buff_remove(me, buff.name)
+    Msg.send_buff_remove(me, buff.name)
     return Enums.Code.OK
 
 func check_buff(buff_name: String) -> bool:
@@ -175,7 +175,7 @@ func _set_(
     if value_new != value_before and impact_type == Enums.ValueType.CUR:
         Utils.set_dict(attributes_changed_by_how, [category], changed_by_how)
         Utils.set_dict(attributes_changed_by_who, [category], changed_by_who)
-        MsgHubChar.send_attr_changed(me, category)
+        Msg.send_attr_changed(me, category)
 
     return value_new - value_before
 

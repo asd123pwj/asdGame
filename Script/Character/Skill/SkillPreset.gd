@@ -37,12 +37,12 @@ func listen(char_: Character) -> void:
     _trigger_funcs[char_] = {}
     var trigger_func = func (_msg) -> void:
         skill.in_queue(char_, config)
-    var msg_ID = MsgHubChar.listen_status_satisfied(char_, dependence_status, trigger_func)
+    var msg_ID = Msg.listen_status_satisfied(char_, dependence_status, trigger_func)
     _trigger_funcs[char_][msg_ID] = trigger_func
 
     trigger_func = func (_msg) -> void:
         skill.out_queue(char_)
-    msg_ID = MsgHubChar.listen_status_unsatisfied(char_, dependence_status, trigger_func)
+    msg_ID = Msg.listen_status_unsatisfied(char_, dependence_status, trigger_func)
     _trigger_funcs[char_][msg_ID] = trigger_func
 
 func unlisten(char_: Character) -> void:

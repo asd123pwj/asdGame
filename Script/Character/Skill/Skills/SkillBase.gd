@@ -16,7 +16,7 @@ func out_queue(_char: Character) -> void:
 
 func act(_char: Character, _delta: float, _config: Array) -> bool:
     if _act(_char, _delta, _config):
-        MsgHubChar.send_behavior_act(_char, CLASS_NAME)
+        Msg.send_skill_act(_char, CLASS_NAME)
         return true
     return false
 

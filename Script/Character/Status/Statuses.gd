@@ -38,7 +38,7 @@ func add_status(status_name: String) -> Enums.Code:
     var status: StatusPreset = StatusPreset.get_(status_name)
     statuses[status_name] = status
     status.listen(me)
-    MsgHubChar.send_status_add(me, status_name)
+    Msg.send_status_add(me, status_name)
     return Enums.Code.OK
 
 func remove_statuses(status_name: Array[String]) -> Array[Enums.Code]:
@@ -52,7 +52,7 @@ func remove_status(status_name: String) -> Enums.Code:
         return Enums.Code.NOT_MODIFIED
     statuses[status_name].unlisten(me)
     statuses.erase(status_name)
-    MsgHubChar.send_status_remove(me, status_name)
+    Msg.send_status_remove(me, status_name)
     return Enums.Code.OK
 
 func check_exist(status_name: String) -> bool:

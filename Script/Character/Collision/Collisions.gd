@@ -25,7 +25,7 @@ func add_collision(collision_name: String) -> Enums.Code:
     var collision = CollisionPreset.get_(collision_name)
     collisions[collision_name] = collision
     collision.listen(me)
-    MsgHubChar.send_collision_add(me, collision_name)
+    Msg.send_collision_add(me, collision_name)
     return Enums.Code.OK
 
 func remove_collisions(collision_name: Array[String]) -> Array[Enums.Code]:
@@ -39,7 +39,7 @@ func remove_collision(collision_name: String) -> Enums.Code:
         return Enums.Code.NOT_MODIFIED
     # collisions[collision_name].unlisten(me)
     collisions.erase(collision_name)
-    MsgHubChar.send_collision_remove(me, collision_name)
+    Msg.send_collision_remove(me, collision_name)
     return Enums.Code.OK
 
 func check_collision(collision_name: String) -> bool:

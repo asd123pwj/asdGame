@@ -21,14 +21,14 @@ static func _input(event: InputEvent):
 
 static func _process(_delta: float) -> void:
     for key in keys_downing:
-        MsgHubInput.send_key_down(key)
+        Msg.send_key_down(key)
 
 static func _send_key_status(key, isDown: bool):
     if isDown:
         if not key in keys_downing:
             keys_downing.append(key)
-            MsgHubInput.send_key_first_down(key)
+            Msg.send_key_first_down(key)
     else:
         keys_downing.erase(key)
-        MsgHubInput.send_key_first_up(key)
+        Msg.send_key_first_up(key)
     

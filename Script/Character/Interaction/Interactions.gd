@@ -21,7 +21,7 @@ func add_interaction(interaction_name: String) -> Enums.Code:
     var interaction = InteractionPreset.get_(interaction_name)
     interactions[interaction_name] = interaction
     interaction.listen(me)
-    MsgHubChar.send_interaction_add(me, interaction_name)
+    Msg.send_interaction_add(me, interaction_name)
     return Enums.Code.OK
 
 func remove_interactions(interactions_name: Array[String]) -> Array[Enums.Code]:
@@ -35,7 +35,7 @@ func remove_interaction(interaction_name: String) -> Enums.Code:
         return Enums.Code.NOT_MODIFIED
     interactions[interaction_name].unlisten(me)
     interactions.erase(interaction_name)
-    MsgHubChar.send_interaction_remove(me, interaction_name)
+    Msg.send_interaction_remove(me, interaction_name)
     return Enums.Code.OK
 
 func check_exist(interaction_name: String) -> bool:

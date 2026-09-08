@@ -39,7 +39,7 @@ func add_inventory(inventory_name: String) -> Enums.Code:
     # 这里的是类型名，而非配置名，以方便不同配置使用同一个类型的存储空间
     inventories[inventory_preset.inventory_name] = inventory_preset.inventory 
     inventory_preset.listen(me)
-    MsgHubChar.send_inventory_add(me, inventory_name)
+    Msg.send_inventory_add(me, inventory_name)
     return Enums.Code.OK
 
 func remove_inventories(inventories_name: Array[String]) -> Array[Enums.Code]:
@@ -52,7 +52,7 @@ func remove_inventory(inventory_name: String) -> Enums.Code:
     if not inventory_name in inventories:
         return Enums.Code.NOT_MODIFIED
     inventories.erase(inventory_name)
-    MsgHubChar.send_inventory_remove(me, inventory_name)
+    Msg.send_inventory_remove(me, inventory_name)
     return Enums.Code.OK
 
 func check_inventory(inventory_name: String) -> bool:

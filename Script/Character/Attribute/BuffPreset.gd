@@ -44,7 +44,7 @@ func consume(char_: Character) -> void:
         if uses[char_] >= max_uses:
             char_.attrs.remove_buff(name)
         uses[char_] += 1
-        MsgHubChar.send_buff_consume(char_, name) # 注意消息发送在计算前
+        Msg.send_buff_consume(char_, name) # 注意消息发送在计算前
 
 func apply(value: int, char_: Character) -> int:
     var value_offset: int

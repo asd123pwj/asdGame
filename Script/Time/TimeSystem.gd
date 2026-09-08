@@ -28,7 +28,7 @@ static func _process(delta: float) -> void:
     if period > 0.0 and _period_accum >= period:
         _period_accum -= period   # 保留余量，避免多帧累积丢时间
         advance()
-    MsgHubTime.send_tick()
+    Msg.send_tick()
     
 
 static func advance() -> void:
@@ -51,9 +51,9 @@ static func advance() -> void:
                 year_changed = true
     TimeFormat.update()
     if year_changed:
-        MsgHubTime.send_advance_year(year)
+        Msg.send_advance_year(year)
     if month_changed:
-        MsgHubTime.send_advance_month(month)
+        Msg.send_advance_month(month)
     if day_changed:
-        MsgHubTime.send_advance_day(day)
-    MsgHubTime.send_advance_hour(hour)
+        Msg.send_advance_day(day)
+    Msg.send_advance_hour(hour)
