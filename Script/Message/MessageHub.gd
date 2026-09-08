@@ -174,6 +174,12 @@ static func listen_key_first_up(key: Variant, callback: Callable) -> String:
 """
 static func send_cmd(message: Variant) -> Array:
     return super.send("COMMAND", message)
+# 快速取多条指令的结果
+static func send_cmd0(message: Variant) -> Variant:
+    return send_cmd(message)[0]
+# 快速取单条指令的结果
+static func send_cmd00(message: Variant) -> Variant:
+    return send_cmd(message)[0][0]
 
 static func listen_cmd(callback: Callable) -> String:
     return super.listen("COMMAND", callback)

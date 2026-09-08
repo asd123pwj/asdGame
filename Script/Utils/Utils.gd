@@ -30,3 +30,6 @@ static func get_or_set_dict(dict: Dictionary, keys: Array, default_value: Varian
     if not current.has(last_key):
         current[last_key] = default_value
     return current[last_key]
+
+static func identity(x: Variant) -> Variant:
+    return x

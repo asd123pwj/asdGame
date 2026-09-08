@@ -28,7 +28,7 @@ func down_a(_msg) -> void:
 
 
 func run() -> void:
-    char_A = Msg.send_cmd("CharSys.spawn 人类")[0][0]
+    char_A = Msg.send_cmd00("CharSys.spawn 人类")
     # char_A = CharSys.spawn("人类")
     char_B = CharSys.spawn("兔子")
     char_C = CharSys.spawn("草药")
@@ -40,14 +40,15 @@ func run() -> void:
 
 func get_char_info(char_: Character) -> void:
     var info: String = char_.name
-    for attr_type_name in char_.attrs.attributes.keys():
+    # for attr_type_name in char_.attrs.attributes.keys():
+    for attr_type_name in Msg.send_cmd00("&@" + str(char_.ID) + ".attrs.attributes").keys():
         info += " %s: %d" % [attr_type_name, char_.attrs.get_(attr_type_name)]
     print(info)
 
 
 func delay_loop_test() -> void:
     Msg.listen_advance_hour(when_time_advance)
-    # get_char_info(char_A)
+    get_char_info(char_A)
     # get_char_info(char_B)
     Msg.send_status_detected(char_A, "Detect=>Nourish")
 

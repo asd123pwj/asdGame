@@ -1,6 +1,9 @@
 class_name BaseClass
 extends RefCounted
 
+
+var ID: int = get_instance_id()
+
 """ ---------- 指令化函数基类 ---------- """
 # 有类MapSys，继承于BaseClass
 # MapSys有静态方法place，参数如下：

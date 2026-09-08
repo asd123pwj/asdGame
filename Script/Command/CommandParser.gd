@@ -35,6 +35,13 @@ static func parse(input: String) -> Dictionary:
 	input = input.strip_edges()
 	if input.is_empty():
 		input = "NOCOMMAND"
+	# & 前缀 = 取值：整条命令是一个取值路径/表达式，直接求值返回其值。
+	#   &Test.int1       读静态成员值
+	#   &@ID.hp          读实例属性
+	#   &Test.func(1)    调函数并把结果作为值
+	if input.begins_with("&"):
+		var eval := _eval_expr("$" + input.substr(1))
+		return { "is_value": true, "name": "", "value": eval[1] if eval[0] else null }
 	var tokens := _tokenize(input)
 	if tokens.is_empty():
 		tokens = ["NOCOMMAND"]
@@ -137,6 +144,9 @@ static func _convert(raw: String):
 #   $类名.函数(参数, ...)    调函数（参数可用逗号分隔、可递归 $ 表达式，如 $Test.test_func($Test.int1, -1)）
 static func _eval_expr(s: String) -> Array:
 	var body := s.substr(1)   # 去掉前导 $
+	# 实例访问：$@ID.成员 或 $@ID.方法(...)
+	if body.begins_with("@"):
+		return _resolve_instance(body.substr(1))
 	# 找第一个 "(" 判断是否为函数调用
 	var paren := _find_top_level_paren(body)
 	if paren < 0:
@@ -162,6 +172,112 @@ static func _eval_expr(s: String) -> Array:
 		args.append(av[1])
 	var callable: Callable = resolved_func[1]
 	return [true, callable.callv(args)]
+
+
+# 实例访问：inst_expr 形如 "ID.成员..." 或 "ID.方法(...)"。
+# 用 Godot 内建 instance_from_id(ID) 取回实例，再做链式访问。
+static func _resolve_instance(inst_expr: String) -> Array:
+	var i := 0
+	var id_str := ""
+	while i < inst_expr.length() and inst_expr[i] != "." and inst_expr[i] != "[" and inst_expr[i] != "(":
+		id_str += inst_expr[i]
+		i += 1
+	if id_str.is_empty() or not id_str.is_valid_int():
+		return [false, null]
+	var obj := instance_from_id(id_str.to_int())
+	if obj == null:
+		return [false, null]
+	var rest := inst_expr.substr(i)   # 形如 ".hp" 或 ".move(1)" 或 ""
+	return _walk_chain(obj, rest)
+
+
+# 通用链式访问（作用于实例/对象/字典/数组），返回 [ok, value]。
+# rest 形如 ".hp" / ".attrs.hp" / ".move(1).x" / "[0]"，
+#   .名称        Object.get 或 字典键
+#   .名称(...)   调用方法（参数递归求值 $ 表达式）
+#   [数字]       数组下标
+static func _walk_chain(v: Variant, rest: String) -> Array:
+	var i := 0
+	while i < rest.length():
+		var c := rest[i]
+		if c == ".":
+			i += 1
+			var seg := ""
+			while i < rest.length() and rest[i] != "." and rest[i] != "[" and rest[i] != "(":
+				seg += rest[i]
+				i += 1
+			if seg.is_empty():
+				return [false, null]
+			# 方法调用（seg 后紧跟 (）
+			if i < rest.length() and rest[i] == "(":
+				if not (v is Object):
+					return [false, null]
+				var obj: Object = v
+				var args_end := _match_paren(rest, i)
+				if args_end < 0:
+					return [false, null]
+				var args_str := rest.substr(i + 1, args_end - i - 1)
+				var arg_parts := _split_top_level_args(args_str)
+				var args: Array = []
+				for ap_raw in arg_parts:
+					var ap: String = ap_raw
+					var trimmed := ap.strip_edges()
+					if trimmed.is_empty():
+						continue
+					var av := _eval_arg(trimmed)
+					if not av[0]:
+						return [false, null]
+					args.append(av[1])
+				if not obj.has_method(seg):
+					return [false, null]
+				v = obj.callv(seg, args)
+				i = args_end + 1
+			else:
+				# 读属性 / 字典键
+				if v is Object:
+					var obj2: Object = v
+					if not seg in obj2:
+						return [false, null]
+					v = obj2.get(seg)
+				elif v is Dictionary:
+					var d: Dictionary = v
+					if not d.has(seg):
+						return [false, null]
+					v = d[seg]
+				else:
+					return [false, null]
+		elif c == "[":
+			i += 1
+			var num := ""
+			while i < rest.length() and rest[i] >= "0" and rest[i] <= "9":
+				num += rest[i]
+				i += 1
+			if i >= rest.length() or rest[i] != "]":
+				return [false, null]
+			i += 1
+			if not (v is Array) or num.is_empty():
+				return [false, null]
+			var arr: Array = v
+			var n := num.to_int()
+			if n < 0 or n >= arr.size():
+				return [false, null]
+			v = arr[n]
+		else:
+			return [false, null]
+	return [true, v]
+
+
+# 找到从 start（指向 '('）开始配对的 ')' 下标；未匹配返回 -1。
+static func _match_paren(s: String, start: int) -> int:
+	var depth := 0
+	for j in range(start, s.length()):
+		if s[j] == "(":
+			depth += 1
+		elif s[j] == ")":
+			depth -= 1
+			if depth == 0:
+				return j
+	return -1
 
 
 # 求值一个参数：可能是 $ 表达式、数字、bool，或裸字符串。

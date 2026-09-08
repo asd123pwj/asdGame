@@ -16,13 +16,15 @@ var body: CharacterBody2D
 
 static var _we: Dictionary[int, Character] = {}
 
-var ID: int = get_instance_id()
 
 func _init(archetype_type: String, name: String="") -> void:
     _we[ID] = self
     self.name = name if name != "" else archetype_type
     _init_from_archetype(archetype_type)
     init_done()
+
+static func get_(id: int) -> Character:
+    return _we[id]
 
 func physics_process(delta: float) -> void:
     skills.physics_process(delta)

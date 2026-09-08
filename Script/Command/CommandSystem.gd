@@ -1,8 +1,28 @@
-## 继承BaseClass的类，其静态方法可以用"类名.方法名 参数"作为命令调用。
-##     MapSys.place 0 5 -10 门 2 -1 true
-##     MapSys.place --layer_id 0 --x 10 --source_name 门 --tile_name 2 --force_space
-## 支持使用静态变量
-##
+## 继承于BaseClass的类的属性/方法可作为指令调用。
+##     class_name Test
+##     static var test_int := [{"value": [{"value": 5}]}] # [0].value[0].value
+##     static var test_int2 := {"value": [-10]}
+##     static var a := 0
+##     static func test_func(a: int, b: int) -> int:
+##		   return a + b
+##     var char_a := Character.new()
+## 使用静态函数：
+##     Msg.send_cmd("MapSys.place 0 5 -10 门 2 -1 true")
+##	   Msg.send_cmd("MapSys.place --layer_id 0 --x 10 --source_name 门 --tile_name 2 --force_space")
+## 嵌套使用静态函数/变量，参数前加$，
+##   下面为使用静态变量，访问字典用".key"，访问数组用"[index]"：
+##     Msg.send_cmd("MapSys.place $Test.a 5 -10 门 2 -1 true")
+##     Msg.send_cmd("MapSys.place $Test.a $Test.test_int[0].value[0].value $Test.test_int2.value[0] 门 2 -1 true")
+##   下面为使用静态函数，用()包裹参数：
+##     Msg.send_cmd("MapSys.place 0 $Test.test_func($Test.a, 4) $Test.test_int2.value[0] 门 2 -1 true")
+## 返回变量值，开头用@：
+##     Msg.send_cmd("&Test.a")
+## 使用实例，用"@实例ID"来代替"类名"，其它与类的使用一致：
+##     Msg.send_cmd("&@Test.char_a")
+## 调用单调指令返回的结果：
+## 	   Msg.send_cmd00("&@Test.char_a")
+## 调用多条指令返回的结果，[结果1, 结果2]（未测试）：
+## 	   Msg.send_cmd0("&@Test.char_a")
 class_name CmdSys
 extends BaseClass
 
@@ -29,8 +49,6 @@ static func _scan_all_sources() -> void:
 	for e in entries:
 		by_name[e["class"]] = e
 	for cls in entries:
-		if cls["class"] == "CmdSys":      # 排除自身，避免自我注册
-			continue
 		if not _descends_from(cls, "BaseClass", by_name):
 			continue
 		var script: GDScript = load(cls["path"])
@@ -58,8 +76,8 @@ static func _register_source_methods(class_name_: String, script: GDScript) -> v
 	for m_raw in script.get_script_method_list():
 		var m: Dictionary = m_raw
 		var method_name: String = m["name"]
-		if method_name.begins_with("_"):
-			continue
+		# if method_name.begins_with("_"):
+		# 	continue
 		# 只收 static（get_script_method_list 的 flags 含 METHOD_FLAG_STATIC）
 		if m.get("flags", 0) & METHOD_FLAG_STATIC == 0:
 			continue
@@ -93,6 +111,9 @@ static func execute(command_str: String) -> Array:
 		if cmd.is_empty():
 			continue
 		var parsed: Dictionary = CommandParser.parse(cmd)
+		if parsed.get("is_value", false):
+			results.append(parsed.get("value"))
+			continue
 		var name: String = parsed["name"]
 		if not _commands.has(name):
 			_lazy_load(name)
