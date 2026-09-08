@@ -16,8 +16,8 @@ func _init() -> void:
 	if not Sys.sysCfg.lazy_command_registration:
 		_scan_all_sources()
 	MsgHubCmd.listen_cmd(
-		func(message: Variant) -> void:
-			execute(str(message))
+		func(message: Variant) -> Variant:
+			return execute(str(message))
 	)
 
 
@@ -84,7 +84,10 @@ static func _make_arg_meta(m: Dictionary) -> Array:
 		})
 	return arg_meta
 
-static func execute(command_str: String) -> void:
+# 执行命令，返回每条子命令的结果列表（元素 = 对应函数的返回值，如 CharSys.spawn 返回 Character）。
+# 多条命令用 '\v' 分隔，结果按序一一对应；未找到的命令在对应位置放错误字符串。
+static func execute(command_str: String) -> Array:
+	var results: Array = []
 	for single in command_str.split("\v"):
 		var cmd: String = single.strip_edges()
 		if cmd.is_empty():
@@ -95,11 +98,14 @@ static func execute(command_str: String) -> void:
 			_lazy_load(name)
 		var desc_raw: Variant = _commands.get(name)
 		if desc_raw == null:
-			print("No command: ", name)
+			var err: String = "No command: " + name
+			print(err)
+			results.append(err)
 			continue
 		var desc: Dictionary = desc_raw
 		var callable: Callable = desc["callable"]
-		callable.callv(_build_args(desc["arg_meta"], parsed))
+		results.append(callable.callv(_build_args(desc["arg_meta"], parsed)))
+	return results
 
 
 # 懒注册：命令形如 "类名.方法名"，据此定位并加载宿主类脚本，注册其命令。

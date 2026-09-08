@@ -6,36 +6,36 @@ extends MsgBus
 static func _format_ID(type: String) -> String:
     return format_ID(["TIME", type])
 
-static func _send(type: String, message: Variant) -> Enums.Code:
+static func _send(type: String, message: Variant) -> Array:
     return send(_format_ID(type), message)
 
 static func _listen(type: String, callback: Callable) -> String:
     return listen(_format_ID(type), callback)
 
 """ ---------- ADVANCE ---------- """
-static func send_tick(message: Variant = null) -> Enums.Code:
+static func send_tick(message: Variant = null) -> Array:
     return _send("TICK", message)
 
 static func listen_tick(callback: Callable) -> String:
     return _listen("TICK", callback)
 
 """ ---------- ADVANCE ---------- """
-static func send_advance_year(message: Variant) -> Enums.Code:
+static func send_advance_year(message: Variant) -> Array:
     return _send("ADVANCE_YEAR", message)
 
-static func send_advance_month(message: Variant) -> Enums.Code:
+static func send_advance_month(message: Variant) -> Array:
     return _send("ADVANCE_MONTH", message)
 
-static func send_advance_xun(message: Variant) -> Enums.Code:
+static func send_advance_xun(message: Variant) -> Array:
     return _send("ADVANCE_XUN", message)
 
-static func send_advance_day(message: Variant) -> Enums.Code:
+static func send_advance_day(message: Variant) -> Array:
     return _send("ADVANCE_DAY", message)
 
-static func send_advance_hour(message: Variant) -> Enums.Code:
+static func send_advance_hour(message: Variant) -> Array:
     return _send("ADVANCE_HOUR", message)
 
-# static func send_advance(message: Variant) -> Enums.Code:
+# static func send_advance(message: Variant) -> Array:
 #     return _send("ADVANCE", message)
 
 static func listen_advance_year(callback: Callable) -> String:

@@ -1,6 +1,6 @@
 class_name Interaction_CostHeal
 extends InteractionBase
 
-func interact(patient: Character, healer: Character) -> Enums.Code:
+func interact(patient: Character, healer: Character) -> Array:
     var result = cost(patient, patient, healer, "Health", "Health", "Health")
-    return result.code
+    return [result]

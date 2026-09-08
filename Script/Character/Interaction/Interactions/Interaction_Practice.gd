@@ -1,7 +1,7 @@
 class_name Interaction_Practice
 extends InteractionBase
 
-func interact(user: Character, attr_name) -> Enums.Code:
+func interact(user: Character, attr_name) -> Array:
     # print(user.name, "成长", attr_name)
     # 先用配置指定的属性名，没有则使用检测传入的属性名
     var str_attr_name: String
@@ -15,4 +15,4 @@ func interact(user: Character, attr_name) -> Enums.Code:
     if (result.code == Enums.Code.OK):
         # print(str_attr_name, "Practice", result.ori, "=>", result.new)
         pass
-    return result.code
+    return [result]

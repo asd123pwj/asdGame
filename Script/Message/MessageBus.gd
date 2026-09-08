@@ -21,13 +21,14 @@ static func unlisten(id: String, receiver: Callable) -> void:
     if _nodes[id].receivers.is_empty():
         _nodes.erase(id)
 
-static func send(id: String, message: Variant) -> Enums.Code:
+static func send(id: String, message: Variant) -> Array:
     if not _nodes.has(id):
-        return Enums.Code.NOT_FOUND
+        return []
     _nodes[id]["message"] = message
+    var result := []
     for receiver in _nodes[id].receivers:
-        receiver.call(message)
-    return Enums.Code.OK
+        result.append(receiver.call(message))
+    return result
 
 static func get_message(id: String) -> Variant:
     if not _nodes.has(id):

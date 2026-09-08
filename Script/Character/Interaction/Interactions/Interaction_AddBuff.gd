@@ -3,7 +3,6 @@ extends InteractionBase
 
 
 
-func interact(user: Character, _none) -> Enums.Code:
-    user.attrs.add_buff(config)
-    return Enums.Code.OK
+func interact(user: Character, _none) -> Array:
+    return [user.attrs.add_buff(config)]
     

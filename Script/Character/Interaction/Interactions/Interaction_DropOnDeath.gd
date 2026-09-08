@@ -1,8 +1,8 @@
 class_name Interaction_DropOnDeath
 extends InteractionBase
 
-func interact(me: Character, _target: Character) -> Enums.Code:
+func interact(me: Character, _target: Character) -> Array:
     for race in me.inventories.get_DeadDrop():
         # CharSys.spawn(race)
         print("BehaviorDropOnDeath: ", race.name)
-    return Enums.Code.OK
+    return [Enums.Code.OK]

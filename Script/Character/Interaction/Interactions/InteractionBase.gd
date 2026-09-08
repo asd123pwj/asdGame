@@ -10,8 +10,8 @@ func _init(name: String, config) -> void:
 
 
 
-func interact(_source: Character, _target) -> Enums.Code:
-    return Enums.Code.NULL
+func interact(_source: Character, _target) -> Array:
+    return []
 
 ## 攻击比防御高(isMax=True)，则降低(isPositive=False)生命，降低值为攻击防御差值
 func attack(char_source: Character, char_compare: Character, char_target: Character, source_attr_category: String, compare_attr_category: String, target_attr_category: String) -> ChangeResult:

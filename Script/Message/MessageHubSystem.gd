@@ -6,24 +6,24 @@ extends MsgBus
 static func _format_ID(type: String) -> String:
     return format_ID(["SYS", type])
 
-static func _send(type: String, message: Variant) -> Enums.Code:
+static func _send(type: String, message: Variant) -> Array:
     return send(_format_ID(type), message)
 
 static func _listen(type: String, callback: Callable) -> String:
     return listen(_format_ID(type), callback)
 
 """ ---------- Command ---------- """
-static func send_command(message: Variant) -> Enums.Code:
+static func send_command(message: Variant) -> Array:
     return _send("COMMAND", message)
 
 """ ---------- Spawn or Destory ---------- """
-static func send_char_create(char_: Character) -> Enums.Code:
+static func send_char_create(char_: Character) -> Array:
     return _send("CHAR_CREATE", char_)
 
-static func send_spawn(char_: Character) -> Enums.Code:
+static func send_spawn(char_: Character) -> Array:
     return _send("SPAWN", char_)
 
-static func send_destory(char_: Character) -> Enums.Code:
+static func send_destory(char_: Character) -> Array:
     return _send("DESTORY", char_)
 
 

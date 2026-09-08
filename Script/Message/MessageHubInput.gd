@@ -9,12 +9,12 @@ static func _format_ID(key: Variant, status: Enums.KeyStatus) -> String:
     else:
         return format_ID(["Input", str(key), str(status)])
 
-static func _send(key: Variant, status: Enums.KeyStatus) -> Enums.Code:
-    var code =  send(_format_ID(key, status), [key, status])
+static func _send(key: Variant, status: Enums.KeyStatus) -> Array:
+    var results := send(_format_ID(key, status), [key, status])
     # 这个写完我还没测试过，或者说，所有unlisten我都没测试过
-    if (code == Enums.Code.NOT_FOUND) and (typeof(key) == TYPE_ARRAY):
+    if results.is_empty() and (typeof(key) == TYPE_ARRAY):
         InputCombo.unlisten(key)
-    return code
+    return results
         
 static func _listen(key: Variant, status: Enums.KeyStatus, callback: Callable) -> String:
     if typeof(key) == TYPE_ARRAY:
@@ -22,16 +22,16 @@ static func _listen(key: Variant, status: Enums.KeyStatus, callback: Callable) -
     return listen(_format_ID(key, status), callback)
 
 """ ---------- Single Key ---------- """
-static func send_key_down(key: Variant) -> Enums.Code:
+static func send_key_down(key: Variant) -> Array:
     return _send(key, Enums.KeyStatus.DOWN)
 
-static func send_key_first_down(key: Variant) -> Enums.Code:
+static func send_key_first_down(key: Variant) -> Array:
     return _send(key, Enums.KeyStatus.FIRST_DOWN)
 
-# static func send_key_up(key: Variant) -> Enums.Code:
+# static func send_key_up(key: Variant) -> Array:
 #     return _send(key, Enums.KeyStatus.UP)
 
-static func send_key_first_up(key: Variant) -> Enums.Code:
+static func send_key_first_up(key: Variant) -> Array:
     return _send(key, Enums.KeyStatus.FIRST_UP)
 
 static func listen_key_down(key: Variant, callback: Callable) -> String:

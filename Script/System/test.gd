@@ -26,7 +26,8 @@ func down_a(_msg) -> void:
 
 
 func run() -> void:
-    char_A = CharSys.spawn("人类")
+    char_A = MsgHubCmd.send_cmd("CharSys.spawn 人类")[0][0]
+    # char_A = CharSys.spawn("人类")
     char_B = CharSys.spawn("兔子")
     char_C = CharSys.spawn("草药")
     # char_B.inventories.print_contents("DeadDrop")
@@ -49,7 +50,6 @@ func delay_loop_test() -> void:
     MsgHubChar.send_status_detected(char_A, "Detect=>Nourish")
 
     await Sys.sys.get_tree().create_timer(1).timeout
-    MsgHubCmd.send_cmd("CharSys.spawn 人类")
     # for i in range(1000):
     while true:
         await Sys.sys.get_tree().create_timer(1).timeout

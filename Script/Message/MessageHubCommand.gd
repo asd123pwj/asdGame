@@ -2,7 +2,7 @@ class_name MsgHubCmd
 extends MsgBus
 
 
-static func send_cmd(message: Variant) -> Enums.Code:
+static func send_cmd(message: Variant) -> Array:
     return super.send("COMMAND", message)
 
 static func listen_cmd(callback: Callable) -> String:
