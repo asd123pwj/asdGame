@@ -1,12 +1,5 @@
 class_name MessageNode
 extends BaseClass
 
-var receivers: Array[Callable]
-var message: Variant
-
-func _init():
-    receivers = []
-    message = null
-
-func check_not_empty() -> bool:
-    return receivers.size() > 0
+var receivers: Array[Callable] = []
+var message: Variant = null
