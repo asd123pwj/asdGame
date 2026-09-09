@@ -34,8 +34,43 @@ func run() -> void:
     char_C = CharSys.spawn("草药")
     # char_B.inventories.print_contents("DeadDrop")
     print(Sys.sysCfg.random_seed)
+    ui_test()
     @warning_ignore("missing_await")
     delay_loop_test()
+
+
+func ui_test() -> void:
+    # UI 最小原型：从 UIPreset_Basic.values 取 MiniHUD 描述，UiBuilder 生成 Control 树并显示。
+    var preset: UIPreset_Basic = UIPreset_Basic.new()
+    var desc: Dictionary = {}
+    for v in preset.values:
+        if v.get("name", "") == "MiniHUD":
+            desc = v
+            break
+    if desc.is_empty():
+        print("UiBuilder: 未找到 MiniHUD 描述")
+        return
+    var r: Array = UiBuilder.build(desc, { "parent_style": {}, "track": null })
+    if not r[0]:
+        print("UiBuilder: 构建失败")
+        return
+    var root: Control = r[1]
+    _dump_ui(root, 0)
+
+    # 挂到主场景显示（临时 CanvasLayer）
+    var layer: CanvasLayer = CanvasLayer.new()
+    Sys.sys.get_tree().current_scene.add_child(layer)
+    layer.add_child(root)
+
+
+func _dump_ui(node: Node, depth: int) -> void:
+    var pad: String = ""
+    for i in depth:
+        pad += "  "
+    print(pad, node.get_class(), " / ", node.name)
+    for c in node.get_children():
+        var child: Node = c
+        _dump_ui(child, depth + 1)
 
 
 func get_char_info(char_: Character) -> void:
