@@ -18,4 +18,4 @@
   3. 加 `CollisionShape2D`(矩形，尺寸=精灵)
   4. 挂到 `current_scene`
   - 返回 body。
-- 供谁调用：`Character.create_body`(按 archetype.bodies[0] 取预设建 body)；`body` 之后设 `meta("character", self)` 供碰撞反查。
+- 供谁调用：`Character.ensure_body`(延后生成：按 `archetype.bodies[0]` 取预设建 body，未配 `bodies` 则留空返回 `null`)；`body` 之后设 `meta("character", self)` 供碰撞反查。

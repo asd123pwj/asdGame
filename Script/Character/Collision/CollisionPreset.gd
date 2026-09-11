@@ -32,3 +32,7 @@ static func get_(name: String) -> CollisionPreset:
 func listen(char_: Character) -> void:
     @warning_ignore("unsafe_method_access")
     collision_objs[char_] = collision.new(char_, name, config)
+
+func attach(char_: Character) -> void:
+    @warning_ignore("unsafe_method_access")
+    collision_objs[char_].attach()

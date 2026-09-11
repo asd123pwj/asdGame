@@ -12,6 +12,9 @@ static var presets: PresetRegister
 static var inputSys: InputSys
 static var tmapSys: MapSys
 static var cmdSys: CmdSys
+static var uiSys: UiSystem
+
+static var sys_status: Character
 
 static var USER_CONFIG_DIR := "user://Config/"
 static var SYS_CONFIG_DIR := "res://Config/"
@@ -22,7 +25,7 @@ var _test = Test.new()
 func _ready() -> void:
     sys = self
     init_sub_system()
-    
+    sys_status = CharSys.create_char("SYS", "SYS", "SYS")
     print("test")
     _test.run()
 
@@ -47,4 +50,5 @@ func init_sub_system() -> void:
     presets = PresetRegister.new()
     inputSys = InputSys.new()
     tmapSys = MapSys.new()
+    uiSys = UiSystem.new()
     # print("init_done")

@@ -3,11 +3,15 @@ extends ConfigBase
 
 
 var values: Array[Dictionary] = [
+    # {
+    #     "name": "SYS",
+    #     "packages": ["通用活体", "Healable"]
+    # },
     {
         "name": "人类",
         "buffs": ["Strength Base +3", "Defense Base +3", "Health Base +10", "Strength Multiplier =2"],
         "bodies": ["Human"],
-        "packages": ["通用活体","Grow when hour advance", "移动状态", "Rebirth", "死亡掉落", "触觉", "掉落物感知", "接触伤害", ]
+        "packages": ["通用活体","Grow when hour advance", "移动能力", "Rebirth", "死亡掉落", "触觉", "掉落物感知", "接触伤害", ]
     },
     {
         "name": "兔子",

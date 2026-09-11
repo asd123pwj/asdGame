@@ -25,7 +25,7 @@
 - `_init(me, skill_names[])`：`add_skill` 把技能装给角色。
 - `add/remove_skill`：装/卸(内部 preset.listen/unlisten)。
 - `skill_queue`(SkillBase→config)：待驱动队列。
-- `physics_process(delta)`：对队列每个 `skill.act(me, delta, config)`，最后 `me.body.move_and_slide()`。被 `Character.physics_process` 转发。
+- `physics_process(delta)`：先 `me.ensure_body()`(body 延后生成)，对队列每个 `skill.act(me, delta, config)`，最后 `if me.body: me.body.move_and_slide()`(body 可为空)。被 `Character.physics_process` 转发。
 - `check_skill`：查是否已装。
 
 ## Skills/ 子目录（Base + 实现）

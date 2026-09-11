@@ -44,3 +44,8 @@ func remove_collision(collision_name: String) -> Enums.Code:
 
 func check_collision(collision_name: String) -> bool:
     return collisions.has(collision_name)
+
+## body 生成后，把已装碰撞区的探测体挂到 body 上
+func attach_collisions() -> void:
+    for collision in collisions.values():
+        collision.attach(me)

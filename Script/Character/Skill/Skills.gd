@@ -13,6 +13,8 @@ func _init(me: Character, skill_name: Array[String]) -> void:
     add_skills(skill_name)
 
 func physics_process(delta: float) -> void:
+    if me.body == null: 
+        return
     for skill in skill_queue:
         skill.act(me, delta, skill_queue[skill])
     me.body.move_and_slide()

@@ -225,16 +225,20 @@ func listen(char_: Character) -> void:
         trigger_cur = false
         if listener.match_type in ["Satisfied", "Unsatisfied"]:
             var isSatisfied: bool = listener.match_type == "Satisfied"
+            # "状态名@unique_name" 时监听对象为 unique 角色，初始值/监听都转向它
+            var resolved := Msg._resolve_target(char_, listener.name)
+            var target: Character = resolved[0]
+            var status_name_: String = resolved[1]
             # 获取当前status是否满足条件
-            if (char_.statuses != null) and char_.statuses.check_exist(listener.name):
-                trigger_cur = (isSatisfied == char_.statuses.check_satisfied(listener.name))
+            if (target != null) and (target.statuses != null) and target.statuses.check_exist(status_name_):
+                trigger_cur = (isSatisfied == target.statuses.check_satisfied(status_name_))
             # status未初始化完成，监听该状态添加，添加后判断状态，我真聪明
             # 如果不这样，也许会导致初始状态错误
             # 另一种做法是等待初始化完成，但这样如果依赖顺序颠倒，会死锁，例如Live依赖Dead，且Live的初始化顺序在前，则Live一直等待Dead初始化完成，而Dead又排在Live后，死锁
             else:
                 trigger_func = func(_msg): 
                     latest_message[char_] = _msg
-                    _status_triggers[char_][listener.name] = (isSatisfied == get_(listener.name).satisfied[char_])
+                    _status_triggers[char_][listener.name] = (isSatisfied == get_(status_name_).satisfied.get(target, false))
                     execute(char_)
                 msg_ID = Msg.listen_status_add(char_, listener.name, trigger_func)
                 _trigger_funcs[char_][msg_ID] = trigger_func

@@ -39,29 +39,6 @@ func run() -> void:
     delay_loop_test()
 
 
-func ui_test() -> void:
-    # UI 最小原型：从 UIPreset_Basic.values 取 MiniHUD 描述，UiBuilder 生成 Control 树并显示。
-    var preset: UIPreset_Basic = UIPreset_Basic.new()
-    var desc: Dictionary = {}
-    for v in preset.values:
-        if v.get("name", "") == "MiniHUD":
-            desc = v
-            break
-    if desc.is_empty():
-        print("UiBuilder: 未找到 MiniHUD 描述")
-        return
-    var r: Array = UiBuilder.build(desc, { "parent_style": {}, "track": null })
-    if not r[0]:
-        print("UiBuilder: 构建失败")
-        return
-    var root: Control = r[1]
-    _dump_ui(root, 0)
-
-    # 挂到主场景显示（临时 CanvasLayer）
-    var layer: CanvasLayer = CanvasLayer.new()
-    Sys.sys.get_tree().current_scene.add_child(layer)
-    layer.add_child(root)
-
 
 func _dump_ui(node: Node, depth: int) -> void:
     var pad: String = ""
@@ -71,6 +48,23 @@ func _dump_ui(node: Node, depth: int) -> void:
     for c in node.get_children():
         var child: Node = c
         _dump_ui(child, depth + 1)
+
+
+func ui_test() -> void:
+    # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 -> UiSystem 管理脚本 -> UIBase 包装 Control。
+    # 交互一律走 Msg（不用自定义 signal）；指针输入由 PointDetect 用 InputSys 检测命中后派发。
+    var preset: UIPreset = UIPreset.get_("MiniHUD")
+    if preset == null or preset.ui == null:
+        print("UI: 未找到 MiniHUD 预设")
+        return
+    var ui: UIBase = preset.ui
+    Msg.listen_ui_interact(ui, "close", func(_m): print("UI close"))
+    Msg.listen_ui_interact(ui, "submit", func(_m): print("UI submit"))
+    Msg.listen_ui_interact(ui, "fade", func(m): print("UI fade -> ", m))
+    Msg.listen_ui_interact(ui, "press", func(_m): print("UI press"))
+    Msg.listen_ui_interact(ui, "release", func(_m): print("UI release"))
+    Sys.uiSys.add_ui("MiniHUD")
+    print("UI: add_ui MiniHUD = ", Sys.uiSys.check_ui("MiniHUD"))
 
 
 func get_char_info(char_: Character) -> void:

@@ -27,6 +27,8 @@
   - **Time**：`TICK` + `ADVANCE_YEAR/MONTH/DAY/HOUR`(每个 send_/listen_)。
   - **Input**：单键 `key_status`(`key.status` → id)；`DOWN/FIRST_DOWN/FIRST_UP`。key 为 Array(组合键) 时自动用 `InputCombo`。
   - **Command**：`send_cmd`(COMMAND)；`send_cmd0` 去一层、`send_cmd00` 去两层取结果。
-  - **Character 各域**：经 `_format_character` 生成"某角色的某类型某 action"精确 id，细分 ATTR/ANY_ATTR、BUFF(±consume/depleted)、STATUS(satisfied/unsatisfied/detected/±add/remove)、INTERACTION、SKILL、COLLISION、INVENTORY 的 ±add/remove/act/enter 等。
+  - **Character 各域**：经 `_format_character` 生成"某角色的某类型某 action"精确 id，细分 ATTR/ANY_ATTR、BUFF(±consume/depleted)、STATUS(satisfied/unsatisfied/detected/±add/remove)、INTERACTION、SKILL、COLLISION、INVENTORY、SHORTCUT 的 ±add/remove/act/enter 等。
+  - **名字定向 `名字@unique_name`（全域通用）**：`_send_character`/`_listen_character`/`_get_message_character` 三个统一入口都先过 `_resolve_target(char_, type_name)`——若 `type_name` 含 `@`，则从 `CharSys.get_by_unique(unique_name)` 取出目标角色，不再用传入的 `char_`；解析失败则回退 `char_` + 原名。因此 STATUS/BUFF/ATTR/INTERACTION/SKILL/COLLISION/INVENTORY 的 type_name（状态名/buff名/属性名/交互名...）都支持该语法。
+  - **消息 id 的角色标识**：`_format_character` 用 `char_.unique_name`（未绑定则退化为 `str(ID)` 兜底，避免匿名角色 id 冲突）而非 `str(ID)`。故 `@unique_name` 解析后的目标角色发出的 id 恰好是 `CHAR->unique_name->...`，send 端无需写 `@` 即可与 listen 端天然对上。
 - 规则：`send_xxx` / `listen_xxx` / 部分 `get_xxx`(取最近)。
 - 供谁调用：**全项目所有**跨模块联动（状态/技能/交互/属性/碰撞/时间/指令等触发都靠它）。

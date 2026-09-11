@@ -45,6 +45,15 @@ func listen(char_: Character) -> void:
     msg_ID = Msg.listen_status_unsatisfied(char_, dependence_status, trigger_func)
     _trigger_funcs[char_][msg_ID] = trigger_func
 
+    # 判断当前状态是否满足。
+    var result = Msg._resolve_target(char_, dependence_status)
+    var char_listening: Character = result[0]
+    var status_listening: String = result[1]
+    if char_listening.statuses.check_satisfied(status_listening):
+        skill.in_queue.call_deferred(char_, config)
+    else:
+        skill.out_queue.call_deferred(char_)
+
 func unlisten(char_: Character) -> void:
     for msg_ID in _trigger_funcs[char_].keys():
         MsgBus.unlisten(msg_ID, _trigger_funcs[char_][msg_ID])

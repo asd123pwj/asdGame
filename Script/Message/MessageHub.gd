@@ -103,7 +103,6 @@ static func listen_advance_hour(callback: Callable) -> String:
 #     return _listen_time("ADVANCE", callback)
 
 
-
 """
 ░██████                                    ░██    
   ░██                                      ░██    
@@ -162,7 +161,6 @@ static func listen_key_first_up(key: Variant, callback: Callable) -> String:
     return _listen_input(key, Enums.KeyStatus.FIRST_UP, callback)
 
     
-
 """
   ░██████                         ░██ 
  ░██   ░██                        ░██ 
@@ -185,7 +183,6 @@ static func listen_cmd(callback: Callable) -> String:
     return super.listen("COMMAND", callback)
 
 
-
 """
   ░██████  ░██                            
  ░██   ░██ ░██                            
@@ -197,21 +194,36 @@ static func listen_cmd(callback: Callable) -> String:
 """
 
 """ ---------- Basic ---------- """
-static func _format_character(char_: Character, type: String, type_name: String, action: String) -> String:
-    return format_ID(["CHAR", str(char_.ID), type, type_name, action])
+## 名字支持 "名字@unique_name"：含 @ 时指向 CharSys.unique 里该 unique_name 的角色，不再用传入的 char_。
+## 返回 [解析后的角色, 纯名字]。所有域的 type_name 都经此统一解析。
+static func _resolve_target(char_: Character, type_name: String) -> Array:
+    if "@" in type_name:
+        var parts := type_name.split("@")
+        var target: Character = CharSys.get_by_unique(parts[1])
+        if target != null:
+            return [target, parts[0]]
+    return [char_, type_name]
 
-static func _send_character(char_: Character, type: String, type_name: String, action: String, message:Variant = null) -> Array:
-    var node_ID = _format_character(char_, type, type_name, action)
+static func _format_character(char_: Character, type: String, type_name: String, action: String) -> String:
+    ## 未绑定 unique_name 的角色用自身 ID 兜底，避免所有匿名角色 id 冲突串消息
+    var char_ID := char_.unique_name if char_.unique_name != "" else str(char_.ID)
+    return format_ID(["CHAR", char_ID, type, type_name, action])
+
+static func _send_character(char_: Character, type: String, type_name: String, action: String, message: Variant = null) -> Array:
+    var resolved := _resolve_target(char_, type_name)
+    var node_ID = _format_character(resolved[0], type, resolved[1], action)
     if message != null:
         return send(node_ID, message)
-    return send(node_ID, char_)
+    return send(node_ID, resolved[0])
 
 static func _listen_character(char_: Character, type: String, type_name: String, action: String, callback: Callable) -> String:
-    var node_ID = _format_character(char_, type, type_name, action)
+    var resolved := _resolve_target(char_, type_name)
+    var node_ID = _format_character(resolved[0], type, resolved[1], action)
     return listen(node_ID, callback)
 
 static func _get_message_character(char_: Character, type: String, type_name: String, action: String) -> Variant:
-    var node_ID = _format_character(char_, type, type_name, action)
+    var resolved := _resolve_target(char_, type_name)
+    var node_ID = _format_character(resolved[0], type, resolved[1], action)
     return get_message(node_ID)
 
 """
@@ -236,7 +248,6 @@ static func listen_attr_changed(char_: Character, type_name: String, callback: C
 
 static func listen_any_attr_changed(char_: Character, callback: Callable) -> String:
     return _listen_character(char_, "ANY_ATTR", "ANY", "changed", callback)
-
 
 
 """
@@ -329,13 +340,12 @@ static func listen_status_detected(char_: Character, status_name: String, callba
 # static func listen_status_undetected(char_: Character, status_name: String, callback: Callable) -> String:
 #     return _listen_character(char_, "STATUS", status_name, "undetected", callback)
 
-static func get_status_detected(char_: Character, interaction_name: String) -> Variant:
-    return _get_message_character(char_, "STATUS", interaction_name, "detected")
+static func get_status_detected(char_: Character, status_name: String) -> Variant:
+    return _get_message_character(char_, "STATUS", status_name, "detected")
 
 ## 我觉得这玩意用不到
-static func get_status_undetected(char_: Character, interaction_name: String) -> Variant:
-    return _get_message_character(char_, "STATUS", interaction_name, "undetected")
-
+static func get_status_undetected(char_: Character, status_name: String) -> Variant:
+    return _get_message_character(char_, "STATUS", status_name, "undetected")
 
 
 """ ---------- Character Behaviors ---------- """
@@ -368,7 +378,6 @@ static func get_status_undetected(char_: Character, interaction_name: String) ->
                 ░██████░██    ░██     ░████  ░███████  ░██       ░█████░██  ░███████      ░████ 
                                                                                                 
                                                                                                 
-                                                                                                
 """
 """ ---------- Character InteractionPreset ---------- """
 static func send_interaction_add(char_: Character, interaction_name: String) -> Array:
@@ -390,7 +399,6 @@ static func listen_interaction_act(char_: Character, interaction_name: String, c
     return _listen_character(char_, "INTERACTION", interaction_name, "act", callback)
 
 
-
 """
                   ░██████   ░██          ░██   ░██    ░██ 
                  ░██   ░██  ░██                ░██    ░██ 
@@ -399,7 +407,6 @@ static func listen_interaction_act(char_: Character, interaction_name: String, c
                         ░██ ░███████     ░██   ░██    ░██ 
                  ░██   ░██  ░██   ░██    ░██   ░██    ░██ 
                   ░██████   ░██    ░██   ░██   ░██    ░██ 
-                                                          
                                                           
                                                           
 """
@@ -483,3 +490,65 @@ static func listen_inventory_add(char_: Character, inventory_name: String, callb
 
 static func listen_inventory_remove(char_: Character, inventory_name: String, callback: Callable) -> String:
     return _listen_character(char_, "INVENTORY", inventory_name, "remove", callback)
+
+
+""" ---------- Character SystemShortcut ---------- """
+static func send_shortcut_add(char_: Character, shortcut_name: String) -> Array:
+    return _send_character(char_, "SHORTCUT", shortcut_name, "add")
+
+static func send_shortcut_remove(char_: Character, shortcut_name: String) -> Array:
+    return _send_character(char_, "SHORTCUT", shortcut_name, "remove")
+
+static func send_shortcut_act(char_: Character, shortcut_name: String) -> Array:
+    return _send_character(char_, "SHORTCUT", shortcut_name, "act")
+
+static func listen_shortcut_add(char_: Character, shortcut_name: String, callback: Callable) -> String:
+    return _listen_character(char_, "SHORTCUT", shortcut_name, "add", callback)
+
+static func listen_shortcut_remove(char_: Character, shortcut_name: String, callback: Callable) -> String:
+    return _listen_character(char_, "SHORTCUT", shortcut_name, "remove", callback)
+
+static func listen_shortcut_act(char_: Character, shortcut_name: String, callback: Callable) -> String:
+    return _listen_character(char_, "SHORTCUT", shortcut_name, "act", callback)
+
+"""
+░██     ░██ ░██████
+░██     ░██   ░██  
+░██     ░██   ░██  
+░██     ░██   ░██  
+░██     ░██   ░██  
+ ░██   ░██    ░██  
+  ░██████   ░██████
+"""
+""" ---------- Basic ---------- """
+static func _format_ui(ui: UIBase, action: String) -> String:
+    return format_ID(["UI", str(ui.ID), action])
+
+static func _send_ui(ui: UIBase, action: String, message: Variant = null) -> Array:
+    var node_ID: String = _format_ui(ui, action)
+    if message != null:
+        return send(node_ID, message)
+    return send(node_ID, ui)
+
+static func _listen_ui(ui: UIBase, action: String, callback: Callable) -> String:
+    return listen(_format_ui(ui, action), callback)
+
+""" ---------- Life Cycle ---------- """
+static func send_ui_create(ui: UIBase) -> Array:
+    return super.send("UI_CREATE", ui)
+
+static func send_ui_remove(ui: UIBase) -> Array:
+    return super.send("UI_REMOVE", ui)
+
+static func listen_ui_create(callback: Callable) -> String:
+    return super.listen("UI_CREATE", callback)
+
+static func listen_ui_remove(callback: Callable) -> String:
+    return super.listen("UI_REMOVE", callback)
+
+""" ---------- Interact ---------- """
+static func send_ui_interact(ui: UIBase, action: String, message: Variant = null) -> Array:
+    return _send_ui(ui, action, message)
+
+static func listen_ui_interact(ui: UIBase, action: String, callback: Callable) -> String:
+    return _listen_ui(ui, action, callback)

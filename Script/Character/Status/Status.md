@@ -13,7 +13,8 @@
 ## StatusPreset.gd 说明（Preset）
 - 字段：`name/auto_reset(变化后自动复位)/match_any(任一满足即满足)/with_detect` + 6 类监听器数组(attrs/buffs/statuses/interactions/keys/time)。
 - 监听器 `ListenType` = `match_type(比较符) + name(监听对象) + thres(阈值)`。attrs 支持 Changed/>/</Base*/AnyChanged 等；buffs Present/Absent；statuses Satisfied/Unsatisfied；interactions Present/Absent/Act；keys 按下抬起；time 时间推进；with_detect 用外部检测信号。
-- `listen(char_)`：按监听器类型 `Msg.listen_*` 注册触发器，实时把各触发器真值写进 `_xxx_triggers[char_]`。
+- **`状态名@unique_name` 定向语法**：监听对象名（statuses 的 `name`）若写成 `状态名@unique_name`，则监听的是 `CharSys.unique[unique_name]` 那个独特角色的状态，而非当前角色自己。解析由 `Msg._resolve_target(char_, status_name)` 统一负责（STATUS/BUFF/ATTR/... 全域通用），返回 `[目标角色, 纯状态名]`；解析失败（无该 unique 角色）则回退为 `char_` + 原名。`StatusPreset.listen` 用它同时解析"初始值读取"和"监听注册"，两者保持一致。由此多个角色可共享监听同一个"敌人/目标"角色的状态。
+- `listen(char_)`：按监听器类型 `Msg.listen_*` 注册触发器，实时把各触发器真值写进 `_xxx_triggers[char_]`（本地记录仍归 `char_`；`@` 语法的"监听源/取值"转为目标角色）。
 - `execute(char_, force)`：汇总各触发器真值(按 match_any 取与/或) → 得 `satisfied`；满足/解除时发 `Msg.send_status_satisfied/unsatisfied`。
 - `char_init_done(char_)`：初始化完成后强制 `execute` 一次，校准初始状态。
 - `get_latest_message`：返回最近一次触发收到的消息(供交互取 target)。
