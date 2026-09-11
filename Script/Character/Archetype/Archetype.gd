@@ -19,21 +19,60 @@ var _unpacked: bool = false
 
 """ ----- Global ----- """
 static var _we: Dictionary[String, Archetype] = {}
+## 各字段对应的预设类（按 archetype 的键名判断用哪个类加载内联配置）
+static var _field_class: Dictionary[String, GDScript] = {
+    "buffs": BuffPreset,
+    "statuses": StatusPreset,
+    "interactions": InteractionPreset,
+    "bodies": BodyPreset,
+    "skills": SkillPreset,
+    "collisions": CollisionPreset,
+    "inventories": InventoryPreset,
+    "shortcuts": SystemShortcutPreset,
+    "packages": Archetype,
+}
 
 func _init(config: Dictionary) -> void:
     self.name = config["name"]
     _we[name] = self
-    
-    self.buffs.assign(Utils.find_dict(config, ["buffs"], []))
-    self.statuses.assign(Utils.find_dict(config, ["statuses"], []))
-    # self.behaviors.assign(Utils.find_dict(config, ["behaviors"], []))
-    self.interactions.assign(Utils.find_dict(config, ["interactions"], []))
-    self.bodies.assign(Utils.find_dict(config, ["bodies"], []))
-    self.skills.assign(Utils.find_dict(config, ["skills"], []))
-    self.collisions.assign(Utils.find_dict(config, ["collisions"], []))
-    self.inventories.assign(Utils.find_dict(config, ["inventories"], []))
-    self.shortcuts.assign(Utils.find_dict(config, ["shortcuts"], []))
-    self.packages.assign(Utils.find_dict(config, ["packages"], []))
+
+    self.buffs.assign(_load_field(config, "buffs"))
+    self.statuses.assign(_load_field(config, "statuses"))
+    # self.behaviors.assign(_load_field(config, "behaviors"))
+    self.interactions.assign(_load_field(config, "interactions"))
+    self.bodies.assign(_load_field(config, "bodies"))
+    self.skills.assign(_load_field(config, "skills"))
+    self.collisions.assign(_load_field(config, "collisions"))
+    self.inventories.assign(_load_field(config, "inventories"))
+    self.shortcuts.assign(_load_field(config, "shortcuts"))
+    self.packages.assign(_load_field(config, "packages"))
+
+## 读取某字段，返回预设名数组。
+## 元素为字符串 → 视为已存在的预设名，直接用；
+## 元素为字典/列表 → 视为内联配置，按字段对应的类现场创建（重名则报错），再取其 name。
+static func _load_field(config: Dictionary, field: String) -> Array[String]:
+    var names: Array[String] = []
+    for item in Utils.find_dict(config, [field], []):
+        names.append(_load_item(config["name"], field, item))
+    return names
+
+static func _load_item(owner: String, field: String, item) -> String:
+    if item is String:
+        return item
+
+    var class_: GDScript = _field_class[field]
+    var item_name: String = item["name"] if typeof(item) == TYPE_DICTIONARY else item[0]
+
+    @warning_ignore("unsafe_property_access", "unsafe_method_access")
+    if class_._we.has(item_name):
+        push_error("Archetype: %s 的 %s 中「%s」已存在" % [owner, field, item_name])
+        return item_name
+
+    if typeof(item) == TYPE_DICTIONARY:
+        class_.new(item)
+    else:
+        class_.new.callv(item)
+    return item_name
 
 static func get_(name: String) -> Archetype:
     var archetype: Archetype = _we[name]

@@ -548,8 +548,44 @@ static func listen_ui_remove(callback: Callable) -> String:
     return super.listen("UI_REMOVE", callback)
 
 """ ---------- Interact ---------- """
-static func send_ui_interact(ui: UIBase, action: String, message: Variant = null) -> Array:
-    return _send_ui(ui, action, message)
+static func send_ui_press(ui: UIBase) -> Array:
+    return _send_ui(ui, "PRESS")
 
-static func listen_ui_interact(ui: UIBase, action: String, callback: Callable) -> String:
-    return _listen_ui(ui, action, callback)
+static func send_ui_drag(ui: UIBase) -> Array:
+    return _send_ui(ui, "DRAG")
+
+static func send_ui_release(ui: UIBase) -> Array:
+    return _send_ui(ui, "RELEASE")
+
+static func send_ui_submit(ui: UIBase) -> Array:
+    return _send_ui(ui, "SUBMIT")
+
+static func send_ui_close(ui: UIBase) -> Array:
+    return _send_ui(ui, "CLOSE")
+
+static func send_ui_scale(ui: UIBase) -> Array:
+    return _send_ui(ui, "SCALE")
+
+static func send_ui_fade(ui: UIBase, target: float) -> Array:
+    return _send_ui(ui, "FADE", target)
+
+static func listen_ui_press(ui: UIBase, callback: Callable) -> String:
+    return _listen_ui(ui, "PRESS", callback)
+
+static func listen_ui_drag(ui: UIBase, callback: Callable) -> String:
+    return _listen_ui(ui, "DRAG", callback)
+
+static func listen_ui_release(ui: UIBase, callback: Callable) -> String:
+    return _listen_ui(ui, "RELEASE", callback)
+
+static func listen_ui_submit(ui: UIBase, callback: Callable) -> String:
+    return _listen_ui(ui, "SUBMIT", callback)
+
+static func listen_ui_close(ui: UIBase, callback: Callable) -> String:
+    return _listen_ui(ui, "CLOSE", callback)
+
+static func listen_ui_scale(ui: UIBase, callback: Callable) -> String:
+    return _listen_ui(ui, "SCALE", callback)
+
+static func listen_ui_fade(ui: UIBase, callback: Callable) -> String:
+    return _listen_ui(ui, "FADE", callback)

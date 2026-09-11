@@ -5,11 +5,11 @@ extends ConfigBase
 name: String, 
 buffs: Array[String]=[], 
 statuses: Array[String]=[],
-behaviors: Array[String]=[],
 interactions: Array[String]=[],
 bodies: Array[String]=[],
 skills: Array[String]=[],
 collisions: Array[String]=[],
+shortcuts: Array[String]=[],
 packages: Array[String]=[],
 """
 

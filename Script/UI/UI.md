@@ -50,8 +50,8 @@ static func get_(name) -> UIPreset: return _we[name]
 - 显示内容：`control` 下可挂文本(Label)/按钮(Button)/滚动条(ScrollContainer) 等原生控件。
 - 交互开关（可按需开启、可复用一个 UI）：`draggable / closeable / scalable / submittable / track_id`。
 - 指针交互由 **`PointDetect`** 用 `InputSys` 检测命中后回调：`on_pointer_down()` / `on_pointer_move()` / `on_pointer_up()` / `on_submit()`；**不用引擎 `Control.gui_input`**。
-- 交互事件统一走 **`Msg`**（不自定义 signal）：
-  - `Msg.send_ui_interact(ui, "press")` / `"drag"` / `"release"` / `"close"` / `"scale"` / `"submit"` / `"fade"` 等。
+- 交互事件统一走 **`Msg`**（不自定义 signal），且**按行为分函数**（函数名即行为，避免外部字符串写错）：
+  - `Msg.send_ui_press/drag/release/submit/close/scale(ui)`、`Msg.send_ui_fade(ui, target)`；对应 `listen_ui_press/...`。
   - 仅控件自身的引擎内建信号（`Button.pressed`）保留，用于把按钮点击接回 UIBase 方法。
 - 子类覆写虚接口实现具体外观（如 `UI_Panel`）。
 
@@ -63,7 +63,7 @@ static func get_(name) -> UIPreset: return _we[name]
 
 ## 消息（MessageHub.gd 末尾补充）
 - `send_ui_create(ui)` / `listen_ui_create(cb)`、`send_ui_remove(ui)` / `listen_ui_remove(cb)`。
-- `send_ui_interact(ui, action, message=null)` / `listen_ui_interact(ui, action, cb)`：`format_ID(["UI", str(ui.ID), action])`，参考角色级消息。
+- `send_ui_press/drag/release/submit/close/scale(ui)`、`send_ui_fade(ui, target)` 与对应 `listen_ui_*`：每个函数固定自己的 action（`PRESS/DRAG/RELEASE/SUBMIT/CLOSE/SCALE/FADE`），id 为 `format_ID(["UI", str(ui.ID), action])`，参考角色级消息。
 
 ## Config/UI/UIPreset_Basic.gd（extends ConfigBase）
 ```gdscript

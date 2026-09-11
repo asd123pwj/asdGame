@@ -58,11 +58,11 @@ func ui_test() -> void:
         print("UI: 未找到 MiniHUD 预设")
         return
     var ui: UIBase = preset.ui
-    Msg.listen_ui_interact(ui, "close", func(_m): print("UI close"))
-    Msg.listen_ui_interact(ui, "submit", func(_m): print("UI submit"))
-    Msg.listen_ui_interact(ui, "fade", func(m): print("UI fade -> ", m))
-    Msg.listen_ui_interact(ui, "press", func(_m): print("UI press"))
-    Msg.listen_ui_interact(ui, "release", func(_m): print("UI release"))
+    Msg.listen_ui_close(ui, func(_m): print("UI close"))
+    Msg.listen_ui_submit(ui, func(_m): print("UI submit"))
+    Msg.listen_ui_fade(ui, func(m): print("UI fade -> ", m))
+    Msg.listen_ui_press(ui, func(_m): print("UI press"))
+    Msg.listen_ui_release(ui, func(_m): print("UI release"))
     Sys.uiSys.add_ui("MiniHUD")
     print("UI: add_ui MiniHUD = ", Sys.uiSys.check_ui("MiniHUD"))
 

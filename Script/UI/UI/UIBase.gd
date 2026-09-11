@@ -66,7 +66,7 @@ func on_pointer_down() -> void:
 	if draggable:
 		_dragging = true
 		_drag_offset = InputSys.mouse_position - control.global_position
-	Msg.send_ui_interact(self, "press")
+	Msg.send_ui_press(self)
 
 
 ## 指针按住移动（PointDetect 每帧派发）：拖动跟随指针，发 drag。
@@ -74,7 +74,7 @@ func on_pointer_move() -> void:
 	if not _dragging:
 		return
 	control.global_position = InputSys.mouse_position - _drag_offset
-	Msg.send_ui_interact(self, "drag")
+	Msg.send_ui_drag(self)
 
 
 ## 指针抬起（PointDetect 派发）：结束拖动，发 release。
@@ -82,25 +82,25 @@ func on_pointer_up() -> void:
 	if not _dragging:
 		return
 	_dragging = false
-	Msg.send_ui_interact(self, "release")
+	Msg.send_ui_release(self)
 
 
 ## 提交键（PointDetect 派发）：发 submit。
 func on_submit() -> void:
 	if submittable:
-		Msg.send_ui_interact(self, "submit")
+		Msg.send_ui_submit(self)
 
 
 ## 关闭：发交互消息并隐藏。
 func close() -> void:
-	Msg.send_ui_interact(self, "close")
+	Msg.send_ui_close(self)
 	if control != null:
 		control.hide()
 
 
 ## 透明度渐隐/渐显：发交互消息并补间。
 func fade_to(target: float, duration: float = 0.25) -> void:
-	Msg.send_ui_interact(self, "fade", target)
+	Msg.send_ui_fade(self, target)
 	if control == null:
 		return
 	var tween: Tween = control.create_tween()
