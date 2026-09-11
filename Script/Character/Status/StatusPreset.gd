@@ -49,8 +49,8 @@ static var _we: Dictionary[String, StatusPreset] = {}
 ## buffs: 支持Present, Absent
 ## statuses: 支持Satisfied, Unsatisfied
 ## interactions: 支持Present, Absent, Act
-## keys: 支持Enums.KeyStatus.FIRST_DOWN, Enums.KeyStatus.DOWN, Enums.KeyStatus.FIRST_UP
-## time: name支持Year, Month, Xun, Aay, Hour
+## keys: 支持Enums.KeyStatus.FIRST_DOWN, Enums.KeyStatus.DOWN, Enums.KeyStatus.FIRST_UP, Enums.KeyStatus.POINTER_MOVE
+## time: name支持Year, Month, Xun, Aay, Hour, Tick
 ##       condition支持Advance
 ## with_detect: 使用外部检测信号，用send_status_detected发送
 ## cfgs为嵌套列表[[配置1],[配置2]]
@@ -262,47 +262,6 @@ func listen(char_: Character) -> void:
             print("Status监听器类型错误: ", listener.match_type)
         _status_triggers[char_][listener.name] = trigger_cur
 
-    # # ----- Behavior监听器 -----
-    # _interaction_triggers[char_] = {}
-    # for listener in _behavior_listeners:
-    #     trigger_cur = false
-    #     if listener.match_type in ["Present", "Absent"]:
-    #         var isPresent: bool = listener.match_type == "Present"
-    #         # 获取当前behavior是否满足条件
-    #         trigger_cur = (isPresent == char_.behaviors.check_behavior(listener.name))
-    #         # 两个叠加的监听器用于实时监控。
-    #         trigger_func = func(_msg): 
-    #             _interaction_triggers[char_][listener.name] = isPresent
-    #             execute(char_)
-    #         msg_ID = Msg.listen_behavior_add(char_, listener.name, trigger_func)
-    #         _trigger_funcs[char_][msg_ID] = trigger_func
-
-    #         trigger_func = func(_msg): 
-    #             _interaction_triggers[char_][listener.name] = !isPresent
-    #             execute(char_)
-    #         msg_ID = Msg.listen_behavior_remove(char_, listener.name, trigger_func)
-    #         _trigger_funcs[char_][msg_ID] = trigger_func
-    
-    #     elif listener.match_type == "Act":
-    #         trigger_cur = false 
-    #         # 类似attr_type的changed
-    #         trigger_func = func(_msg): 
-    #             self._interaction_triggers[char_][listener.name] = true
-    #             execute(char_)
-    #         msg_ID = Msg.listen_behavior_act(char_, listener.name, trigger_func)
-    #         _trigger_funcs[char_][msg_ID] = trigger_func
-
-    #         trigger_func = func(_msg): 
-    #             self._interaction_triggers[char_][listener.name] = false;
-    #             execute(char_)
-    #         msg_ID = Msg.listen_behavior_remove(char_, listener.name, trigger_func)
-    #         _trigger_funcs[char_][msg_ID] = trigger_func
-
-
-    #     else:
-    #         print("Behavior监听器类型错误: ", listener.match_type)
-    #     _interaction_triggers[char_][listener.name] = trigger_cur
-
 
     # ----- Interaction监听器 -----
     _interaction_triggers[char_] = {}
@@ -394,6 +353,17 @@ func listen(char_: Character) -> void:
             msg_ID = Msg.listen_key_first_up(listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
+        elif listener.match_type == Enums.KeyStatus.POINTER_MOVE:
+            # 暂时仅支持listener.name = 0的占位符
+            trigger_func = func(_msg):
+                latest_message[char_] = _msg
+                _key_triggers[char_][0] = true
+                execute(char_)
+                _key_triggers[char_][0] = false
+                execute(char_)
+            msg_ID = Msg.listen_pointer_move(0, trigger_func)
+            _trigger_funcs[char_][msg_ID] = trigger_func
+
         else:
             print("Key监听器类型错误: ", listener.match_type)
         _key_triggers[char_][listener.name] = trigger_cur
@@ -420,6 +390,8 @@ func listen(char_: Character) -> void:
                 msg_ID = Msg.listen_advance_day(trigger_func)
             elif listener.name == "Hour":
                 msg_ID = Msg.listen_advance_hour(trigger_func)
+            elif listener.name == "Tick":
+                msg_ID = Msg.listen_tick(trigger_func)
             else:
                 print("时间监听器名称错误: ", listener.name)
 

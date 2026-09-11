@@ -16,6 +16,7 @@ static func _input(event: InputEvent):
         _send_key_status(event.button_index, event.pressed)
     elif event is InputEventMouseMotion:
         mouse_position = event.position
+        Msg.send_pointer_move()
         # print(mouse_position)
     @warning_ignore_restore("unsafe_property_access")
 

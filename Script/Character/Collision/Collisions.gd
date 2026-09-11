@@ -47,5 +47,5 @@ func check_collision(collision_name: String) -> bool:
 
 ## body 生成后，把已装碰撞区的探测体挂到 body 上
 func attach_collisions() -> void:
-    for collision in collisions.values():
+    for collision: CollisionPreset in collisions.values():
         collision.attach(me)

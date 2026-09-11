@@ -142,11 +142,12 @@ static func send_key_down(key: Variant) -> Array:
 static func send_key_first_down(key: Variant) -> Array:
     return _send_input(key, Enums.KeyStatus.FIRST_DOWN)
 
-# static func send_key_up(key: Variant) -> Array:
-#     return _send_input(key, Enums.KeyStatus.UP)
-
 static func send_key_first_up(key: Variant) -> Array:
     return _send_input(key, Enums.KeyStatus.FIRST_UP)
+
+static func send_pointer_move(key: Variant=0) -> Array:
+    return _send_input(key, Enums.KeyStatus.POINTER_MOVE)
+
 
 static func listen_key_down(key: Variant, callback: Callable) -> String:
     return _listen_input(key, Enums.KeyStatus.DOWN, callback)
@@ -154,11 +155,11 @@ static func listen_key_down(key: Variant, callback: Callable) -> String:
 static func listen_key_first_down(key: Variant, callback: Callable) -> String:
     return _listen_input(key, Enums.KeyStatus.FIRST_DOWN, callback)
 
-# static func listen_key_up(key: Variant, callback: Callable) -> String:
-#     return _listen_input(key, Enums.KeyStatus.UP, callback)
-
 static func listen_key_first_up(key: Variant, callback: Callable) -> String:
     return _listen_input(key, Enums.KeyStatus.FIRST_UP, callback)
+
+static func listen_pointer_move(key: Variant=0, callback: Callable=Utils.identity) -> String:
+    return _listen_input(key, Enums.KeyStatus.POINTER_MOVE, callback)
 
     
 """

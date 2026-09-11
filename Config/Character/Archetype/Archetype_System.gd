@@ -4,7 +4,11 @@ extends ConfigBase
 var values: Array[Dictionary] = [
     {
         "name": "SYS",
-        "packages": ["输入监控", "指针监控", "时间周期"],
+        "packages": ["输入监控", "指针监控", "时间周期", "其它"],
+    },
+    {
+        "name": "其它",
+        "statuses": ["AlwaysSatisfied"],
     },
     {
         "name": "输入监控",
@@ -12,8 +16,8 @@ var values: Array[Dictionary] = [
     },
     {
         "name": "指针监控",
-        "statuses": ["Pointer Down", "Pointer Hold", "Pointer Up", "Submit"],
-        "shortcuts": ["Pointer Down", "Pointer Hold", "Pointer Up", "Submit"],
+        "statuses": ["Pointer Down", "Pointer Move", "Pointer Up", "Submit"],
+        "shortcuts": ["Pointer Down", "Pointer Move", "Pointer Up", "Submit"],
     },
     {
         "name": "时间周期",
