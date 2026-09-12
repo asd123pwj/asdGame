@@ -15,7 +15,7 @@
 ##     Msg.send_cmd("MapSys.place $Test.a $Test.test_int[0].value[0].value $Test.test_int2.value[0] 门 2 -1 true")
 ##   下面为使用静态函数，用()包裹参数：
 ##     Msg.send_cmd("MapSys.place 0 $Test.test_func($Test.a, 4) $Test.test_int2.value[0] 门 2 -1 true")
-## 返回变量值，开头用@：
+## 返回变量值，开头用&：
 ##     Msg.send_cmd("&Test.a")
 ## 使用实例，用"@实例ID"来代替"类名"，其它与类的使用一致：
 ##     Msg.send_cmd("&@Test.char_a")
@@ -110,6 +110,8 @@ static func execute(command_str: String) -> Array:
 		var cmd: String = single.strip_edges()
 		if cmd.is_empty():
 			continue
+		# 解析（含 $ 定位）与参数组装由 CommandParser 的两级缓存承担；
+		# 这里只做"查命令 + 组装参数 + 调用"，不再另设执行缓存。
 		var parsed: Dictionary = CommandParser.parse(cmd)
 		if parsed.get("is_value", false):
 			results.append(parsed.get("value"))
@@ -127,6 +129,11 @@ static func execute(command_str: String) -> Array:
 		var callable: Callable = desc["callable"]
 		results.append(callable.callv(_build_args(desc["arg_meta"], parsed)))
 	return results
+
+
+# 清空缓存（热重载 / 调试用）。
+static func clear_cache() -> void:
+	CommandParser.clear_cache()
 
 
 # 懒注册：命令形如 "类名.方法名"，据此定位并加载宿主类脚本，注册其命令。
