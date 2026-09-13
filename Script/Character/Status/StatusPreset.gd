@@ -225,7 +225,7 @@ func listen(char_: Character) -> void:
         trigger_cur = false
         if listener.match_type in ["Satisfied", "Unsatisfied"]:
             var isSatisfied: bool = listener.match_type == "Satisfied"
-            # "状态名@unique_name" 时监听对象为 unique 角色，初始值/监听都转向它
+            # "状态名@identity" 时监听对象为 unique 角色，初始值/监听都转向它
             var resolved := Msg._resolve_target(char_, listener.name)
             var target: Character = resolved[0]
             var status_name_: String = resolved[1]

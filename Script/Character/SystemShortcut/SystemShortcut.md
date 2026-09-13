@@ -12,7 +12,7 @@
 
 ## SystemShortcutPreset.gd 说明（Preset）
 - 一条快捷 = `name / dependence_status(依赖状态) / config(指令串)`。
-  - `dependence_status` 支持 `状态名@unique_name` 定向语法（见 `Msg._resolve_target`）。
+  - `dependence_status` 支持 `状态名@identity` 定向语法（见 `Msg._resolve_target`）。
   - `config` 是交给 `Msg.send_cmd` 的指令串，可含多条（`\v` 分隔，语义同 `CmdSys`）。
 - `listen(char_)`：`Msg.listen_status_satisfied(char_, dependence_status, ...)` → 满足时 `Msg.send_cmd(config)` + `Msg.send_shortcut_act`。
 - `unlisten(char_)`：取消监听。（`send_shortcut_add/remove` 由集合 `SystemShortcuts` 发出，与 `InteractionPreset`/`Interactions` 分工一致。）

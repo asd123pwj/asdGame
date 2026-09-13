@@ -15,18 +15,18 @@ var shortcuts: SystemShortcuts
 """ ----- Actor ----- """
 var body: CharacterBody2D = null
 var archetype_type: String = ""
-var unique_name: String = ""
+var identity: String = ""
 var _body_created: bool = false
 
 static var _we: Dictionary[int, Character] = {}
 
 
-func _init(archetype_type: String, name: String="", unique_name: String="") -> void:
+func _init(archetype_type: String, identity: String="", name: String="") -> void:
     _we[ID] = self
     self.name = name if name != "" else archetype_type
-    self.unique_name = unique_name
-    if unique_name != "":
-        CharSys.bind_unique(unique_name, self)
+    self.identity = identity
+    if identity != "":
+        CharSys.bind_identity(identity, self)
     _init_from_archetype(archetype_type)
     init_done()
 

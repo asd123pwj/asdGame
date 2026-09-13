@@ -18,7 +18,7 @@ static func _input(event: InputEvent):
     elif event is InputEventMouseMotion:
         mouse_delta = event.position - mouse_position
         mouse_position = event.position
-        Msg.send_pointer_move()
+        Msg.send_pointer_move(0)
         # print(mouse_position)
     @warning_ignore_restore("unsafe_property_access")
 

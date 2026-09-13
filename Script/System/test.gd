@@ -28,7 +28,7 @@ func down_a(_msg) -> void:
 
 
 func run() -> void:
-    char_A = CharSys.spawn("人类")
+    char_A = CharSys.spawn("人类", "player")
     # char_A = CharSys.spawn("人类")
     char_B = CharSys.spawn("兔子")
     char_C = CharSys.spawn("草药")

@@ -25,7 +25,7 @@ var _test = Test.new()
 func _ready() -> void:
     sys = self
     init_sub_system()
-    sys_status = CharSys.create_char("SYS", "SYS", "SYS")
+    sys_status = CharSys.create_char("SYS", "SYS")
     print("test")
     _test.run()
 

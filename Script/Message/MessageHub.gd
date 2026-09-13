@@ -145,7 +145,7 @@ static func send_key_press(key: Variant) -> Array:
 static func send_key_release(key: Variant) -> Array:
     return _send_input(key, Enums.KeyStatus.RELEASE)
 
-static func send_pointer_move(key: Variant=0) -> Array:
+static func send_pointer_move(key: Variant) -> Array:
     return _send_input(key, Enums.KeyStatus.POINTER_MOVE)
 
 
@@ -158,7 +158,7 @@ static func listen_key_press(key: Variant, callback: Callable) -> String:
 static func listen_key_release(key: Variant, callback: Callable) -> String:
     return _listen_input(key, Enums.KeyStatus.RELEASE, callback)
 
-static func listen_pointer_move(key: Variant=0, callback: Callable=Utils.identity) -> String:
+static func listen_pointer_move(key: Variant, callback: Callable) -> String:
     return _listen_input(key, Enums.KeyStatus.POINTER_MOVE, callback)
 
     
@@ -195,19 +195,26 @@ static func listen_cmd(callback: Callable) -> String:
 """
 
 """ ---------- Basic ---------- """
-## 名字支持 "名字@unique_name"：含 @ 时指向 CharSys.unique 里该 unique_name 的角色，不再用传入的 char_。
+## 名字支持 "名字@identity"：含 @ 时指向 CharSys.identies 里该 identity 的角色，不再用传入的 char_。
 ## 返回 [解析后的角色, 纯名字]。所有域的 type_name 都经此统一解析。
 static func _resolve_target(char_: Character, type_name: String) -> Array:
     if "@" in type_name:
         var parts := type_name.split("@")
-        var target: Character = CharSys.get_by_unique(parts[1])
+        var target: Character = CharSys.get_identity(parts[1])
         if target != null:
             return [target, parts[0]]
     return [char_, type_name]
 
 static func _format_character(char_: Character, type: String, type_name: String, action: String) -> String:
-    ## 未绑定 unique_name 的角色用自身 ID 兜底，避免所有匿名角色 id 冲突串消息
-    var char_ID := char_.unique_name if char_.unique_name != "" else str(char_.ID)
+    ## 未绑定 identity 的角色用自身 ID 兜底，避免所有匿名角色 id 冲突串消息。
+    ## char_ 可为 null：这是"@identity 尚未解析出角色"时的占位（调用方无需自备角色），
+    ## 用该 identity 造个临时标签即可——该监听随后会由 bind_identity → rebind_identity
+    ## 迁到真实角色的节点上（见 _listen_character）。
+    var char_ID: String
+    if char_ != null:
+        char_ID = char_.identity if char_.identity != "" else str(char_.ID)
+    else:
+        char_ID = "@" + (type_name.split("@")[1] if "@" in type_name else "?")
     return format_ID(["CHAR", char_ID, type, type_name, action])
 
 static func _send_character(char_: Character, type: String, type_name: String, action: String, message: Variant = null) -> Array:
@@ -220,7 +227,19 @@ static func _send_character(char_: Character, type: String, type_name: String, a
 static func _listen_character(char_: Character, type: String, type_name: String, action: String, callback: Callable) -> String:
     var resolved := _resolve_target(char_, type_name)
     var node_ID = _format_character(resolved[0], type, resolved[1], action)
-    return listen(node_ID, callback)
+    # 含 @identity 的监听记为"身份接收器"：照常广播，但 identity 换角色时会被迁到新节点。
+    # 这样 identity 未出现时先监听也有效（等它出现时迁到正确节点）。
+    var identity_bound: bool = "@" in type_name
+    var msg_ID := listen(node_ID, callback, identity_bound)
+    if identity_bound:
+        var parts := type_name.split("@")
+        var pure_name: String = parts[0]
+        var identity: String = parts[1]
+        # 工厂：identity 换角色时按新角色算出该监听应处的节点 ID
+        var factory := func(new_char: Character) -> String:
+            return _format_character(new_char, type, pure_name, action)
+        bind_identity_receiver(identity, node_ID, callback, factory)
+    return msg_ID
 
 static func _get_message_character(char_: Character, type: String, type_name: String, action: String) -> Variant:
     var resolved := _resolve_target(char_, type_name)

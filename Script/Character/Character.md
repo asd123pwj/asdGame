@@ -15,15 +15,16 @@
 
 ### `Character.gd`（聚合根，不在子文件夹）
 - 一个角色实例的容器，持 `attrs/statuses/interactions/skills/collisions/inventories/shortcuts/body`。
-- `_init(archetype_type, name, unique_name)`：查 `Archetype.get_()` → 按其配置数组依次 new 各集合类；**不建 body**。`unique_name` 非空时把自己登记进 `CharSys.unique`（供状态名 `@unique_name` 定向）。
+- `_init(archetype_type, name, identity)`：查 `Archetype.get_()` → 按其配置数组依次 new 各集合类；**不建 body**。`identity` 非空时把自己登记进 `CharSys.identities`（供状态名 `@identity` 定向）。
 - `body` **延后生成**：`ensure_body()` 首次需要时按 `archetype.bodies[0]` 建 body，未配 `bodies` 的角色留空(`null`)。"需要"点 = 进入世界(`CharSys.spawn`)、技能驱动(`Skills.physics_process`)；body 生成时会顺带 `collisions.attach_collisions()` 补挂已装碰撞区。
 - 供外调用：`physics_process`(转发给 skills)、`ensure_body`、`Character.get_(id)`(查角色)。
 
 ### `CharacterSystem.gd`（`CharSys`，角色系统门面/工厂）
-- `static spawn(race_name, name, unique_name)`：`create_char` 建角色 → `ensure_body()`(配了 bodies 才有) → 广播 `Msg.send_spawn`；`create_char` 只建角色逻辑，不建 body。
-- `static unique: Dictionary[String, Character]` + `bind_unique(unique_name, char_)` / `get_by_unique(unique_name)`：**独特角色字典**，把 "敌人"、"目标" 等名字指向具体角色实例。绑定时机：`Character._init` 时 `unique_name` 非空则自动绑定；也可运行时调 `bind_unique` 动态改指向（如遇见新敌人时把 "敌人" 指向新角色）。
+- `static spawn(race_name, name, identity)`：`create_char` 建角色 → `ensure_body()`(配了 bodies 才有) → 广播 `Msg.send_spawn`；`create_char` 只建角色逻辑，不建 body。
+- `static identities: Dictionary[String, Character]` + `bind_identity(identity, char_)` / `get_identity(identity)`：**独特角色字典**，把 "敌人"、"目标" 等名字指向具体角色实例。绑定时机：`Character._init` 时 `identity` 非空则自动绑定；也可运行时调 `bind_identity` 动态改指向（如遇见新敌人时把 "敌人" 指向新角色）。
+- `bind_identity` 除写入 `identities` 外，还会调 `MsgBus.rebind_identity(identity, char_)`：把绑定到该 identity 的接收器迁到新角色对应的消息节点。因此"先监听、后出现"与"identity 换角色"两种情况下，监听都不会丢。绑定登记与迁移的具体实现见 `MsgBus._identity_bindings` / `rebind_identity`（`Script/Message/Message.md`）。
 - `_physics_process(delta)`：遍历所有角色驱动 `physics_process`（帧入口，被 `Sys` 调）。
-- 衔接：依赖 `Character`（生产）；是 `InventoryBase` 补货/`Interaction` 生成新角色的入口；`unique` 被 `Msg`/`StatusPreset` 的状态名 `@unique_name` 语法解析。
+- 衔接：依赖 `Character`（生产）；是 `InventoryBase` 补货/`Interaction` 生成新角色的入口；`identities` 被 `Msg`/`StatusPreset` 的状态名 `@identity` 语法解析。
 
 ### `Archetype/`（种族=各模块预设名的组合根）
 - 存某"种族/角色定义"用了哪些 buffs/statuses/interactions/skills/collisions/inventories/shortcuts/bodies（都是**预设名数组**，各数组都可为空）。

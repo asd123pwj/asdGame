@@ -5,7 +5,7 @@ extends PresetRegister
 
 
 var name: String
-## 依赖状态名（支持 "状态名@unique_name" 定向到独特角色，见 Msg._resolve_target）
+## 依赖状态名（支持 "状态名@identity" 定向到独特角色，见 Msg._resolve_target）
 var dependence_status: String
 ## 要执行的指令串（可含多条，'\v' 分隔，语义同 CmdSys）
 var config: String
