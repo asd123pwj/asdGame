@@ -4,7 +4,7 @@ extends BaseClass
 ## 按需根据 InputSys.mouse_position 计算指针下的目标：hover_ui / hover_char / map_position。
 ## 本类**只提供执行函数，不监听按键**：按键→状态→SystemShortcut→执行指令的链路
 ## 由 Character 的 Status 与 SystemShortcut 声明（状态满足即执行对应 CmdSys 指令）。
-## 因此这里的函数都是可被指令系统调用的静态方法（如 `PointDetect.pointer_down`）。
+## 因此这里的函数都是可被指令系统调用的静态方法（如 `PointDetect.pointer_press`）。
 
 ## 指针当前目标
 static var hover_ui: UIBase = null
@@ -26,12 +26,12 @@ static func update_targets() -> void:
 
 
 ## 指针键按下：取回当前目标并派发；命中 UI 执行操作，其它暂忽略。
-static func pointer_down() -> void:
+static func pointer_press() -> void:
 	update_targets()
 	if hover_ui == null:
 		return
 	dragging_ui = hover_ui
-	dragging_ui.on_pointer_down()
+	dragging_ui.on_pointer_press()
 
 
 ## 指针键按住：拖动跟随（天然支持连按/长按）。
@@ -43,10 +43,10 @@ static func pointer_move() -> void:
 
 
 ## 指针键抬起：结束拖动。
-static func pointer_up() -> void:
+static func pointer_release() -> void:
 	if dragging_ui == null:
 		return
-	dragging_ui.on_pointer_up()
+	dragging_ui.on_pointer_release()
 	dragging_ui = null
 
 
@@ -58,11 +58,12 @@ static func submit() -> void:
 
 
 ## 指针命中的 UI（按加入顺序取最上层）。
+## 用 is_visible_in_tree：父 UI 关闭(hide)后子元素也应视为不可命中。
 static func _ui_at(pos: Vector2) -> UIBase:
 	var list: Array = Sys.uiSys.uis.values()
 	for i in range(list.size() - 1, -1, -1):
 		var ui: UIBase = list[i]
-		if ui.control != null and ui.control.visible and ui.control.get_global_rect().has_point(pos):
+		if ui.control != null and ui.control.is_visible_in_tree() and ui.control.get_global_rect().has_point(pos):
 			return ui
 	return null
 

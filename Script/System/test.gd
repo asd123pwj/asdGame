@@ -15,10 +15,10 @@ var char_E: Character
 
 func _init() -> void:
     pass
-    Msg.listen_key_first_up([KEY_SHIFT, MOUSE_BUTTON_LEFT], down_a)
-    Msg.listen_key_first_down([KEY_S, KEY_S], down_a)
-    Msg.listen_key_down([KEY_S, KEY_S], down_a)
-    Msg.listen_key_first_down([KEY_SHIFT, KEY_D, KEY_D], down_a)
+    Msg.listen_key_release([KEY_SHIFT, MOUSE_BUTTON_LEFT], down_a)
+    Msg.listen_key_press([KEY_S, KEY_S], down_a)
+    Msg.listen_key_hold([KEY_S, KEY_S], down_a)
+    Msg.listen_key_press([KEY_SHIFT, KEY_D, KEY_D], down_a)
 
     # Msg.listen_combo([KEY_A, KEY_A], down_a)
     pass
@@ -28,7 +28,7 @@ func down_a(_msg) -> void:
 
 
 func run() -> void:
-    char_A = Msg.send_cmd00("CharSys.spawn 人类")
+    char_A = CharSys.spawn("人类")
     # char_A = CharSys.spawn("人类")
     char_B = CharSys.spawn("兔子")
     char_C = CharSys.spawn("草药")
@@ -61,10 +61,15 @@ func ui_test() -> void:
     Msg.listen_ui_close(ui, func(_m): print("UI close"))
     Msg.listen_ui_submit(ui, func(_m): print("UI submit"))
     Msg.listen_ui_fade(ui, func(m): print("UI fade -> ", m))
-    Msg.listen_ui_press(ui, func(_m): print("UI press"))
-    Msg.listen_ui_release(ui, func(_m): print("UI release"))
     Sys.uiSys.add_ui("MiniHUD")
     print("UI: add_ui MiniHUD = ", Sys.uiSys.check_ui("MiniHUD"))
+    # 展示 content/refresh 流程：修改内容属性即可更新滚动条 UI（不必重建控件）
+    var info: UIBase = Sys.uiSys.get_ui("MiniHUD/Info")
+    if info != null:
+        var lines: PackedStringArray = PackedStringArray()
+        for i in range(40):
+            lines.append("第 %d 行：滚动查看内容。" % i)
+        info.set_content("\n".join(lines))
 
 
 func get_char_info(char_: Character) -> void:

@@ -2,78 +2,124 @@
 
 ## 定位
 UI 系统遵循项目统一范式（见 `设计文档.md` §二/§三/§十）：**UIPreset**（配置）→ **UiSystem**（管理脚本）→ **UIBase**（元素基类）→ `Config/UI/` 配置类。
-- `UIBase extends BaseClass`，**不直接继承 Control**：内部用变量持有 `control: Control`（真正的引擎节点），对外交互一律走 **`Msg`** 消息，不用自定义 signal。
-- UI 描述放进 `ConfigBase.values`，玩家改配置 json 即可自定义。
+- `UIBase extends BaseClass`，**不直接继承 Control**：内部用变量持有 `control: Control`（真正的引擎节点），不用自定义 signal。
+- **一个 UI = 多个基本元素的组装**：根元素（如 `UI_Panel`）由 config["children"] 声明子元素（都是 UIBase 子类），build 时递归组装。
+- **交互 = 指令**：元素不再用 `draggable/closeable/...` 开关，而是"事件→指令"——config 按 `press/move/release/submit` 事件键各配一条指令串，事件发生即发送；指令里 `$parent`(挂载对象)/`$self`(自身) 在发送前替换为实例（`$@ID` 形式）。想要什么行为就配什么指令（拖动手柄配 drag 指令、关闭按钮配 close 指令）。
+- **显示内容统一挂 `content` 属性**：元素展示什么由 content 决定，改内容 = `set_content(v)`（内部自动 `refresh()`），不必重建控件。
 
 ## 目录与命名约定
 ```
 Script/UI/
 ├─ UI.md                 # 本文档
-├─ UIPreset.gd           # UI 预设（extends PresetRegister）：一条 UI 配置 + 实例化对应 UIBase
-├─ UiSystem.gd           # UI 管理脚本（extends BaseClass）：挂载/移除/持有全部 UI
+├─ UIPreset.gd           # UI 预设（extends PresetRegister）：一条 UI 配置 + create_element 工厂
+├─ UiSystem.gd           # UI 管理脚本（extends BaseClass）：挂载/移除 UI 树（只管生命周期）
+├─ UIInteract.gd         # UI 交互指令宿主（extends BaseClass）：close/open/drag_*/fade_to/set_content
 ├─ UIBase.gd             # 元素基类（extends BaseClass，持有 control: Control）
-└─ UI/                   # 具体元素放置目录
-   └─ UI_Panel.gd        # 示例元素（class_name UI_Panel，配置里 ui_name = "UI_Panel"）
+└─ UI/                   # 原子元素（每个都是 UIBase 子类，配置里 ui_name = 类名）
+   ├─ UI_Panel.gd        # 面板容器：竖排布局，组装子元素
+   ├─ UI_Label.gd        # 文本：content 即文本（配 press 指令即"按钮"，配 move 即"拖动手柄"）
+   ├─ UI_Image.gd        # 图片：content = 纹理路径，set_content(新路径) 即改图
+   └─ UI_Scroll.gd       # 滚动容器：content 为多行文本
 ```
 - 元素类 `class_name UI_XXX extends UIBase`，统一放 `Script/UI/UI/`。
 - 配置类 `class_name UIPreset_XXX extends ConfigBase`，放 `Config/UI/`，`values: Array[Array]`（每条 = `UIPreset._init` 的位置参数）。
+- **原子元素尽量少**：显示/交互有明显差异才做子类（文本/图片/滚动/容器）；"按钮"= 文本元素 + press 指令，组合控件直接用 `children` 配置堆叠，不写子类。
 
 ## 文件
 | 文件 | 作用 |
 |---|---|
-| `UIPreset.gd` | UI 预设：一条 UI 配置（名字/实现类名/显示与交互配置），按类名实例化对应 `UIBase`，注册进 `static _we`。 |
-| `UiSystem.gd` | 管理脚本：持 UI 根（CanvasLayer），按预设挂载/移除 UI，持有当前全部 UI 集合，操作时发 `Msg`。 |
-| `UIBase.gd` | 元素基类：`extends BaseClass`，持有 `control: Control`；`build()` 生成控件树；指针交互由 `PointDetect` 回调，结果走 `Msg`。 |
-| `UI/UI_*.gd` | 具体元素实现（如可拖动面板）。 |
+| `UIPreset.gd` | UI 预设：一条 UI 配置；`create_element(ui_name, name, config)` 为根 UI 与子元素共用的实例化工厂。 |
+| `UiSystem.gd` | 管理脚本：挂载/移除**整棵 UI 树**（子元素一并登记/注销），只管生命周期。 |
+| `UIInteract.gd` | **交互指令宿主**（静态方法自动注册为指令）：`UIInteract.close/open/drag/fade_to/set_content`。 |
+| `UIBase.gd` | 元素基类：`build()` 生成控件并组装子元素；持 `content`/`target`/`children`；指针事件→指令。 |
+| `UI/UI_*.gd` | 原子元素实现（容器/文本/图片/滚动）。 |
 
 ## UIPreset.gd（extends PresetRegister）
 ```gdscript
 var name: String          # UI 唯一名
 var ui_name: String       # 实现类名，如 "UI_Panel"
-var config: Dictionary    # 显示/交互配置
-var ui: UIBase            # 按 ui_name 实例化的元素
+var config: Dictionary    # 显示/交互配置（含 children）
+var ui: UIBase
 
 static var _we: Dictionary[String, UIPreset] = {}
-func _init(name, ui_name, config := {}): _we[name] = self; ...
-static func get_(name) -> UIPreset: return _we[name]
+static func get_(name) -> UIPreset
+static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类名查找 + new，根/子元素共用
 ```
-- `_init` 里按 `ui_name` 用 `ProjectSettings.get_global_class_list()` 找类并 `new`，缓存到 `ui`（参考 `InventoryPreset`）。
 
-## UiSystem.gd（extends BaseClass，管理脚本）
-- 持 `var root: CanvasLayer`（UI 根，挂到主场景）与 `var uis: Dictionary[String, UIBase]`。
-- `add_ui(name) -> Enums.Code`：查 `UIPreset.get_(name)` → `ui.build()` → 把 `ui.control` 挂到 `root` → 存入 `uis` → `Msg.send_ui_create(...)`。
-- `remove_ui(name) -> Enums.Code`：摘除并 `Msg.send_ui_remove(...)`。
-- `get_ui(name)` / `check_ui(name)`。
+## UiSystem.gd（extends BaseClass）
+- 持 `var root: CanvasLayer` 与 `var uis: Dictionary[String, UIBase]`。
+- `add_ui(name)`：`build()`（含子元素）→ 挂到 root → **登记整棵树**：根用原名，子元素用 `"根名/子名"`（如 `MiniHUD/Close`）→ `Msg.send_ui_create`。
+  - 子元素进 `uis` 是为了 **PointDetect 能把指针命中派发到具体子元素**（如关闭按钮、拖动手柄）；`uis.values()` 后加入者靠前，倒序命中即"子元素优先于父"。
+- `remove_ui(name)`：收集整棵树的登记名逐一注销 → `queue_free` 根控件（子元素随之释放）→ `Msg.send_ui_remove`。
+- `get_ui(name)` / `check_ui(name)`：子元素用全名（`MiniHUD/Close`）。
+- **只管生命周期，交互实现都在 `UIInteract`**。
 
 ## UIBase.gd（extends BaseClass）
-- 持 `var control: Control`（引擎对象）；`func build() -> Control` 生成控件树，返回 control。
-- 显示内容：`control` 下可挂文本(Label)/按钮(Button)/滚动条(ScrollContainer) 等原生控件。
-- 交互开关（可按需开启、可复用一个 UI）：`draggable / closeable / scalable / submittable / track_id`。
-- 指针交互由 **`PointDetect`** 用 `InputSys` 检测命中后回调：`on_pointer_down()` / `on_pointer_move()` / `on_pointer_up()` / `on_submit()`；**不用引擎 `Control.gui_input`**。
-- 交互事件统一走 **`Msg`**（不自定义 signal），且**按行为分函数**（函数名即行为，避免外部字符串写错）：
-  - `Msg.send_ui_press/drag/release/submit/close/scale(ui)`、`Msg.send_ui_fade(ui, target)`；对应 `listen_ui_press/...`。
-  - 仅控件自身的引擎内建信号（`Button.pressed`）保留，用于把按钮点击接回 UIBase 方法。
-- 子类覆写虚接口实现具体外观（如 `UI_Panel`）。
+- `var control: Control`；`build()` = `_create_control()` → `_apply_config()` → `refresh()` → `_build_children()`。
+- **`var content: Variant`**：显示内容（子类解释：Label=文本、Scroll=多行文本、Image=纹理路径）。`set_content(v)` 改内容并自动 `refresh()`；子类覆写 `refresh()` 把 content 刷到控件。
+- **`var parent: UIBase`**（挂载对象）：组装子元素时由父元素注入，是 `$parent` 的指向。
+- **`var children: Array[UIBase]`**：按 `config["children"]`（每项 `[child_name, ui_class, child_config]`）组装，挂到 `_content_box()`（容器类覆写返回内部布局节点）。
+- **事件→指令**：`on_pointer_press/move/release`、`on_submit`（由 PointDetect 派发）→ `_fire("press"/"move"/"release"/"submit")`：
+  - config 有该事件的指令串 → `Msg.send_cmd(UIInteract.resolve_cmd(指令串, self))`（解析 `$parent`/`$self` 占位符）。
+  - 未配置的事件不发送（无默认回退），元素没有隐式行为。
+- **只存"何时发什么指令"**：无 `close()/fade_to()` 等交互实现（都在 `UIInteract`），无 `draggable/closeable/...` 开关。
 
-## PointDetect（Script/Input/PointDetect.gd，extends BaseClass）
-- 职责：监控指针目标 + 按需派发到目标（详见 `Input.md`）。
-- **按需** `update_targets()` 刷新：`hover_ui`(指针下 UI) / `hover_char`(指针下角色) / `map_position`(指针地图格，逻辑坐标 y 向上)，不再每帧。
-- **只提供执行函数，不监听按键**：`pointer_down/move/up`、`submit` 由状态→SystemShortcut→指令驱动（`StatusPreset_Pointer` + `SystemShortcutPreset_Pointer`），不再 `Msg.listen_key_*`，也不被 `Sys._process` 驱动。
-- 命中 UI 判定按 `uis` 加入顺序取最上层，用 `control.get_global_rect()` 做矩形命中。
+## 交互指令（Script/UI/UIInteract.gd，静态方法 → 指令）
+- **这些都是纯副作用指令（`-> void`）**：只做 close/hide、改 position、起 Tween、转发消息，不返回值。因此被指令系统调用时不会在 `send_cmd` 的结果数组里多套一层，无需 `[0]` 剥离。
+- **参数类型 `target: UIBase`**：指令里的 `$parent/$self` 由 `resolve_cmd` 转成 `$@ID`，指令系统执行 `$` 表达式时用 `instance_from_id` 取出**实例**再传入，所以这里收到的必然是 UIBase，不是 ID 也不是名字。
+- **`_as_ui(target, cmd_name)`**：只做校验、不再做"名字→实例"归一化（该路径已由指令系统承担）。target 为空、或目标尚未 `build()`（`control == null`）时 **`push_warning` 指明是哪个指令**，而不是静默 return——避免配置/组装写错却无提示。
+- **`resolve_cmd(cmd, sender)`**：解析占位符——`$self`→自身；`$parent`→父 UI，`$parent.parent`→祖父（链式任意级，`_climb_parent` 实现；**级别不足时 `push_warning` 并用可达的最高级替代**）；链尾 `.xxx` 原样保留（`$parent.parent.text` → `$@ID.parent…` 后由指令系统继续按表达式取属性）。
+| 指令 | 作用 | 典型配置 |
+|---|---|---|
+| `UIInteract.close $parent` | 关闭（隐藏）目标 UI（发 `Msg.send_ui_close` + hide） | 关闭"按钮"的 press |
+| `UIInteract.open $parent` | 重新显示（与 close 成对） | 外部再次唤出 |
+| `UIInteract.drag $parent` | 把鼠标帧间位移（`InputSys.mouse_delta`）作用到目标 UI | 拖动手柄的 move |
+| `UIInteract.fade_to $parent 0.0 0.5` | 透明度渐隐/渐显（alpha, duration；**指令调用须写全参数**） | 提示淡出 |
+| `UIInteract.set_content $parent "文本"` | 修改显示内容（→ refresh） | 更新滚动区文本 |
 
-## 消息（MessageHub.gd 末尾补充）
-- `send_ui_create(ui)` / `listen_ui_create(cb)`、`send_ui_remove(ui)` / `listen_ui_remove(cb)`。
-- `send_ui_press/drag/release/submit/close/scale(ui)`、`send_ui_fade(ui, target)` 与对应 `listen_ui_*`：每个函数固定自己的 action（`PRESS/DRAG/RELEASE/SUBMIT/CLOSE/SCALE/FADE`），id 为 `format_ID(["UI", str(ui.ID), action])`，参考角色级消息。
+## 原子元素（Script/UI/UI/）
+| 类 | 职责 | 事件配置示例 |
+|---|---|---|
+| `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑 | — |
+| `UI_Label` | 文本：content 即文本；**配 press 即"按钮"、配 move 即"拖动手柄"**（无需单独 Button 类） | `"press": "UIInteract.close $parent"` |
+| `UI_Image` | 图片：content = 纹理路径，refresh 时 load；`set_content(新路径)` 即改图 | — |
+| `UI_Scroll` | 滚动容器：content 为多行文本，内层 Label autowrap；`set_content` 即改展示。**ScrollContainer 默认最小尺寸为 0，必须用 `size` 配置可视区大小，否则不可见** | — |
+- 组合控件（如带背景的按钮）直接用 `children` 配置堆叠（Panel 背景子元素 + Label 文字子元素），不写子类。
+- 元素**不连接任何引擎信号**（含 `Button.pressed`）：点击/拖动等全部由 PointDetect 命中 → 事件 → `_fire` → 指令/消息 派发，输入链路唯一。
+
+## PointDetect（Script/Input/PointDetect.gd）
+- 与之前一致：按需 `update_targets()`，`pointer_press/move/release/submit` 由状态→SystemShortcut→指令驱动。
+- 命中判定改为 `control.is_visible_in_tree()`：父 UI 关闭(hide)后子元素不再可命中；`uis` 倒序遍历，子元素优先命中。
 
 ## Config/UI/UIPreset_Basic.gd（extends ConfigBase）
 ```gdscript
 var values: Array[Array] = [
-    ["MiniHUD", "UI_Panel", { "size": [320, 220], "draggable": true }],
+    ["MiniHUD", "UI_Panel", {
+        "position": [30, 30], "size": [320, 220],
+        "children": [
+            ["Title", "UI_Label", {
+                "content": "MiniHUD（按住拖动）",
+                "move": "UIInteract.drag $parent",
+            }],
+            # "按钮" = 文本元素 + press 指令，无需 Button 子类
+            ["Close", "UI_Label", {
+                "content": "[关闭]",
+                "press": "UIInteract.close $parent",
+            }],
+            ["Info", "UI_Scroll", { "content": "初始内容" }],
+            # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],
+        ],
+    }],
 ]
 ```
-- 每条 = `UIPreset._init(name, ui_name, config)` 的位置参数。
+- 组装读法：根 `UI_Panel` 含三个子元素——标题栏按住拖动父 UI、文本"按钮"关闭父 UI、滚动区展示内容；改展示内容只需 `get_ui("MiniHUD/Info").set_content(...)` 或发 `UIInteract.set_content` 指令。
+
+## 消息（MessageHub.gd）
+- `send_ui_create/remove(ui)` 与 `listen_ui_create/remove`。
+- `send_ui_press/drag/release/submit/close/scale(ui)`、`send_ui_fade(ui, target)` 与对应 `listen_ui_*`：每个函数固定 action，id 为 `format_ID(["UI", str(ui.ID), action])`。
+- 现在这些消息主要作为**未配指令元素**的默认出口；配了指令的元素改走 `Msg.send_cmd`。
 
 ## 已确认但暂缓 / 留空
-- `PointDetect` 已提供 `hover_char` / `map_position`，但角色/地图的交互派发暂缓（等后续扩展）；`track_id`（UI 跟随角色）的"地图坐标→屏幕"投影依赖相机方案，接口先留。
-- 多套 UI 版本（横竖屏/字体缩放）、可视化编辑器。
+- `PointDetect` 已提供 `hover_char` / `map_position`，角色/地图的交互派发暂缓；`track_id`（UI 跟随角色）随开关一起移除，待需要时以指令形式回归（如 `UIInteract.follow $parent $@角色ID`）。
+- 多套 UI 版本（横竖屏/字体缩放）、可视化编辑器、缩放指令（`UIInteract.scale`）。
 - 更细的 style 默认值回退链（元素→父→UI 根→全局默认）后续按需补。

@@ -8,6 +8,6 @@ var values: Array[Dictionary] = [
         "statuses": [["Right", "Unsatisfied"]],
     }, {   
         "name": "Shift + Left Click",
-        "keys": [[[KEY_SHIFT, MOUSE_BUTTON_LEFT], Enums.KeyStatus.FIRST_UP]],
+        "keys": [[[KEY_SHIFT, MOUSE_BUTTON_LEFT], Enums.KeyStatus.RELEASE]],
     },
 ]

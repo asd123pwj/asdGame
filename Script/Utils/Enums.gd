@@ -28,10 +28,10 @@ enum ModificationMethod {
 }
 
 enum KeyStatus{
-    DOWN,
-    FIRST_DOWN,
+    HOLD,
+    PRESS,
     # UP, # 不支持Up，感觉用不着，想要Up的用Down状态应该也能代替，或者AlwaysSatisfied配合Down的Unsatisfied，又或者Tick配合Down的Unsatisfied
-    FIRST_UP,
+    RELEASE,
     POINTER_MOVE
 }
 

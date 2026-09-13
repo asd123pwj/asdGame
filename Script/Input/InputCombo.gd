@@ -26,22 +26,22 @@ func _listen() -> void:
     var listen_keys: Array[String] = []
     for i in range(_sequence.size()):
         var key_and_key_status
-        if _check_checkWithFirstDown(i):
-            key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.FIRST_DOWN)
+        if _check_checkWithPress(i):
+            key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.PRESS)
             if not key_and_key_status in listen_keys:
                 listen_keys.append(key_and_key_status)
-                var msg_ID = Msg.listen_key_first_down(_sequence[i], _act)
+                var msg_ID = Msg.listen_key_press(_sequence[i], _act)
                 _listen_ids.append(msg_ID)
         else:
-            key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.DOWN)
+            key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.HOLD)
             if not key_and_key_status in listen_keys:
                 listen_keys.append(key_and_key_status)
-                var msg_ID = Msg.listen_key_down(_sequence[i], _act)
+                var msg_ID = Msg.listen_key_hold(_sequence[i], _act)
                 _listen_ids.append(msg_ID)
-        key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.FIRST_UP)
+        key_and_key_status = str(_sequence[i]) + "_" + str(Enums.KeyStatus.RELEASE)
         if not key_and_key_status in listen_keys:
             listen_keys.append(key_and_key_status)
-            var msg_ID = Msg.listen_key_first_up(_sequence[i], _act)
+            var msg_ID = Msg.listen_key_release(_sequence[i], _act)
             _listen_ids.append(msg_ID)
 
 func _unlisten() -> void:
@@ -68,7 +68,7 @@ func _check_full() -> bool:
 func _check_deadline() -> bool:
     return (Time.get_ticks_msec() - _last_input_msec) > _interval
 
-func _check_checkWithFirstDown(index:int = INT64_MIN) -> bool:
+func _check_checkWithPress(index:int = INT64_MIN) -> bool:
     if index == INT64_MIN:
         index = _current_index
     if index == 0:
@@ -80,28 +80,28 @@ func _check_checkWithFirstDown(index:int = INT64_MIN) -> bool:
 func _get_next_key() -> Variant:
     return _sequence[_current_index]
 
-func _check_next_key_down(key_and_key_status) -> bool:
-    if _check_checkWithFirstDown():
-        return _get_next_key() == key_and_key_status[0] && key_and_key_status[1] == Enums.KeyStatus.FIRST_DOWN
-    return _get_next_key() == key_and_key_status[0] && key_and_key_status[1] == Enums.KeyStatus.DOWN
+func _check_next_key(key_and_key_status) -> bool:
+    if _check_checkWithPress():
+        return _get_next_key() == key_and_key_status[0] && key_and_key_status[1] == Enums.KeyStatus.PRESS
+    return _get_next_key() == key_and_key_status[0] && key_and_key_status[1] == Enums.KeyStatus.HOLD
 
 func _act(key_and_key_status) -> bool:
     if _check_combo(key_and_key_status):
-        if not _sequence in InputSys.keys_downing:
-            InputSys.keys_downing.append(_sequence)
-            Msg.send_key_first_down(_sequence)
+        if not _sequence in InputSys.keys_holding:
+            InputSys.keys_holding.append(_sequence)
+            Msg.send_key_press(_sequence)
     else:
-        if key_and_key_status[1] == Enums.KeyStatus.FIRST_UP:
-            if _sequence in InputSys.keys_downing:
-                InputSys.keys_downing.erase(_sequence)
-                Msg.send_key_first_up(_sequence)
+        if key_and_key_status[1] == Enums.KeyStatus.RELEASE:
+            if _sequence in InputSys.keys_holding:
+                InputSys.keys_holding.erase(_sequence)
+                Msg.send_key_release(_sequence)
     return false
 
 func _check_combo(key_and_key_status):
-    if _check_next_key_down(key_and_key_status):
+    if _check_next_key(key_and_key_status):
         if _check_deadline():
             _clear_input()
-            if _check_next_key_down(key_and_key_status):
+            if _check_next_key(key_and_key_status):
                 _add_input()
         else:
             _add_input()

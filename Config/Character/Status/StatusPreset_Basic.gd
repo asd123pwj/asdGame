@@ -25,7 +25,7 @@ interactions: Array[Array[ListenType]]=[]
     condition: Satisfied, Unsatisfied, Act
 keys: Array[Array[ListenType]]=[]
     [[KEY_CODE, "condition"], [[KEY_CODE, KEY_CODE], "condition"]]
-    condition: Enums.KeyStatus.DOWN, Enums.KeyStatus.FIRST_DOWN, Enums.KeyStatus.FIRST_UP
+    condition: Enums.KeyStatus.HOLD, Enums.KeyStatus.PRESS, Enums.KeyStatus.RELEASE
 time: Array[Array[ListenType]]=[]
     [["name", "condition"], ["name", "condition"]]
     name: Year, Month, Xun, Day, Hour

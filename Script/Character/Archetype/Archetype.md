@@ -26,7 +26,7 @@
 ```gdscript
 # A. 全部内联（推荐：系统专用内容只写这一处）
 { "name": "输入监控", "statuses": [
-    { "name": "Right", "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.DOWN]] },
+    { "name": "Right", "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.HOLD]] },
 ] }
 
 # B. 部分内联 + 部分引用

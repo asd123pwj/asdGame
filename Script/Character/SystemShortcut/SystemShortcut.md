@@ -30,6 +30,6 @@
 | 适用 | 需要角色间属性/背包交互 | 状态→触发系统级指令（如 UI 指针派发） |
 
 ## 典型用法：指针派发（PointDetect）
-`PointDetect` 只保留执行函数（`pointer_down/move/up`、`submit`），**不再自己监听按键**。
-按键 → `StatusPreset_Pointer` 定义的状态（Pointer Down/Hold/Up、Submit）→ `SystemShortcutPreset_Pointer` 声明"状态满足→执行 `PointDetect.xxx` 指令"。
-链路：`Msg.listen_key_*`(在 StatusPreset 内) → `send_status_satisfied` → `SystemShortcut` → `Msg.send_cmd("PointDetect.pointer_down")`。
+`PointDetect` 只保留执行函数（`pointer_press/move/release`、`submit`），**不再自己监听按键**。
+按键 → `StatusPreset_Pointer` 定义的状态（Pointer Press/Hold/Release、Submit）→ `SystemShortcutPreset_Pointer` 声明"状态满足→执行 `PointDetect.xxx` 指令"。
+链路：`Msg.listen_key_*`(在 StatusPreset 内) → `send_status_satisfied` → `SystemShortcut` → `Msg.send_cmd("PointDetect.pointer_press")`。

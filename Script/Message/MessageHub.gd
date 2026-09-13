@@ -136,27 +136,27 @@ static func _listen_input(key: Variant, status: Enums.KeyStatus, callback: Calla
     return listen(_format_input(key, status), callback)
 
 """ ---------- Single Key ---------- """
-static func send_key_down(key: Variant) -> Array:
-    return _send_input(key, Enums.KeyStatus.DOWN)
+static func send_key_hold(key: Variant) -> Array:
+    return _send_input(key, Enums.KeyStatus.HOLD)
 
-static func send_key_first_down(key: Variant) -> Array:
-    return _send_input(key, Enums.KeyStatus.FIRST_DOWN)
+static func send_key_press(key: Variant) -> Array:
+    return _send_input(key, Enums.KeyStatus.PRESS)
 
-static func send_key_first_up(key: Variant) -> Array:
-    return _send_input(key, Enums.KeyStatus.FIRST_UP)
+static func send_key_release(key: Variant) -> Array:
+    return _send_input(key, Enums.KeyStatus.RELEASE)
 
 static func send_pointer_move(key: Variant=0) -> Array:
     return _send_input(key, Enums.KeyStatus.POINTER_MOVE)
 
 
-static func listen_key_down(key: Variant, callback: Callable) -> String:
-    return _listen_input(key, Enums.KeyStatus.DOWN, callback)
+static func listen_key_hold(key: Variant, callback: Callable) -> String:
+    return _listen_input(key, Enums.KeyStatus.HOLD, callback)
 
-static func listen_key_first_down(key: Variant, callback: Callable) -> String:
-    return _listen_input(key, Enums.KeyStatus.FIRST_DOWN, callback)
+static func listen_key_press(key: Variant, callback: Callable) -> String:
+    return _listen_input(key, Enums.KeyStatus.PRESS, callback)
 
-static func listen_key_first_up(key: Variant, callback: Callable) -> String:
-    return _listen_input(key, Enums.KeyStatus.FIRST_UP, callback)
+static func listen_key_release(key: Variant, callback: Callable) -> String:
+    return _listen_input(key, Enums.KeyStatus.RELEASE, callback)
 
 static func listen_pointer_move(key: Variant=0, callback: Callable=Utils.identity) -> String:
     return _listen_input(key, Enums.KeyStatus.POINTER_MOVE, callback)

@@ -17,24 +17,24 @@ var values: Array[Dictionary] = [
     {
         "name": "输入监控",
         "statuses": [
-            {"name": "Right", "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.DOWN], [KEY_D, Enums.KeyStatus.DOWN]],}, 
-            {"name": "Up", "match_any": true, "keys": [[KEY_UP, Enums.KeyStatus.DOWN], [KEY_W, Enums.KeyStatus.DOWN]],}, 
-            {"name": "Left", "match_any": true, "keys": [[KEY_LEFT, Enums.KeyStatus.DOWN], [KEY_A, Enums.KeyStatus.DOWN]],}, 
-            {"name": "Down", "match_any": true, "keys": [[KEY_DOWN, Enums.KeyStatus.DOWN], [KEY_S, Enums.KeyStatus.DOWN]],},
+            {"name": "Right", "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.HOLD], [KEY_D, Enums.KeyStatus.HOLD]],}, 
+            {"name": "Up", "match_any": true, "keys": [[KEY_UP, Enums.KeyStatus.HOLD], [KEY_W, Enums.KeyStatus.HOLD]],}, 
+            {"name": "Left", "match_any": true, "keys": [[KEY_LEFT, Enums.KeyStatus.HOLD], [KEY_A, Enums.KeyStatus.HOLD]],}, 
+            {"name": "Down", "match_any": true, "keys": [[KEY_DOWN, Enums.KeyStatus.HOLD], [KEY_S, Enums.KeyStatus.HOLD]],},
         ],
     },
     {
         "name": "指针监控",
         "statuses": [
-            {"name": "Pointer Down", "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.FIRST_DOWN]],}, 
+            {"name": "Pointer Press", "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.PRESS]],}, 
             {"name": "Pointer Move", "keys": [[0, Enums.KeyStatus.POINTER_MOVE]],}, 
-            {"name": "Pointer Up", "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.FIRST_UP]],}, 
-            {"name": "Submit", "keys": [[KEY_ENTER, Enums.KeyStatus.FIRST_DOWN]],},
+            {"name": "Pointer Release", "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.RELEASE]],}, 
+            {"name": "Submit", "keys": [[KEY_ENTER, Enums.KeyStatus.PRESS]],},
         ],
         "shortcuts": [
-            ["Pointer Down", "Pointer Down", "PointDetect.pointer_down"],
+            ["Pointer Press", "Pointer Press", "PointDetect.pointer_press"],
             ["Pointer Move", "Pointer Move", "PointDetect.pointer_move"],
-            ["Pointer Up", "Pointer Up", "PointDetect.pointer_up"],
+            ["Pointer Release", "Pointer Release", "PointDetect.pointer_release"],
             ["Submit", "Submit", "PointDetect.submit"],
         ],
     },

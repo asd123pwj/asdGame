@@ -19,10 +19,9 @@
 ##     Msg.send_cmd("&Test.a")
 ## 使用实例，用"@实例ID"来代替"类名"，其它与类的使用一致：
 ##     Msg.send_cmd("&@Test.char_a")
-## 调用单调指令返回的结果：
-## 	   Msg.send_cmd00("&@Test.char_a")
-## 调用多条指令返回的结果，[结果1, 结果2]（未测试）：
-## 	   Msg.send_cmd0("&@Test.char_a")
+## send_cmd 返回的是"每条指令结果"的数组，取值再按下标：
+##     Msg.send_cmd("&@Test.char_a")[0]          单条指令：取该指令的结果
+##     Msg.send_cmd("CharSys.spawn 人类")[0]      单条指令：取该指令的结果
 class_name CmdSys
 extends BaseClass
 
