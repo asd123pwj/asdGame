@@ -4,9 +4,11 @@ extends BaseClass
 ## 静态方法自动注册为指令（UIInteract.xxx），供元素按事件发送：
 ##   开启 UI   任意事件 → UIInteract.open_ui $parent.parent Menu $self
 ##   关闭      任意事件 → UIInteract.close $parent
+##   关子 UI   任意事件 → UIInteract.close_ui $parent CloseButton（关掉挂在某宿主下的某个预设 UI）
 ##   按住拖动  逐帧状态 → UIInteract.drag $parent
 ##   渐隐/渐显  任意事件 → UIInteract.fade_to $parent 0.0 0.5
 ##   改显示内容 任意事件 → UIInteract.set_content $parent "新文本"
+##   对调配置   任意事件 → UIInteract.swap_config $self events events_2（开关式按钮：点一下换一套配置）
 ## target 为目标 UI 实例（指令里的 $parent/$self 由 resolve_cmd 转成 $@ID，
 ## 指令系统执行时已用 instance_from_id 取出实例，故这里收到的就是 UIBase）。
 ## 本类只做"指令参数 → 具体实现"的转发与校验，**不含任何 UI 策略**：
@@ -114,28 +116,36 @@ static func set_content(target: UIBase, content: Variant) -> void:
 	ui.set_content(content)
 
 
-## 给目标 UI（宿主）的**右上角**加一个关闭按钮：占位实现是 Label 显示 "X" 的方块，点击关闭该 UI。
-## 目标是容器时直接摆 position 会被布局覆盖，所以该元素声明 free 挂到叠加层（非容器），
-## 位置用宿主坐标系算（挂载点原点即宿主原点）。已经加过就不重复加。
-## 被谁用：菜单项"添加关闭按钮"（Config/UI/UIPreset_Menu.gd 的 MenuEdit/AddClose）。
-static func add_close_button(target: UIBase) -> void:
-	var ui := _as_ui(target, "add_close_button")
-	if ui == null or ui.control == null:
+## 对调目标 UI 的 config 里两项（A ↔ B），实现"点一下换一套配置"的开关式按钮。
+## 典型用法是把两套 `events` / `content` 都写在元素上，点击时"做事 + 换一套"——
+## 一条事件串可以写多条命令（用 `\v` 分隔，见 CmdSys.execute），所以：
+##   "Mouse Left" → UIInteract.open_ui <宿主> CloseButton <宿主> \v swap_config $self events events_2
+##                  \v swap_config $self content content_2
+## 换完 `config["events"]` 就是另一套（下一次点击自然走那套），`content` 与显示同步刷新。
+## 于是普通 UI_Label / UI_Image 就能当开关用，不需要专门的开关元素。
+## 被谁用：预设里配 `"Mouse Left"` 的项（Config/UI/UIPreset_Menu.gd 的 MenuEdit/CloseToggle）。
+static func swap_config(target: UIBase, key_a: String, key_b: String) -> void:
+	var ui := _as_ui(target, "swap_config")
+	if ui == null:
 		return
-	for child in ui.children:
-		if child.name == "CloseX":
-			return
-	var box: Vector2 = Vector2(20, 20)
-	var btn: UIBase = ui.add_child_element("CloseX", "UI_Label", {
-		"content": "X",
-		"size": [box.x, box.y],
-		"free": true,
-		"events": [["Mouse Left", "UIInteract.close $parent"]],
-	})
-	if btn == null or btn.control == null:
+	ui.swap_config(key_a, key_b)
+
+
+## 关闭（隐藏）**挂在 target 下的某个预设 UI**：按"挂载点 + 预设名"查（登记名规则见 UiSys 文件头）。
+## 与 UIInteract.open_ui 是一对：开用 `open_ui`（复用 + 摆位 + 显示），关就用它——
+## 于是"给某个 UI 加/减东西"不需要为它专门写一对函数，**加 = 开一个预设 UI，减 = 关掉它**：
+##   给面板加 "X" 关闭按钮 → `open_ui <面板> CloseButton <面板>`（CloseButton 见 Config/UI/UIPreset_Basic.gd）
+##   去掉它             → `close_ui <面板> CloseButton`
+## 没开过就什么都不做（幂等）；"关"沿用统一的隐藏语义，重开仍走 open_ui。
+## 被谁用：开关式按钮的"移除"一侧（Config/UI/UIPreset_Menu.gd 的 MenuEdit/CloseToggle）。
+static func close_ui(target: UIBase, preset_name: String) -> void:
+	var ui := _as_ui(target, "close_ui")
+	if ui == null:
 		return
-	btn.control.size = box
-	btn.control.position = Vector2(ui.control.size.x - box.x, 0.0)
+	var child: UIBase = UiSys.get_child_ui(ui, preset_name)
+	if child == null:
+		return
+	close(child)
 
 
 ## 给目标 UI（宿主）启用拖拽：追加"<event_name> → 拖动自己"的事件绑定。

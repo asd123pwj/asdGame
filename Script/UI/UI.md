@@ -30,7 +30,7 @@ Script/UI/
 |---|---|
 | `UIPreset.gd` | UI 预设：一条 UI 配置；`create_element(ui_name, name, config)` 为根 UI 与子元素共用的实例化工厂。 |
 | `UiSystem.gd` | UI 系统 `UiSys`：开启/登记**整棵 UI 树**（子元素一并登记），成员全静态，日常直接 `UiSys.xxx`。 |
-| `UIInteract.gd` | **交互指令宿主**（静态方法自动注册为指令）：`UIInteract.open_ui/close/drag/fade_to/set_content/add_close_button/enable_drag`；`open_ui` 只转发给 `UiSys.open_ui`。 |
+| `UIInteract.gd` | **交互指令宿主**（静态方法自动注册为指令）：`UIInteract.open_ui/close/close_ui/drag/fade_to/set_content/swap_config/enable_drag`；`open_ui` 只转发给 `UiSys.open_ui`。 |
 | `UIBase.gd` | 元素基类：`build()` 生成控件并组装子元素；持 `content`/`target`/`children`；指针事件→指令。 |
 | `UI/UI_*.gd` | 原子元素实现（容器/文本/图片/滚动）。 |
 
@@ -49,14 +49,16 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 ## UiSystem.gd（class_name UiSys，extends BaseClass）
 - **成员全是静态的**：`static var root: CanvasLayer` 与 `static var uis: Dictionary[String, UIBase]`，调用直接写 `UiSys.open_ui(...)` / `UiSys.uis` / `UiSys.root`，不用经 `Sys.uiSys`（那个实例只用于启动时跑一次 `_init` 建 UI 根）。
 - **挂载规则**（决定 UI 树 ⇒ 决定"关谁连谁一起关"和 `$parent` 的级数）：有 `anchor`（触发它的那个元素）→ **挂在 anchor 下**；没有 anchor → 挂在 `host` 下；都没有 → 挂 UI 根（独立 UI）。所以"菜单开子菜单"得到的是一棵**单链子树**：`MiniHUD → Menu → Edit(菜单项) → MenuEdit → …`。
-- **登记名规则**（唯一的"寻址"约定，`_reg_name`）：没有挂载点 → 就是预设名（`MiniHUD`）；有挂载点 → `挂载点的登记名=>预设名`（`MiniHUD=>Menu`、`MiniHUD=>Menu/Edit=>MenuEdit`）；UI 内部的子元素在后面追加 `/子名`（`MiniHUD=>Menu/Close`）。**"是否能复用"就是一次 `uis.get(登记名)`**，不需要按类型遍历。
+- **登记名规则**（唯一的"寻址"约定，`_reg_name`，**只有这一条**）：没有挂载点 → 就是预设名（`MiniHUD`）；有挂载点 → `挂载点的登记名/名字`（`MiniHUD/Menu`、`MiniHUD/Menu/Edit/MenuEdit`）。**"开出来的 UI"与"配置里的子元素"共用它**（子 UI 的名字就是它的预设名），所以登记表是一整棵 `/` 连接的树；**"是否能复用"就是一次 `uis.get(登记名)`**，不需要按类型遍历。同一挂载点下不要重名。
 - `open_ui(preset_name, host := null, anchor := null)`：**全项目唯一的开启入口**（普通 UI 与菜单同一条路，不要再写第二个）。
   - `host` 为空 → 独立 UI：建预设自己那份 → 挂 `root` → 登记（登记名就是预设名，如 `MiniHUD`）→ `Msg.send_ui_create`。
-  - 给了 `anchor` / `host` → 深拷贝模板 → `挂载点.add_child_element` 挂到它下面 → **登记名 = `挂载点登记名=>预设名`**（如 `MiniHUD=>Menu`、`MiniHUD=>Menu/Edit=>MenuEdit`）；两者都不给则挂 UI 根、登记名就是预设名。
+  - 给了 `anchor` / `host` → 深拷贝模板 → `挂载点.add_child_element` 挂到它下面 → **登记名 = `挂载点登记名/预设名`**（如 `MiniHUD/Menu`、`MiniHUD/Menu/Edit/MenuEdit`）；两者都不给则挂 UI 根、登记名就是预设名。
   - 已存在就**只显示 + 重新摆位**，不重建控件——"是否存在"就是一次字典查找 `uis.get(登记名)`（命名规则见 `UiSys` 文件头），**没有任何按 UI 类型的特判**。
   - 子元素进 `uis` 是为了 **PointerDetect 能把指针命中派发到具体子元素**（如关闭按钮、菜单项）；`uis.values()` 后加入者靠前，倒序命中即"子元素优先于父"。
 - `get_ui(name)`：按登记名取（子元素用全名，如 `MiniHUD/Info`）。
-- `register_child(parent, child, reg_name := "")` / `find_name(ui)`：运行时子元素的登记与反查（`UIBase.add_child_element` → `register_child`）。`reg_name` 留空 = 普通子元素按 `父登记名/子名`；**开 UI 时由 `_build_open` 显式传入 `挂载点=>预设名`**（这条不通，`open_ui` 的复用查找就永远命不中，会重复建实例）。
+- `register_child(parent, child)` / `find_name(ui)`：登记与反查（`UIBase.add_child_element` → `register_child`），都用 `_reg_name` 那一条规则（`挂载点名/名字`）——所以开出来的 UI 与配置子元素同名规则，`open_ui` 的复用查找（`get_child_ui`）才命得中。
+- `get_child_ui(mount, preset_name)`：按"挂载点 + 预设名"取已登记的 UI（= `open_ui` 复用时那把钥匙的公开形式）——`UIInteract.close_ui` 就是靠它"关掉挂在某宿主下的某预设"。
+- **"给某个 UI 加/减东西"= 开/关一个预设 UI**：不再有 `add_close_button` / `remove_close_button` 这类成对的专门函数（那正是"同一需求两套策略"）。关闭按钮就是一个普通预设 `CloseButton`（`Config/UI/UIPreset_Basic.gd`，`open_at = ANCHOR_TOP_RIGHT_IN` 开在锚点内部右上角），加它 = `open_ui <宿主> CloseButton <宿主>`，减它 = `close_ui <宿主> CloseButton`。
 - **只管生命周期，交互实现都在 `UIInteract`**。
 
 ## UIBase.gd（extends BaseClass）
@@ -69,7 +71,8 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
   - 在 `config["events"]`（`[事件名, 指令串]` 列表）里**按等值**取指令串 → `Msg.send_cmd(UIInteract.resolve_cmd(指令串, self))`（解析 `$parent`/`$self` 占位符）。
   - 用列表而非字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），加新事件只需加一项。
   - 自己没配的事件**冒泡给父级**，冒泡到根都没有才什么都不做（元素没有隐式行为）；于是"整块面板的行为"在子元素上同样生效（如菜单面板启用拖拽后，按住菜单项也能拖），`$self/$parent` 以"配了指令的那个元素"为基准。
-- **运行时增改**：`add_child_element(name, ui_class, config, reg_name := "")` 加子元素（内部交给 `UiSys.register_child` 登记，登记后才可被指针命中；`reg_name` 由开 UI 的路径显式指定，普通子元素留空）；`add_event(事件名, 指令串)` 追加事件绑定——菜单的"添加关闭按钮/启用拖拽"就是这两个。
+- **运行时增改**：`add_child_element(name, ui_class, config, reg_name := "")` 加子元素（内部交给 `UiSys.register_child` 登记，登记后才可被指针命中；`reg_name` 由开 UI 的路径显式指定，普通子元素留空）；`add_event(事件名, 指令串)` 追加事件绑定；`swap_config(键A, 键B)` 对调两项配置（开关式按钮的底座）——菜单的"启用拖拽"（`enable_drag`）就是这一条；而"关闭按钮"连新指令都不需要：它是普通预设 `CloseButton`，用 `open_ui` / `close_ui` 开关。
+- **开关式按钮（可选框）**：不需要专门元素——同一个元素上放两套配置（`events` / `content` 与 `events_2` / `content_2`），点击时"做事 + `swap_config` 对调"，下次点击自然走另一套。事件串里多条命令用 `\v` 分隔（见 `CmdSys.execute`）。
 - **config 可选属性**：`position` / `size` / `content` / `children` / `events` / `visible` / `free`（自由定位：挂到叠加层的非容器挂载点，位置不被父级布局覆盖，用于"右上角的关闭按钮""菜单"这类元素）。
   - `size` 里为 **0 的那一维按"内容最小尺寸"补足**（`_fit_size()`；"内容要多大"由可覆写的 `_content_size()` 给出）：`[150, 0]` = 宽固定、高随内容；`[0, 0]` = 完全由内容决定。**必须补**——控件尺寸为 0 时 `get_global_rect()` 是退化矩形，PointerDetect 永远命中不到它（菜单"一打开就没了"就是这么来的：矩形高度 0 → 失焦判定以为指针在菜单外 → 同一帧里就把它关了）。
   - **`UI_Panel` 的 `_content_size()` 必须问内部的 `PanelContainer`，不能问根控件**：根是普通 `Control`，**不会汇总子元素的最小尺寸**，问它只会得到 `custom_minimum_size`（`[150, 0]` → 高度就是 0）。而且建时还没进树、字体主题都问不出来，所以要挂在 `_panel.minimum_size_changed` 上再补一次。
@@ -89,6 +92,8 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | `UIInteract.drag $parent` | 把指针**本帧累计位移**（`InputSys.mouse_delta`）作用到目标 UI | 拖动手柄的逐帧状态（如 `"Mouse Left | Tick"`） |
 | `UIInteract.fade_to $parent 0.0 0.5` | 透明度渐隐/渐显（alpha, duration；**指令调用须写全参数**） | 提示淡出 |
 | `UIInteract.set_content $parent "文本"` | 修改显示内容（→ refresh） | 更新滚动区文本 |
+| `UIInteract.swap_config $parent 键A 键B` | 对调目标 `config` 里两项的值（如 `events`↔`events_2`、`content`↔`content_2`），换完同步镜像（content/visible）并 refresh——**开关式按钮就靠它 + 多命令实现** | 可选框/开关按钮的 `"Mouse Left"` |
+| `UIInteract.close_ui $parent 预设名` | 关闭（隐藏）**挂在 target 下的某个预设 UI**（按"挂载点 + 预设名"查，没开过就什么都不做）。与 `open_ui` 成对：给某个 UI 加/减东西 = 开/关一个预设 | 开关式按钮的"移除"一侧：`close_ui <宿主> CloseButton` |
 
 ## 原子元素（Script/UI/UI/）
 | 类 | 职责 | 事件配置示例 |
@@ -114,7 +119,7 @@ var values: Array[Array] = [
                 "content": "MiniHUD（按住拖动）",
                 "events": [["Mouse Left | Tick", "UIInteract.drag $parent"]],
             }],
-            # "按钮" = 文本元素 + "Pointer Press Left" 指令，无需 Button 子类
+            # "按钮" = 文本元素 + "Mouse Left" 指令，无需 Button 子类
             ["Close", "UI_Label", {
                 "content": "[关闭]",
                 "events": [["Mouse Left", "UIInteract.close $parent"]],
@@ -138,6 +143,7 @@ var values: Array[Array] = [
 - **失焦判定也因此变简单**：`UiSys.close_blur_ui` 判"指针是否在我要的链上"，鼠标在子菜单上时沿 parent 链能走回父菜单，所以父菜单不会被误关。
 - **触发**：宿主配置里写 `"events": [["Mouse Right", "UIInteract.open_ui $self Menu $self"]]`；状态层只需 `Mouse Right → PointerDetect.key "Mouse Right"` 把事件派发给 hover 的 UI，**不需要系统级快捷**。
 - **多级菜单 = 菜单开菜单**：菜单项的 `Pointer Enter` → `UIInteract.open_ui $self MenuEdit $self`（第一个参数是挂载点，第二个是位置锚点，菜单项里都传 `$self`），层数不写死。
+- **菜单项里的"开关"**（如 `MenuEdit/CloseToggle`）：普通 `UI_Label` 上写两套配置，`"Mouse Left"` 一条串里做三件事——`open_ui <宿主> CloseButton <宿主>`（另一套里是 `close_ui <宿主> CloseButton`）\v `swap_config $self events events_2` \v `swap_config $self content content_2`，于是点第一次开关闭按钮、点第二次关它，文字也跟着换。关闭按钮就是 `Config/UI/UIPreset_Basic.gd` 里的普通预设（`open_at = Enums.OpenAt.ANCHOR_TOP_RIGHT_IN`：开在锚点**内部**右上角，按自己宽度内缩）。
 - **关掉 = 隐藏（实例复用）**：关闭统一走 `UIInteract.close`（`hide()` + 广播）；**父 UI 一 hide，挂在它下面的子 UI 随可见性继承一起不可见**，所以不需要"关父菜单时连子菜单一起关"这种递归。`open_ui` 按登记名查——有就"显示 + 重新摆位"，没有才现场创建；同一登记名只有一份，隐藏的实例不参与指针命中、也不算"开着"。
 - **隐藏后怎么回来**：`close` 只是 `hide()`，实例还在 `uis` 里，所以重开不用重建——重开统一走 `UiSys.open_ui`（显示 + 按 `open_at` 摆位，不重建控件；指令形式就是 `UIInteract.open_ui`）。**注意 `PointerDetect` 用 `is_visible_in_tree()` 判命中，隐藏的 UI 再也收不到任何事件**，所以重开的触发不能写在它自己身上（"再点一下"是点不到的），必须来自它仍可见的父级、或系统级的状态/快捷指令。
 - **失焦关闭（纯配置驱动）**：谁写了 `close_on_blur = true` 谁就有这个行为（与"是不是菜单"无关）。`PointerDetect.key` 派发完按键事件后：`UiSys.has_blur_ui()` → 先 `update_targets()` 刷新命中（这类 UI 常是刚在指针处打开的，用旧 hover 会误判成"外面"）→ `UiSys.close_blur_ui(hover_ui)`：遍历登记表，指针不在该 UI（或它的子孙元素）上就 `UIInteract.close` 关掉。

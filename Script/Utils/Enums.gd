@@ -55,6 +55,8 @@ enum OpenAt {
     POINTER,          # 开在指针处（右键菜单）
     ANCHOR_TOP_RIGHT, # 开在"锚点 UI"的右上角顶点（多级菜单：锚点 = 触发它的那个菜单项）
     CONFIG,           # 摆回配置里声明的 position（独立面板；被拖动过就回到初值）——不写 open_at 时的默认
+    ANCHOR_TOP_RIGHT_IN, # 开在"锚点 UI"**内部**的右上角（按自己的宽度内缩；如给面板加的 "X" 关闭按钮）
+    # 注意：新值一律追加在末尾——已存盘的 json 里记的是枚举整数（见 Sys.RESET），插在中间会让旧值串位。
 }
 
 ## LayerType 的显示名（索引与下面的枚举一一对应，COUNT 不参与）。

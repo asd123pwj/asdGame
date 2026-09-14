@@ -18,6 +18,11 @@ config: Dictionary
   UI_Image  图片（content = 纹理路径，改图 = set_content(新路径)）
   UI_Scroll 滚动文本（content = 多行文本，set_content 即改展示）
 组合按钮 = Panel(背景) + Label(文字) 直接用配置堆叠，不写子类。
+开关式按钮（可选框）也不用专门元素：同一个元素上写两套配置（events/content 与 events_2/content_2），
+点击时用 UIInteract.swap_config 对调即可——见 Config/UI/UIPreset_Menu.gd 的 MenuEdit/CloseToggle。
+
+预设也是"普通 UI"，所以重复出现的东西（如关闭按钮 CloseButton）都做成预设、
+用 UIInteract.open_ui / close_ui 开与关，不写专门函数。
 
 注意：ScrollContainer 默认最小尺寸为 0，UI_Scroll 必须用 size 配置可视区大小，否则不可见。
 """
@@ -53,5 +58,17 @@ var values: Array[Array] = [
             # 图片示例：content 填纹理路径即可显示；改图 = UIInteract.set_content $parent "res://xxx.png"
             # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],
         ],
+    }],
+    # 通用小按钮：摆到"锚点 UI"的右上角，点它关掉自己挂着的那个 UI。
+    # **它就是普通 UI 预设**，所以"给某个 UI 加/减关闭按钮"不需要专门函数，直接开/关这个预设即可：
+    #   UIInteract.open_ui  <宿主> CloseButton <宿主>   ← 挂到宿主下、开在宿主内部右上角
+    #   UIInteract.close_ui <宿主> CloseButton          ← 移除（隐藏；重开仍走 open_ui）
+    ["CloseButton", "UI_Label", {
+        "content": "X",
+        "size": [20, 20],
+        "free": true,                                  # 自由定位：挂到宿主叠加层，位置不被父级布局覆盖
+        "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,   # 开在锚点（宿主自己）内部的右上角
+        # 点它就关掉它挂着的那个 UI（$parent = 它的挂载点 = 宿主）
+        "events": [["Mouse Left", "UIInteract.close $parent"]],
     }],
 ]

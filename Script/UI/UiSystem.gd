@@ -15,13 +15,15 @@ extends BaseClass
 ##   ⇒ 关父级时整条链一起隐藏（可见性继承）；
 ##   ⇒ 失焦判定沿 parent 链就能认出"指针在我这条链上"（见 close_blur_ui）。
 ##
-## **登记名规则**（本类唯一的"寻址"约定）：
+## **登记名规则**（本类唯一的"寻址"约定，只有这一条）：
 ##   - 没有挂载点（独立 UI）→ 登记名就是预设名，如 `MiniHUD`；
-##   - 有挂载点 → 登记名 = `挂载点的登记名 + "=>" + 预设名`，如 `MiniHUD=>Menu`、
-##     `MiniHUD=>Menu/Edit=>MenuEdit`（子菜单挂在菜单项下，所以名字也层层接下去）。
+##   - 有挂载点 → 登记名 = `挂载点的登记名 + "/" + 名字`，如 `MiniHUD/Menu`、
+##     `MiniHUD/Menu/Edit/MenuEdit`（子菜单挂在菜单项下，名字也就层层接下去）。
+##   **"开出来的 UI"与"配置里的子元素"共用这一条规则**（子 UI 的名字就是它的预设名），
+##   所以登记表就是一整棵用 `/` 连接的树，看名字就知道挂在谁下面。
 ##   于是"同一个地方再开同一个 UI"就是**一次字典查找**（`uis.get(登记名)`），
 ##   不需要"按同一宿主 + 同一预设遍历所有实例"这种特判。
-##   UI 内部的子元素继续在后面追加 `/子元素名`（如 `MiniHUD=>Menu/Close`），只用于查找与调试。
+##   注意同一挂载点下不要重名（会互相覆盖）。
 ##
 ## **成员全部是静态的**：日常调用直接写 `UiSys.open_ui(...)` / `UiSys.uis` / `UiSys.root`，
 ## 不要绕 `Sys.uiSys`（那个实例只用来在启动时跑一次 `_init` 建 UI 根，见下）。
@@ -59,7 +61,7 @@ static func open_ui(preset_name: String, host: UIBase = null, anchor: UIBase = n
 		return null
 	# 挂载点：锚点优先（子菜单挂到菜单项下 ⇒ 菜单链是一棵子树），其次宿主，都没有就挂 UI 根
 	var mount: UIBase = anchor if anchor != null else host
-	var ui: UIBase = uis.get(_reg_name(mount, preset_name))
+	var ui: UIBase = get_child_ui(mount, preset_name)
 	if ui == null:
 		ui = _build_open(preset, preset_name, mount)
 	if ui == null:
@@ -68,22 +70,23 @@ static func open_ui(preset_name: String, host: UIBase = null, anchor: UIBase = n
 	return ui
 
 
-## 取一个已登记的 UI（用登记名，如 "MiniHUD"、"MiniHUD=>Menu"、"MiniHUD=>Menu/Close"）。
+## 取一个已登记的 UI（用登记名，如 "MiniHUD"、"MiniHUD/Menu"、"MiniHUD/Menu/Close"）。
 ## 被谁用：Test.ui_test（拿滚动区改内容）、外部按名取子元素。
 static func get_ui(name: String) -> UIBase:
 	return uis.get(name)
 
 
+## 按"挂载点 + 预设名"取已登记的 UI —— 就是 open_ui 复用时用的那把钥匙（登记名规则见文件头）。
+## 被谁用：open_ui（复用查找）、UIInteract.close_ui（关掉挂在某宿主下的某预设 UI）。
+static func get_child_ui(mount: UIBase, preset_name: String) -> UIBase:
+	return uis.get(_reg_name(mount, preset_name))
+
+
 ## 给已登记的 UI 追加一个子元素并登记（由 UIBase.add_child_element 调用）。
 ## 登记后才可能被指针命中；父元素没登记就警告（子元素会永远收不到事件）。
-##   reg_name = 指定登记名（**开 UI 时用**：UiSys._build_open 传 `挂载点=>预设名`，
-##              这样"同一个地方再开同一个 UI"才查得到、能复用）；
-##              留空 = 配置/运行时的普通子元素，按 `父登记名/子名` 登记。
-## 被谁用：UIBase.add_child_element（子元素、以及 _build_open 开的 UI）。
-static func register_child(parent: UIBase, child: UIBase, reg_name: String = "") -> void:
-	if reg_name != "":
-		_register_tree(child, reg_name)
-		return
+## 命名就用 _reg_name 那一套（挂载点名 + "/" + 名字），所以"开出来的 UI"与"配置里的子元素"是同一套名字。
+## 被谁用：UIBase.add_child_element（配置子元素、以及 _build_open 开的 UI）。
+static func register_child(parent: UIBase, child: UIBase) -> void:
 	var parent_name: String = find_name(parent)
 	if parent_name == "":
 		push_warning("UiSys: 追加子元素「%s」时父元素未登记，该元素无法被指针命中" % child.name)
@@ -92,17 +95,20 @@ static func register_child(parent: UIBase, child: UIBase, reg_name: String = "")
 
 
 ## 反查一个已登记 UI 的登记名（未登记返回空串）。
-## 被谁用：_reg_name（拼"挂载点=>预设"）、register_child（拼子元素的登记名）。
+## 被谁用：_reg_name（拼"挂载点名/名字"）、register_child（拼子元素的登记名）。
 static func find_name(ui: UIBase) -> String:
+	print(uis.keys())
 	for key in uis:
 		if uis[key] == ui:
 			return key
 	return ""
 
 
-## 拼登记名：无挂载点 → 预设名本身；有挂载点 → `挂载点的登记名=>预设名`。
-## 这一步就是"是否能复用"的全部判据，所以不需要任何按 UI 类型的特判。
-## 被谁用：open_ui。
+## 拼登记名：**只有这一条规则**——无挂载点 → 名字就是预设名（独立 UI，如 `MiniHUD`）；
+## 有挂载点 → `挂载点的登记名/名字`（子 UI 与配置子元素共用同一套，如 `MiniHUD/Menu/Edit/MenuEdit`）。
+## 于是"同一个地方再开同一个 UI"就是一次字典查找（见 open_ui），不需要按 UI 类型特判。
+## 注意同一挂载点下不要重名（会互相覆盖）：子 UI 的名字就是它的预设名。
+## 被谁用：get_child_ui、register_child（经 _register_tree）。
 static func _reg_name(mount: UIBase, preset_name: String) -> String:
 	if mount == null:
 		return preset_name
@@ -110,7 +116,7 @@ static func _reg_name(mount: UIBase, preset_name: String) -> String:
 	if mount_name == "":
 		push_warning("UiSys.open_ui: 挂载点「%s」未登记，拼不出唯一登记名，退化为预设名" % mount.name)
 		return preset_name
-	return mount_name + "=>" + preset_name
+	return mount_name + "/" + preset_name
 
 
 ## 现场造一个开启目标并登记：mount 为空 → 建预设自己那份挂 UI 根；有 mount → 挂到它下面。
@@ -123,14 +129,14 @@ static func _build_open(preset: UIPreset, preset_name: String, mount: UIBase) ->
 		_register_tree(ui, preset_name)
 		Msg.send_ui_create(ui)
 		return ui
-	return mount.add_child_element(preset_name, preset.ui_name, preset.config.duplicate(true),
-		_reg_name(mount, preset_name))
+	return mount.add_child_element(preset_name, preset.ui_name, preset.config.duplicate(true))
 
 
 ## 按被开启 UI 自己的 config["open_at"] 摆位置并显示（Enums.OpenAt）：
 ##   CONFIG（默认，不写就是它）→ 摆回配置声明的 position（独立面板；被拖动过就回到初值）
 ##   POINTER                   → 开在指针处（右键菜单仍要传 anchor：它决定了挂在谁下面）
 ##   ANCHOR_TOP_RIGHT          → 开在 anchor 的右上角顶点（多级菜单传触发它的那个菜单项）
+##   ANCHOR_TOP_RIGHT_IN       → 开在 anchor **内部**的右上角（按自己宽度内缩；如面板的 "X" 按钮）
 ## 被谁用：open_ui。
 static func _place(ui: UIBase, anchor: UIBase) -> void:
 	if ui.control == null:
@@ -138,13 +144,15 @@ static func _place(ui: UIBase, anchor: UIBase) -> void:
 	var strategy: int = int(ui.config.get("open_at", Enums.OpenAt.CONFIG))
 	if strategy == Enums.OpenAt.POINTER:
 		ui.show_at(InputSys.mouse_position)
-	elif strategy == Enums.OpenAt.ANCHOR_TOP_RIGHT:
-		if anchor != null and anchor.control != null:
-			var rect: Rect2 = anchor.control.get_global_rect()
-			ui.show_at(Vector2(rect.end.x, rect.position.y))
-		else:
+	elif strategy == Enums.OpenAt.ANCHOR_TOP_RIGHT or strategy == Enums.OpenAt.ANCHOR_TOP_RIGHT_IN:
+		if anchor == null or anchor.control == null:
 			push_warning("UiSys.open_ui: 「%s」要求开在锚点右上角，但锚点不可用，改在指针处开" % ui.name)
 			ui.show_at(InputSys.mouse_position)
+		else:
+			var rect: Rect2 = anchor.control.get_global_rect()
+			# IN 版：按自己的宽度往内缩，落在锚点内部（见 Enums.OpenAt 的说明）
+			var x: float = rect.end.x - ui.control.size.x if strategy == Enums.OpenAt.ANCHOR_TOP_RIGHT_IN else rect.end.x
+			ui.show_at(Vector2(x, rect.position.y))
 	else:
 		ui.reset_position()
 		ui.control.show()

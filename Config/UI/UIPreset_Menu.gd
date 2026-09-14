@@ -13,15 +13,21 @@ extends ConfigBase
       ├─ Close               → UIInteract.close $parent.parent           (2 级 = MiniHUD)
       └─ Edit(菜单项)        → UIInteract.open_ui $self MenuEdit $self   (菜单B 挂在 Edit 下)
          └─ MenuEdit(菜单B)
-            ├─ AddClose       → $parent.parent.parent.parent              (4 级 = MiniHUD)
-            ├─ EnableDrag     → 同上（$parent.parent.parent.parent）
+            ├─ CloseToggle(开关式按钮) → 点一下"做事 + 换一套配置"：先开/关 MiniHUD 的 "X" 按钮，
+            │                            再把 events↔events_2、content↔content_2 对调，于是下次点击走另一套
+            │                            关闭按钮本身就是普通预设（CloseButton，见 UIPreset_Basic.gd），
+            │                            所以"加/减"就是开/关它，没有专门函数：
+            │                            events   : open_ui  $parent.parent.parent.parent CloseButton $parent.parent.parent.parent
+            │                                       + swap_config $self events events_2 + swap_config $self content content_2
+            │                            events_2 : 同样三条，只是第一条换成 close_ui $parent.parent.parent.parent CloseButton
+            ├─ EnableDrag     → $parent.parent.parent.parent              (4 级 = MiniHUD)
             └─ Advanced       → UIInteract.open_ui $self MenuEmpty $self  (菜单C 挂在 Advanced 下)
 也就是说：**链每深一层，到宿主就多一级 $parent**。
 （"关父级时整条链一起关""鼠标在子菜单上不会被判失焦"都由这棵树自动成立。）
 
 三个预设：
   Menu      : 关闭 / 菜单编辑
-  MenuEdit  : 添加关闭按钮 / 启用拖拽 / 高级编辑
+  MenuEdit  : 关闭按钮（开关式按钮：两套配置对调） / 启用拖拽 / 高级编辑
   MenuEmpty : 高级编辑打开的空菜单（内容待补）
 
 开启位置由各自的 open_at 声明（Enums.OpenAt）：右键菜单开在指针处，多级菜单开在触发项右上角。
@@ -60,10 +66,23 @@ var values: Array[Array] = [
         "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT,  # 开在触发它的那个菜单项的右上角顶点
         "close_on_blur": true,
         "children": [
-            # 给宿主 UI 的右上角加一个关闭按钮（Label "X" 占位）
-            ["AddClose", "UI_Label", {
-                "content": "添加关闭按钮",
-                "events": [["Mouse Left", "UIInteract.add_close_button $parent.parent.parent.parent"]],
+            # 关闭按钮：**开关式按钮**（普通 Label，不需要专门的开关元素）——同一个元素上写两套配置，
+            # 点一下"做事 + 换一套配置"；一条事件串可以写多条命令（\v 分隔，见 CmdSys.execute）。
+            # "加/减关闭按钮"就是开/关一个普通 UI 预设（CloseButton，见 UIPreset_Basic.gd），
+            # 所以这里没有任何专门函数：第一条命令就是普通的 open_ui / close_ui。
+            ["CloseToggle", "UI_Label", {
+                "content": "启用关闭按钮",
+                "content_2": "移除关闭按钮",
+                "events": [
+                    ["Mouse Left", "UIInteract.open_ui $parent.parent.parent.parent CloseButton $parent.parent.parent.parent"
+                        + "\vUIInteract.swap_config $self events events_2"
+                        + "\vUIInteract.swap_config $self content content_2"],
+                ],
+                "events_2": [
+                    ["Mouse Left", "UIInteract.close_ui $parent.parent.parent.parent CloseButton"
+                        + "\vUIInteract.swap_config $self events events_2"
+                        + "\vUIInteract.swap_config $self content content_2"],
+                ],
             }],
             # 让宿主 UI 可以按住拖动
             ["EnableDrag", "UI_Label", {

@@ -34,7 +34,7 @@ var parent: UIBase = null
 
 ## 子元素：build() 按 config["children"] 组装，每项 [child_name, ui_class, child_config]。
 ## 被谁用：_build_children / add_child_element（追加）、UiSys._register_tree（递归登记）、
-##         UIInteract.add_close_button（查重）。
+##         _free_box 的选择依据（在 add_child_element 里读 free 配置）。
 var children: Array[UIBase] = []
 
 
@@ -97,6 +97,38 @@ func refresh() -> void:
 func set_content(value: Variant) -> void:
 	content = value
 	refresh()
+
+
+## 对调 config 里两项的值（A ↔ B），如 `events` ↔ `events_2`、`content` ↔ `content_2`。
+## 这就是"开关式按钮"的做法：**两套配置同时写在元素上**，点一下"做事 + 换一套配置"，
+## 于是同一个元素（Label/Image/任意元素）在两次点击里走两套行为，不需要专门的开关元素。
+## config 是"数据"，元素的界面状态是从运行时字段读的，所以换完必须同步镜像再刷新，否则界面不跟着变。
+## 被谁用：UIInteract.swap_config（指令）。
+func swap_config(key_a: String, key_b: String) -> void:
+	if key_a == "" or key_b == "" or key_a == key_b:
+		push_warning("UIBase「%s」.swap_config: 键名不合法（%s / %s）" % [name, key_a, key_b])
+		return
+	if not config.has(key_a) and not config.has(key_b):
+		push_warning("UIBase「%s」.swap_config: %s 与 %s 都不在 config 里" % [name, key_a, key_b])
+		return
+	var a: Variant = config.get(key_a)
+	var b: Variant = config.get(key_b)
+	config[key_a] = b
+	config[key_b] = a
+	_sync_from_config(key_a)
+	_sync_from_config(key_b)
+	refresh()
+
+
+## 把 config 的某个键同步到对应的运行时字段（换配置后界面才会跟着变）。
+## 目前是镜像关系的只有 content（显示内容）与 visible（可见性）；
+## 以后再加"config 键 → 运行时字段"的镜像，记得也加进这里。
+## 被谁用：swap_config。
+func _sync_from_config(key: String) -> void:
+	if key == "content":
+		content = config.get("content")
+	elif key == "visible" and control != null:
+		control.visible = bool(config.get("visible", true))
 
 
 ## 摆到指定**屏幕坐标**并显示（按 open_at 策略开的 UI 用，见 UiSys._place）。
@@ -201,11 +233,9 @@ func on_event(event_name: Variant) -> void:
 ## 运行时追加一个子元素（如菜单里后加的关闭按钮），返回新元素。
 ## 生成控件 → 挂到 _content_box()/_free_box() → 记进 children → 交给 UiSys 登记
 ## （登记后才可能被指针命中；登记名规则在 UiSys）。
-##   reg_name 由调用方指定登记名（开 UI 时必须给：`挂载点=>预设名`，见 UiSys._build_open）；
-##   留空则按"父登记名/子名"登记（普通子元素的默认）。
-## 被谁用：UiSys._build_open（挂到宿主/锚点下的 UI）、UIInteract.add_close_button。
-func add_child_element(child_name: String, ui_class: String, child_config: Dictionary = {},
-		reg_name: String = "") -> UIBase:
+## 登记名走 UiSys 唯一那条规则（`挂载点登记名/名字`），所以"开出来的 UI"与"配置里的子元素"命名一致。
+## 被谁用：UiSys._build_open（挂到宿主/锚点下的 UI）、UIInteract.close_ui 的取件路径（UiSys.get_child_ui）。
+func add_child_element(child_name: String, ui_class: String, child_config: Dictionary = {}) -> UIBase:
 	var child: UIBase = UIPreset.create_element(child_name, ui_class, child_config)
 	if child == null:
 		return null
@@ -217,7 +247,7 @@ func add_child_element(child_name: String, ui_class: String, child_config: Dicti
 	# 摆放时把屏幕坐标换算成挂载点坐标系的 position 即可（见 UiSys._place）。
 	var box: Control = _free_box() if bool(child_config.get("free", false)) else _content_box()
 	box.add_child(child.control)
-	UiSys.register_child(self, child, reg_name)
+	UiSys.register_child(self, child)
 	return child
 
 
