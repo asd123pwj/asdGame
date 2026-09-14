@@ -1,41 +1,64 @@
 class_name TileSpritePreset
 extends PresetRegister
+## 单个图片素材：加载图集、把"紧密排列的异尺寸格子"重排成规整 48x48、造碰撞体、算形状/擦除哈希。
+## 它是地图渲染的最底层素材来源，所有素材共享同一个 tileset（各素材是其中一个 AtlasSource）。
+## 被谁用：TileSetPreset（取图集/子格/变种数/擦除矩阵/掩码）、MapLayer、TileP3DEraseMask。
 
 # 单个图片素材：只负责 source 加载、region 读取、碰撞体、hash、图集尺寸等素材相关计算。
 # 不关心 tile 名称（tile_name → 行列 的解析由 TileSetPreset 用 match_rule 完成）。
 # P3D 素材按同目录下 "xxx_P3D" 后缀文件是否存在来决定是否加载。
 
+## 素材名（集合里 sprites_name 用的名字）。被谁用：各处按名取素材。
 var name: String
+## 名称规则名（用于取每格尺寸/名称矩阵）。被谁用：_init。
 var match_rule_name: String
+## 图集路径；path_P3D 为同目录 xxx_P3D 路径（存在才用）。
 var path: String
 var path_P3D: String
+## 是否存在 P3D 配套素材。被谁用：_init（决定要不要建 P3D source）。
 var has_p3d: bool = false
 
+## 普通 source 与它的 id（id 用于 set_cell）。
 var source: TileSetAtlasSource
 var source_id: int = -1
+## P3D source 与它的 id（无 P3D 素材时保持 null/-1）。
 var source_P3D: TileSetAtlasSource
 var source_id_P3D: int = -1
 
+## 全部素材：名 -> 实例。被谁用：TileSpritePreset.get_。
 static var _we: Dictionary[String, TileSpritePreset] = {}
 # 所有素材共享同一个 TileSet，各素材的 source 都加入其中
+## 地图渲染唯一使用的 TileSet（MapLayer 的每个子层都用它）。被谁用：MapLayer._create_sub_layers。
 static var tileset: TileSet = _create_tileset()
 # 素材内每组 tile 的变种数：sprite_name -> tile_name -> count（供 TileSetPreset 读取）
+## 重排时按图像内容数出来的变种数。被谁用：get_group_variant_count → TileSetPreset._sprite_variant_cols。
 static var _variant_count_by_tile: Dictionary = {}
 
 # ---- 形状哈希缓存（碰撞体复用）----
+## alpha 哈希 → {poly, rect}。被谁用：_get_or_build_shape / _set_tile_collision。
 static var _shape_cache: Dictionary = {}
 # ---- 图集图像缓存（判空/region 复用，避免重复 get_image）----
+## "名[_P3D]" → Image。被谁用：get_atlas_image。
 static var _atlas_img_cache: Dictionary = {}
 # ---- 命名解析：sprite_name -> "行,列" -> atlas_coords ----
+## 被谁用：Debug/按行列定位（_build_tile_name_map 写）。
 static var _tile_name_coords: Dictionary = {}
 # ---- 擦除矩阵注册表（擦除矩阵 = tile∪P3D 完整轮廓）----
+## 内容矩阵（"T|素材|坐标" / "P|素材|坐标" → BitMap）。被谁用：get_content_matrix / get_p3d_content_matrix。
 static var _content_cache: Dictionary = {}
+## 形状哈希 → 擦除 id（相同轮廓共用）。被谁用：get_erase_id。
 static var _erase_id_by_hash: Dictionary = {}
+## 擦除 id → 轮廓 BitMap。被谁用：get_erase_matrix_by_id（TileP3DEraseMask 取邻居轮廓）。
 static var _erase_matrix_by_id: Dictionary = {}
+## "素材|坐标" → 擦除 id。被谁用：get_erase_id。
 static var _erase_id_map: Dictionary = {}
+## 下一个可分配的擦除 id。被谁用：get_erase_id。
 static var _next_erase_id: int = 0
 
 
+## 注册一个素材：检测 P3D 配套文件 → 重排并建普通 source（含碰撞体）→ 有 P3D 再建一份（无碰撞体）
+## → 建行列命名映射。
+## 被谁用：PresetRegister 的注册流程、Config/Tilemap 的配置。
 func _init(name: String, match_rule_name: String, path: String) -> void:
     _we[name] = self
     self.name = name
@@ -63,6 +86,7 @@ func _init(name: String, match_rule_name: String, path: String) -> void:
 
 
 # 按行列位置命名素材内每个格（"x,y" → atlas_coords），供行列定位与 Debug
+## 被谁用：_init。
 static func _build_tile_name_map(sprite_name: String) -> void:
     var map: Dictionary = {}
     var rows := get_row_count(sprite_name)
@@ -78,29 +102,35 @@ static func _build_tile_name_map(sprite_name: String) -> void:
 #     return str(atlas_coords.x) + "," + str(atlas_coords.y)
 
 
+## 按名取素材。被谁用：本类各静态查询、TileSetPreset。
 static func get_(name: String) -> TileSpritePreset:
     return _we[name]
 
 
+## 普通 source 的 id（set_cell 用）。被谁用：TileSetPreset.get_tile_parts。
 static func get_source_id(name: String) -> int:
     return _we[name].source_id
 
 
+## P3D source 的 id。被谁用：需要直接放 P3D 的地方（当前 P3D 走掩码变体，主要为查询）。
 static func get_source_id_P3D(name: String) -> int:
     return _we[name].source_id_P3D
 
 
+## 该素材是否有 P3D 配套。被谁用：需要判断 P3D 可用性处。
 static func has_p3d_source(name: String) -> bool:
     return _we[name].has_p3d
 
 
 # 素材内某 tile 的变种数（由 _to_48_atlas 基于图像内容计算）。供 TileSetPreset 集合内随机用。
+## 被谁用：TileSetPreset._sprite_variant_cols。
 static func get_group_variant_count(sprite_name: String, tile_name: String) -> int:
     var per_sprite: Dictionary = _variant_count_by_tile.get(sprite_name, {})
     return per_sprite.get(tile_name, 0)
 
 
 # 素材图集列数（48x48 网格）
+## 被谁用：TileSetPreset.debug_variant_counts、_build_tile_name_map。
 static func get_column_count(name: String) -> int:
     var tex := _we[name].source.texture
     if tex == null:
@@ -109,6 +139,7 @@ static func get_column_count(name: String) -> int:
 
 
 # 素材图集行数（48x48 网格）
+## 被谁用：_build_tile_name_map。
 static func get_row_count(name: String) -> int:
     var tex := _we[name].source.texture
     if tex == null:
@@ -117,6 +148,7 @@ static func get_row_count(name: String) -> int:
 
 
 # 获取素材整张图集图像（缓存，避免重复 get_image）。is_p3d 为 true 取 P3D 图集。
+## 被谁用：get_region_image / is_cell_empty / TileSetPreset.get_sprite_atlas_image。
 static func get_atlas_image(name: String, is_p3d: bool) -> Image:
     var key := name + ("_P3D" if is_p3d else "")
     if _atlas_img_cache.has(key):
@@ -132,6 +164,7 @@ static func get_atlas_image(name: String, is_p3d: bool) -> Image:
 
 
 # 获取素材指定 region 图像（48x48）。is_p3d 为 true 取 P3D 图集；无 P3D 返回全透明。
+## 被谁用：形状/内容/擦除矩阵计算、TileP3DEraseMask.build_masked_p3d_image、调试拼图。
 static func get_region_image(name: String, atlas_coords: Vector2i, is_p3d: bool) -> Image:
     var img := get_atlas_image(name, is_p3d)
     if img == null:
@@ -143,6 +176,7 @@ static func get_region_image(name: String, atlas_coords: Vector2i, is_p3d: bool)
 
 
 # 判断某 atlas 格是否为空（alpha 全空）
+## 被谁用：重排/变种检测时跳过空格。
 static func is_cell_empty(name: String, atlas_coords: Vector2i, is_p3d: bool) -> bool:
     var img := get_atlas_image(name, is_p3d)
     if img == null:
@@ -152,11 +186,13 @@ static func is_cell_empty(name: String, atlas_coords: Vector2i, is_p3d: bool) ->
 
 
 # 获取素材内某格 tile 的形状哈希（alpha 哈希，相同形状共享）
+## 被谁用：TileSetPreset.get_tile_hash_by_id（擦除掩码邻居比较）。
 static func get_tile_shape_hash(name: String, atlas_coords: Vector2i) -> String:
     return _hash_alpha(get_region_image(name, atlas_coords, false))
 
 
 # 根据瓦片图像生成 alpha>0 的位图（48x48）
+## 被谁用：内容矩阵、碰撞多边形。
 static func build_alpha_bitmap(image: Image) -> BitMap:
     var bit_map := BitMap.new()
     bit_map.create(Vector2i(Sys.sysCfg.REGION_SIZE.x, Sys.sysCfg.REGION_SIZE.y))
@@ -171,6 +207,7 @@ static func build_alpha_bitmap(image: Image) -> BitMap:
 
 
 # 获取素材指定格的内容矩阵（48x48 alpha 位图，有内容处为 true）
+## 被谁用：get_erase_id（普通 tile 轮廓）。
 static func get_content_matrix(sprite_name: String, atlas_coords: Vector2i) -> BitMap:
     var key := "T|" + sprite_name + "|" + str(atlas_coords)
     if _content_cache.has(key):
@@ -181,6 +218,7 @@ static func get_content_matrix(sprite_name: String, atlas_coords: Vector2i) -> B
 
 
 # 获取素材指定格的 P3D 内容矩阵（48x48 alpha 位图）
+## 被谁用：get_erase_id（P3D 轮廓并集）。
 static func get_p3d_content_matrix(sprite_name: String, atlas_coords: Vector2i) -> BitMap:
     var key := "P|" + sprite_name + "|" + str(atlas_coords)
     if _content_cache.has(key):
@@ -191,6 +229,7 @@ static func get_p3d_content_matrix(sprite_name: String, atlas_coords: Vector2i) 
 
 
 # 获取素材指定格的擦除矩阵 ID。擦除矩阵 = tile∪P3D 完整轮廓（并集）。相同形状共享 ID。
+## 被谁用：TileP3DEraseMask._build_erase_bitmap。
 static func get_erase_id(sprite_name: String, atlas_coords: Vector2i) -> int:
     var key := sprite_name + "|" + str(atlas_coords)
     if _erase_id_map.has(key):
@@ -212,11 +251,13 @@ static func get_erase_id(sprite_name: String, atlas_coords: Vector2i) -> int:
 
 
 # 按擦除 ID 获取内容矩阵
+## 被谁用：TileP3DEraseMask._build_erase_bitmap。
 static func get_erase_matrix_by_id(id: int) -> BitMap:
     return _erase_matrix_by_id.get(id)
 
 
 # 两个 48x48 位图取并集
+## 被谁用：get_erase_id。
 static func _union_bitmap(a: BitMap, b: BitMap) -> BitMap:
     var result := BitMap.new()
     result.create(Vector2i(Sys.sysCfg.REGION_SIZE.x, Sys.sysCfg.REGION_SIZE.y))
@@ -228,6 +269,7 @@ static func _union_bitmap(a: BitMap, b: BitMap) -> BitMap:
 
 
 # 对内容矩阵(BitMap)做哈希，相同形状共享
+## 被谁用：get_erase_id。
 static func _hash_bitmap(bit_map: BitMap) -> String:
     var alpha := PackedByteArray()
     alpha.resize(Sys.sysCfg.REGION_SIZE.x * Sys.sysCfg.REGION_SIZE.y)
@@ -242,6 +284,8 @@ static func _hash_bitmap(bit_map: BitMap) -> String:
     return ctx.finish().hex_encode()
 
 
+## 建共享 TileSet（48x48 格，带一层物理层，碰撞层/掩码都是 1）。
+## 被谁用：tileset 的静态初始化。
 static func _create_tileset() -> TileSet:
     var ts := TileSet.new()
     ts.tile_size = SysCfg.GRID_SIZE
@@ -253,6 +297,7 @@ static func _create_tileset() -> TileSet:
 
 # 创建 source（仅配置，不含瓦片）。素材图集紧密排列不同尺寸格子，统一重排成规整 48x48。
 # 同时生成剪裁掩码图（标记每个格子的理论裁切区域，含变种）供核对。
+## 被谁用：_init（普通与 P3D 各一次）。
 static func _create_source(path: String, cell_sizes: Array[Array], tiles_name: Array, sprite_name: String) -> TileSetAtlasSource:
     var texture: Texture2D = load(path)
     if texture == null:
@@ -272,6 +317,7 @@ static func _create_source(path: String, cell_sizes: Array[Array], tiles_name: A
 
 
 # 是否需要重排：cell_sizes 非空且存在非 48x48 的格子
+## 被谁用：_to_48_atlas（全 48 就直接用原图）。
 static func _need_reflow(cell_sizes: Array[Array]) -> bool:
     if cell_sizes.is_empty():
         return false
@@ -287,6 +333,8 @@ static func _need_reflow(cell_sizes: Array[Array]) -> bool:
 # 2) 根据原图内容检测每组变种数（组水平偏移组宽处非空即有一份变种）
 # 3) 生成掩码图（标记所有格子本组+变种区域）
 # 4) 重排所有格子到规整 48 网格（本组 + 变种列偏移）
+## 重排的核心：算布局/变种数 → 顺带写好 _variant_count_by_tile → 生成剪裁掩码（调试图）→ 逐格 blit 到 48 网格。
+## 被谁用：_create_source。
 static func _to_48_atlas(image: Image, cell_sizes: Array[Array], tiles_name: Array, sprite_name: String) -> Image:
     var rows := cell_sizes.size()
     # 解析每格名称归属（tiles_name 行列结构同 cell_sizes）
@@ -405,6 +453,7 @@ static func _to_48_atlas(image: Image, cell_sizes: Array[Array], tiles_name: Arr
 
 
 # 扫描原图某 y 范围，返回最右侧非空像素的 x+1（该行内容宽度）
+## 被谁用：_to_48_atlas（推该行变种数）。
 static func _row_content_width(image: Image, y0: int, y1: int) -> int:
     var img_w: int = image.get_width()
     var max_x := 0
@@ -419,6 +468,8 @@ static func _row_content_width(image: Image, y0: int, y1: int) -> int:
 
 # 生成剪裁掩码图：标记所有格子（本组 + 变种）的源区域。
 # 内部按 tile 名着色（相同 tile 的所有变种同色）；方框按变种索引着色（不同变种方框不同色）。
+## 生成剪裁掩码调试图（每个格子按 tile 名着色、按变种索引描边），存到 DEBUG_DIR 供人工核对。
+## 被谁用：_to_48_atlas。
 static func _build_mask(row_cells_data: Array, group_width: Dictionary,
         group_variant_count: Dictionary) -> Image:
     var total_h := 0
@@ -464,6 +515,7 @@ static func _build_mask(row_cells_data: Array, group_width: Dictionary,
     return mask
 
 
+## 在掩码图上填一个矩形（越界自动裁剪）。被谁用：_build_mask。
 static func _mask_fill(mask: Image, x: int, y: int, w: int, h: int, color: Color) -> void:
     for py in range(y, y + h):
         for px in range(x, x + w):
@@ -472,6 +524,7 @@ static func _mask_fill(mask: Image, x: int, y: int, w: int, h: int, color: Color
 
 
 # 画格子白色方框（1px 边框）
+## 被谁用：_build_mask。
 static func _mask_outline(mask: Image, x: int, y: int, w: int, h: int, color: Color) -> void:
     for px in range(x, x + w):
         if px >= 0 and px < mask.get_width() and y >= 0 and y < mask.get_height():
@@ -485,6 +538,8 @@ static func _mask_outline(mask: Image, x: int, y: int, w: int, h: int, color: Co
                 mask.set_pixel(x + w - 1, py, color)
 
 
+## 按"margin + n*(格+间隔) + 格 <= 贴图长度"数出该方向能放多少格。
+## 被谁用：get_column_count / get_row_count / _create_tiles。
 static func _count(tex_len: int, margin: int, separation: int) -> int:
     var n := 0
     while margin + n * (Sys.sysCfg.REGION_SIZE.x + separation) + Sys.sysCfg.REGION_SIZE.x <= tex_len:
@@ -493,6 +548,7 @@ static func _count(tex_len: int, margin: int, separation: int) -> int:
 
 
 # 遍历创建所有瓦片；with_collision 为 false 时只创建图像，不生成碰撞体
+## 被谁用：_init（普通 source 带碰撞体，P3D source 不带）。
 static func _create_tiles(source: TileSetAtlasSource, with_collision: bool = true) -> void:
     var texture: Texture2D = source.texture
     var tex_size: Vector2i = texture.get_image().get_size()
@@ -506,6 +562,8 @@ static func _create_tiles(source: TileSetAtlasSource, with_collision: bool = tru
                 _set_tile_collision(source, texture, coords)
 
 
+## 给单个格子加碰撞多边形（形状按 alpha 轮廓算，同形状共享缓存）。
+## 被谁用：_create_tiles。
 static func _set_tile_collision(source: TileSetAtlasSource, texture: Texture2D, coords: Vector2i) -> void:
     var region := Rect2i(Sys.sysCfg.TILE_MARGINS + coords * (Sys.sysCfg.REGION_SIZE + Sys.sysCfg.TILE_SEPARATION), Sys.sysCfg.REGION_SIZE)
     var image := texture.get_image().get_region(region)
@@ -519,6 +577,8 @@ static func _set_tile_collision(source: TileSetAtlasSource, texture: Texture2D, 
         tile_data.set_collision_polygon_points(0, i, polygons[i])
 
 
+## 取（或算）某张格图的碰撞形状 {poly, rect}；全空返回 {}（不加碰撞体）。
+## 被谁用：_set_tile_collision。
 static func _get_or_build_shape(image: Image) -> Dictionary:
     var key := _hash_alpha(image)
     if _shape_cache.has(key):
@@ -534,6 +594,8 @@ static func _get_or_build_shape(image: Image) -> Dictionary:
     return entry
 
 
+## 用 alpha 外接矩形拼一个矩形多边形（相对格中心，含 P3D 偏移）。
+## 被谁用：_get_or_build_shape（作为 poly 的备用形状）。
 static func _build_bounding_rect(image: Image) -> Array:
     var rect: Rect2i = image.get_used_rect()
     if rect.size == Vector2i.ZERO:
@@ -550,6 +612,8 @@ static func _build_bounding_rect(image: Image) -> Array:
     ])]
 
 
+## 把 alpha 位图转成一组碰撞多边形（去掉重复收尾点，坐标平移到格中心并含 P3D 偏移）。
+## 被谁用：_get_or_build_shape。
 static func _build_polygons(image: Image) -> Array:
     var bit_map := build_alpha_bitmap(image)
     var result: Array = []
@@ -566,6 +630,8 @@ static func _build_polygons(image: Image) -> Array:
     return result
 
 
+## 只对 alpha 通道做 MD5（形状相同 → 哈希相同，用于形状/碰撞缓存）。
+## 被谁用：get_tile_shape_hash、_get_or_build_shape。
 static func _hash_alpha(image: Image) -> String:
     image.convert(Image.FORMAT_LA8)
     var data := image.get_data()
@@ -581,6 +647,7 @@ static func _hash_alpha(image: Image) -> String:
     return ctx.finish().hex_encode()
 
 
+## 把一张图存到 DEBUG_DIR（自动建目录，失败报错）。被谁用：_to_48_atlas（剪裁掩码）、_create_source。
 static func _save_debug_png(image: Image, file_name: String) -> void:
     var debug_path: String = Sys.sysCfg.DEBUG_DIR + file_name
     DirAccess.make_dir_recursive_absolute(Sys.sysCfg.DEBUG_DIR)

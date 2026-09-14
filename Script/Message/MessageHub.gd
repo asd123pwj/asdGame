@@ -1,5 +1,13 @@
 class_name Msg
 extends MsgBus
+## 消息层（见 Script/Message/Message.md）：本类只负责**"每种消息用什么节点 ID"**，收发在父类 MsgBus。
+## 结构约定（改这里前先读这三条）：
+##   1. 每个域（时间/输入/指令/角色/属性/buff/状态/交互/碰撞/背包/技能/快捷/UI/其它）一段，
+##      段首有 ASCII 大标题 + `""" ---------- X ---------- """` 小标题，方便定位。
+##   2. 段的 ID 规则收在段顶的 `_format_x()` 里；`_send_x()` / `_listen_x()` 是"按 ID 收发"的中间层；
+##      后面成串的 `send_yyy()` / `listen_yyy()` 都是**同模板的薄包装**（一行 send / 一行 listen）。
+##      所以：**改 ID 规则只改 `_format_x`；要查某条消息谁在用，直接 grep 那个 `send_/listen_` 函数名。**
+##   3. 角色域的名字支持 "名字@identity"（定位到其它角色），解析与迁移见 `_resolve_target` / `_listen_character`。
 
 """
 为了方便用Msg.send统一发送消息，而不是MsgHubChar这么长
@@ -18,6 +26,8 @@ https://patorjk.com/software/taag/#p=display&f=Terrace&t=System&x=none&v=4&h=4&w
                    ░██                                                 
              ░███████                                                  
 """
+## 角色生成/销毁：ID 就是固定串（无参数），全局广播。
+## 被谁用：CharSys.create_char / spawn（send），以及需要感知角色出现/消失的地方（listen）。
 """ ---------- Spawn or Destory ---------- """
 static func send_char_create(char_: Character) -> Array:
     return super.send("CHAR_CREATE", char_)
@@ -49,12 +59,16 @@ static func listen_destory(callback: Callable) -> String:
     ░██       ░██   ░██   ░██   ░██  ░███████  
 """
 """ ---------- Basic ---------- """
+## 时间域 ID 规则：["TIME", 事件名] → "TIME->事件名"（全局广播，不带角色）。
+## 被谁用：下面所有 send_tick/advance_* 与它们的 listen_（同模板薄包装）。
 static func _format_time(type: String) -> String:
     return format_ID(["TIME", type])
 
+## 按时间域规则发一条消息（供本段各 send_* 复用）。被谁用：本段各 send_*。
 static func _send_time(type: String, message: Variant) -> Array:
     return send(_format_time(type), message)
 
+## 按时间域规则登记监听（供本段各 listen_* 复用）。被谁用：本段各 listen_*。
 static func _listen_time(type: String, callback: Callable) -> String:
     return listen(_format_time(type), callback)
 
@@ -116,7 +130,13 @@ static func listen_advance_hour(callback: Callable) -> String:
                                                   
 """
 
+## 单键域：一个键值（Godot 常量，如 KEY_S / MOUSE_BUTTON_LEFT）当一个"键"用，ID 见 _format_input。
+## 被谁用：InputSys._send_key_status（send_key_press/release）、InputSys._process（send_key_hold）；
+##          listen 侧主要是 StatusPreset 的按键监听与 InputCombo。
 """ ---------- Single Key Basic ---------- """
+## 输入域 ID 规则：["KEY", 键值, 状态]（键值用 Godot 常量；指针类事件键值统一 MOUSE_BUTTON_NONE 占位）。
+## 被谁用：下面 send_key_*/send_pointer_move 与 listen_key_*/listen_pointer_move；再由
+##          PointerDetect/StatusPreset/InputCombo 等上层调用。
 static func _format_input(key: Variant, status: Enums.KeyStatus) -> String:
     if typeof(key) == TYPE_ARRAY:
         return format_ID(["Input", " ".join(key), str(status)])
@@ -135,6 +155,8 @@ static func _listen_input(key: Variant, status: Enums.KeyStatus, callback: Calla
         InputCombo.add_if_not_exist(key)
     return listen(_format_input(key, status), callback)
 
+## 单键（对外接口层）：与上面同域，只是把 hold/press/release/pointer_move 拆成便于配置引用的名字。
+## 被谁用：StatusPreset.listen（按键监听）、InputCombo._listen、PointerDetect 的下游。
 """ ---------- Single Key ---------- """
 static func send_key_hold(key: Variant) -> Array:
     return _send_input(key, Enums.KeyStatus.HOLD)
@@ -172,6 +194,9 @@ static func listen_pointer_move(callback: Callable) -> String:
  ░██   ░██ ░██   ░██   ░██ ░██   ░███ 
   ░██████  ░██   ░██   ░██  ░█████░██ 
 """
+## 指令域：send_cmd 把指令串交给 CmdSys（返回每条子指令结果数组）；
+## send_cmd0 / send_cmd00 是"只要结果"的便捷版（取下标，见 test.gd 里的用法）。
+## 被谁用：全项目的 Msg.send_cmd(...)（UI 事件、状态触发、快捷键、测试）。
 static func send_cmd(message: Variant) -> Array:
     return super.send("COMMAND", message)
 # 快速取多条指令的结果
@@ -218,6 +243,8 @@ static func _format_character(char_: Character, type: String, type_name: String,
         char_ID = "@" + (type_name.split("@")[1] if "@" in type_name else "?")
     return format_ID(["CHAR", char_ID, type, type_name, action])
 
+## 角色域通用发送：先按 "名字@identity" 解析目标，再拼 ID 发出去。
+## 被谁用：本文件里角色域（属性/buff/状态/交互/碰撞/背包/技能/快捷）的**所有** send_*。
 static func _send_character(char_: Character, type: String, type_name: String, action: String, message: Variant = null) -> Array:
     var resolved := _resolve_target(char_, type_name)
     var node_ID = _format_character(resolved[0], type, resolved[1], action)
@@ -225,6 +252,9 @@ static func _send_character(char_: Character, type: String, type_name: String, a
         return send(node_ID, message)
     return send(node_ID, resolved[0])
 
+## 角色域通用监听：解析目标 → 拼 ID → 登记；名字带 @identity 时记为"身份接收器"，
+## 以后该 identity 换角色会自动迁到新节点（见 MsgBus.bind_identity_receiver）。
+## 被谁用：本文件里角色域的所有 listen_*。
 static func _listen_character(char_: Character, type: String, type_name: String, action: String, callback: Callable) -> String:
     var resolved := _resolve_target(char_, type_name)
     var node_ID = _format_character(resolved[0], type, resolved[1], action)
@@ -242,6 +272,8 @@ static func _listen_character(char_: Character, type: String, type_name: String,
         bind_identity_receiver(identity, node_ID, callback, factory)
     return msg_ID
 
+## 角色域"取上次消息"：同样的 ID 规则，返回该节点最近一次收到的消息。
+## 被谁用：需要读"某条角色消息最近内容"的地方（如状态取上一次的 target）。
 static func _get_message_character(char_: Character, type: String, type_name: String, action: String) -> Variant:
     var resolved := _resolve_target(char_, type_name)
     var node_ID = _format_character(resolved[0], type, resolved[1], action)
@@ -256,6 +288,8 @@ static func _get_message_character(char_: Character, type: String, type_name: St
                 ░██    ░██    ░██       ░██    ░██      
                 ░██    ░██     ░████     ░████ ░██      
 """
+## 属性域：ID 用 ["CHAR", 角色, "ATTR"/"ANY_ATTR", 属性名, "changed"]，见 _format_character。
+## 被谁用：Attributes._set_（值变化时 send）；StatusPreset 的属性监听（listen_attr_changed / listen_any_attr_changed）。
 """ ---------- Attributes ---------- """
 static func send_attr_changed(char_: Character, type_name: String) -> Array:
     send_any_attr_changed(char_, type_name)
@@ -280,6 +314,9 @@ static func listen_any_attr_changed(char_: Character, callback: Callable) -> Str
                 ░██     ░██ ░██   ░███    ░██       ░██    
                 ░█████████   ░█████░██    ░██       ░██                                                         
 """
+## buff 域：ID = ["CHAR", 角色, "BUFF", buff 名, 动作]。
+## 被谁用：Attributes.add_buff/remove_buff 与 BuffPreset.consume（send）；
+##          StatusPreset 的 buff 监听（listen_buff_add / listen_buff_remove）。
 """ ---------- BuffPreset ---------- """
 static func send_buff_add(char_: Character, buff_name: String) -> Array:
     return _send_character(char_, "BUFF", buff_name, "add")
@@ -316,6 +353,10 @@ static func listen_buff_depleted(char_: Character, buff_name: String, callback: 
                   ░██████       ░████  ░█████░██     ░████  ░█████░██  ░███████                                                                             
 """
 
+## 状态域：ID = ["CHAR", 角色, "STATUS", 状态名, 动作]；satisfied/unsatisfied 是状态的主输出，
+## 交互、技能、快捷、UI 都靠它。
+## 被谁用：StatusPreset.execute（send_status_satisfied / unsatisfied）、Statuses.add/remove_status、
+##          Msg.send_status_detected（外部检测）；listen 侧见 StatusPreset 与 InteractionPreset。
 """ ---------- Character Statuses Listener ---------- """
 static func send_status_satisfied(char_: Character, status_name: String) -> Array:
     return _send_character(char_, "STATUS", status_name, "satisfied")
@@ -369,6 +410,8 @@ static func get_status_undetected(char_: Character, status_name: String) -> Vari
     return _get_message_character(char_, "STATUS", status_name, "undetected")
 
 
+## 行为域：**当前未启用**（Character.behaviors 已注释，见 Character._init_from_archetype），
+## 保留只为以后复用同一套 send/listen 模板。
 """ ---------- Character Behaviors ---------- """
 # static func send_behavior_add(char_: Character, behavior_name: String) -> Array:
 #     return _send_character(char_, "BEHAVIOR", behavior_name, "add")
@@ -400,6 +443,9 @@ static func get_status_undetected(char_: Character, status_name: String) -> Vari
                                                                                                 
                                                                                                 
 """
+## 交互域：ID = ["CHAR", 角色, "INTERACTION", 交互名, 动作]。
+## 被谁用：Interactions.add/remove_interaction（增删）、InteractionPreset.listen 的触发（send_interaction_act）；
+##          listen 侧是 StatusPreset 的交互监听与 InteractionPreset。
 """ ---------- Character InteractionPreset ---------- """
 static func send_interaction_add(char_: Character, interaction_name: String) -> Array:
     return _send_character(char_, "INTERACTION", interaction_name, "add")
@@ -431,6 +477,8 @@ static func listen_interaction_act(char_: Character, interaction_name: String, c
                                                           
                                                           
 """
+## 技能域：ID = ["CHAR", 角色, "SKILL", 技能名, 动作]。
+## 被谁用：Skills.add/remove_skill（增删）、SkillBase.act（send_skill_act，每帧生效时）。
 """ ---------- Character Skills ---------- """
 static func send_skill_add(char_: Character, skill_name: String) -> Array:
     return _send_character(char_, "SKILL", skill_name, "add")
@@ -461,6 +509,8 @@ static func listen_skill_act(char_: Character, skill_name: String, callback: Cal
                   ░██████   ░███████  ░██ ░██ ░██ ░███████  ░██ ░███████  ░██    ░██                                                                                 
 """
 
+## 碰撞域：ID = ["CHAR", 角色, "COLLISION", 碰撞区名, 动作]（enter/exit 由 Area2D 信号驱动）。
+## 被谁用：Collisions.add/remove_collision、Collision_Area 的进出回调；listen 侧见状态层的 Detect。
 """ ---------- Character CollisionPreset ---------- """
 static func send_collision_add(char_: Character, collision_name: String) -> Array:
     return _send_character(char_, "COLLISION", collision_name, "add")
@@ -498,6 +548,8 @@ static func listen_collision_exit(char_: Character, collision_name: String, call
                                                                                                         ░██ 
                                                                                                   ░███████                                                                                      
 """
+## 背包域：ID = ["CHAR", 角色, "INVENTORY", 背包名, 动作]。
+## 被谁用：Inventories.add/remove_inventory；交互（吃/掉落/搜寻）从背包取内容时也会发。
 """ ---------- Character Inventory ---------- """
 static func send_inventory_add(char_: Character, inventory_name: String) -> Array:
     return _send_character(char_, "INVENTORY", inventory_name, "add")
@@ -513,6 +565,9 @@ static func listen_inventory_remove(char_: Character, inventory_name: String, ca
     return _listen_character(char_, "INVENTORY", inventory_name, "remove", callback)
 
 
+## 快捷域：ID = ["CHAR", 角色, "SHORTCUT", 快捷名, 动作]。
+## 被谁用：SystemShortcuts.add/remove_shortcut、SystemShortcutPreset.listen 的触发；
+##          这是"配置驱动"的主力——UI 开菜单、按键绑指令都靠它转发到 CmdSys。
 """ ---------- Character SystemShortcut ---------- """
 static func send_shortcut_add(char_: Character, shortcut_name: String) -> Array:
     return _send_character(char_, "SHORTCUT", shortcut_name, "add")
@@ -554,6 +609,10 @@ static func _send_ui(ui: UIBase, action: String, message: Variant = null) -> Arr
 static func _listen_ui(ui: UIBase, action: String, callback: Callable) -> String:
     return listen(_format_ui(ui, action), callback)
 
+## UI 生命周期域（与上面的 Character 域不同，这里以**UI 实例**为 ID 段）。
+## 被谁用：UiSystem._build_open（send_ui_create）、UIInteract.close（send_ui_close）。
+## 注意：**send_ui_remove 当前没有任何发送方**——UI 关闭是 hide 复用，项目里已没有"销毁 UI"的路径；
+## 保留它是为了以后真要销毁时（那时记得同时把 listen_ui_remove 的接收方也接上）。
 """ ---------- Life Cycle ---------- """
 static func send_ui_create(ui: UIBase) -> Array:
     return super.send("UI_CREATE", ui)
@@ -567,6 +626,8 @@ static func listen_ui_create(callback: Callable) -> String:
 static func listen_ui_remove(callback: Callable) -> String:
     return super.listen("UI_REMOVE", callback)
 
+## UI 交互域：fade / scale / submit 等"对 UI 做了什么"的消息。
+## 被谁用：UIInteract（fade_to 等指令）、需要监听 UI 交互的外部逻辑。
 """ ---------- Interact ---------- """
 static func send_ui_press(ui: UIBase) -> Array:
     return _send_ui(ui, "PRESS")

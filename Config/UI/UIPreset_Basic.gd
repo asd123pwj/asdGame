@@ -24,6 +24,9 @@ config: Dictionary
 var values: Array[Array] = [
     ["MiniHUD", "UI_Panel", {
         "position": [30, 30], "size": [320, 220],
+        # 右键这块 UI → 开"Menu"（菜单是它的子 UI，菜单项里 $parent.parent 就指回这个面板）
+        # open_at 由 Menu 自己的配置声明（POINTER = 指针处），所以第三个参数随便传 $self
+        "events": [["Mouse Right", "UIInteract.open_ui $self Menu $self"]],
         "children": [
             # 标题栏：只显示文本；"Mouse Left | Tick"(左键按住·逐帧) → 拖动它整个父 UI
             # （事件名即 Archetype_System 里那条状态的名字，逐帧的状态才能跟手）

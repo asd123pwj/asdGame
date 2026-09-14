@@ -1,27 +1,45 @@
 class_name TileSetPreset
 extends PresetRegister
+## tile 集合：一份"用哪些素材（TileSpritePreset）、按哪条名称规则拼 tile、放置要满足哪些需求"的声明。
+## 它是地图放置与渲染之间的中间层：对外只暴露 tile_id（[set_name, tile_name, variant] 的编号），
+## 命中与 P3D 掩码变体都挂在共享的 TileSpritePreset.tileset 上。
+## 被谁用：MapSys.place/build、MapLayer、TileP3DEraseMask、TileSpritePreset。
 
 # 一个 tile 集合：由多个 TileSpritePreset（素材）组成。
 # tile_name 由 match_rule 的 tiles_name 解析（tile_name → 行列 + 多格子），
 # 其变种 = 各素材同名 tile_name 变种的拼接（一个 tile 的所有子格来自同一素材）。
 
+## 集合名（= "source_name"）。被谁用：tile_id 的 set_name 段、指令与配置。
 var name: String
+## 该集合属于哪个逻辑层（Enums.LayerType）。被谁用：MapSys.place 的放置层判定。
 var layer: Enums.LayerType
+## 名称规则名（TileNameRulePreset）。被谁用：_build_tile_defs。
 var tile_match_rule_name: String
+## 该集合可用的素材名列表（TileSpritePreset）。被谁用：_ensure_variants、debug_variant_counts。
 var sprites_name: Array = []
+## 放置需求名列表（MapPlaceRulePreset）。被谁用：MapSys.place 的兼容检查。
 var place_rule_names: Array = []
 
+## 全部预设：名 -> 实例。被谁用：TileSetPreset.get_。
 static var _we: Dictionary[String, TileSetPreset] = {}
 # tile 定义：set_name -> tile_name -> {base_cols, parts:[{dx,dy,coords,size}]}
+## 每个 tile_name 的"多格组成"定义（由名称规则解析而来）。
+## 被谁用：has_tile_name、get_tile_def 等所有按 tile_name 查询的地方。
 static var _tile_defs: Dictionary = {}
 # tile_id 注册：_tile_id_list[id] = [set_name, tile_name, variant]；variant 是跨素材变种索引
+## id → 定义；配合 _tile_id_map 做去重。被谁用：get_or_register_tile_id / get_tile_id_info / get_tile_parts_by_id。
 static var _tile_id_list: Array = []
+## "set|tile|variant" → id 的去重表。被谁用：get_or_register_tile_id。
 static var _tile_id_map: Dictionary = {}
+## id → 形状哈希缓存（擦除掩码用）。被谁用：get_tile_hash（MapLayer/TileP3DEraseMask 邻居比较）。
 static var _tile_hash_cache: Dictionary = {}
 # P3D 掩码变体缓存：sprite+coords+掩码 -> {source_id, atlas_coords}
+## 同一 (素材, 坐标, 掩码) 只注册一次 AtlasSource。被谁用：get_or_register_masked_p3d。
 static var _p3d_mask_variant_cache: Dictionary = {}
 
 
+## 注册一个 tile 集合，并立刻按名称规则建好各 tile_name 的多格定义。
+## 被谁用：PresetRegister 的注册流程、Config/Tilemap 的配置。
 func _init(name: String, layer: Enums.LayerType, tile_match_rule_name: String,
         sprites_name: Array, place_rule_names: Array = []) -> void:
     _we[name] = self
@@ -33,11 +51,13 @@ func _init(name: String, layer: Enums.LayerType, tile_match_rule_name: String,
     _build_tile_defs(name)
 
 
+## 按名取预设。被谁用：MapSys.place、MapLayer 的各类查询。
 static func get_(name: String) -> TileSetPreset:
     return _we[name]
 
 
 # 解析 match_rule 的 tiles_name，建立 tile_name -> 行列定义（不依赖具体素材）
+## 被谁用：_init；get_tile_def 在"首次注册时规则还没就绪"时会懒重建一次。
 static func _build_tile_defs(set_name: String) -> void:
     var rule := TileNameRulePreset.get_(_we[set_name].tile_match_rule_name)
     var defs: Dictionary = {}
@@ -46,6 +66,9 @@ static func _build_tile_defs(set_name: String) -> void:
     _tile_defs[set_name] = defs
 
 
+## 把名称矩阵编译成 tile_name -> 多格定义：同名格合成一组，锚点取最左下角（min_col, max_row），
+## 组内 dx 向右为正、dy 向上为正；组整体水平偏移 base_cols 列即为一个变种。
+## 被谁用：_build_tile_defs。
 static func _parse_tiles_name(_set_name: String, tiles_name: Array, defs: Dictionary) -> void:
     # 第一遍：收集每个名称的所有出现 (col, row, size)
     var occurrences: Dictionary = {}  # tile_name -> [{col,row,size}]
@@ -95,11 +118,14 @@ static func _parse_tiles_name(_set_name: String, tiles_name: Array, defs: Dictio
 
 
 # tile_name 是否存在（解析自 match_rule 的 tiles_name）
+## 被谁用：MapSys.place、MapLayer._apply_tile_match。
 static func has_tile_name(set_name: String, tile_name: String) -> bool:
     var defs: Dictionary = _tile_defs.get(set_name, {})
     return defs.has(tile_name)
 
 
+## 取某 tile_name 的多格定义（含懒重建：注册时规则未就绪则这里补建一次）。
+## 被谁用：变种/子格/P3D 相关的所有查询。
 static func get_tile_def(set_name: String, tile_name: String) -> Dictionary:
     var defs: Dictionary = _tile_defs.get(set_name, {})
     # 懒重建：若首次注册时 match_rule 尚未就绪导致 defs 为空，且现在规则已可用则重建
@@ -112,6 +138,8 @@ static func get_tile_def(set_name: String, tile_name: String) -> Dictionary:
 
 # 某素材下该 tile_name 的有效变种列（索引）。变种数由 TileSpritePreset._to_48_atlas 基于图像内容计算，
 # TileSetPreset 只关心"该素材该 tile 有几个变种"，不关心具体内容。
+## 某素材下该 tile_name 的有效变种序号列表（0..count-1），素材里没有则空数组。
+## 被谁用：_ensure_variants、debug_variant_counts。
 static func _sprite_variant_cols(_set_name: String, tile_name: String, sprite_name: String) -> Array:
     var count: int = TileSpritePreset.get_group_variant_count(sprite_name, tile_name)
     if count <= 0:
@@ -124,6 +152,8 @@ static func _sprite_variant_cols(_set_name: String, tile_name: String, sprite_na
 
 # 懒展开该 tile 的变种列表：遍历所有素材(PNG)，对每个 PNG 内每个有效变种，生成一个完整多格组元素。
 # 每组作为一个列表元素，随机时从整个列表选一组（不关心来自哪个 PNG）。
+## 懒展开该 tile 的变种列表（首次用到才做，且素材未就绪时不标 ready，下次重试）。
+## 被谁用：get_tile_variant_count、_resolve_variant。
 static func _ensure_variants(set_name: String, tile_name: String, def: Dictionary) -> void:
     if def.variants_ready:
         return
@@ -149,6 +179,7 @@ static func _ensure_variants(set_name: String, tile_name: String, def: Dictionar
 
 
 # 该 tile_name 的总变种数（= 所有 PNG 内变种之和，扁平列表长度）
+## 被谁用：MapSys.place（随机选变种）、MapLayer._apply_tile_match。
 static func get_tile_variant_count(set_name: String, tile_name: String) -> int:
     var def := get_tile_def(set_name, tile_name)
     if def.is_empty():
@@ -159,6 +190,7 @@ static func get_tile_variant_count(set_name: String, tile_name: String) -> int:
 
 
 # Debug：打印各素材下某 tile 的变种数（定位跨素材随机性问题）
+## 被谁用：MapSys._init 里的调试开关。
 static func debug_variant_counts(set_name: String, tile_name: String) -> void:
     for sp in _we[set_name].sprites_name:
         var vcols := _sprite_variant_cols(set_name, tile_name, sp)
@@ -168,6 +200,8 @@ static func debug_variant_counts(set_name: String, tile_name: String) -> void:
 
 
 # 变种索引 → 变种元素 {sprite, vcol}（直接索引扁平变种列表，跨 PNG 与 PNG 内变种同权）
+## 变种索引 → 变种元素 {sprite, vcol, parts}（越界会夹到范围内）。
+## 被谁用：get_tile_parts、get_tile_variant_info、get_tile_hash_by_id、save_all_tiles_debug。
 static func _resolve_variant(set_name: String, tile_name: String, variant: int) -> Dictionary:
     var def := get_tile_def(set_name, tile_name)
     if def.is_empty():
@@ -181,6 +215,7 @@ static func _resolve_variant(set_name: String, tile_name: String, variant: int) 
 
 
 # 获取某 tile 变种的所有子tile（含 source_id）。供渲染放置用。
+## 被谁用：get_tile_parts_by_id（MapSys.place / MapLayer._place_tile 取子格）、save_all_tiles_debug。
 static func get_tile_parts(set_name: String, tile_name: String, variant: int) -> Array:
     var def := get_tile_def(set_name, tile_name)
     if def.is_empty():
@@ -203,6 +238,7 @@ static func get_tile_parts(set_name: String, tile_name: String, variant: int) ->
 
 
 # 变种信息（供 P3D 擦除用）：[sprite_name, atlas_coords]
+## 被谁用：MapLayer._place_p3d、TileP3DEraseMask._build_erase_bitmap。
 static func get_tile_variant_info(set_name: String, tile_name: String, variant: int) -> Array:
     var def := get_tile_def(set_name, tile_name)
     if def.is_empty():
@@ -218,6 +254,8 @@ static func get_tile_variant_info(set_name: String, tile_name: String, variant: 
 
 # 注册/获取掩码后的 P3D 变体（基于素材生成独立 AtlasSource 加到共享 tileset）。
 # 返回 {source_id, atlas_coords}
+## 同一 (素材, 坐标, 掩码) 只注册一次（缓存）；贴图原点固定 (-8, 8) 以对齐 P3D 偏移。
+## 被谁用：MapLayer._place_p3d。
 static func get_or_register_masked_p3d(sprite_name: String, atlas_coords: Vector2i,
         mask: BitMap) -> Dictionary:
     var mask_hash := _hash_mask(mask)
@@ -239,6 +277,8 @@ static func get_or_register_masked_p3d(sprite_name: String, atlas_coords: Vector
     return result
 
 
+## 把掩码压成一串 MD5（缓存键用：掩码相同即同一变体）。
+## 被谁用：get_or_register_masked_p3d。
 static func _hash_mask(bit_map: BitMap) -> String:
     var alpha := PackedByteArray()
     alpha.resize(Sys.sysCfg.REGION_SIZE.x * Sys.sysCfg.REGION_SIZE.y)
@@ -254,6 +294,8 @@ static func _hash_mask(bit_map: BitMap) -> String:
 
 
 # 获取/注册 (set_name, tile_name, variant) 的 tile id
+## tile_id 是地图书里通用的"格子编号"（所有查询都按它走），并把形状哈希一并缓存。
+## 被谁用：MapSys.place、MapLayer._apply_tile_match。
 static func get_or_register_tile_id(set_name: String, tile_name: String, variant: int = 0) -> int:
     variant = clampi(variant, 0, maxi(0, get_tile_variant_count(set_name, tile_name) - 1))
     var key := set_name + "|" + tile_name + "|" + str(variant)
@@ -266,11 +308,14 @@ static func get_or_register_tile_id(set_name: String, tile_name: String, variant
     return id
 
 
+## 按 id 取 [set_name, tile_name, variant]。
+## 被谁用：MapLayer（匹配/放置）、TileP3DEraseMask._build_erase_bitmap。
 static func get_tile_id_info(id: int) -> Array:
     return _tile_id_list[id]
 
 
 # 按 tile_id 反查其所属集合名（source_name），供"使用当前位置已放置的 source"场景
+## 被谁用：MapLayer.get_source_at → MapSys.place（source 缺省时沿用）。
 static func get_set_name_by_id(tile_id: int) -> String:
     if tile_id < 0 or tile_id >= _tile_id_list.size():
         return ""
@@ -278,6 +323,7 @@ static func get_set_name_by_id(tile_id: int) -> String:
 
 
 # 按 id 获取该 tile 所有子tile（含 source_id/coords/dx/dy）
+## 被谁用：MapSys.place（找锚点/判组内位置）、MapLayer.place_group 与 _place_tile（展开整组）。
 static func get_tile_parts_by_id(tile_id: int) -> Array:
     if tile_id < 0 or tile_id >= _tile_id_list.size():
         return []
@@ -286,6 +332,7 @@ static func get_tile_parts_by_id(tile_id: int) -> Array:
 
 
 # 把 info [set_name, tile_name, variant] 转为第一个子tile 的 atlas_coords
+## 被谁用：需要把 tile 定义换算成图集坐标的调用方（当前主要为调试/外部工具）。
 static func get_tile_info_coords(info: Array) -> Vector2i:
     var parts := get_tile_parts(info[0], info[1], info[2])
     if parts.is_empty():
@@ -294,6 +341,8 @@ static func get_tile_info_coords(info: Array) -> Vector2i:
 
 
 # 按 id 计算形状哈希（用于擦除掩码邻居）
+## 哈希取自该 tile 第一个子格的形状（同形状的邻居可共用掩码）。
+## 被谁用：get_or_register_tile_id（建 id 时顺便算）、get_tile_hash。
 static func get_tile_hash_by_id(tile_id: int) -> String:
     var info: Array = _tile_id_list[tile_id]
     var rv := _resolve_variant(info[0], info[1], info[2])
@@ -305,6 +354,7 @@ static func get_tile_hash_by_id(tile_id: int) -> String:
     return TileSpritePreset.get_tile_shape_hash(rv.sprite, vparts[0].coords)
 
 
+## 取（或补算）某 id 的形状哈希。被谁用：TileP3DEraseMask.get_neighbor_mask_key。
 static func get_tile_hash(tile_id: int) -> String:
     if _tile_hash_cache.has(tile_id):
         return _tile_hash_cache[tile_id]
@@ -312,24 +362,29 @@ static func get_tile_hash(tile_id: int) -> String:
 
 
 # 获取素材图集图像（共享缓存）
+## 被谁用：需要拿素材原图的地方（P3D 掩码生成与调试）。
 static func get_sprite_atlas_image(sprite_name: String, is_p3d: bool) -> Image:
     return TileSpritePreset.get_atlas_image(sprite_name, is_p3d)
 
 
 # 判断某 tile 是否具有 tag（匹配 tile_name 或 set_name）
+## 被谁用：MapLayer.tile_has_tag → MapPlaceRulePreset.check_compatible。
 static func has_tag(set_name: String, tile_name: String, tag: String) -> bool:
     return tile_name == tag or set_name == tag
 
 
+## 该集合是否配了可用的匹配规则。被谁用：MapLayer._get_rule_for_group。
 static func has_match_rule(set_name: String) -> bool:
     return TileMatchRulePreset.get_(_we[set_name].tile_match_rule_name) != null
 
 
+## 该集合的放置需求名列表。被谁用：MapSys.place（check_compatible）。
 static func get_place_rule_names(set_name: String) -> Array:
     return _we[set_name].place_rule_names
 
 
 # 默认 tile 名（match_rule 的 tiles_name (0,0) 位置）
+## 被谁用：MapSys.place（没指定 tile_name 时的"占位 tile"）。
 static func get_default_tile_name(set_name: String) -> String:
     var rule := TileNameRulePreset.get_(_we[set_name].tile_match_rule_name)
     if rule == null or rule.tiles_name.is_empty():
@@ -342,12 +397,14 @@ static func get_default_tile_name(set_name: String) -> String:
 
 
 # 该集合实际用于渲染的 TileSet（素材层共享）
+## 被谁用：需要 tileset 的地方（当前统一走 TileSpritePreset.tileset）。
 static func tileset() -> TileSet:
     return TileSpritePreset.tileset
 
 
 # Debug：把所有 tile 的所有变种保存到 Debug 目录。
 # 对多格 tile，把整组按 dx/dy 拼成一张完整图保存（文件名含 集合/tile/变种/素材）。
+## 被谁用：MapSys._init 里的调试开关。
 static func save_all_tiles_debug() -> void:
     for set_name in _tile_defs:
         var defs: Dictionary = _tile_defs[set_name]
@@ -382,6 +439,7 @@ static func save_all_tiles_debug() -> void:
                 _save_debug_png(img, file_name)
 
 
+## 把一张图存到 DEBUG_DIR（自动建目录，失败报错）。被谁用：save_all_tiles_debug。
 static func _save_debug_png(image: Image, file_name: String) -> void:
     var debug_path: String = Sys.sysCfg.DEBUG_DIR + file_name
     DirAccess.make_dir_recursive_absolute(Sys.sysCfg.DEBUG_DIR)

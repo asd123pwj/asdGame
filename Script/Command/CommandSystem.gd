@@ -24,8 +24,13 @@
 ##     Msg.send_cmd("CharSys.spawn 人类")[0]      单条指令：取该指令的结果
 class_name CmdSys
 extends BaseClass
+## 指令系统：把字符串指令变成方法调用（解析在 CommandParser，本类负责"找命令 + 组参数 + 调用"）。
+## 命令 = "类名.静态方法名"，参数可位置或 `--名字`（可跳过带默认值的参数）。
+## 被谁用：Msg.send_cmd（唯一入口，落到 MessageHub 的 COMMAND → 本类 execute）。
 
 
+## 命令表：cmd_name -> { callable, arg_meta }。
+## 被谁用：execute（查）、_register_source_methods（写）、_lazy_load。
 static var _commands: Dictionary = {}   # cmd_name -> { callable, arg_meta }
 
 
@@ -42,6 +47,7 @@ func _init() -> void:
 
 # 扫描所有最终继承 BaseClass 的类（含间接继承，如父类的父类是 BaseClass），
 # 注册其非私有静态方法为命令。命令名 = "类名.方法名"（class_name 取自全局类表）。
+# 被谁用：_init（非懒注册模式）。
 static func _scan_all_sources() -> void:
 	var entries := ProjectSettings.get_global_class_list()
 	var by_name := {}
@@ -58,6 +64,7 @@ static func _scan_all_sources() -> void:
 
 # 判断某个全局类记录（entry）是否最终继承自 root_name（沿 base 链上溯）。
 # get_global_class_list 的 "base" 只给直接父类名，需递归查祖先。
+# 被谁用：_scan_all_sources、_lazy_load。
 static func _descends_from(entry: Dictionary, root_name: String, by_name: Dictionary) -> bool:
 	var cur: Dictionary = entry
 	while cur.has("base") and cur["base"] != "":
@@ -71,6 +78,7 @@ static func _descends_from(entry: Dictionary, root_name: String, by_name: Dictio
 
 # 把某个命令源脚本里非 "_" 开头的静态方法注册为命令。
 # class_name_: 类名（命令名前缀）；script: 对应脚本。
+# 被谁用：_scan_all_sources、_lazy_load。
 static func _register_source_methods(class_name_: String, script: GDScript) -> void:
 	for m_raw in script.get_script_method_list():
 		var m: Dictionary = m_raw
@@ -87,6 +95,7 @@ static func _register_source_methods(class_name_: String, script: GDScript) -> v
 # 从反射到的方法信息构造参数元信息数组。
 # default_args 只含末尾若干有默认值的参数，按位对齐补到对应参数，
 # 因此省略某参数时会自动用方法签名里写的默认值（如 variant=-1）。
+# 被谁用：_register_source_methods。
 static func _make_arg_meta(m: Dictionary) -> Array:
 	var arg_list: Array = m["args"]
 	var default_args: Array = m.get("default_args", [])
@@ -103,6 +112,7 @@ static func _make_arg_meta(m: Dictionary) -> Array:
 
 # 执行命令，返回每条子命令的结果列表（元素 = 对应函数的返回值，如 CharSys.spawn 返回 Character）。
 # 多条命令用 '\v' 分隔，结果按序一一对应；未找到的命令在对应位置放错误字符串。
+# 被谁用：_init 注册的 COMMAND 监听（即 Msg.send_cmd 的落地）。
 static func execute(command_str: String) -> Array:
 	var results: Array = []
 	for single in command_str.split("\v"):
@@ -131,11 +141,13 @@ static func execute(command_str: String) -> Array:
 
 
 # 清空缓存（热重载 / 调试用）。
+# 被谁用：手动调用（调试）。
 static func clear_cache() -> void:
 	CommandParser.clear_cache()
 
 
 # 懒注册：命令形如 "类名.方法名"，据此定位并加载宿主类脚本，注册其命令。
+# 被谁用：execute（命令表里没有时）。
 static func _lazy_load(cmd_name: String) -> void:
 	var dot := cmd_name.rfind(".")
 	if dot <= 0:
@@ -157,6 +169,8 @@ static func _lazy_load(cmd_name: String) -> void:
 
 
 # 按反射参数元信息，把位置/命名参数组装成与方法签名顺序一致的全参数数组。
+# 优先级：命名参数 > 位置参数 > 方法默认值 > 该类型的零值。
+# 被谁用：execute。
 static func _build_args(arg_meta: Array, parsed: Dictionary) -> Array:
 	var full: Array = []
 	var positional: Array = parsed["positional"]
@@ -180,6 +194,7 @@ static func _build_args(arg_meta: Array, parsed: Dictionary) -> Array:
 # 把解析出的 Variant 值，按反射到的目标参数类型强制转换。
 # 例如 --tile_name 2 里的 "2" 会被解析成 int，但目标参数是 String，
 # callv 不会隐式转换，这里统一转成正确类型。
+# 被谁用：_build_args。
 static func _coerce(value: Variant, type: int) -> Variant:
 	match type:
 		TYPE_INT:
@@ -203,6 +218,8 @@ static func _coerce(value: Variant, type: int) -> Variant:
 			return value
 
 
+# 某类型的零值（参数没给、方法也没默认值时用）。
+# 被谁用：_build_args。
 static func _type_zero(type: int):
 	match type:
 		TYPE_INT:

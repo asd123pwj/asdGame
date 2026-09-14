@@ -28,7 +28,12 @@ extends BaseClass
 #   - 位置参数  : 不带头，按序出现，对应命令签名
 #   - 命名参数  : --name value（或 --name 结尾则视为 flag=true）
 #   - flag      : --xxx（后无值）=> 值 true；命名参数用 -- 前缀（负数 -10 不视为参数名）
+## 本类只做"命令字符串 → 名字 + 参数"的解析（含 $ 表达式），执行在 CmdSys。
+## 解析结果带两级缓存（L1 热 LRU + L2 时间桶），命中就跳过 tokenize/编译，只重跑取值。
+## 被谁用：CmdSys.execute（唯一调用方）；清理由 CmdSys.clear_cache。
 
+## class_name -> GDScript 懒缓存（找不到的类也缓存 null，避免反复扫全局类表）。
+## 被谁用：_find_class_script（读/写）、clear_cache。
 static var _class_scripts := {}   # class_name -> GDScript（懒缓存，供静态成员引用）
 
 # ---- 两级解析缓存 ----
@@ -38,6 +43,7 @@ static var _class_scripts := {}   # class_name -> GDScript（懒缓存，供静�
 #   新项写入指针**下一个**桶（即"最新"桶），于是指针**当前**指向的桶就是最旧的一批。
 #   桶数 N = ceil(TTL / 周期)，保证一项从写入到被清空恰好经历 TTL。
 #   例：TTL=300s、周期=60s → 5 个桶，环形轮转，无需遍历扫描。
+## 以下 L1/L2 各成员都被 _cache_* / _l1_* / _l2_* 系列读写，外部只经 clear_cache 清空。
 static var _l1: Dictionary = {}      # key -> plan（LRU 冷热数据）
 static var _l1_prev: Dictionary = {} # key -> 前驱 key（LRU 链表）
 static var _l1_next: Dictionary = {} # key -> 后继 key（LRU 链表）
@@ -48,6 +54,9 @@ static var _l2_index: Dictionary = {} # key -> 桶下标（O(1) 查询/计数，
 static var _l2_hand: int = 0         # 时钟指针：指向"最旧"的桶（下次轮转时清空）
 static var _l2_last_tick: float = 0.0 # 上次轮转时刻(秒)
 
+## 解析一条命令（多条命令由 CmdSys 按 '\v' 拆开再逐条调这里）。
+## 返回 { is_value, name, positional, named } 或（取值式）{ is_value:true, value }。
+## 被谁用：CmdSys.execute。
 static func parse(input: String) -> Dictionary:
 	input = input.strip_edges()
 	if input.is_empty():
@@ -68,6 +77,7 @@ static func parse(input: String) -> Dictionary:
 	return _run_plan(_compile(input))
 
 ## 清空类脚本与两级解析缓存（热重载 / 调试用）。
+## 被谁用：CmdSys.clear_cache。
 static func clear_cache() -> void:
 	_class_scripts.clear()
 	_l1.clear()
@@ -83,6 +93,8 @@ static func clear_cache() -> void:
 
 # ---------- 缓存读写 ----------
 
+## 取缓存：L1 命中就移到表头；L2 命中就回迁到 L1；都没有返回 null。
+## 被谁用：parse。
 static func _cache_get(key: String) -> Variant:
 	if _l1.has(key):
 		_l1_touch(key)
@@ -97,6 +109,8 @@ static func _cache_get(key: String) -> Variant:
 		return plan
 	return null
 
+## 写入 L1（满了先把表尾降级到 L2）；L1/L2 里已有就跳过。
+## 被谁用：parse、_cache_get（L2 回迁）、_l1_touch。
 static func _cache_put(key: String, plan: Dictionary) -> void:
 	if _l1.has(key) or _l2_has(key):
 		return
@@ -113,6 +127,7 @@ static func _cache_put(key: String, plan: Dictionary) -> void:
 		_l1_tail = key
 
 # 命中 L1：移到表头（最近使用）。
+## 被谁用：_cache_get。
 static func _l1_touch(key: String) -> void:
 	if _l1_head == key:
 		return
@@ -137,6 +152,7 @@ static func _l1_touch(key: String) -> void:
 		_l1_tail = key
 
 # L1 满：表尾降级到 L2。
+## 被谁用：_cache_put。
 static func _evict_l1_tail() -> void:
 	if _l1_tail == "":
 		return
@@ -156,6 +172,7 @@ static func _evict_l1_tail() -> void:
 # ---------- L2 时间桶（时钟指针） ----------
 
 # 轮转：指针前进，清空新指向的桶（即最旧的一桶）。按需触发，可能一次补多格。
+## 被谁用：parse（每次解析前）。
 static func _l2_tick() -> void:
 	@warning_ignore("unsafe_property_access")
 	var ttl: float = Sys.sysCfg.cache_command_l2_ttl
@@ -188,6 +205,7 @@ static func _l2_tick() -> void:
 		_l2_drop_bucket(_l2_hand)
 
 ## 清空指定桶，并同步删除索引。
+## 被谁用：_l2_tick、_l2_insert（总量超限时强推指针）。
 static func _l2_drop_bucket(idx: int) -> void:
 	var bucket: Dictionary = _l2_ring[idx]
 	for key in bucket:
@@ -195,6 +213,7 @@ static func _l2_drop_bucket(idx: int) -> void:
 	_l2_ring[idx] = {}
 
 # 写入 L2：进入"最新"桶（指针的下一格），保证存活时间≈TTL。
+## 被谁用：_evict_l1_tail、_resize_ring。
 static func _l2_insert(key: String, plan: Dictionary) -> void:
 	@warning_ignore("unsafe_property_access")
 	var cap: int = Sys.sysCfg.cache_command_max
@@ -210,15 +229,18 @@ static func _l2_insert(key: String, plan: Dictionary) -> void:
 	_l2_ring[write_idx][key] = plan
 	_l2_index[key] = write_idx
 
+## L2 里有没有这个 key。被谁用：_cache_put（避免重复写入）。
 static func _l2_has(key: String) -> bool:
 	return _l2_index.has(key)
 
+## 清空 L2 全部桶与索引。被谁用：_l2_tick（TTL<=0 或轮转整圈）。
 static func _l2_clear() -> void:
 	for i in _l2_ring.size():
 		_l2_ring[i] = {}
 	_l2_index.clear()
 
 # 重建桶数组：保留旧条目（并入新桶），避免配置变更丢失全部缓存。
+## 被谁用：_l2_tick（桶数变化时）。
 static func _resize_ring(count: int) -> void:
 	var old := _l2_ring
 	_l2_ring = []
@@ -231,6 +253,7 @@ static func _resize_ring(count: int) -> void:
 			for key in bucket:
 				_l2_insert(key, bucket[key])
 
+## 当前时间（秒，自引擎启动）。被谁用：_l2_tick。
 static func _now() -> float:
 	return Time.get_ticks_msec() / 1000.0
 
@@ -239,6 +262,7 @@ static func _now() -> float:
 
 ## 把命令原文编译成"计划"。确定性部分（tokenize、字面量、$ 的定位）一次性固化；
 ## 运行时会变的部分（$ 的取值）留到 _run_plan 时执行。
+## 被谁用：parse。
 static func _compile(input: String) -> Dictionary:
 	# & 前缀 = 取值：整条命令是一个取值路径/表达式，直接求值返回其值。
 	#   &Test.int1       读静态成员值
@@ -274,6 +298,7 @@ static func _compile(input: String) -> Dictionary:
 	return { "is_value": false, "name": name, "positional": positional, "named": named }
 
 ## 执行计划，得到 parse() 的结果字典。
+## 被谁用：parse（缓存命中与未命中都走它）。
 static func _run_plan(plan: Dictionary) -> Dictionary:
 	if plan.get("is_value", false):
 		@warning_ignore("unsafe_cast")
@@ -290,6 +315,7 @@ static func _run_plan(plan: Dictionary) -> Dictionary:
 
 ## 编译一个参数：字面量直接固化；$ 表达式编译成子计划。
 ## 计划用 dict 表示：{ "lit": true, "value": ... } 或 { "lit": false, "expr": {...} }
+## 被谁用：_compile。
 static func _compile_arg(raw: String) -> Dictionary:
 	if raw.begins_with("$") and not raw.begins_with("\\$"):
 		return { "lit": false, "expr": _compile_expr(raw) }
@@ -297,6 +323,7 @@ static func _compile_arg(raw: String) -> Dictionary:
 
 ## 执行一个参数计划。
 ## 注意：named 里的"无值 flag"直接存的是 bool true（非计划字典），要原样返回。
+## 被谁用：_run_plan。
 static func _run_arg(p: Variant) -> Variant:
 	@warning_ignore("unsafe_method_access")
 	if p is Dictionary and p.has("lit"):
@@ -312,6 +339,7 @@ static func _run_arg(p: Variant) -> Variant:
 #  - 顶层空格切分 token；
 #  - 括号内的空格并入（使函数调用 $Test.func($Test.int1, -1) 保持整体）；
 #  - 顶层双引号成对包裹的字符串作为单 token 且去掉引号。
+## 被谁用：_compile。
 static func _tokenize(input: String) -> Array:
 	var tokens: Array = []
 	var cur := ""
@@ -365,6 +393,7 @@ static func _tokenize(input: String) -> Array:
 #   { "op": "method", "name": String, "args": [<plan>...] }  .名称(...)
 
 ## 编译一个以 "$" 开头的表达式。
+## 被谁用：_compile_arg、_compile（& 取值式）、_compile_args（嵌套 $）。
 static func _compile_expr(s: String) -> Dictionary:
 	var body := s.substr(1)   # 去掉前导 $
 	# 实例访问：$@ID.成员 或 $@ID.方法(...)
@@ -392,6 +421,7 @@ static func _compile_expr(s: String) -> Dictionary:
 	return { "kind": "func", "callable": resolved_func[1], "args": arg_plans }
 
 ## 执行已编译的表达式计划，返回 [ok, value]。
+## 被谁用：_run_plan、_run_arg、_run_ops（方法参数）、_run_expr（函数参数，递归）。
 static func _run_expr(plan: Dictionary) -> Array:
 	match plan.get("kind", ""):
 		"instance":
@@ -416,6 +446,7 @@ static func _run_expr(plan: Dictionary) -> Array:
 			return [false, null]
 
 ## 拆分 "$@ID.<...>" 得到 <...> 部分（去掉 ID）。
+## 被谁用：_compile_expr（instance 分支）。
 static func _chain_rest(inst_expr: String) -> String:
 	var i := 0
 	while i < inst_expr.length() and inst_expr[i] != "." and inst_expr[i] != "[" and inst_expr[i] != "(":
@@ -425,6 +456,7 @@ static func _chain_rest(inst_expr: String) -> String:
 ## 取 "$@ID.<...>" 里的 ID，返回 [ok, id]。
 ## 注意：不能用 is_valid_int()——实例 ID 是 64 位且可能为负，is_valid_int() 按 int32 校验会误判；
 ## 也不能用负数当"无效"哨兵（合法 ID 本身就可能为负），故用 [ok, id] 返回。
+## 被谁用：_compile_expr（instance 分支）。
 static func _chain_id(inst_expr: String) -> Array:
 	var i := 0
 	var id_str := ""
@@ -445,6 +477,7 @@ static func _chain_id(inst_expr: String) -> Array:
 	return [true, int(id_str)]
 
 ## 编译成员链（<...> 部分）为 ops 数组。
+## 被谁用：_compile_expr（instance / member 两个分支）。
 static func _compile_ops(rest: String) -> Array:
 	var ops: Array = []
 	var i := 0
@@ -481,6 +514,7 @@ static func _compile_ops(rest: String) -> Array:
 	return ops
 
 ## 编译参数串 "a, b, $x" 为计划数组。
+## 被谁用：_compile_expr（函数参数）、_compile_ops（方法参数）。
 static func _compile_args(args_str: String) -> Array:
 	var plans: Array = []
 	for ap_raw in _split_top_level_args(args_str):
@@ -495,6 +529,8 @@ static func _compile_args(args_str: String) -> Array:
 	return plans
 
 ## 对已取到的宿主值执行成员链 ops。
+## 支持宿主是 GDScript（静态成员/常量）、Object（实例属性/方法）、Dictionary（键）。
+## 被谁用：_run_expr（instance 分支）、_run_member。
 static func _run_ops(v: Variant, ops: Array) -> Array:
 	for op in ops:
 		match op["op"]:
@@ -547,6 +583,7 @@ static func _run_ops(v: Variant, ops: Array) -> Array:
 	return [true, v]
 
 ## 执行 "$类.<成员链>"：取类脚本作为静态宿主，再走 ops。
+## 被谁用：_run_expr（member 分支）。
 static func _run_member(owner: String, ops: Array) -> Array:
 	# $ 表达式的宿主只支持类名（$类名.xxx），取类脚本后走 ops
 	var script := _find_class_script(owner)
@@ -556,6 +593,7 @@ static func _run_member(owner: String, ops: Array) -> Array:
 
 
 # 找到从 start（指向 '('）开始配对的 ')' 下标；未匹配返回 -1。
+## 被谁用：_compile_ops（方法参数）。
 static func _match_paren(s: String, start: int) -> int:
 	var depth := 0
 	for j in range(start, s.length()):
@@ -569,6 +607,7 @@ static func _match_paren(s: String, start: int) -> int:
 
 
 # 在 body 中找第一个不处于嵌套括号内的 "(" 的索引；无则 -1。
+## 被谁用：_compile_expr（判断是不是函数调用）。
 static func _find_top_level_paren(body: String) -> int:
 	var depth := 0
 	for i in body.length():
@@ -583,6 +622,7 @@ static func _find_top_level_paren(body: String) -> int:
 
 
 # 把括号内参数字符串按逗号拆分成顶层项（忽略嵌套括号/引号内的逗号）。
+## 被谁用：_compile_args。
 static func _split_top_level_args(args_str: String) -> Array:
 	var parts: Array = []
 	var cur := ""
@@ -611,6 +651,7 @@ static func _split_top_level_args(args_str: String) -> Array:
 
 
 # 普通字面量：bool / int / float / 字符串。
+## 被谁用：_compile_arg、_compile_args。
 static func _convert_literal(raw: String):
 	var low := raw.to_lower()
 	if low == "true":
@@ -630,6 +671,7 @@ static func _convert_literal(raw: String):
 
 
 ## 判定是否为十进制整数（支持前导 +/-，不限 32 位）。
+## 被谁用：_convert_literal。
 static func _is_int_literal(raw: String) -> bool:
 	if raw.is_empty():
 		return false
@@ -648,6 +690,7 @@ static func _is_int_literal(raw: String) -> bool:
 
 # 取一个可调用的静态方法，返回 [ok, Callable]。
 # func_expr 形如 "类名.静态方法"，如 "Test.test_func"。
+## 被谁用：_compile_expr（函数调用分支）。
 static func _try_resolve_method(func_expr: String) -> Array:
 	var dot := func_expr.find(".")
 	if dot <= 0 or dot == func_expr.length() - 1:
@@ -663,6 +706,7 @@ static func _try_resolve_method(func_expr: String) -> Array:
 
 
 # 按 class_name 找全局类脚本，结果懒缓存（找不到的类缓存 null，避免反复查）。
+## 被谁用：_run_member、_try_resolve_method。
 static func _find_class_script(class_name_: String) -> GDScript:
 	if _class_scripts.has(class_name_):
 		@warning_ignore("unsafe_cast")

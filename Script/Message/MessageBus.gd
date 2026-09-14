@@ -1,6 +1,14 @@
 class_name MsgBus
 extends BaseClass
+## 消息总线（设计见 Script/Message/Message.md）：按"接收方 ID"收发，一个 ID 一个 MessageNode。
+## 上层的 Msg（MessageHub.gd）只负责"每种消息用什么 ID 规则"，实际的收发都在本类。
+## 被谁用：MessageHub 的所有 send_/listen_ 都落到这里。
+## 关于 identity：接收器可以登记为"绑定到某个 identity（如 '人类'）"，
+## 该 identity 的角色换人（重生/换身）时，接收器会被迁到新角色对应的节点上，
+## 调用方手里的旧 ID 由 _aliases 顺着别名链解析成新 ID。
 
+## 全部节点：ID -> 收件箱。
+## ID 由 MessageHub 用 format_ID 拼出（如 "char->1->key->32"）。
 static var _nodes: Dictionary[String, MessageNode] = {}   
 
 ## 迁移别名：旧节点 ID -> 新节点 ID。identity 接收器被迁走后，调用方手里仍握着
@@ -11,12 +19,16 @@ static var _aliases: Dictionary[String, String] = {}
 ## identity 换角色时按工厂算出新节点，把接收器迁过去（见 rebind_identity）。
 static var _identity_bindings: Dictionary[String, Array] = {}
 
+## 确保该 ID 有节点（没有就建一个空收件箱）。
+## 被谁用：listen、_move_identity_receiver。
 static func _init_message_node(id: String) -> void:
     if _nodes.has(id):
         return
     _nodes[id] = MessageNode.new()
 
 ## identity_bound 为 true 时记入 identity_receivers（同样参与广播，identity 变更时会迁移）。
+## 返回 ID 本身（调用方要拿它去 unlisten）。
+## 被谁用：MessageHub 的各 listen_*。
 static func listen(id: String, receiver: Callable, identity_bound: bool = false) -> String:
     if not _nodes.has(id):
         _init_message_node(id)
@@ -26,6 +38,8 @@ static func listen(id: String, receiver: Callable, identity_bound: bool = false)
         _nodes[id].receivers.append(receiver)
     return id
 
+## 注销接收器：从普通与 identity 两个列表里都删（并清掉 identity 登记），空了就删节点。
+## 被谁用：MessageHub 的各 unlisten_*（也用于"换绑"时先退订）。
 static func unlisten(id: String, receiver: Callable) -> void:
     # 同步清理 identity 登记，避免 identity 之后出现时把已注销的接收器又迁回来
     for identity in _identity_bindings:
@@ -47,12 +61,14 @@ static func unlisten(id: String, receiver: Callable) -> void:
 
 ## 把 receiver 登记为"绑定到 identity"：identity 换角色时由 rebind_identity 迁移。
 ## node_id 为当前所在节点；factory(char_) 产出该接收器在新角色下应处的节点 ID。
+## 被谁用：MessageHub 里"监听对象是 identity 名字而非具体角色"的那些 listen_*。
 static func bind_identity_receiver(identity: String, node_id: String, receiver: Callable, factory: Callable) -> void:
     if not _identity_bindings.has(identity):
         _identity_bindings[identity] = []
     _identity_bindings[identity].append([node_id, receiver, factory])
 
 ## identity 出现/换角色：把绑定到它的接收器从旧节点迁到该角色对应的新节点。
+## 被谁用：MessageHub（角色重生/换身时）。
 static func rebind_identity(identity: String, char_: Character) -> void:
     if not _identity_bindings.has(identity):
         return
@@ -67,6 +83,7 @@ static func rebind_identity(identity: String, char_: Character) -> void:
         item[0] = new_id
 
 ## 把 receiver 从 old_id 的 identity_receivers 搬到 new_id 的 identity_receivers。
+## 被谁用：rebind_identity。
 static func _move_identity_receiver(old_id: String, new_id: String, receiver: Callable) -> void:
     if _nodes.has(old_id):
         var old_node: MessageNode = _nodes[old_id]
@@ -79,6 +96,7 @@ static func _move_identity_receiver(old_id: String, new_id: String, receiver: Ca
     _aliases[old_id] = new_id
 
 ## 顺着别名链解析出节点当前的真实 ID。
+## 被谁用：unlisten。
 static func _resolve_alias(id: String) -> String:
     var cur := id
     while _aliases.has(cur):
@@ -88,6 +106,9 @@ static func _resolve_alias(id: String) -> String:
 
 ## ---------- 收发 ----------
 
+## 把消息发给该 ID 的所有接收器，返回所有返回值（按登记顺序）。
+## 同时把消息记在节点上（get_message 可取"上一次的消息"）。
+## 被谁用：MessageHub 的所有 send_*。没有该节点就返回空数组（没人听，不算错误）。
 static func send(id: String, message: Variant) -> Array:
     if not _nodes.has(id):
         return []
@@ -99,14 +120,20 @@ static func send(id: String, message: Variant) -> Array:
         result.append(receiver.call(message))
     return result
 
+## 取该 ID 上一次收到的消息（没发过/没节点都返回 null）。
+## 被谁用：MessageHub 里"取上次消息"的接口。
 static func get_message(id: String) -> Variant:
     if not _nodes.has(id):
         return null
     return _nodes[id]["message"]
 
+## 拼节点 ID：各段用 "->" 连接（如 ["char","1","key","32"] → "char->1->key->32"）。
+## 被谁用：MessageHub 拼各类消息的 ID；parse_ID 为逆操作。
 static func format_ID(infos: Array[String]) -> String:
     return "->".join(infos)
 
+## 拆节点 ID（"->" 分段）。
+## 被谁用：MessageHub 里需要按 ID 段取参数的接收器。
 static func parse_ID(id: String) -> Array[String]:
     var result: Array[String] = []
     result.assign(id.split("->"))

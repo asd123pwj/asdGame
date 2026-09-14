@@ -19,7 +19,8 @@ Script/UI/
    ├─ UI_Panel.gd        # 面板容器：竖排布局，组装子元素
    ├─ UI_Label.gd        # 文本：content 即文本（配左键 PRESS 指令即"按钮"，配左键 HOLD 即"拖动手柄"）
    ├─ UI_Image.gd        # 图片：content = 纹理路径，set_content(新路径) 即改图
-   └─ UI_Scroll.gd       # 滚动容器：content 为多行文本
+   ├─ UI_Scroll.gd       # 滚动容器：content 为多行文本
+   └─ UI_Menu.gd         # 菜单：菜单项是它的子 UI，行为作用于宿主 UI（$parent.parent）
 ```
 - 元素类 `class_name UI_XXX extends UIBase`，统一放 `Script/UI/UI/`。
 - 配置类 `class_name UIPreset_XXX extends ConfigBase`，放 `Config/UI/`，`values: Array[Array]`（每条 = `UIPreset._init` 的位置参数）。
@@ -30,7 +31,7 @@ Script/UI/
 |---|---|
 | `UIPreset.gd` | UI 预设：一条 UI 配置；`create_element(ui_name, name, config)` 为根 UI 与子元素共用的实例化工厂。 |
 | `UiSystem.gd` | 管理脚本：挂载/移除**整棵 UI 树**（子元素一并登记/注销），只管生命周期。 |
-| `UIInteract.gd` | **交互指令宿主**（静态方法自动注册为指令）：`UIInteract.close/open/drag/fade_to/set_content`。 |
+| `UIInteract.gd` | **交互指令宿主**（静态方法自动注册为指令）：`UIInteract.open_ui/close/drag/fade_to/set_content/add_close_button/enable_drag`；`open_ui` 只转发给 `UiSystem.open_ui`。 |
 | `UIBase.gd` | 元素基类：`build()` 生成控件并组装子元素；持 `content`/`target`/`children`；指针事件→指令。 |
 | `UI/UI_*.gd` | 原子元素实现（容器/文本/图片/滚动）。 |
 
@@ -48,10 +49,13 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 
 ## UiSystem.gd（extends BaseClass）
 - 持 `var root: CanvasLayer` 与 `var uis: Dictionary[String, UIBase]`。
-- `add_ui(name)`：`build()`（含子元素）→ 挂到 root → **登记整棵树**：根用原名，子元素用 `"根名/子名"`（如 `MiniHUD/Close`）→ `Msg.send_ui_create`。
-  - 子元素进 `uis` 是为了 **PointerDetect 能把指针命中派发到具体子元素**（如关闭按钮、拖动手柄）；`uis.values()` 后加入者靠前，倒序命中即"子元素优先于父"。
-- `remove_ui(name)`：收集整棵树的登记名逐一注销 → `queue_free` 根控件（子元素随之释放）→ `Msg.send_ui_remove`。
-- `get_ui(name)` / `check_ui(name)`：子元素用全名（`MiniHUD/Close`）。
+- `open_ui(preset_name, host := null, anchor := null)`：**全项目唯一的开启入口**（普通 UI 与菜单同一条路，不要再写第二个）。
+  - `host` 为空 → 独立 UI：建预设自己那份 → 挂 `root` → 登记（登记名就是预设名，如 `MiniHUD`）→ `Msg.send_ui_create`。
+  - `host` 给了 → 寄主型（菜单/提示）：深拷贝模板 → `host.add_child_element` 挂到宿主下 → 登记名 `宿主名/预设名`。
+  - 已存在就**只显示 + 重新摆位**，不重建控件（独立 UI 按预设名在 `uis` 里找；寄主型按"同一宿主 + 同一预设"找 `UI_Menu.find_instance`）。
+  - 子元素进 `uis` 是为了 **PointerDetect 能把指针命中派发到具体子元素**（如关闭按钮、菜单项）；`uis.values()` 后加入者靠前，倒序命中即"子元素优先于父"。
+- `get_ui(name)`：按登记名取（子元素用全名，如 `MiniHUD/Info`）。
+- `register_child(parent, child)` / `find_name(ui)`：运行时子元素的登记与反查（`UIBase.add_child_element` → `register_child`）。
 - **只管生命周期，交互实现都在 `UIInteract`**。
 
 ## UIBase.gd（extends BaseClass）
@@ -63,7 +67,13 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
   - 事件名就是**状态名**（如 `"Pointer Press Left"`、`"Right"`）——**UI 不感知按键**，键位只在状态层 `statuses` 的 `keys` 里配置；hover 变化不对应状态，用 `PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT`。
   - 在 `config["events"]`（`[事件名, 指令串]` 列表）里**按等值**取指令串 → `Msg.send_cmd(UIInteract.resolve_cmd(指令串, self))`（解析 `$parent`/`$self` 占位符）。
   - 用列表而非字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），加新事件只需加一项。
-  - 未配置的事件不发送（无默认回退），元素没有隐式行为。
+  - 自己没配的事件**冒泡给父级**，冒泡到根都没有才什么都不做（元素没有隐式行为）；于是"整块面板的行为"在子元素上同样生效（如菜单面板启用拖拽后，按住菜单项也能拖），`$self/$parent` 以"配了指令的那个元素"为基准。
+- **运行时增改**：`add_child_element(name, ui_class, config)` 加子元素（内部交给 `UiSystem.register_child` 登记，登记后才可被指针命中）；`add_event(事件名, 指令串)` 追加事件绑定——菜单的"添加关闭按钮/启用拖拽"就是这两个。
+- **config 可选属性**：`position` / `size` / `content` / `children` / `events` / `visible` / `free`（自由定位：挂到叠加层的非容器挂载点，位置不被父级布局覆盖，用于"右上角的关闭按钮""菜单"这类元素）。
+  - `size` 里为 **0 的那一维按"内容最小尺寸"补足**（`_fit_size()`；"内容要多大"由可覆写的 `_content_size()` 给出）：`[150, 0]` = 宽固定、高随内容；`[0, 0]` = 完全由内容决定。**必须补**——控件尺寸为 0 时 `get_global_rect()` 是退化矩形，PointerDetect 永远命中不到它（菜单"一打开就没了"就是这么来的：矩形高度 0 → 失焦判定以为指针在菜单外 → 同一帧里就把它关了）。
+  - **`UI_Panel` 的 `_content_size()` 必须问内部的 `PanelContainer`，不能问根控件**：根是普通 `Control`，**不会汇总子元素的最小尺寸**，问它只会得到 `custom_minimum_size`（`[150, 0]` → 高度就是 0）。而且建时还没进树、字体主题都问不出来，所以要挂在 `_panel.minimum_size_changed` 上再补一次。
+  - 指令串参数：**只有中间带空格时才需要引号**（如 `"Mouse Left | Tick"`），其余直接写名字（如 `open_menu $self Menu`）。
+  - **自由定位元素不要设 `Control.top_level`**：那会让它不再继承父级可见性（宿主 `hide()` 后它还留在屏幕上、也还能被命中）。摆放时把屏幕坐标换算成**宿主坐标系的 `position`**（挂载点原点即宿主原点）；也不要用 `set_global_position`——它按"当前全局变换求逆"算，重复摆会跟旧 position 复合，越摆越偏。
 - **只存"何时发什么指令"**：无 `close()/fade_to()` 等交互实现（都在 `UIInteract`），无 `draggable/closeable/...` 开关。
 
 ## 交互指令（Script/UI/UIInteract.gd，静态方法 → 指令）
@@ -74,7 +84,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | 指令 | 作用 | 典型配置 |
 |---|---|---|
 | `UIInteract.close $parent` | 关闭（隐藏）目标 UI（发 `Msg.send_ui_close` + hide） | 关闭"按钮"的 press |
-| `UIInteract.open $parent` | 重新显示（与 close 成对） | 外部再次唤出 |
+| `UIInteract.open_ui [宿主] 预设名 [锚点]` | 开启/重开一个 UI（显示 + 按 `open_at` 摆位；不重建控件）。宿主省略 = 独立 UI | 面板右键开菜单、外部唤出 |
 | `UIInteract.drag $parent` | 把指针**本帧累计位移**（`InputSys.mouse_delta`）作用到目标 UI | 拖动手柄的逐帧状态（如 `"Mouse Left | Tick"`） |
 | `UIInteract.fade_to $parent 0.0 0.5` | 透明度渐隐/渐显（alpha, duration；**指令调用须写全参数**） | 提示淡出 |
 | `UIInteract.set_content $parent "文本"` | 修改显示内容（→ refresh） | 更新滚动区文本 |
@@ -115,6 +125,20 @@ var values: Array[Array] = [
 ]
 ```
 - 组装读法：根 `UI_Panel` 含三个子元素——标题栏按住拖动父 UI、文本"按钮"关闭父 UI、滚动区展示内容；改展示内容只需 `get_ui("MiniHUD/Info").set_content(...)` 或发 `UIInteract.set_content` 指令。
+
+## 右键菜单（Script/UI/UI/UI_Menu.gd + Config/UI/UIPreset_Menu.gd）
+- **菜单就是一种普通 UI 元素**：`UI_Menu extends UI_Panel`，与 UI_Label/UI_Scroll/UI_Image 同级，只是配置多三条（`open_at` / `close_on_blur` / `free`）。菜单项就是它 `config["children"]` 里的普通子 UI，行为由子 UI 的事件绑定给出——**换一套配置的 UI_Menu 就等于换一种菜单**。
+- **开启 = 开一个 UI（唯一入口 `UiSystem.open_ui`）**：`UIInteract.open_ui` 只是指令入口，原样转发过去（指令里的 `$self`/`$parent.parent` 要先由 `resolve_cmd` 换成实例，所以保留这个壳，它不含任何策略）。`host` 给不给决定挂哪，摆在哪由**被开启 UI 自己配置里的 `open_at`** 声明：
+  - `host` 为空 → 独立 UI 挂 UI 根，指令写成 `UIInteract.open_ui --preset_name MiniHUD`（命名参数跳过 target）。
+  - `host` 给了 → 挂到宿主下（菜单：菜单项里 `$parent.parent` 指回宿主）。
+  - `Enums.OpenAt.CONFIG`（不写 `open_at` 时的默认）：摆回配置里的 `position`；`POINTER`：开在指针处（右键菜单，`anchor` 用不上）；`ANCHOR_TOP_RIGHT`：开在 `anchor` 的右上角顶点（多级菜单把触发它的那个菜单项传进来）。
+  - 位置换算（屏幕坐标 → 挂载点坐标系的 `position`）在 `UIBase.show_at`：**别用 `set_global_position`**（按当前全局变换求逆，重复摆会跟旧 position 复合、越摆越偏），**也别设 `Control.top_level`**（会失去父级可见性继承，宿主关掉后它还留在屏幕上、还能被命中）。
+- **菜单是宿主 UI 的子元素**，所以菜单项里 `$parent` = 菜单、`$parent.parent` = **宿主 UI** ← 菜单项的功能都作用在宿主上（"关闭"关宿主、"添加关闭按钮"给宿主加 X、"启用拖拽"拖宿主），菜单只是快捷方式——像右键窗口标题栏点"关闭"，关掉的是窗口。宿主一 `hide()`，挂在它下面的菜单随之不可见、也不再被指针命中（可见性照常继承）。
+- **触发**：宿主配置里写 `"events": [["Mouse Right", "UIInteract.open_ui $self Menu $self"]]`；状态层只需 `Mouse Right → PointerDetect.key "Mouse Right"` 把事件派发给 hover 的 UI，**不需要系统级快捷**。
+- **多级菜单 = 菜单开菜单**：菜单项的 `Pointer Enter` → `UIInteract.open_ui $parent.parent MenuEdit $self`，层数不写死。
+- **关掉 = 隐藏（实例复用）**：`UI_Menu.close_self` 只 `hide()` 自己（连同自己弹出的子菜单）；`open_ui` 先 `UI_Menu.find_instance(宿主, 预设)` —— 有就"显示 + 挪到新位置"，没有才"创建 + 挪到新位置"。同一 (宿主, 预设) 只有一份，隐藏的实例不参与指针命中、也不算"开着"。
+- **隐藏后怎么回来**：`close` 只是 `hide()`，实例还在 `uis` 里，所以重开不用重建——重开统一走 `UiSystem.open_ui`（显示 + 按 `open_at` 摆位，不重建控件；指令形式就是 `UIInteract.open_ui`）。**注意 `PointerDetect` 用 `is_visible_in_tree()` 判命中，隐藏的 UI 再也收不到任何事件**，所以重开的触发不能写在它自己身上（"再点一下"是点不到的），必须来自它仍可见的父级、或系统级的状态/快捷指令。
+- **失焦关闭**：菜单 config 里 `close_on_blur = true` 时，`PointerDetect.key` 派发完按键事件后会先 `update_targets()` 刷新命中，再 `UI_Menu.notify_key_event(hover_ui)`——hover 沿 parent 链向上找不到该菜单就关掉它（`close_self`：隐藏自己 + 自己弹出的子菜单）。判断前必须刷新：菜单可能是刚在指针处打开的，用旧 hover 会误判成"外面"。只从 hover 往上找，所以宿主 UI 不算菜单内。
 
 ## 消息（MessageHub.gd）
 - `send_ui_create/remove(ui)` 与 `listen_ui_create/remove`。

@@ -1,13 +1,21 @@
 class_name ConfigBase
 extends BaseClass
+## 配置基类（见 Script/设计文档.md）：**每个配置类 = 一组可被 json 覆盖的变量**。
+## 子类（Config/ 下那些 `extends ConfigBase`，如 UIPreset_Basic / UIPreset_Menu）把配置写成
+## `var values: Array[Array]` 之类的脚本变量；本类负责：
+##   启动时按"脚本全局类名.json"决定"读盘覆盖 values"还是"把 values 写盘"（Sys.RESET 控制）。
+## 注意：json 的 key 只能是字符串，所以配置里别用数组/字典当 key（会被 String() 掉）。
 
-
+## 构造即加载：立刻按脚本名去 USER_CONFIG_DIR 找 json（找不到或 Sys.RESET 就写盘生成）。
+## 被谁用：所有配置类的实例化（PresetRegister._add_presets 里 script.new()）。
 func _init() -> void:
     var script: Script = get_script()
     var config_path = Sys.USER_CONFIG_DIR + script.get_global_name() + ".json"
     save_or_init(config_path)
 
 
+## 读盘覆盖变量，或首次/RESET 时写盘。json 顶层不是字典就静默返回（保持代码里的默认值）。
+## 被谁用：_init。
 func save_or_init(config_path: String) -> void:
     if (not FileAccess.file_exists(config_path)) or Sys.RESET:
         save(config_path)
@@ -22,6 +30,9 @@ func save_or_init(config_path: String) -> void:
             _assign_property(key, json[key])
 
 
+## 把 json 里的值赋给同名变量，按"变量当前类型"做还原：
+## Array/Dictionary 就地 clear+合并（保持引用不变），各 Vector/Color/NodePath 由数组或字符串还原。
+## 被谁用：save_or_init。
 func _assign_property(name: String, value: Variant) -> void:
     var current : Variant = get(name)
 
@@ -85,6 +96,8 @@ func _assign_property(name: String, value: Variant) -> void:
     set(name, current)
 
 
+## 把本类的脚本变量写盘（跳过 `_` 开头的私有变量），Vector/Color/NodePath 转成数组或字符串。
+## 被谁用：save_or_init（首次/RESET 时）；想手动存盘也调它。
 func save(config_path: String) -> void:
     if not DirAccess.dir_exists_absolute(Sys.USER_CONFIG_DIR):
         DirAccess.make_dir_recursive_absolute(Sys.USER_CONFIG_DIR)

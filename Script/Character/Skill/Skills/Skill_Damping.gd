@@ -1,6 +1,11 @@
 class_name Skill_Damping
 extends SkillBase
+## 阻尼技能：地面摩擦/撞墙时的速度衰减（配置 [是否摩擦型, 阻力系数 Vector2]）。
+## 摩擦型：阻力 = 当前速度 × 系数（并保证不低于 sysCfg.min_damping_velocity，避免永远停不下来）。
+## 被谁用：SkillPreset（skill_name = "Skill_Damping"）。
 
+## 逐轴（x 贴地、y 贴墙）衰减速度；速度小于阻力就直接归零。
+## 被谁用：SkillBase.act（每物理帧）。
 func _act(me: Character, _delta: float, _config: Array) -> bool:
     # 摩擦阻力为定值，空气阻力随速度而变化
     var is_friction: bool = _config[0]

@@ -1,13 +1,21 @@
 class_name MapSys
 extends BaseClass
+## 地图系统：世界层（MapLayer）的持有者 + 放置/构建的对外入口（见 Script/Tilemap/Tilemap.md）。
+## place() 负责"选择 source/tile/变种 + 检查空间与兼容 + 整组登记"，真正画出来交给 MapLayer.build。
+## 被谁用：Sys.tmapSys；指令里的 `MapSys.place ...` / `MapSys.build ...`。
 
+## 所有地图层的父节点（挂在 Sys 下）。
+## 被谁用：MapLayer 建层、PointerDetect._map_at（坐标换算）。
 static var maps_parent_node: Node2D = Node2D.new()
 # 世界层：layer_id -> MapLayer（每个 MapLayer 管理六个子层）
+## 被谁用：place / build 按 layer_id 取层。
 static var layers: Dictionary[int, MapLayer] = {}
 # P3D 擦除掩码 shader（供 MapLayer 使用），通过 ShaderManager 按文件名访问
 # static var erase_shader: Shader = ShaderManager.get_shader("p3d_mask")
 
 
+## 起手建 layer 0，并填一批演示用 tile（**这段是演示数据，实际地图内容以后要挪走**）。
+## 被谁用：Sys.init_sub_system。
 func _init() -> void:
     Sys.sys.add_child(maps_parent_node)
 
@@ -71,6 +79,7 @@ func _init() -> void:
 # 放置 tile/P3D：layer_id 世界层号；layer_type 用 tile 初始化时指定的层。
 # 多格 tile：先判断锚点（左下角[1,1]）能否放置（位置+兼容），再检查组内其它位置是否有位置，全部通过才整组放置。
 # tile_name 为空时使用默认占位 tile；指定 tile_name 时固定为该 tile。
+## 被谁用：指令 `MapSys.place ...`、MapSystem._init 的演示数据。
 static func place(layer_id: int, x: int, y: int,
         source_name: String = "", tile_name: String = "", variant: int = -1,
         force_space: bool = false, force_compatible: bool = false) -> void:
@@ -149,6 +158,7 @@ static func place(layer_id: int, x: int, y: int,
 
 # 增量 build：基于各 layer 的 _pending 是否有待放置内容，只更新有内容的层。
 # 每层 build 完会清空自己的 _pending，故只有本轮新 place 过的层才会被真正更新，其余跳过。
+## 被谁用：指令 `MapSys.build ...`、MapSystem._init。
 static func build() -> void:
     for layer_id: int in layers:
         var layer := layers[layer_id]
@@ -156,9 +166,12 @@ static func build() -> void:
             layer.build()
 
 
+## 把（世界层号, 层类型）压成一个 id（MapLayer.map_content 的键）。
+## 被谁用：MapLayer 内部记录/查询。
 static func map_layer_to_id(layer: int, layer_type: Enums.LayerType) -> int:
     return layer * Enums.LayerType.COUNT + layer_type
 
+## 把上面的 id 还原成人看的名字（如 "Layer 0 Middle"）。被谁用：调试输出。
 static func map_id_to_name(id: int) -> String:
     @warning_ignore("integer_division")
     var layer = id / Enums.LayerType.COUNT

@@ -1,6 +1,10 @@
 class_name TimeFormat
 extends BaseClass
+## 时间的中文显示（年/月/旬/日/时辰），从 TimeSys 的数字换算而来。
+## 被谁用：需要"给人看的时间文本"的地方（打印/日志/UI 展示）。
 
+## 下面五个都是**给人和 UI 看的字符串**（由 update() 从 TimeSys 的数字刷新）。
+## 被谁用：日志/UI 展示（如 Test 里的 year+month+day+hour 打印）。
 static var year: String
 static var month: String
 static var xun: String
@@ -14,6 +18,8 @@ static var _日 = ["初一", "初二", "初三", "初四", "初五", "初六", "
            "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"]
 static var _时辰: Array = ["子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时"]
 
+## 把 TimeSys 的当前数字刷成中文字符串。
+## 被谁用：TimeSys.advance（每次时间推进后）。
 static func update() -> void:
     year = year_to_chinese(Sys.timeSys.year)
     month = _月[Sys.timeSys.month - 1]
@@ -22,6 +28,7 @@ static func update() -> void:
 
 
 ## 年份数字转中文（如 1→"元"，2→"二"，10→"十"，123→"一百二十三"）
+## 被谁用：update。
 static func year_to_chinese(num: int) -> String:
     if num <= 0:
         return "零年"
@@ -30,6 +37,7 @@ static func year_to_chinese(num: int) -> String:
     return _number_to_chinese(num) + "年"
 
 ## 内部数字转中文（支持0~99999，可根据需要扩展）
+## 被谁用：year_to_chinese。
 static func _number_to_chinese(num: int) -> String:
     const DIGITS = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
     const UNITS = ["", "十", "百", "千", "万"]

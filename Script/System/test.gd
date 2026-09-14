@@ -1,9 +1,15 @@
 class_name Test
 extends BaseClass
+## 项目自用的演示/联调脚本（不是正式系统逻辑，可以随意改）。
+## 由 Sys._ready 里 `_test.run()` 触发，里面既演示各系统的用法，也兼作"改完先跑一遍"的冒烟测试。
+## 被谁用：Sys._ready（唯一入口）。
 
 static var test_int := [{"value": [{"value": 5}]}] # [0].value[0].value
 static var test_int2 := {"value": [-10]}
 static var int1 := 1
+## 指令系统的取值示例（见 CommandSystem.gd 顶部说明）：
+## 用 `$Test.test_int[0].value[0].value`、`$Test.test_func($Test.int1, 4)` 这类写法把静态成员/函数当参数。
+## 被谁用：delay_loop_test 里的 Msg.send_cmd 示例。
 static func test_func(a: int, b: int) -> int:
     return a + b
 
@@ -13,6 +19,8 @@ var char_C: Character
 var char_D: Character
 var char_E: Character
 
+## 起手挂几条按键监听，用来调消息链路（含组合键的注释示例）。
+## 被谁用：Sys._ready（`var _test = Test.new()` 时构造）。
 func _init() -> void:
     pass
     Msg.listen_key_release([KEY_SHIFT, MOUSE_BUTTON_LEFT], down_a)
@@ -23,10 +31,14 @@ func _init() -> void:
     # Msg.listen_combo([KEY_A, KEY_A], down_a)
     pass
 
+## 调试回调：把收到的消息原样打印。
+## 被谁用：_init 里那几条 listen_key_*。
 func down_a(_msg) -> void:
     print(_msg)
 
 
+## 冒烟入口：生成几个角色 → 开 UI → 起延迟循环。
+## 被谁用：Sys._ready。
 func run() -> void:
     char_A = CharSys.spawn("人类", "player")
     # char_A = CharSys.spawn("人类")
@@ -40,29 +52,21 @@ func run() -> void:
 
 
 
-func _dump_ui(node: Node, depth: int) -> void:
-    var pad: String = ""
-    for i in depth:
-        pad += "  "
-    print(pad, node.get_class(), " / ", node.name)
-    for c in node.get_children():
-        var child: Node = c
-        _dump_ui(child, depth + 1)
-
-
+## UI 演示：**开启路径与游戏内完全一致**（发指令 UIInteract.open_ui，不直接调内部函数）。
+## 被谁用：run。
 func ui_test() -> void:
-    # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 -> UiSystem 管理脚本 -> UIBase 包装 Control。
-    # 交互一律走 Msg（不用自定义 signal）；指针输入由 PointerDetect 用 InputSys 检测命中后派发。
-    var preset: UIPreset = UIPreset.get_("MiniHUD")
-    if preset == null or preset.ui == null:
-        print("UI: 未找到 MiniHUD 预设")
+    # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 → UiSystem.open_ui 统一开启 → UIBase 包装 Control。
+    # 开启方式与游戏里**完全一致**：发指令（UIInteract.open_ui），不直接调内部函数——
+    # 全项目开 UI 只有这一条路，改了才会全都被改到。想手动开关就绑快捷键到这个指令上。
+    Msg.send_cmd("UIInteract.open_ui --preset_name MiniHUD")
+    var ui: UIBase = Sys.uiSys.get_ui("MiniHUD")
+    if ui == null:
+        print("UI: MiniHUD 没开出来（查预设与 open_ui）")
         return
-    var ui: UIBase = preset.ui
+    # 交互一律走 Msg（不用自定义 signal）；指针输入由 PointerDetect 用 InputSys 检测命中后派发。
     Msg.listen_ui_close(ui, func(_m): print("UI close"))
     Msg.listen_ui_submit(ui, func(_m): print("UI submit"))
     Msg.listen_ui_fade(ui, func(m): print("UI fade -> ", m))
-    Sys.uiSys.add_ui("MiniHUD")
-    print("UI: add_ui MiniHUD = ", Sys.uiSys.check_ui("MiniHUD"))
     # 展示 content/refresh 流程：修改内容属性即可更新滚动条 UI（不必重建控件）
     var info: UIBase = Sys.uiSys.get_ui("MiniHUD/Info")
     if info != null:
@@ -72,6 +76,8 @@ func ui_test() -> void:
         info.set_content("\n".join(lines))
 
 
+## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
+## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:
     var info: String = char_.name
     # for attr_type_name in char_.attrs.attributes.keys():
@@ -80,6 +86,8 @@ func get_char_info(char_: Character) -> void:
     print(info)
 
 
+## 每秒跑一轮的联调循环：地图放置/构建、状态检测、指令取值示例都在这儿。
+## 被谁用：run（里面的 while true 会一直转，所以 run 里加了 missing_await 抑制）。
 func delay_loop_test() -> void:
     Msg.listen_advance_hour(when_time_advance)
     get_char_info(char_A)
@@ -109,6 +117,8 @@ func delay_loop_test() -> void:
         #     print("B触摸A")
         #     Msg.send_status_detected(char_B, "Touch", char_A)
 
+## 时间推进回调：打印当前中文时间（演示 TimeSys → TimeFormat 的用法）。
+## 被谁用：delay_loop_test 里 listen_advance_hour 的回调。
 func when_time_advance(_msg: Variant) -> void:
     print("===================================")
     print(TimeFormat.year + TimeFormat.month + TimeFormat.day + TimeFormat.hour)

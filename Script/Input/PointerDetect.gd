@@ -7,19 +7,24 @@ extends BaseClass
 ##
 ## **事件派发只有一个入口 `key(status_name)`**：不区分 press/hold/release/move，也不碰键位——
 ## 键位只存在于状态层（statuses 的 keys），这里只管"哪个状态满足了"，把它当事件名派发给 UI。
-## 参数由快捷指令串给出（如 `PointerDetect.key "Pointer Press Left"`），因此
+## 参数由快捷指令串给出（如 `PointerDetect.key "Mouse Left"`），因此
 ## "增删/改绑多功能键"只需改配置，不必动本文件。
 ## 指针移动**不锁定目标**：每次移动都派发给当前 hover 的 UI，由它 config 里配的指令决定做什么。
 
 ## 指针当前目标
+## 被谁用：key（事件派发给谁）、UI_Menu.notify_key_event（失焦判定入参）。
 static var hover_ui: UIBase = null
+## 指针当前目标角色（占位功能，暂无人使用）。
 static var hover_char: Character = null
+## 指针当前目标地图格（占位功能，暂无人使用）。
 static var map_position: Vector2i = Vector2i.ZERO
 ## 上次的 hover_ui，用于判 hover 变化并发 enter/exit
+## 被谁用：update_targets。
 static var _prev_hover_ui: UIBase = null
 
 ## hover 变化的两个内置事件名：它们不是配置里的状态（由 update_targets 判定后直接派发），
 ## UI 侧在 config["events"] 里用这两个常量绑同名的项即可。
+## 被谁用：update_targets（派发）、Config/UI 里绑 "Pointer Enter/Exit" 的项。
 const EVENT_POINTER_ENTER: String = "Pointer Enter"
 const EVENT_POINTER_EXIT: String = "Pointer Exit"
 
@@ -31,6 +36,7 @@ func _init() -> void:
 ## 刷新指针下的目标；hover_ui 变化时对新旧目标发 enter/exit。
 ## 由 Tick 状态 → 快捷指令 `PointerDetect.update_targets` 每帧驱动
 ## （hover 展开子菜单依赖它，所以这里会每帧被调用）。
+## 被谁用：Tick 状态的快捷指令；以及 key() 里"派发完按键后补刷一次"。
 static func update_targets() -> void:
 	hover_ui = _ui_at(InputSys.mouse_position)
 	hover_char = _char_at()
@@ -49,14 +55,21 @@ static func update_targets() -> void:
 ## 不区分 press/hold/release/move，也不涉及键位——"哪个状态满足了"已由状态层判定。
 ## 命中刷新由每帧的 `PointerDetect.update_targets`（Tick 状态驱动）负责，这里不重复刷新。
 ## 指针移动不锁定任何 UI —— 被拖的元素跟随光标，hover 始终是它。
+## 被谁用：状态层 shortcuts 里的 `PointerDetect.key "<状态名>"`（见 Config/Character/Archetype）。
 static func key(status_name: String) -> void:
-	if hover_ui == null:
-		return
-	hover_ui.on_event(status_name)
+	if hover_ui != null:
+		hover_ui.on_event(status_name)
+	# 按键后清理菜单：配了 close_on_blur 的菜单，指针不在它的链上就把自己关掉（"点菜单外即关"）。
+	# 先刷新一次命中：菜单常是刚在这一帧打开、或挪到了指针处，用旧的 hover 会误判成"在外面"。
+	if UI_Menu.has_any_open():
+		update_targets()
+		UI_Menu.notify_key_event(hover_ui)
 
 
 ## 指针命中的 UI（按加入顺序取最上层）。
 ## 用 is_visible_in_tree：父 UI 关闭(hide)后子元素也应视为不可命中。
+## 注意 Rect2 退化（宽或高为 0）时永远命不中——UI 的 size 必须补足（见 UIBase._fit_size）。
+## 被谁用：update_targets。
 static func _ui_at(pos: Vector2) -> UIBase:
 	var list: Array = Sys.uiSys.uis.values()
 	for i in range(list.size() - 1, -1, -1):
@@ -92,6 +105,7 @@ static func _map_at() -> Vector2i:
 
 
 ## 我没说要实现这个，但它先帮我实现了，那就先占位用
+## 取角色碰撞体矩形尺寸（body 下第一个矩形 CollisionShape2D）。
 static func _body_size(body: CharacterBody2D) -> Vector2:
 	for child in body.get_children():
 		if child is CollisionShape2D and child.shape is RectangleShape2D:

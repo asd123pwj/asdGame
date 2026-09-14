@@ -1,15 +1,21 @@
 class_name TileP3DEraseMask
 extends BaseClass
+## P3D 遮挡擦除：把三个邻居（上/右上/右）的"擦除矩阵"合并成一张 48x48 掩码，
+## 用来把当前 P3D 图被邻居挡住的部分挖空（alpha=0）。
+## 只依赖"三邻居的组合"，所以掩码可以按邻居组合缓存复用。
+## 被谁用：MapLayer（给 P3D 层生成遮挡后的图）。
 
 # P3D 遮挡擦除：把三个邻居的内容矩阵（来自 TileSpritePreset 的擦除矩阵）合并成掩码，
 # 挖空当前 P3D 被邻居遮挡的部分。擦除矩阵（内容矩阵/erase id）已由 TileSpritePreset 提供。
 
 # ---- 掩码缓存 ----
 # 邻居 hash 组合 key -> 掩码 BitMap(48x48, true=被邻居遮挡)
+## 被谁用：get_or_build_mask（读/写）。
 static var _mask_cache: Dictionary = {}
 
 
 # 由三个邻居 tile id 组成掩码缓存键（用邻居 tile 的形状哈希，不含当前 tile）
+## 被谁用：get_or_build_mask。
 static func get_neighbor_mask_key(neighbors: Array) -> String:
     var key := ""
     for id in neighbors:
@@ -22,6 +28,7 @@ static func get_neighbor_mask_key(neighbors: Array) -> String:
 
 # 获取/生成掩码 BitMap（true=该位置被邻居遮挡）。掩码只依赖三邻居组合，共享缓存。
 # get_neighbor: Callable (x,y) -> [上,右上,右] 的 int tile id
+## 被谁用：MapLayer.build（生成 P3D 图前）。
 static func get_or_build_mask(get_neighbor: Callable, x: int, y: int, p3d_offset: Vector2) -> BitMap:
     var neighbors: Array = get_neighbor.call(x, y)
     var key := get_neighbor_mask_key(neighbors)
@@ -33,6 +40,7 @@ static func get_or_build_mask(get_neighbor: Callable, x: int, y: int, p3d_offset
 
 
 # 把三个邻居内容矩阵合并成 48x48 掩码 BitMap，偏移到当前 P3D 局部坐标系
+## 被谁用：get_or_build_mask（缓存未命中时）。
 static func _build_erase_bitmap(x: int, y: int, neighbors: Array, p3d_offset: Vector2) -> BitMap:
     var mask := BitMap.new()
     mask.create(Vector2i(Sys.sysCfg.REGION_SIZE.x, Sys.sysCfg.REGION_SIZE.y))
@@ -60,6 +68,7 @@ static func _build_erase_bitmap(x: int, y: int, neighbors: Array, p3d_offset: Ve
 
 
 # 把一个内容矩阵(48x48)按 nbase 偏移绘制到掩码 BitMap（P3D 局部坐标系 origin 基准）
+## 被谁用：_build_erase_bitmap。
 static func _blit_matrix_to_mask(matrix: BitMap, nbase: Vector2, origin: Vector2, mask: BitMap) -> void:
     for my in 48:
         for mx in 48:
@@ -72,6 +81,7 @@ static func _blit_matrix_to_mask(matrix: BitMap, nbase: Vector2, origin: Vector2
 
 
 # 生成掩码后的 P3D 图像（P3D 原图，被邻居遮挡处挖空 alpha=0）
+## 被谁用：MapLayer.build（给 P3D 层做贴图）。
 static func build_masked_p3d_image(sprite_name: String, atlas_coords: Vector2i,
         mask: BitMap) -> Image:
     var p3d: Image = TileSpritePreset.get_region_image(sprite_name, atlas_coords, true)
