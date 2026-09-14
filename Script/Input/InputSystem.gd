@@ -6,7 +6,7 @@ extends BaseClass
 ## 被谁用：Sys._input 把引擎事件转进来；PointerDetect / UIInteract / 各状态读这里的鼠标数据。
 
 ## 指针当前位置（屏幕坐标）。
-## 被谁用：PointerDetect.update_targets（命中判定）、UiSystem._place（POINTER 策略开菜单）。
+## 被谁用：PointerDetect.update_targets（命中判定）、UiSys._place（POINTER 策略开菜单）。
 static var mouse_position: Vector2 = Vector2.ZERO
 ## 本帧累计的指针位移：一帧内多个 MouseMotion 事件相加，帧末由 end_frame() 清零。
 ## 消费方一律是"每帧调用一次"的（拖拽类指令），所以必须按帧对齐，否则：

@@ -7,7 +7,7 @@ ui_name: String
 config: Dictionary
 
 交互不是开关，而是"事件→指令"：config["events"] 是 [事件名, 指令串] 的列表，事件发生即发指令。
-事件名就是状态名（见 Archetype_System 的 statuses，如 "Pointer Press Left"）——UI 不关心键位，
+事件名就是状态名（见 Archetype_System 的 statuses，如 "Mouse Left"）——UI 不关心键位，
 键位只在状态层配置；hover 变化用 PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT。
 占位符：$parent = 挂载对象（父 UI），$parent.parent = 祖父（链式任意级），$self = 自身。
 交互指令宿主为 UIInteract（close/open/drag/fade_to/set_content）。
@@ -24,8 +24,9 @@ config: Dictionary
 var values: Array[Array] = [
     ["MiniHUD", "UI_Panel", {
         "position": [30, 30], "size": [320, 220],
-        # 右键这块 UI → 开"Menu"（菜单是它的子 UI，菜单项里 $parent.parent 就指回这个面板）
-        # open_at 由 Menu 自己的配置声明（POINTER = 指针处），所以第三个参数随便传 $self
+        # 右键这块 UI → 开"Menu"（菜单挂在这个面板下，菜单项里 $parent.parent 就指回它）
+        # 第一/第三个参数都传 $self：第一个没有 anchor 时才用来当挂载点，第三个既是位置锚点
+        # 又是挂载点（菜单链因此是一棵子树）；摆在哪由 Menu 自己的 open_at 声明（POINTER = 指针处）
         "events": [["Mouse Right", "UIInteract.open_ui $self Menu $self"]],
         "children": [
             # 标题栏：只显示文本；"Mouse Left | Tick"(左键按住·逐帧) → 拖动它整个父 UI

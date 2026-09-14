@@ -12,7 +12,7 @@ extends BaseClass
 ## 指针移动**不锁定目标**：每次移动都派发给当前 hover 的 UI，由它 config 里配的指令决定做什么。
 
 ## 指针当前目标
-## 被谁用：key（事件派发给谁）、UI_Menu.notify_key_event（失焦判定入参）。
+## 被谁用：key（事件派发给谁）、UiSys.close_blur_ui（失焦判定入参）。
 static var hover_ui: UIBase = null
 ## 指针当前目标角色（占位功能，暂无人使用）。
 static var hover_char: Character = null
@@ -59,11 +59,11 @@ static func update_targets() -> void:
 static func key(status_name: String) -> void:
 	if hover_ui != null:
 		hover_ui.on_event(status_name)
-	# 按键后清理菜单：配了 close_on_blur 的菜单，指针不在它的链上就把自己关掉（"点菜单外即关"）。
-	# 先刷新一次命中：菜单常是刚在这一帧打开、或挪到了指针处，用旧的 hover 会误判成"在外面"。
-	if UI_Menu.has_any_open():
+	# 按键后清理：配了 close_on_blur 的 UI（菜单就是这种，没有任何专属类），指针不在它上面就关掉。
+	# 先刷新一次命中：这类 UI 常是刚在这一帧打开、或挪到了指针处，用旧的 hover 会误判成"在外面"。
+	if UiSys.has_blur_ui():
 		update_targets()
-		UI_Menu.notify_key_event(hover_ui)
+		UiSys.close_blur_ui(hover_ui)
 
 
 ## 指针命中的 UI（按加入顺序取最上层）。
@@ -71,7 +71,7 @@ static func key(status_name: String) -> void:
 ## 注意 Rect2 退化（宽或高为 0）时永远命不中——UI 的 size 必须补足（见 UIBase._fit_size）。
 ## 被谁用：update_targets。
 static func _ui_at(pos: Vector2) -> UIBase:
-	var list: Array = Sys.uiSys.uis.values()
+	var list: Array = UiSys.uis.values()
 	for i in range(list.size() - 1, -1, -1):
 		var ui: UIBase = list[i]
 		if ui.control != null and ui.control.is_visible_in_tree() and ui.control.get_global_rect().has_point(pos):

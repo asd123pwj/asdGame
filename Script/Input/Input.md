@@ -40,5 +40,5 @@
   - **不区分 press/hold/release/move，也不涉及键位**——"哪个状态满足了"由状态层判定，这里只把状态名当事件名派发。
   - 命中刷新由每帧 Tick 的 `update_targets` 负责（不再在派发前重复刷新）。
   - 命中 UI 时调 `ui.on_event(状态名)`，UI 侧按状态名等值匹配 `config["events"]` 里的指令。
-- 命中判定：UI 按 `Sys.uiSys.uis` 加入顺序取最上层、`control.get_global_rect()` 矩形命中；角色按身体 `CollisionShape2D` 矩形；地图按世界坐标 / `TileSpritePreset.tileset.tile_size` 换算（y 取反）。
+- 命中判定：UI 按 `UiSys.uis` 加入顺序取最上层、`control.get_global_rect()` 矩形命中；角色按身体 `CollisionShape2D` 矩形；地图按世界坐标 / `TileSpritePreset.tileset.tile_size` 换算（y 取反）。
 - 驱动链路：`StatusPreset_Pointer` 定义按键状态（Pointer Press/Hold/Release、Submit）→ `SystemShortcutPreset_Pointer` 声明"状态满足→`PointerDetect.key` 指令"→ 满足时 `Msg.send_cmd`。输入全部来自 `InputSys` 的 `Msg` 消息，不用引擎 `gui_input`。

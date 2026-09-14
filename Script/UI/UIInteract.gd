@@ -10,7 +10,7 @@ extends BaseClass
 ## target 为目标 UI 实例（指令里的 $parent/$self 由 resolve_cmd 转成 $@ID，
 ## 指令系统执行时已用 instance_from_id 取出实例，故这里收到的就是 UIBase）。
 ## 本类只做"指令参数 → 具体实现"的转发与校验，**不含任何 UI 策略**：
-## 开启策略在 UiSystem.open_ui，显示内容在 UIBase.content/refresh，可见性直接用 Control。
+## 开启策略在 UiSys.open_ui，显示内容在 UIBase.content/refresh，可见性直接用 Control。
 
 
 ## 解析指令串占位符（由 UIBase.on_event 在发送前调用）：
@@ -54,17 +54,18 @@ static func _climb_parent(sender: UIBase, levels: int) -> UIBase:
 	return cur
 
 
-## 开启一个 UI —— 指令入口：**不含任何"开/摆"策略，直接转发给唯一的实现 `UiSystem.open_ui`**
+## 开启一个 UI —— 指令入口：**不含任何"开/摆"策略，直接转发给唯一的实现 `UiSys.open_ui`**
 ## （普通 UI 与菜单同一条路；要改怎么开、怎么摆，只改那边）。
-##   target      = 宿主。给了就挂到它下面（菜单项里写 $parent.parent 指回宿主，菜单就是宿主的子 UI）；
-##                 **不给就是独立 UI**（挂 UI 根）——指令里用 `--preset_name xxx` 跳过它。
+##   target      = 宿主（挂载点）。没有 anchor 时挂到它下面；
+##                 **target 与 anchor 都不给就是独立 UI**（挂 UI 根）——指令里用 `--preset_name xxx` 跳过它。
 ##   preset_name = 预设名（见 Config/UI/）
-##   anchor      = 位置锚点（只有 ANCHOR_TOP_RIGHT 策略用得上，多级菜单传触发它的那个菜单项）
+##   anchor      = 位置锚点，同时是挂载点：多级菜单传"触发它的那个菜单项"，
+##                 子菜单挂在该菜单项下 ⇒ 整条菜单链是一棵子树（关父级全关、失焦判定沿 parent 链）
 ## 指令写法：UIInteract.open_ui $self Menu $self        （面板右键 → 指针处开菜单）
 ##           UIInteract.open_ui --preset_name MiniHUD  （独立 UI → 开在配置声明的位置）
 ## 被谁用：Config/UI 里各预设的 "events"，以及 Test.ui_test（测试也走指令，不抄近路）。
 static func open_ui(target: UIBase = null, preset_name: String = "", anchor: UIBase = null) -> void:
-	Sys.uiSys.open_ui(preset_name, target, anchor)
+	UiSys.open_ui(preset_name, target, anchor)
 
 
 ## 关闭（隐藏）目标 UI：只是 hide，实例留在原地；**重开统一走 UIInteract.open_ui**

@@ -27,8 +27,9 @@ static var inputSys: InputSys
 static var tmapSys: MapSys
 ## 指令系统（解析并执行指令串）。被谁用：Msg.send_cmd。
 static var cmdSys: CmdSys
-## UI 系统（开启/登记 UI）。被谁用：UIBase / UIInteract / Test。
-static var uiSys: UiSystem
+## UI 系统（开启/登记 UI）。成员都是静态的，日常直接用 `UiSys.xxx`；
+## 这里的实例只用于启动时跑一次 `UiSys._init()`（建 UI 根）。被谁用：Sys.init_sub_system。
+static var uiSys: UiSys
 
 ## "SYS" 角色：世界默认值、系统级状态（如全局 Tick）挂在它身上。
 ## 被谁用：Attributes 取世界默认值、状态里以 SYS 为主体的判定。
@@ -84,5 +85,5 @@ func init_sub_system() -> void:
     presets = PresetRegister.new()
     inputSys = InputSys.new()
     tmapSys = MapSys.new()
-    uiSys = UiSystem.new()
+    uiSys = UiSys.new()
     # print("init_done")

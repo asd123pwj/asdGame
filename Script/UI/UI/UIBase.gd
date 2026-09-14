@@ -8,18 +8,18 @@ extends BaseClass
 ## 事件名就是**状态名**（如 "Mouse Left"）：UI 不关心键位，键位只在状态层（statuses 的 keys）配置；
 ## hover 变化不对应任何状态，用 PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT。
 ## 占位符解析与交互实现都在 UIInteract（UIBase 只存"何时发什么指令"）；
-## 开启与登记在 UiSystem.open_ui（**全项目唯一的开启入口**）。
+## 开启与登记在 UiSys.open_ui（**全项目唯一的开启入口**）。
 ## 显示内容统一挂 var content，子类 refresh() 把它刷到控件上。
 
 ## 元素名：登记名的一段（独立 UI 就是预设名，子元素就是配置里写的名字）。
-## 被谁用：UiSystem._register_tree / find_name（拼登记名）、各处的警告文案。
+## 被谁用：UiSys._register_tree / find_name（拼登记名）、各处的警告文案。
 var name: String = ""
 ## 本元素的配置（见 Config/UI/）。公共属性：position/size/content/children/events/visible/free，
 ## 各子类另有自己的（如菜单的 open_at / close_on_blur）。
-## 被谁用：_apply_config、_build_children、on_event、UiSystem._place（读 open_at）。
+## 被谁用：_apply_config、_build_children、on_event、UiSys._place（读 open_at）。
 var config: Dictionary = {}
 ## 真正的引擎控件（本元素外观的根，子节点也挂在它下面）。
-## 被谁用：UiSystem（挂载）、PointerDetect._ui_at（命中矩形）、UIInteract 各指令、UiSystem._place。
+## 被谁用：UiSystem（挂载）、PointerDetect._ui_at（命中矩形）、UIInteract 各指令、UiSys._place。
 var control: Control
 
 ## 显示内容：指明该 UI 展示什么（文本/多行文本/纹理路径…由子类解释）。
@@ -29,11 +29,11 @@ var content: Variant = null
 
 ## 挂载对象（父 UI）：组装子元素时由父元素注入，即指令占位符 $parent 的指向。
 ## 被谁用：_build_children / add_child_element（注入）、UIInteract.resolve_cmd（$parent 链）、
-##         on_event（事件冒泡）、UI_Menu.nearest / find_instance（判定宿主与菜单链）。
+##         on_event（事件冒泡）、UiSys._is_inside（判"指针是否在这个 UI 上"）。
 var parent: UIBase = null
 
 ## 子元素：build() 按 config["children"] 组装，每项 [child_name, ui_class, child_config]。
-## 被谁用：_build_children / add_child_element（追加）、UiSystem._register_tree（递归登记）、
+## 被谁用：_build_children / add_child_element（追加）、UiSys._register_tree（递归登记）、
 ##         UIInteract.add_close_button（查重）。
 var children: Array[UIBase] = []
 
@@ -47,7 +47,7 @@ func _init(name_: String = "", config_: Dictionary = {}) -> void:
 
 ## 生成控件树并组装子元素，返回 control（供 UiSystem 挂载）。
 ## 顺序不能换：建控件 → 应用配置 → 刷内容 → 建子元素 → 补尺寸（子元素建完才知道内容多大）。
-## 被谁用：UiSystem._build_open（独立 UI 与寄主型都走它）、_build_children / add_child_element（子元素）。
+## 被谁用：UiSys._build_open（独立 UI 与寄主型都走它）、_build_children / add_child_element（子元素）。
 func build() -> Control:
 	control = _create_control()
 	_apply_config()
@@ -99,11 +99,11 @@ func set_content(value: Variant) -> void:
 	refresh()
 
 
-## 摆到指定**屏幕坐标**并显示（按 open_at 策略开的 UI 用，见 UiSystem._place）。
+## 摆到指定**屏幕坐标**并显示（按 open_at 策略开的 UI 用，见 UiSys._place）。
 ## 位置换算成"挂载点坐标系"的 position：
 ##   - 不用 set_global_position——它按"当前全局变换求逆"算，重复摆会跟旧 position 复合，越摆越偏；
 ##   - 也不设 Control.top_level——那会让元素不再继承父级可见性（父级 hide 后它还留在屏幕上、也还能被命中）。
-## 被谁用：UiSystem._place（POINTER / ANCHOR_TOP_RIGHT 两种策略）。
+## 被谁用：UiSys._place（POINTER / ANCHOR_TOP_RIGHT 两种策略）。
 func show_at(pos: Vector2) -> void:
 	if control == null:
 		return
@@ -114,7 +114,7 @@ func show_at(pos: Vector2) -> void:
 
 
 ## 摆回配置里声明的位置（config["position"]）；没配就不动。
-## 被谁用：_apply_config（建时）、UiSystem._place（CONFIG 策略：被拖动过的 UI 重开时回初值）。
+## 被谁用：_apply_config（建时）、UiSys._place（CONFIG 策略：被拖动过的 UI 重开时回初值）。
 func reset_position() -> void:
 	if control == null:
 		return
@@ -138,7 +138,7 @@ func _free_box() -> Control:
 
 
 ## 应用 config 里的公共属性：position / size / content / visible。
-## 被谁用：build()。子类覆写时必须先 super()（如 UI_Scroll 之后调 label 尺寸、UI_Menu 之后记实例）。
+## 被谁用：build()。子类覆写时必须先 super()（如 UI_Scroll 之后再调内层 label 的宽度）。
 func _apply_config() -> void:
 	reset_position()
 	if config.has("size") and config["size"] is Array:
@@ -199,10 +199,13 @@ func on_event(event_name: Variant) -> void:
 
 
 ## 运行时追加一个子元素（如菜单里后加的关闭按钮），返回新元素。
-## 生成控件 → 挂到 _content_box()/_free_box() → 记进 children → 交给 UiSystem 登记
-## （登记后才可能被指针命中；登记名规则在 UiSystem）。
-## 被谁用：UiSystem._build_open（菜单这类寄主型 UI）、UIInteract.add_close_button。
-func add_child_element(child_name: String, ui_class: String, child_config: Dictionary = {}) -> UIBase:
+## 生成控件 → 挂到 _content_box()/_free_box() → 记进 children → 交给 UiSys 登记
+## （登记后才可能被指针命中；登记名规则在 UiSys）。
+##   reg_name 由调用方指定登记名（开 UI 时必须给：`挂载点=>预设名`，见 UiSys._build_open）；
+##   留空则按"父登记名/子名"登记（普通子元素的默认）。
+## 被谁用：UiSys._build_open（挂到宿主/锚点下的 UI）、UIInteract.add_close_button。
+func add_child_element(child_name: String, ui_class: String, child_config: Dictionary = {},
+		reg_name: String = "") -> UIBase:
 	var child: UIBase = UIPreset.create_element(child_name, ui_class, child_config)
 	if child == null:
 		return null
@@ -211,10 +214,10 @@ func add_child_element(child_name: String, ui_class: String, child_config: Dicti
 	children.append(child)
 	# 配置里声明 free 的当"自由定位"元素：挂到叠加层，位置才不会被父级容器布局覆盖。
 	# 注意不要给它设 Control.top_level——那样它就不再继承父级可见性，宿主关了它还会留在屏幕上；
-	# 摆放时把屏幕坐标换算成挂载点坐标系的 position 即可（见 UiSystem._place）。
+	# 摆放时把屏幕坐标换算成挂载点坐标系的 position 即可（见 UiSys._place）。
 	var box: Control = _free_box() if bool(child_config.get("free", false)) else _content_box()
 	box.add_child(child.control)
-	Sys.uiSys.register_child(self, child)
+	UiSys.register_child(self, child, reg_name)
 	return child
 
 

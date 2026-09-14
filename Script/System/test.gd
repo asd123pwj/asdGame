@@ -55,11 +55,11 @@ func run() -> void:
 ## UI 演示：**开启路径与游戏内完全一致**（发指令 UIInteract.open_ui，不直接调内部函数）。
 ## 被谁用：run。
 func ui_test() -> void:
-    # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 → UiSystem.open_ui 统一开启 → UIBase 包装 Control。
+    # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 → UiSys.open_ui 统一开启 → UIBase 包装 Control。
     # 开启方式与游戏里**完全一致**：发指令（UIInteract.open_ui），不直接调内部函数——
     # 全项目开 UI 只有这一条路，改了才会全都被改到。想手动开关就绑快捷键到这个指令上。
     Msg.send_cmd("UIInteract.open_ui --preset_name MiniHUD")
-    var ui: UIBase = Sys.uiSys.get_ui("MiniHUD")
+    var ui: UIBase = UiSys.get_ui("MiniHUD")
     if ui == null:
         print("UI: MiniHUD 没开出来（查预设与 open_ui）")
         return
@@ -68,7 +68,7 @@ func ui_test() -> void:
     Msg.listen_ui_submit(ui, func(_m): print("UI submit"))
     Msg.listen_ui_fade(ui, func(m): print("UI fade -> ", m))
     # 展示 content/refresh 流程：修改内容属性即可更新滚动条 UI（不必重建控件）
-    var info: UIBase = Sys.uiSys.get_ui("MiniHUD/Info")
+    var info: UIBase = UiSys.get_ui("MiniHUD/Info")
     if info != null:
         var lines: PackedStringArray = PackedStringArray()
         for i in range(40):

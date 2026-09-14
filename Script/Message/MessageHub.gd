@@ -610,7 +610,7 @@ static func _listen_ui(ui: UIBase, action: String, callback: Callable) -> String
     return listen(_format_ui(ui, action), callback)
 
 ## UI 生命周期域（与上面的 Character 域不同，这里以**UI 实例**为 ID 段）。
-## 被谁用：UiSystem._build_open（send_ui_create）、UIInteract.close（send_ui_close）。
+## 被谁用：UiSys._build_open（send_ui_create）、UIInteract.close（send_ui_close）。
 ## 注意：**send_ui_remove 当前没有任何发送方**——UI 关闭是 hide 复用，项目里已没有"销毁 UI"的路径；
 ## 保留它是为了以后真要销毁时（那时记得同时把 listen_ui_remove 的接收方也接上）。
 """ ---------- Life Cycle ---------- """
