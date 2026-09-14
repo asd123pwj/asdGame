@@ -34,7 +34,9 @@ func _input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
     InputSys._process(delta)
-    TimeSys._process(delta)
+    TimeSys._process(delta)   # 末尾 send_tick()，逐帧状态（如 "Mouse Left | Tick"）在这里满足
+    # 帧末结算：本帧累计的指针位移已被各消费方（拖拽类指令）用完，清空供下一帧重新累计
+    InputSys.end_frame()
 
 func _physics_process(delta: float) -> void:
     CharSys._physics_process(delta)

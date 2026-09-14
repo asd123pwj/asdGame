@@ -52,7 +52,7 @@ func _dump_ui(node: Node, depth: int) -> void:
 
 func ui_test() -> void:
     # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 -> UiSystem 管理脚本 -> UIBase 包装 Control。
-    # 交互一律走 Msg（不用自定义 signal）；指针输入由 PointDetect 用 InputSys 检测命中后派发。
+    # 交互一律走 Msg（不用自定义 signal）；指针输入由 PointerDetect 用 InputSys 检测命中后派发。
     var preset: UIPreset = UIPreset.get_("MiniHUD")
     if preset == null or preset.ui == null:
         print("UI: 未找到 MiniHUD 预设")

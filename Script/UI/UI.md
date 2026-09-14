@@ -4,7 +4,7 @@
 UI 系统遵循项目统一范式（见 `设计文档.md` §二/§三/§十）：**UIPreset**（配置）→ **UiSystem**（管理脚本）→ **UIBase**（元素基类）→ `Config/UI/` 配置类。
 - `UIBase extends BaseClass`，**不直接继承 Control**：内部用变量持有 `control: Control`（真正的引擎节点），不用自定义 signal。
 - **一个 UI = 多个基本元素的组装**：根元素（如 `UI_Panel`）由 config["children"] 声明子元素（都是 UIBase 子类），build 时递归组装。
-- **交互 = 指令**：元素不再用 `draggable/closeable/...` 开关，而是"事件→指令"——config 按 `press/move/release/submit` 事件键各配一条指令串，事件发生即发送；指令里 `$parent`(挂载对象)/`$self`(自身) 在发送前替换为实例（`$@ID` 形式）。想要什么行为就配什么指令（拖动手柄配 drag 指令、关闭按钮配 close 指令）。
+- **交互 = 指令**：元素不再用 `draggable/closeable/...` 开关，而是"事件→指令"——`config["events"]` 是 `[事件键, 指令串]` 的列表，事件发生即发送对应指令；**事件键统一用常量表示**（按键事件 = `[键值, Enums.KeyStatus.状态]`，指针事件 = 行为名 move/enter/exit），不拼字符串键名；指令里 `$parent`(挂载对象)/`$self`(自身) 在发送前替换为实例（`$@ID` 形式）。想要什么行为就配什么指令（拖动手柄配 drag 指令、关闭按钮配 close 指令）。
 - **显示内容统一挂 `content` 属性**：元素展示什么由 content 决定，改内容 = `set_content(v)`（内部自动 `refresh()`），不必重建控件。
 
 ## 目录与命名约定
@@ -17,7 +17,7 @@ Script/UI/
 ├─ UIBase.gd             # 元素基类（extends BaseClass，持有 control: Control）
 └─ UI/                   # 原子元素（每个都是 UIBase 子类，配置里 ui_name = 类名）
    ├─ UI_Panel.gd        # 面板容器：竖排布局，组装子元素
-   ├─ UI_Label.gd        # 文本：content 即文本（配 press 指令即"按钮"，配 move 即"拖动手柄"）
+   ├─ UI_Label.gd        # 文本：content 即文本（配左键 PRESS 指令即"按钮"，配左键 HOLD 即"拖动手柄"）
    ├─ UI_Image.gd        # 图片：content = 纹理路径，set_content(新路径) 即改图
    └─ UI_Scroll.gd       # 滚动容器：content 为多行文本
 ```
@@ -49,7 +49,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 ## UiSystem.gd（extends BaseClass）
 - 持 `var root: CanvasLayer` 与 `var uis: Dictionary[String, UIBase]`。
 - `add_ui(name)`：`build()`（含子元素）→ 挂到 root → **登记整棵树**：根用原名，子元素用 `"根名/子名"`（如 `MiniHUD/Close`）→ `Msg.send_ui_create`。
-  - 子元素进 `uis` 是为了 **PointDetect 能把指针命中派发到具体子元素**（如关闭按钮、拖动手柄）；`uis.values()` 后加入者靠前，倒序命中即"子元素优先于父"。
+  - 子元素进 `uis` 是为了 **PointerDetect 能把指针命中派发到具体子元素**（如关闭按钮、拖动手柄）；`uis.values()` 后加入者靠前，倒序命中即"子元素优先于父"。
 - `remove_ui(name)`：收集整棵树的登记名逐一注销 → `queue_free` 根控件（子元素随之释放）→ `Msg.send_ui_remove`。
 - `get_ui(name)` / `check_ui(name)`：子元素用全名（`MiniHUD/Close`）。
 - **只管生命周期，交互实现都在 `UIInteract`**。
@@ -59,8 +59,10 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - **`var content: Variant`**：显示内容（子类解释：Label=文本、Scroll=多行文本、Image=纹理路径）。`set_content(v)` 改内容并自动 `refresh()`；子类覆写 `refresh()` 把 content 刷到控件。
 - **`var parent: UIBase`**（挂载对象）：组装子元素时由父元素注入，是 `$parent` 的指向。
 - **`var children: Array[UIBase]`**：按 `config["children"]`（每项 `[child_name, ui_class, child_config]`）组装，挂到 `_content_box()`（容器类覆写返回内部布局节点）。
-- **事件→指令**：`on_pointer_press/move/release`、`on_submit`（由 PointDetect 派发）→ `_fire("press"/"move"/"release"/"submit")`：
-  - config 有该事件的指令串 → `Msg.send_cmd(UIInteract.resolve_cmd(指令串, self))`（解析 `$parent`/`$self` 占位符）。
+- **事件→指令**：唯一入口 `on_event(事件名)`（由 PointerDetect 派发）：
+  - 事件名就是**状态名**（如 `"Pointer Press Left"`、`"Right"`）——**UI 不感知按键**，键位只在状态层 `statuses` 的 `keys` 里配置；hover 变化不对应状态，用 `PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT`。
+  - 在 `config["events"]`（`[事件名, 指令串]` 列表）里**按等值**取指令串 → `Msg.send_cmd(UIInteract.resolve_cmd(指令串, self))`（解析 `$parent`/`$self` 占位符）。
+  - 用列表而非字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），加新事件只需加一项。
   - 未配置的事件不发送（无默认回退），元素没有隐式行为。
 - **只存"何时发什么指令"**：无 `close()/fade_to()` 等交互实现（都在 `UIInteract`），无 `draggable/closeable/...` 开关。
 
@@ -73,7 +75,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 |---|---|---|
 | `UIInteract.close $parent` | 关闭（隐藏）目标 UI（发 `Msg.send_ui_close` + hide） | 关闭"按钮"的 press |
 | `UIInteract.open $parent` | 重新显示（与 close 成对） | 外部再次唤出 |
-| `UIInteract.drag $parent` | 把鼠标帧间位移（`InputSys.mouse_delta`）作用到目标 UI | 拖动手柄的 move |
+| `UIInteract.drag $parent` | 把指针**本帧累计位移**（`InputSys.mouse_delta`）作用到目标 UI | 拖动手柄的逐帧状态（如 `"Mouse Left | Tick"`） |
 | `UIInteract.fade_to $parent 0.0 0.5` | 透明度渐隐/渐显（alpha, duration；**指令调用须写全参数**） | 提示淡出 |
 | `UIInteract.set_content $parent "文本"` | 修改显示内容（→ refresh） | 更新滚动区文本 |
 
@@ -81,14 +83,14 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | 类 | 职责 | 事件配置示例 |
 |---|---|---|
 | `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑 | — |
-| `UI_Label` | 文本：content 即文本；**配 press 即"按钮"、配 move 即"拖动手柄"**（无需单独 Button 类） | `"press": "UIInteract.close $parent"` |
+| `UI_Label` | 文本：content 即文本；**配 `"Pointer Press Left"` 即"按钮"、配 `"Pointer Hold Left"` 即"拖动手柄"**（无需单独 Button 类） | `["Pointer Press Left", "UIInteract.close $parent"]` |
 | `UI_Image` | 图片：content = 纹理路径，refresh 时 load；`set_content(新路径)` 即改图 | — |
 | `UI_Scroll` | 滚动容器：content 为多行文本，内层 Label autowrap；`set_content` 即改展示。**ScrollContainer 默认最小尺寸为 0，必须用 `size` 配置可视区大小，否则不可见** | — |
 - 组合控件（如带背景的按钮）直接用 `children` 配置堆叠（Panel 背景子元素 + Label 文字子元素），不写子类。
-- 元素**不连接任何引擎信号**（含 `Button.pressed`）：点击/拖动等全部由 PointDetect 命中 → 事件 → `_fire` → 指令/消息 派发，输入链路唯一。
+- 元素**不连接任何引擎信号**（含 `Button.pressed`）：点击/拖动等全部由 PointerDetect 命中 → 事件 → `on_event` → 指令/消息 派发，输入链路唯一。
 
-## PointDetect（Script/Input/PointDetect.gd）
-- 与之前一致：按需 `update_targets()`，`pointer_press/move/release/submit` 由状态→SystemShortcut→指令驱动。
+## PointerDetect（Script/Input/PointerDetect.gd）
+- 与之前一致：按需 `update_targets()`，`key_press/hold/release` 由状态→SystemShortcut→指令驱动。
 - 命中判定改为 `control.is_visible_in_tree()`：父 UI 关闭(hide)后子元素不再可命中；`uis` 倒序遍历，子元素优先命中。
 
 ## Config/UI/UIPreset_Basic.gd（extends ConfigBase）
@@ -99,12 +101,12 @@ var values: Array[Array] = [
         "children": [
             ["Title", "UI_Label", {
                 "content": "MiniHUD（按住拖动）",
-                "move": "UIInteract.drag $parent",
+                "events": [["Pointer Hold Left", "UIInteract.drag $parent"]],
             }],
-            # "按钮" = 文本元素 + press 指令，无需 Button 子类
+            # "按钮" = 文本元素 + "Pointer Press Left" 指令，无需 Button 子类
             ["Close", "UI_Label", {
                 "content": "[关闭]",
-                "press": "UIInteract.close $parent",
+                "events": [["Pointer Press Left", "UIInteract.close $parent"]],
             }],
             ["Info", "UI_Scroll", { "content": "初始内容" }],
             # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],
@@ -120,6 +122,6 @@ var values: Array[Array] = [
 - 现在这些消息主要作为**未配指令元素**的默认出口；配了指令的元素改走 `Msg.send_cmd`。
 
 ## 已确认但暂缓 / 留空
-- `PointDetect` 已提供 `hover_char` / `map_position`，角色/地图的交互派发暂缓；`track_id`（UI 跟随角色）随开关一起移除，待需要时以指令形式回归（如 `UIInteract.follow $parent $@角色ID`）。
+- `PointerDetect` 已提供 `hover_char` / `map_position`，角色/地图的交互派发暂缓；`track_id`（UI 跟随角色）随开关一起移除，待需要时以指令形式回归（如 `UIInteract.follow $parent $@角色ID`）。
 - 多套 UI 版本（横竖屏/字体缩放）、可视化编辑器、缩放指令（`UIInteract.scale`）。
 - 更细的 style 默认值回退链（元素→父→UI 根→全局默认）后续按需补。

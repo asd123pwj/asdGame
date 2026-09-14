@@ -6,7 +6,9 @@ name: String
 ui_name: String
 config: Dictionary
 
-config 里的交互不是开关，而是"事件→指令"：press/move/release/submit 键各配一条指令串，
+交互不是开关，而是"事件→指令"：config["events"] 是 [事件名, 指令串] 的列表，事件发生即发指令。
+事件名就是状态名（见 Archetype_System 的 statuses，如 "Pointer Press Left"）——UI 不关心键位，
+键位只在状态层配置；hover 变化用 PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT。
 占位符：$parent = 挂载对象（父 UI），$parent.parent = 祖父（链式任意级），$self = 自身。
 交互指令宿主为 UIInteract（close/open/drag/fade_to/set_content）。
 
@@ -23,15 +25,20 @@ var values: Array[Array] = [
     ["MiniHUD", "UI_Panel", {
         "position": [30, 30], "size": [320, 220],
         "children": [
-            # 标题栏：只显示文本；配置 move 指令 → 按住移动它整个父 UI 随鼠标拖动
+            # 标题栏：只显示文本；"Mouse Left | Tick"(左键按住·逐帧) → 拖动它整个父 UI
+            # （事件名即 Archetype_System 里那条状态的名字，逐帧的状态才能跟手）
             ["Title", "UI_Label", {
                 "content": "MiniHUD（按住拖动）",
-                "move": "UIInteract.drag $parent",
+                "events": [
+                    ["Mouse Left | Tick", "UIInteract.drag $parent"],
+                ],
             }],
-            # 关闭"按钮"：就是文本元素 + press 指令（点它关闭挂载对象即父 UI）
+            # 关闭"按钮"：就是文本元素 + "Mouse Left"(左键按住) 指令（点它关闭挂载对象即父 UI）
             ["Close", "UI_Label", {
                 "content": "[关闭]",
-                "press": "UIInteract.close $parent",
+                "events": [
+                    ["Mouse Left", "UIInteract.close $parent"],
+                ],
             }],
             # 滚动内容：展示本元素 content 属性（改内容 = UIInteract.set_content 或 set_content）
             # ScrollContainer 最小尺寸为 0，必须给 size 配置可视高度

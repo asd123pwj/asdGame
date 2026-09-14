@@ -49,7 +49,8 @@ static var _we: Dictionary[String, StatusPreset] = {}
 ## buffs: 支持Present, Absent
 ## statuses: 支持Satisfied, Unsatisfied
 ## interactions: 支持Present, Absent, Act
-## keys: 支持Enums.KeyStatus.PRESS, Enums.KeyStatus.HOLD, Enums.KeyStatus.RELEASE, Enums.KeyStatus.POINTER_MOVE
+## keys: 支持Enums.KeyStatus.PRESS, Enums.KeyStatus.HOLD, Enums.KeyStatus.RELEASE,
+##       Enums.KeyStatus.POINTER_MOVE（指针移动不绑键位，键值统一填 MOUSE_BUTTON_NONE 占位）
 ## time: name支持Year, Month, Xun, Aay, Hour, Tick
 ##       condition支持Advance
 ## with_detect: 使用外部检测信号，用send_status_detected发送
@@ -315,20 +316,22 @@ func listen(char_: Character) -> void:
     _key_triggers[char_] = {}
     for listener in _key_listeners:
         trigger_cur = false
+        # 配置里键直接写常量（KEY_RIGHT / MOUSE_BUTTON_LEFT…），本身就是数值，无需转换
+        var key_internal: Variant = listener.name
         if listener.match_type == Enums.KeyStatus.HOLD:
             # 按键为单帧触发，因此不需要监听当前按键，我猜是这样
             trigger_func = func(_msg):
                 latest_message[char_] = _msg
                 _key_triggers[char_][listener.name] = true
                 execute(char_)
-            msg_ID = Msg.listen_key_hold(listener.name, trigger_func)
+            msg_ID = Msg.listen_key_hold(key_internal, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
             
             trigger_func = func(_msg):
                 latest_message[char_] = _msg
                 _key_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = Msg.listen_key_release(listener.name, trigger_func)
+            msg_ID = Msg.listen_key_release(key_internal, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type == Enums.KeyStatus.PRESS:
@@ -339,7 +342,7 @@ func listen(char_: Character) -> void:
                 execute(char_)
                 _key_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = Msg.listen_key_press(listener.name, trigger_func)
+            msg_ID = Msg.listen_key_press(key_internal, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type == Enums.KeyStatus.RELEASE:
@@ -350,18 +353,18 @@ func listen(char_: Character) -> void:
                 execute(char_)
                 _key_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = Msg.listen_key_release(listener.name, trigger_func)
+            msg_ID = Msg.listen_key_release(key_internal, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         elif listener.match_type == Enums.KeyStatus.POINTER_MOVE:
-            # 暂时仅支持listener.name = 0的占位符
+            # 指针移动不绑定具体按键，键值约定用 MOUSE_BUTTON_NONE 占位
             trigger_func = func(_msg):
                 latest_message[char_] = _msg
-                _key_triggers[char_][0] = true
+                _key_triggers[char_][listener.name] = true
                 execute(char_)
-                _key_triggers[char_][0] = false
+                _key_triggers[char_][listener.name] = false
                 execute(char_)
-            msg_ID = Msg.listen_pointer_move(0, trigger_func)
+            msg_ID = Msg.listen_pointer_move(trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         else:

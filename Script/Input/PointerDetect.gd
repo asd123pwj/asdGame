@@ -1,60 +1,58 @@
-class_name PointDetect
+class_name PointerDetect
 extends BaseClass
 ## 指针目标检测（设计见 Script/Input/Input.md）。
-## 按需根据 InputSys.mouse_position 计算指针下的目标：hover_ui / hover_char / map_position。
+## 根据 InputSys.mouse_position 计算指针下的目标：hover_ui / hover_char / map_position。
 ## 本类**只提供执行函数，不监听按键**：按键→状态→SystemShortcut→执行指令的链路
 ## 由 Character 的 Status 与 SystemShortcut 声明（状态满足即执行对应 CmdSys 指令）。
-## 因此这里的函数都是可被指令系统调用的静态方法（如 `PointDetect.pointer_press`）。
+##
+## **事件派发只有一个入口 `key(status_name)`**：不区分 press/hold/release/move，也不碰键位——
+## 键位只存在于状态层（statuses 的 keys），这里只管"哪个状态满足了"，把它当事件名派发给 UI。
+## 参数由快捷指令串给出（如 `PointerDetect.key "Pointer Press Left"`），因此
+## "增删/改绑多功能键"只需改配置，不必动本文件。
+## 指针移动**不锁定目标**：每次移动都派发给当前 hover 的 UI，由它 config 里配的指令决定做什么。
 
 ## 指针当前目标
 static var hover_ui: UIBase = null
 static var hover_char: Character = null
 static var map_position: Vector2i = Vector2i.ZERO
-## 正在拖动的 UI（按下时锁定，避免拖动中目标漂移）
-static var dragging_ui: UIBase = null
+## 上次的 hover_ui，用于判 hover 变化并发 enter/exit
+static var _prev_hover_ui: UIBase = null
+
+## hover 变化的两个内置事件名：它们不是配置里的状态（由 update_targets 判定后直接派发），
+## UI 侧在 config["events"] 里用这两个常量绑同名的项即可。
+const EVENT_POINTER_ENTER: String = "Pointer Enter"
+const EVENT_POINTER_EXIT: String = "Pointer Exit"
 
 
 func _init() -> void:
 	pass
 
 
-## 按需更新指针下的目标。
+## 刷新指针下的目标；hover_ui 变化时对新旧目标发 enter/exit。
+## 由 Tick 状态 → 快捷指令 `PointerDetect.update_targets` 每帧驱动
+## （hover 展开子菜单依赖它，所以这里会每帧被调用）。
 static func update_targets() -> void:
 	hover_ui = _ui_at(InputSys.mouse_position)
 	hover_char = _char_at()
 	map_position = _map_at()
+	if hover_ui != _prev_hover_ui:
+		# hover 变化不对应任何状态，直接用上面两个内置事件名派发
+		if _prev_hover_ui != null:
+			_prev_hover_ui.on_event(EVENT_POINTER_EXIT)
+		if hover_ui != null:
+			hover_ui.on_event(EVENT_POINTER_ENTER)
+		_prev_hover_ui = hover_ui
 
 
-## 指针键按下：取回当前目标并派发；命中 UI 执行操作，其它暂忽略。
-static func pointer_press() -> void:
-	update_targets()
+## 状态满足后的统一派发入口：把状态名当事件名派发给当前 hover 的 UI，
+## UI 侧按状态名等值匹配 config["events"] 里的指令。
+## 不区分 press/hold/release/move，也不涉及键位——"哪个状态满足了"已由状态层判定。
+## 命中刷新由每帧的 `PointerDetect.update_targets`（Tick 状态驱动）负责，这里不重复刷新。
+## 指针移动不锁定任何 UI —— 被拖的元素跟随光标，hover 始终是它。
+static func key(status_name: String) -> void:
 	if hover_ui == null:
 		return
-	dragging_ui = hover_ui
-	dragging_ui.on_pointer_press()
-
-
-## 指针键按住：拖动跟随（天然支持连按/长按）。
-static func pointer_move() -> void:
-	if dragging_ui == null:
-		return
-	update_targets()
-	dragging_ui.on_pointer_move()
-
-
-## 指针键抬起：结束拖动。
-static func pointer_release() -> void:
-	if dragging_ui == null:
-		return
-	dragging_ui.on_pointer_release()
-	dragging_ui = null
-
-
-## 提交键：对指针下的 UI 派发提交。
-static func submit() -> void:
-	update_targets()
-	if hover_ui != null:
-		hover_ui.on_submit()
+	hover_ui.on_event(status_name)
 
 
 ## 指针命中的 UI（按加入顺序取最上层）。

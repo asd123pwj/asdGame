@@ -11,7 +11,7 @@ extends BaseClass
 ## UIBase 只负责"展示 content + 存事件键→指令串"，解析与交互实现都在本类。
 
 
-## 解析指令串占位符（由 UIBase._fire 在发送前调用）：
+## 解析指令串占位符（由 UIBase.on_event 在发送前调用）：
 ##   $self          → 自身实例（$@ID）
 ##   $parent        → 父 UI；$parent.parent → 祖父，链式任意级。
 ##     级别不足时警告并用可达的最高级 parent 替代。
@@ -69,8 +69,8 @@ static func open(target: UIBase) -> void:
 		ui.control.show()
 
 
-## 拖动：把"鼠标相对上次事件移动的距离"(InputSys.mouse_delta)作用到目标 UI 上。
-## 由拖动手柄的 move 指令在鼠标移动时逐次调用（无移动则无事件，不会重复套用）。
+## 拖动：把"指针本帧的累计位移"(InputSys.mouse_delta)作用到目标 UI 上。
+## 由拖动手柄的逐帧状态（如 "Mouse Left | Tick"）驱动，一帧一次；指针不动时位移为 (0,0)，不会漂。
 static func drag(target: UIBase) -> void:
 	var ui := _as_ui(target, "drag")
 	if ui == null:

@@ -145,8 +145,9 @@ static func send_key_press(key: Variant) -> Array:
 static func send_key_release(key: Variant) -> Array:
     return _send_input(key, Enums.KeyStatus.RELEASE)
 
-static func send_pointer_move(key: Variant) -> Array:
-    return _send_input(key, Enums.KeyStatus.POINTER_MOVE)
+## 指针移动不绑定具体按键：键值统一用 MOUSE_BUTTON_NONE 占位（与 statuses 里那条配置保持一致）。
+static func send_pointer_move() -> Array:
+    return _send_input(MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE)
 
 
 static func listen_key_hold(key: Variant, callback: Callable) -> String:
@@ -158,8 +159,8 @@ static func listen_key_press(key: Variant, callback: Callable) -> String:
 static func listen_key_release(key: Variant, callback: Callable) -> String:
     return _listen_input(key, Enums.KeyStatus.RELEASE, callback)
 
-static func listen_pointer_move(key: Variant, callback: Callable) -> String:
-    return _listen_input(key, Enums.KeyStatus.POINTER_MOVE, callback)
+static func listen_pointer_move(callback: Callable) -> String:
+    return _listen_input(MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE, callback)
 
     
 """

@@ -2,9 +2,11 @@ class_name UIBase
 extends BaseClass
 ## UI 元素基类（设计见 Script/UI/UI.md）。
 ## extends BaseClass，内部持 control: Control（不直接继承 Control）。
-## 指针输入由 PointDetect 用 InputSys 检测命中后回调本对象（不用引擎 gui_input）。
+## 指针输入由 PointerDetect 用 InputSys 检测命中后回调本对象（不用引擎 gui_input）。
 ## 交互**不用开关**（draggable/closeable 等已移除），而是"事件→指令"：
-## config 里按事件键（"press"/"move"/"release"/"submit"）配指令串，事件发生即发送；
+## config["events"] 是 [事件名, 指令串] 的列表，事件发生即发送对应指令。
+## 事件名就是**状态名**（如 "Pointer Press Left"）：UI 不关心键位，键位只在状态层（statuses 的 keys）配置；
+## hover 变化不对应任何状态，用 PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT。
 ## 占位符解析与交互实现都在 UIInteract（UIBase 只存"何时发什么指令"）：
 ##   $self → 自身实例；$parent → 父 UI；$parent.parent → 祖父（链式任意级，级别不足警告并用最高可达级）。
 ## 显示内容统一挂 var content，子类 refresh() 把它刷到控件上。
@@ -29,7 +31,7 @@ func _init(name_: String = "", config_: Dictionary = {}) -> void:
 	config = config_
 
 
-## 生成控件树并组装子元素，返回 control（供 UiSystem 挂载）。指针交互由 PointDetect 驱动。
+## 生成控件树并组装子元素，返回 control（供 UiSystem 挂载）。指针交互由 PointerDetect 驱动。
 func build() -> Control:
 	control = _create_control()
 	_apply_config()
@@ -93,15 +95,21 @@ func _build_children() -> void:
 		box.add_child(child.control)
 
 
-## 指针按下（PointDetect 派发）：发送 config["press"] 指令。
-func on_pointer_press() -> void: _fire("press")
-func on_pointer_move() -> void: _fire("move")
-func on_pointer_release() -> void: _fire("release")
-func on_submit() -> void: _fire("submit")
-## 事件→指令：统一只做"查事件键 → 发指令"，事件键本身区分按下/移动/抬起/提交；
-## 未配置指令的事件不发送（无默认回退），元素没有额外隐式行为。
+## 唯一事件入口（PointerDetect 派发）：参数是事件名——状态驱动的事件就是配置里的状态名
+## （如 "Pointer Press Left"、"Right"；UI 不感知按键，键位只在状态层出现），
+## hover 变化用 PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT。
+## 事件→指令：在 config["events"]（[事件名, 指令串] 列表）里按等值取指令串，取到才发送
+## （未配置的事件不发送，无默认回退，元素没有隐式行为）。
+## 用列表而不是字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），
+## 且要加新事件只需往列表里加一项。
 ## 占位符（$self/$parent 链）由 UIInteract.resolve_cmd 解析。
-func _fire(event_kind: String) -> void:
-	var cmd: String = config.get(event_kind, "")
-	if cmd != "":
-		Msg.send_cmd(UIInteract.resolve_cmd(cmd, self))
+func on_event(event_name: Variant) -> void:
+	for entry in config.get("events", []):
+		if not (entry is Array):
+			push_warning("UIBase「%s」: config[\"events\"] 的项应为 [事件名, 指令串]，收到 %s" % [name, type_string(typeof(entry))])
+			continue
+		var pair: Array = entry
+		if pair.size() >= 2 and pair[0] == event_name:
+			var cmd: String = pair[1]
+			Msg.send_cmd(UIInteract.resolve_cmd(cmd, self))
+			return

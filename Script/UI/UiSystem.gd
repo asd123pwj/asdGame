@@ -51,7 +51,7 @@ func check_ui(name: String) -> bool:
 
 
 ## 登记整棵 UI 树：根用原名，子元素用 "根名/子名"。
-## 子元素也进 uis，PointDetect 才能把指针命中派发到具体子元素（如关闭按钮）。
+## 子元素也进 uis，PointerDetect 才能把指针命中派发到具体子元素（如关闭按钮）。
 func _register_tree(ui: UIBase, full_name: String) -> void:
 	uis[full_name] = ui
 	for child in ui.children:

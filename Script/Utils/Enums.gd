@@ -30,9 +30,10 @@ enum ModificationMethod {
 enum KeyStatus{
     HOLD,
     PRESS,
-    # UP, # 不支持Up，感觉用不着，想要Up的用Down状态应该也能代替，或者AlwaysSatisfied配合Down的Unsatisfied，又或者Tick配合Down的Unsatisfied
     RELEASE,
-    POINTER_MOVE
+    POINTER_MOVE, # 不支持键位绑定，键值统一用 MOUSE_BUTTON_NONE 占位（任意占位均可，项目内保持一致）
+    POINTER_ENTER, # 不支持键位绑定，键值统一用 MOUSE_BUTTON_NONE 占位（任意占位均可，项目内保持一致）
+    POINTER_EXIT, # 不支持键位绑定，键值统一用 MOUSE_BUTTON_NONE 占位（任意占位均可，项目内保持一致）
 }
 
 static var StrLayerType = [
