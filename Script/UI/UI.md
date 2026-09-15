@@ -73,7 +73,20 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
   - 自己没配的事件**冒泡给父级**，冒泡到根都没有才什么都不做（元素没有隐式行为）；于是"整块面板的行为"在子元素上同样生效（如菜单面板启用拖拽后，按住菜单项也能拖），`$self/$parent` 以"配了指令的那个元素"为基准。
 - **运行时增改**：`add_child_element(name, ui_class, config, reg_name := "")` 加子元素（内部交给 `UiSys.register_child` 登记，登记后才可被指针命中；`reg_name` 由开 UI 的路径显式指定，普通子元素留空）；`add_event(事件名, 指令串)` 追加事件绑定；`swap_config(键A, 键B)` 对调两项配置（开关式按钮的底座）——菜单的"启用拖拽"（`enable_drag`）就是这一条；而"关闭按钮"连新指令都不需要：它是普通预设 `CloseButton`，用 `open_ui` / `close_ui` 开关。
 - **开关式按钮（可选框）**：不需要专门元素——同一个元素上放两套配置（`events` / `content` 与 `events_2` / `content_2`），点击时"做事 + `swap_config` 对调"，下次点击自然走另一套。事件串里多条命令用 `\v` 分隔（见 `CmdSys.execute`）。
-- **config 可选属性**：`position` / `size` / `content` / `children` / `events` / `visible` / `free`（自由定位：挂到叠加层的非容器挂载点，位置不被父级布局覆盖，用于"右上角的关闭按钮""菜单"这类元素）。
+- **config 可选属性**：`position` / `size` / `content` / `children` / `events` / `visible` / `free`（自由定位：挂到叠加层的非容器挂载点，`position`/`size` 不被父级布局覆盖，用于"右上角的关闭按钮""菜单""键盘的每个键"这类元素）。**配置子元素与运行时加的子元素共用这条规则**（`_build_children` 与 `add_child_element` 一致）：配了 `free` 就进叠加层任意摆，没配才进内容盒（容器类 = 竖排）。
+  - `font_size`（字号）/ `font_color`（字色）与 `background`（背景图路径）是**公共属性**（都在 `UIBase._apply_config` 里读，不是某个元素独有）：
+    - `font_size` / `font_color` 作用在**配它的那个控件**上——主题重写不向下传，所以要小字/深色字就配在真正显示文本的元素上。**不配字色就是主题默认（接近白色）**，配在浅色底图上会看不见。
+    - `background`（九宫格底图）由 `UIBase._apply_background` 统一实现：找本元素控件的 stylebox 槽套上去（槽名由 `_background_slot` 按 `panel → normal → background` 取第一个存在的）。**实测各元素对应哪个槽**：
+
+      | 元素 | 内部控件 | 可用的槽 |
+      |---|---|---|
+      | `UI_Panel` | PanelContainer | `panel`（它覆写 `_apply_background`，套在内层 `_panel` 上） |
+      | `UI_Label` | Label | `normal` |
+      | `UI_Scroll` | ScrollContainer | `panel` |
+      | `UI_Image` | TextureRect | **无**（TextureRect 本身不画 StyleBox，配了只警告一次、不画） |
+
+      控件一个槽都没有时警告一次、不画——要"带底"就换有槽的元素（文字带底 = `UI_Panel` 里放 `UI_Label`，键盘的键就是这么做的）。**整块底图走它，不要放 Image 元素当背景**——Image 属于内容，摆在叠加层上会盖住别的子元素。
+    - 九宫格边距默认 `BG_SLICE`（8，按 32px 圆角方块定的）；不同图的圆角不一样，可用 `background_slice` 逐元素指定。
   - `size` 里为 **0 的那一维按"内容最小尺寸"补足**（`_fit_size()`；"内容要多大"由可覆写的 `_content_size()` 给出）：`[150, 0]` = 宽固定、高随内容；`[0, 0]` = 完全由内容决定。**必须补**——控件尺寸为 0 时 `get_global_rect()` 是退化矩形，PointerDetect 永远命中不到它（菜单"一打开就没了"就是这么来的：矩形高度 0 → 失焦判定以为指针在菜单外 → 同一帧里就把它关了）。
   - **`UI_Panel` 的 `_content_size()` 必须问内部的 `PanelContainer`，不能问根控件**：根是普通 `Control`，**不会汇总子元素的最小尺寸**，问它只会得到 `custom_minimum_size`（`[150, 0]` → 高度就是 0）。而且建时还没进树、字体主题都问不出来，所以要挂在 `_panel.minimum_size_changed` 上再补一次。
   - 指令串参数：**只有中间带空格时才需要引号**（如 `"Mouse Left | Tick"`），其余直接写名字（如 `open_menu $self Menu`）。
@@ -98,7 +111,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 ## 原子元素（Script/UI/UI/）
 | 类 | 职责 | 事件配置示例 |
 |---|---|---|
-| `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑 | — |
+| `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑。`background` 可给整块面板铺一张九宫格底图 | — |
 | `UI_Label` | 文本：content 即文本；**配 `"Mouse Left"` 即"按钮"、配 `"Mouse Left | Tick"` 即"拖动手柄"**（无需单独 Button 类） | `["Mouse Left", "UIInteract.close $parent"]` |
 | `UI_Image` | 图片：content = 纹理路径，refresh 时 load；`set_content(新路径)` 即改图 | — |
 | `UI_Scroll` | 滚动容器：content 为多行文本，内层 Label autowrap；`set_content` 即改展示。**ScrollContainer 默认最小尺寸为 0，必须用 `size` 配置可视区大小，否则不可见** | — |
@@ -147,6 +160,19 @@ var values: Array[Array] = [
 - **关掉 = 隐藏（实例复用）**：关闭统一走 `UIInteract.close`（`hide()` + 广播）；**父 UI 一 hide，挂在它下面的子 UI 随可见性继承一起不可见**，所以不需要"关父菜单时连子菜单一起关"这种递归。`open_ui` 按登记名查——有就"显示 + 重新摆位"，没有才现场创建；同一登记名只有一份，隐藏的实例不参与指针命中、也不算"开着"。
 - **隐藏后怎么回来**：`close` 只是 `hide()`，实例还在 `uis` 里，所以重开不用重建——重开统一走 `UiSys.open_ui`（显示 + 按 `open_at` 摆位，不重建控件；指令形式就是 `UIInteract.open_ui`）。**注意 `PointerDetect` 用 `is_visible_in_tree()` 判命中，隐藏的 UI 再也收不到任何事件**，所以重开的触发不能写在它自己身上（"再点一下"是点不到的），必须来自它仍可见的父级、或系统级的状态/快捷指令。
 - **失焦关闭（纯配置驱动）**：谁写了 `close_on_blur = true` 谁就有这个行为（与"是不是菜单"无关）。`PointerDetect.key` 派发完按键事件后：`UiSys.has_blur_ui()` → 先 `update_targets()` 刷新命中（这类 UI 常是刚在指针处打开的，用旧 hover 会误判成"外面"）→ `UiSys.close_blur_ui(hover_ui)`：遍历登记表，指针不在该 UI（或它的子孙元素）上就 `UIInteract.close` 关掉。
+
+## 键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）
+
+- **一份配置搞定**：`values` 里只有一个 `Keyboard`（`UI_Panel`），103 个键的子元素由文件里的 `KEYS` 表**在 values 外算好**再由 values 引用（`_layout`）。
+- `KEYS` 每列是 **[键码, x, 行, 尺寸, 显示文本]**（左右修饰键多一列 `KEY_LOCATION_LEFT/RIGHT`）：表中数值照抄 Unity 那版的原表达式（`32*2`、`row1 = -36*2`…），统一再乘一个 `SCALE`（表里数值保持与 Unity 一致，**要缩放只改 `SCALE`**）。`SCALE = 1.0` 就是与 Unity 同尺寸（面板 1600×576、键 64×64），比默认窗口 1152×648 大；想缩进小窗口就调小它（如 0.7 ⇒ 1120×403）。字号不跟着 `SCALE` 走，改完要自己看着调。
+- **键码才是"这个键是谁"**（`KEY_ESCAPE` / `KEY_Q` / `KEY_KP_8`…），最后一列只是给人看的文本（"Esc"、"Space"）。以后"点某个键 → 把它绑到某操作"就是拿 `config["key_code"]`（+ `key_location`）造 `InputEventKey`。
+  - 左右修饰键在 Godot 里 keycode 相同（Shift/Ctrl/Alt 各一对），靠 `InputEventKey.location` 区分 → 表里多一列位置，**元素名也随之带 `_L`/`_R`**（不带的话两个键会注册到同一个名字下互相覆盖）。
+  - 元素名由键码字符串生成：`Escape→Key_Escape`、`Kp 8→Key_Kp8`、`Slash→Key_Slash`、`Shift+LEFT→Key_Shift_L`（生成时做重名检查并警告）。
+- 每个键 = 一个 `free` 的 `UI_Panel`（绝对坐标定位，底图 `KEY_BG`，配置里带 `key_code` / `key_location`）+ 两个 `UI_Label`：`Name` 键名（Esc / Q …）、`Desc` 当前绑定的操作。**字号与字色都配在这两个文本上**（`font_size` / `font_color`）——不配字色就是主题默认的近白色，画在浅色键底上会看不见。
+- **整块面板可拖动**：`"Mouse Left | Tick"` → `drag $self`（子元素没配这个事件时会冒泡到这里，与 MiniHUD 标题栏同一套）。
+- **底图**走 `UI_Panel.background`（九宫格），面板与键共用 `Material/Texture/UI/RoundedIcon_32.png`；图片缺失只警告一次、改用默认面板样式，不影响运行。
+- **以后给键绑操作**：改它的描述文本即可，登记名 = `Keyboard/键名/Desc`（键名由键码生成，如 `Keyboard/Key_Q/Desc`、`Keyboard/Key_Kp8/Desc`、`Keyboard/Key_Shift_L/Desc`）。
+- **开启**：独立 UI，`UIInteract.open_ui --preset_name Keyboard`；右上角的 "X" 就是普通预设 `CloseButton`（`open_ui <键盘> CloseButton <键盘>`）——见 `Test.ui_test`。
 
 ## 消息（MessageHub.gd）
 - `send_ui_create/remove(ui)` 与 `listen_ui_create/remove`。

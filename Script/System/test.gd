@@ -75,6 +75,13 @@ func ui_test() -> void:
             lines.append("第 %d 行：滚动查看内容。" % i)
         info.set_content("\n".join(lines))
 
+    # 键盘快捷键界面（见 Config/UI/UIPreset_Keyboard.gd）：独立 UI + 它右上角的关闭按钮。
+    # "给面板加个 X"就是开一个普通预设（CloseButton），不写专门函数；指令里引用实例要写 $@ID
+    # （配置里那套 $parent/$self 是 resolve_cmd 在发送前换成 $@ID 的，这里手动拼同样的形式）。
+    Msg.send_cmd("UIInteract.open_ui --preset_name Keyboard")
+    var kb_id: String = "$@" + str(UiSys.get_ui("Keyboard").ID)
+    Msg.send_cmd("UIInteract.open_ui " + kb_id + " CloseButton " + kb_id)
+
 
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。

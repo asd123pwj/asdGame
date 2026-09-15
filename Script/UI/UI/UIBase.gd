@@ -14,6 +14,13 @@ extends BaseClass
 ## 元素名：登记名的一段（独立 UI 就是预设名，子元素就是配置里写的名字）。
 ## 被谁用：UiSys._register_tree / find_name（拼登记名）、各处的警告文案。
 var name: String = ""
+
+## 背景图九宫格的边距（像素）：config["background"] 的图是 32×32 圆角方块，圆角≈8px。
+## 被谁用：_make_background。
+const BG_SLICE: int = 8
+## 找"当底的 stylebox 槽"时的顺序（哪个控件有哪个，见类文档里的实测表）。
+## 被谁用：_background_slot。
+const BACKGROUND_SLOTS: Array[String] = ["panel", "normal", "background"]
 ## 本元素的配置（见 Config/UI/）。公共属性：position/size/content/children/events/visible/free，
 ## 各子类另有自己的（如菜单的 open_at / close_on_blur）。
 ## 被谁用：_apply_config、_build_children、on_event、UiSys._place（读 open_at）。
@@ -169,7 +176,7 @@ func _free_box() -> Control:
 	return _content_box()
 
 
-## 应用 config 里的公共属性：position / size / content / visible。
+## 应用 config 里的公共属性：position / size / content / visible / font_size / font_color / background。
 ## 被谁用：build()。子类覆写时必须先 super()（如 UI_Scroll 之后再调内层 label 的宽度）。
 func _apply_config() -> void:
 	reset_position()
@@ -182,13 +189,71 @@ func _apply_config() -> void:
 		content = config["content"]
 	if config.has("visible"):
 		control.visible = bool(config["visible"])
+	# 字号/字色是通用属性（谁都能配），作用在**本元素的控件**上：
+	# 主题重写只在配它的那个控件上生效，**不会自动传给子控件**——要小字号/深色字请配到真正显示文本的那个元素上。
+	# （不配字色就用主题默认：Godot 默认主题是接近白色的，画在浅色底图上会看不见。）
+	if config.has("font_size"):
+		control.add_theme_font_size_override("font_size", int(config["font_size"]))
+	if config.has("font_color"):
+		var font_color: Color = config["font_color"]
+		control.add_theme_color_override("font_color", font_color)
+	_apply_background(str(config.get("background", "")))
+
+
+## 虚接口 + 通用实现：给本元素铺一张背景图（config["background"] = 纹理路径）。
+## 做法 = 给它**主题里那个"当底"的 stylebox 槽**套上九宫格图（槽名见 _background_slot）：
+##   UI_Panel→panel（内层 PanelContainer）、UI_Label→normal、UI_Scroll→panel……
+## 控件一个槽都没有（TextureRect / 纯 Control，本身不画 StyleBox）就画不出来：警告一次、不画。
+## 那种元素要"带底"请换有槽的元素（文字带底 = UI_Panel 里放 UI_Label，键盘的键就是这么做的）。
+## 被谁用：_apply_config。覆写者：UI_Panel（它要套在内层 _panel 上，不是根 Control）。
+func _apply_background(path: String) -> void:
+	var style: StyleBoxTexture = _make_background(path)
+	if style == null:
+		return
+	var slot: String = _background_slot()
+	if slot == "":
+		push_warning("UIBase「%s」(%s): 控件没有可用的 stylebox 槽，画不出背景 %s"
+			% [name, control.get_class() if control != null else "?", path])
+		return
+	control.add_theme_stylebox_override(slot, style)
+
+
+## 本元素用哪个 stylebox 槽当底：按 BACKGROUND_SLOTS 取第一个存在的；一个都没有 → 空串。
+## 被谁用：_apply_background。（UI_Panel 不走这里：它把图套在内层 PanelContainer 的 "panel" 上）
+func _background_slot() -> String:
+	if control == null:
+		return ""
+	for slot in BACKGROUND_SLOTS:
+		if control.has_theme_stylebox(slot):
+			return slot
+	return ""
+
+
+## 造一张九宫格背景样式（供 config["background"] 用）；路径为空/图片不存在/加载失败返回 null。
+## 九宫格的边距取 config["background_slice"]（不写就用 BG_SLICE）：
+## 每张图的圆角半径不一样（Unity 那边每张 sprite 也自带自己的九宫格参数），所以要能逐个指定。
+## 被谁用：_apply_background（本类与 UI_Panel 的覆写）。
+func _make_background(path: String) -> StyleBoxTexture:
+	if path == "":
+		return null
+	if not ResourceLoader.exists(path):
+		push_warning("UIBase「%s」: 背景图不存在，改用默认样式：%s" % [name, path])
+		return null
+	var tex: Texture2D = load(path)
+	if tex == null:
+		return null
+	var style: StyleBoxTexture = StyleBoxTexture.new()
+	style.texture = tex
+	style.set_texture_margin_all(int(config.get("background_slice", BG_SLICE)))  # 九宫格：圆角不被拉伸
+	return style
 
 
 ## 组装子元素：config["children"] 每项 [child_name, ui_class, child_config]。
 ## 子元素的挂载对象（parent）即本元素（父 UI），其指令里的 $parent 指向本元素。
+## 挂载点与运行时那条路**同一套规则**（见 add_child_element）：配了 free 的挂到叠加层
+## （绝对定位，position/size 不被父级布局改），没配的进内容盒（容器类 = 竖排）。
 ## 被谁用：build()。（运行时加子元素走 add_child_element，那条路要额外登记。）
 func _build_children() -> void:
-	var box: Control = _content_box()
 	for item_raw in config.get("children", []):
 		if not (item_raw is Array):
 			continue
@@ -202,6 +267,8 @@ func _build_children() -> void:
 		child.parent = self
 		child.build()
 		children.append(child)
+		# free 的挂到叠加层（非容器，位置/尺寸保持配置值），否则进内容盒（竖排布局）
+		var box: Control = _free_box() if bool(child_config.get("free", false)) else _content_box()
 		box.add_child(child.control)
 
 
