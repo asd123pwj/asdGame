@@ -37,6 +37,10 @@ var content: Variant = null
 ##         on_event（事件冒泡）、UIInteract_OpenClose._is_inside（判"指针是否在这个 UI 上"）。
 var parent: UIBase = null
 
+## 挂在 control 上的 meta 键：控件 → UIBase 反查（指针命中沿控件树走，见 PointerDetect._ui_at）。
+## 被谁用：build()（写）、PointerDetect._hit_in（读）。
+const META_UI := "ui_base"
+
 ## 子元素：build() 按 config["children"] 组装，每项 [child_name, ui_class, child_config]。
 ## 被谁用：_build_children / add_child_element（追加）、UiSys._register_tree（递归登记）、
 ##         _free_box 的选择依据（在 add_child_element 里读 free 配置）。
@@ -52,9 +56,13 @@ func _init(name_: String = "", config_: Dictionary = {}) -> void:
 
 ## 生成控件树并组装子元素，返回 control（供 UiSystem 挂载）。
 ## 顺序不能换：建控件 → 应用配置 → 刷内容 → 建子元素 → 补尺寸（子元素建完才知道内容多大）。
+## 建完把"我自己"挂在 control 的 meta 上（META_UI）：指针命中是**沿控件树**走的
+## （见 PointerDetect._ui_at），走到一个没挂 meta 的内部控件（容器的 PanelContainer/VBox、
+## 文本内部的 Label 之类）就往上取最近的这个元素。
 ## 被谁用：UIInteract_OpenClose._build_open（独立 UI 与寄主型都走它）、_build_children / add_child_element（子元素）。
 func build() -> Control:
 	control = _create_control()
+	control.set_meta(META_UI, self)
 	_apply_config()
 	refresh()
 	_build_children()
@@ -274,7 +282,7 @@ func _build_children() -> void:
 
 
 ## 唯一事件入口（PointerDetect 派发）：参数是事件名——状态驱动的事件就是配置里的状态名
-## （如 "Mouse Left"、"Mouse Left | Hold | Tick"；UI 不感知按键，键位只在状态层出现），
+## （如 "Mouse Left"、"Mouse Left | Tick"；UI 不感知按键，键位只在状态层出现），
 ## hover 变化用 QName.pointer_enter / QName.pointer_exit。
 ## 事件→指令：在 config["events"]（[事件名, 指令串] 列表）里按等值取指令串，取到才发送。
 ## 自己没配的事件**冒泡给父级**：于是"整块面板的行为"在它的子元素上同样生效
@@ -304,7 +312,7 @@ func on_event(event_name: Variant) -> void:
 ##   $parent → 父 UI；$parent.parent → 祖父，链式任意级。级别不足时警告并用可达的最高级 parent 替代；
 ##             链尾若还跟着 ".xxx" 原样保留（成为 $@ID.xxx，指令系统会继续按表达式取该属性）。
 ##   $event  → 触发这次事件的**事件名**（= 状态名 / Key 名），**自带引号**——名字里通常有空格
-##             （如 "Mouse Left | Hold"），指令要把整串当一个参数，所以这里补上引号；
+##             （如 "Mouse Left"），指令要把整串当一个参数，所以这里补上引号；
 ##             于是配置可以写 `UIInteract.drag $parent $event`，不必把状态名再抄一遍。
 ## 被谁用：on_event（唯一调用方）。
 func _resolve_cmd(cmd: String, event_name: String = "") -> String:

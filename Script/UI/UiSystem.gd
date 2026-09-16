@@ -8,7 +8,7 @@ extends BaseClass
 ## 登记（`register_child` / `_register_tree`）、取件（`get_ui`）与登记名规则（`_reg_name`）都在这。
 ## **开启与失焦关闭都不在本类**：`open`（复用查找 + 摆位 + 显示）连同它的子方法
 ## `_build_open`/`_place`/`_child_ui` 放在 Script/UI/Interact/UIInteract_OpenClose.gd，
-## 失焦关闭（`has_blur_ui`/`close_blur_ui`）也在那儿——候选只有"开出来的 UI"才可能有，记在 open 那边。
+## 失焦关闭（`close_blur_ui`）也在那儿——候选只有"开出来的 UI"才可能有，记在 open 那边。
 ## 要改"怎么开、怎么摆、什么时候失焦关"都去那边。交互指令（开/关/拖动/缩放/渐隐/改内容）都在 `Script/UI/Interact/`。
 ## "按住期间每帧做的事"（如等比缩放）也不在本类：见 `AutoSys`（Script/Auto/Auto.md，
 ## 状态满足期间每帧执行一条指令，状态不满足自动删——与指针在哪无关）。
@@ -31,12 +31,18 @@ extends BaseClass
 ## **成员全部是静态的**：日常调用直接写 `UiSys.uis` / `UiSys.root` / `UiSys.get_ui(...)`，
 ## 不要绕 `Sys.uiSys`（那个实例只用来在启动时跑一次 `_init` 建 UI 根，见下）。
 
+## UI 根的 CanvasLayer 层号：**必须高于地图**。地图每个子层用 `CanvasLayer.layer = 子层 id`
+## （见 MapLayer：世界层 0 的六个子层 = 0~5，以后加世界层还会更大），默认值 1 会被地图的 1~5 盖住，
+## 所以这里取一个明显更大的值，给以后加地图层留富余。
+## 被谁用：_init（建根时设置）。
+const ROOT_LAYER: int = 100
+
 ## UI 根（CanvasLayer）：所有"没有宿主"的 UI 都挂这里。
 ## 被谁用：_init（创建）、UIInteract_OpenClose._build_open（挂独立 UI）。
 static var root: CanvasLayer
-## 已登记的 UI：登记名 -> 实例（规则见文件头）。
-## 被谁用：UIInteract_OpenClose.open / _child_ui（复用查找与取件）、get_ui（按名取）、find_name（反查）、
-##         PointerDetect._ui_at（命中）。
+## 已登记的 UI：登记名 -> 实例（规则见文件头）——**只是"按名取件"的字典，顺序没有含义**：
+## 指针命中已改为沿控件树走（见 PointerDetect._ui_at），前后关系由 CanvasLayer + 节点树序决定。
+## 被谁用：UIInteract_OpenClose.open / _child_ui（复用查找与取件）、get_ui（按名取）、find_name（反查）。
 static var uis: Dictionary[String, UIBase] = {}
 
 
@@ -45,6 +51,7 @@ static var uis: Dictionary[String, UIBase] = {}
 func _init() -> void:
 	root = CanvasLayer.new()
 	root.name = "UIRoot"
+	root.layer = ROOT_LAYER
 	# 初始化发生在 Sys._ready()（引擎仍在建子节点），需延迟到本帧空闲再挂载
 	Sys.sys.get_tree().root.add_child.call_deferred(root)
 
@@ -100,7 +107,7 @@ static func _register_tree(ui: UIBase, full_name: String) -> void:
 
 
 ## 失焦关闭（配 `close_on_blur` 的 UI 指针一离开就关）不在这里：候选只有"开出来的 UI"才可能有，
-## 所以它在开/关那边（Script/UI/Interact/UIInteract_OpenClose.gd 的 has_blur_ui / close_blur_ui）。
+## 所以它在开/关那边（Script/UI/Interact/UIInteract_OpenClose.gd 的 close_blur_ui）。
 
 
 ## 逐帧回调与"按住期间每帧执行"都搬到 AutoSys 了（见 Script/Auto/Auto.md）：

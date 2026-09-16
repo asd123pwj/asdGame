@@ -33,10 +33,10 @@ extends ConfigBase
 开启位置由各自的 open_at 声明（Enums.OpenAt）：右键菜单开在指针处，多级菜单开在触发项右上角。
 
 由宿主 UI 的配置决定何时开哪个，例如：
-  "events": [["Mouse Right | Hold", "UIInteract.open $self Menu $self"]]
+  "events": [["Mouse Right", "UIInteract.open $self Menu $self"]]
 （第三个参数 = 位置锚点，同时也是**挂载点**：子菜单因此挂在触发它的那个菜单项下；
  POINTER 策略下开在指针处，但仍然用它决定挂在谁下面，所以菜单项里通常传 $self。
- 指令串的参数只有中间带空格时才需要引号，如 "Mouse Left | Hold"；其余直接写名字。）
+ 指令串的参数只有中间带空格时才需要引号，如 "Mouse Left"；其余直接写名字。）
 """
 
 var values: Array[Array] = [
@@ -50,7 +50,7 @@ var values: Array[Array] = [
             # 关闭 = 关掉宿主 UI（不是关菜单）
             ["Close", "UI_Label", {
                 "content": "关闭",
-                "events": [[QName.mouseLeft_hold, "UIInteract.close $parent.parent"]],
+                "events": [[QName.mouseLeft, "UIInteract.close $parent.parent"]],
             }],
             # 菜单编辑：悬停即在它右上角弹出子菜单（多级菜单 = 菜单开菜单）
             ["Edit", "UI_Label", {
@@ -74,12 +74,12 @@ var values: Array[Array] = [
                 "content": "启用关闭按钮",
                 "content_2": "移除关闭按钮",
                 "events": [
-                    [QName.mouseLeft_hold, "UIInteract.open $parent.parent.parent.parent CloseButton $parent.parent.parent.parent"
+                    [QName.mouseLeft, "UIInteract.open $parent.parent.parent.parent CloseButton $parent.parent.parent.parent"
                         + "\vUIInteract.swap_config $self events events_2"
                         + "\vUIInteract.swap_config $self content content_2"],
                 ],
                 "events_2": [
-                    [QName.mouseLeft_hold, "UIInteract.close $parent.parent.parent.parent CloseButton"
+                    [QName.mouseLeft, "UIInteract.close $parent.parent.parent.parent CloseButton"
                         + "\vUIInteract.swap_config $self events events_2"
                         + "\vUIInteract.swap_config $self content content_2"],
                 ],
@@ -87,25 +87,20 @@ var values: Array[Array] = [
             # 给宿主 UI 加/减"按住拖动"：**不写专门函数，就是对调它的两套 events**
             # （和 CloseToggle 一个路子：同一个元素上写两套配置，点一下换一套）。
             # 所以宿主 UI 的预设里要同时给 events / events_2（一套含拖动绑定、一套不含）。
-            # 给宿主 UI 加/减"按住拖动"：**没有专门函数**——宿主预设里写两套 events（一套含拖动、一套不含），
-            # 点一下就是把它们对调；本项自己走同一套开关式写法（events + content 一起换，文案跟着变）。
-            # 两套的命令内容一样：对调是"自己做自己的反操作"，点第二次自然换回来。
+            # 给宿主 UI 加/减"按住拖动"：**不写专门函数**——直接开关宿主 events 列表里的那一条绑定
+            # （switch_value：有就删、没有就加；"那一条"就是 QName 里的 UI_event_mouseLeft_drag，
+            #  所以指令串只有一处、不必在宿主预设里预摆两套 events 手工同步）。
             ["EnableDrag", "UI_Label", {
                 "content": "启用拖拽",
                 "content_2": "移除拖拽",
-                "events": [[QName.mouseLeft_hold,
-                    "UIInteract.swap_config $parent.parent.parent.parent events events_2"
-                    + "\vUIInteract.swap_config $self events events_2"
-                    + "\vUIInteract.swap_config $self content content_2"]],
-                "events_2": [[QName.mouseLeft_hold,
-                    "UIInteract.swap_config $parent.parent.parent.parent events events_2"
-                    + "\vUIInteract.swap_config $self events events_2"
+                "events": [[QName.mouseLeft,
+                    "UIInteract.switch_value $parent.parent.parent.parent events $QName.UI_event_mouseLeft_drag"
                     + "\vUIInteract.swap_config $self content content_2"]],
             }],
             # 高级编辑：另开一个空菜单
             ["Advanced", "UI_Label", {
                 "content": "高级编辑 ▸",
-                "events": [[QName.mouseLeft_hold, "UIInteract.open $self MenuEmpty $self"]],
+                "events": [[QName.mouseLeft, "UIInteract.open $self MenuEmpty $self"]],
             }],
         ],
     }],

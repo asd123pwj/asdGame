@@ -29,7 +29,7 @@ static func register(class_: GDScript) -> void:
 static func _scan(class_: GDScript) -> Array[GDScript]:
     var class_name_ = class_.resource_path.get_file().get_basename()
     var scripts : Array[GDScript] = []
-    _scan_dir(Sys.SYS_CONFIG_DIR, class_name_, scripts)
+    _scan_dir(SysCfg.SYS_CONFIG_DIR, class_name_, scripts)
     return scripts
 
 

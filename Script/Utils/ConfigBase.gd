@@ -3,21 +3,30 @@ extends BaseClass
 ## 配置基类（见 Script/设计文档.md）：**每个配置类 = 一组可被 json 覆盖的变量**。
 ## 子类（Config/ 下那些 `extends ConfigBase`，如 UIPreset_Basic / UIPreset_Menu）把配置写成
 ## `var values: Array[Array]` 之类的脚本变量；本类负责：
-##   启动时按"脚本全局类名.json"决定"读盘覆盖 values"还是"把 values 写盘"（Sys.RESET 控制）。
+##   启动时按"脚本全局类名.json"决定"读盘覆盖 values"还是"把 values 写盘"（SysCfg.RESET 控制）。
 ## 注意：json 的 key 只能是字符串，所以配置里别用数组/字典当 key（会被 String() 掉）。
 
-## 构造即加载：立刻按脚本名去 USER_CONFIG_DIR 找 json（找不到或 Sys.RESET 就写盘生成）。
+## 构造即加载：立刻按脚本名去 SysCfg.USER_CONFIG_DIR 找 json（找不到或 SysCfg.RESET 就写盘生成）。
+## **路径必须落在配置目录里**：本类是唯一写 json 的地方，而 `USER_CONFIG_DIR` 一旦取空/被改，
+## 拼出来的 "类名.json" 是**相对路径** ⇒ 会写到 `res://` 根目录（"项目根莫名多出一堆配置 json"）。
+## 所以这里先校验目录可用，并把结尾的 "/" 补齐；不合法就报错跳过（宁可不写，也不写错地方）。
 ## 被谁用：所有配置类的实例化（PresetRegister._add_presets 里 script.new()）。
 func _init() -> void:
     var script: Script = get_script()
-    var config_path = Sys.USER_CONFIG_DIR + script.get_global_name() + ".json"
-    save_or_init(config_path)
+    var dir: String = SysCfg.USER_CONFIG_DIR
+    if not dir.begins_with("res://") and not dir.begins_with("user://"):
+        push_error("ConfigBase「%s」: 配置目录不可用（SysCfg.USER_CONFIG_DIR = '%s'），跳过写盘以免落到项目根目录"
+            % [script.get_global_name(), dir])
+        return
+    if not dir.ends_with("/"):
+        dir += "/"
+    save_or_init(dir + script.get_global_name() + ".json")
 
 
 ## 读盘覆盖变量，或首次/RESET 时写盘。json 顶层不是字典就静默返回（保持代码里的默认值）。
 ## 被谁用：_init。
 func save_or_init(config_path: String) -> void:
-    if (not FileAccess.file_exists(config_path)) or Sys.RESET:
+    if (not FileAccess.file_exists(config_path)) or SysCfg.RESET:
         save(config_path)
         return
 
@@ -99,8 +108,10 @@ func _assign_property(name: String, value: Variant) -> void:
 ## 把本类的脚本变量写盘（跳过 `_` 开头的私有变量），Vector/Color/NodePath 转成数组或字符串。
 ## 被谁用：save_or_init（首次/RESET 时）；想手动存盘也调它。
 func save(config_path: String) -> void:
-    if not DirAccess.dir_exists_absolute(Sys.USER_CONFIG_DIR):
-        DirAccess.make_dir_recursive_absolute(Sys.USER_CONFIG_DIR)
+    # 建目录用的是"这份文件所在的那一级"，不再依赖配置目录常量（谁传进来的路径就写哪儿）
+    var dir: String = config_path.get_base_dir()
+    if dir != "" and not DirAccess.dir_exists_absolute(dir):
+        DirAccess.make_dir_recursive_absolute(dir)
 
     var data := {}
 

@@ -243,9 +243,8 @@ var values: Array[Array] = [
         "size": _layout["size"],
         "background": PANEL_BG, "background_slice": PANEL_BG_SLICE,
         # 整块面板按住拖动（子元素没配这个事件时会冒泡到这里）；和 MiniHUD 标题栏是同一套。
-        # events_2 是给菜单"启用拖拽"用的另一套（这套不含拖动）——点一下就 events ↔ events_2 对调。
-        "events": [[QName.mouseLeft_hold, "UIInteract.drag $self $event"]],
-        "events_2": [],
+        # 这条绑定也随时能被菜单项"启用/移除拖拽"加删（switch_value 直接开关这个列表，见 UIPreset_Menu）。
+        "events": [[QName.mouseLeft, "UIInteract.drag $self $event"]],
         "children": _layout["children"],
     }],
 ]

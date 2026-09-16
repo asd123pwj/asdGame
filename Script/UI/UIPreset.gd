@@ -44,6 +44,7 @@ static func get_(name_: String) -> UIPreset:
 static func create_element(element_name: String, ui_name_: String, element_config: Dictionary = {}) -> UIBase:
 	for cls in ProjectSettings.get_global_class_list():
 		if cls["class"] == ui_name_:
+			@warning_ignore("unsafe_method_access")
 			return load(cls["path"]).new(element_name, element_config)
 	push_error("找不到 UI 元素类: ", ui_name_)
 	return null

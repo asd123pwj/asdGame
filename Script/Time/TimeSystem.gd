@@ -1,7 +1,7 @@
 class_name TimeSys
 extends BaseClass
 ## 时间系统：按真实时间推进"时辰"，并广播时间消息（见 Script/Time/Time.md）。
-## 每次推进都会 send_tick()，所以"逐帧状态"（如 "Mouse Left | Hold | Tick" 拖动）实际是**帧**驱动，
+## 每次推进都会 send_tick()，所以"逐帧状态"（如 "Mouse Left | Tick" 拖动）实际是**帧**驱动，
 ## 时钟推进是**秒**驱动——两者都在本类的 _process 里发。
 ## 被谁用：Sys._process（唯一驱动）；状态层的 time 监听与各 Msg.send_advance_* 的接收方。
 
@@ -31,7 +31,8 @@ func _init() -> void:
 
 
 ## 每帧累加真实时间；够一个时辰周期就 advance()；最后无条件 send_tick()。
-## 被谁用：Sys._process（必须在 InputSys._process 之后、InputSys.end_frame() 之前）。
+## 被谁用：Sys._process（必须在 InputSys._process 之后——本帧的指针位移就是在这里被消费的，
+## 而清零被 InputSys 排到了帧末的 deferred 队列里）。
 static func _process(delta: float) -> void:
     elapse += delta
     _period_accum += delta

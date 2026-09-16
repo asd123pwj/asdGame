@@ -20,16 +20,16 @@ var values: Array[Dictionary] = [
         "statuses": [
             {"name": QName.pointer_move, "keys": [[MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE]],},
             # 一个鼠标键三个状态：按下 / 按住 / 松开
-            {"name": QName.mouseLeft_press, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.PRESS]],},
-            {"name": QName.mouseLeft_hold, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.HOLD]],},
-            {"name": QName.mouseLeft_release, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.RELEASE]],},
-            {"name": QName.mouseRight_hold, "keys": [[MOUSE_BUTTON_RIGHT, Enums.KeyStatus.HOLD]],},
+            {"name": QName.mouseLeft, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.HOLD]],},
+            # {"name": QName.mouseLeft_press, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.PRESS]],},
+            # {"name": QName.mouseLeft_release, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.RELEASE]],},
+            {"name": QName.mouseRight, "keys": [[MOUSE_BUTTON_RIGHT, Enums.KeyStatus.HOLD]],},
             
             {"name": QName.right, "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.HOLD], [KEY_D, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.up, "match_any": true, "keys": [[KEY_UP, Enums.KeyStatus.HOLD], [KEY_W, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.left, "match_any": true, "keys": [[KEY_LEFT, Enums.KeyStatus.HOLD], [KEY_A, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.down, "match_any": true, "keys": [[KEY_DOWN, Enums.KeyStatus.HOLD], [KEY_S, Enums.KeyStatus.HOLD]],},
-            {"name": QName.submit, "match_any": true, "keys": [[KEY_ENTER, Enums.KeyStatus.PRESS], [KEY_KP_ENTER, Enums.KeyStatus.PRESS]],},
+            {"name": QName.submit, "match_any": true, "keys": [[KEY_ENTER, Enums.KeyStatus.HOLD], [KEY_KP_ENTER, Enums.KeyStatus.HOLD]],},
         
         ],
     },
@@ -38,15 +38,13 @@ var values: Array[Dictionary] = [
         "shortcuts": [
             # 每帧刷新指针目标（hover 变化时发 enter/exit），菜单 hover 展开依赖它
             ["Pointer Refresh", QName.tick, "PointerDetect.update_targets"],
-            # 每帧跑一遍 AutoSys 的登记（状态满足期间要一直做的事，如等比缩放；不看指针在哪）
-            ["Auto Tick", QName.tick, "AutoSys.update"],
             # 统一入口 PointerDetect.key <状态名>：状态名 = 上面 statuses 的 name，也是 UI 侧 config["events"] 的事件名
-            ["Pointer Move", QName.pointer_move, "PointerDetect.key \"" + QName.pointer_move + "\""],
-            ["Submit", QName.submit, "PointerDetect.key \"" + QName.submit + "\""],
-            ["Mouse Left Press", QName.mouseLeft_press, "PointerDetect.key \"" + QName.mouseLeft_press + "\""],
-            ["Mouse Left Hold", QName.mouseLeft_hold, "PointerDetect.key \"" + QName.mouseLeft_hold + "\""],
-            ["Mouse Left Release", QName.mouseLeft_release, "PointerDetect.key \"" + QName.mouseLeft_release + "\""],
-            ["Mouse Right Hold", QName.mouseRight_hold, "PointerDetect.key \"" + QName.mouseRight_hold + "\""],
+            [QName.pointer_move, QName.pointer_move, "PointerDetect.key \"" + QName.pointer_move + "\""],
+            [QName.submit, QName.submit, "PointerDetect.key \"" + QName.submit + "\""],
+            [QName.mouseLeft_press, QName.mouseLeft_press, "PointerDetect.key \"" + QName.mouseLeft_press + "\""],
+            [QName.mouseLeft, QName.mouseLeft, "PointerDetect.key \"" + QName.mouseLeft + "\""],
+            [QName.mouseLeft_release, QName.mouseLeft_release, "PointerDetect.key \"" + QName.mouseLeft_release + "\""],
+            [QName.mouseRight, QName.mouseRight, "PointerDetect.key \"" + QName.mouseRight + "\""],
         ],
     },
     {

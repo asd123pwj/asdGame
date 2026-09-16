@@ -9,12 +9,11 @@ extends UIInteractBase
 ## UiSys 现在只剩"登记表 + 登记名规则 + 登记 + 取件"，既不管开启、也不管失焦关闭。
 ## 组内共用与指令前缀见基类 Script/UI/Interact/UIInteractBase.gd。
 ##
-## 失焦关闭（has_blur_ui / close_blur_ui）也在这个文件：**只有"开出来的 UI"才可能配 `close_on_blur`**，
+## 失焦关闭（close_blur_ui）也在这个文件：**只有"开出来的 UI"才可能配 `close_on_blur`**，
 ## 所以 open 顺手把它记进候选列表 `_blur_uis`，失焦判定只遍历这个小列表（不必每次扫整张登记表）。
 
-## 失焦关闭的候选：**被 open 过、且配置里写了 `close_on_blur` 的 UI**（可见性在判定时才看）。
-## 只在 open 时登记、不在这里删：① close 只是 hide，实例还能被 open 复用；② 判定时正在遍历它，
-## 边遍历边删容易出事。候选集合天然有界（就是开过的那几个 UI）。
+## 失焦关闭的候选：**当前开着、且配置里写了 `close_on_blur` 的 UI**。
+## **open 登记、close 摘掉**（所以关过再开能自动回来，列表也始终只装着"当前真的在开着的那几个"）。
 ## 注：按 open 那一刻的配置登记——运行时改 close_on_blur 的玩法目前没有（真要有就再登记一次）。
 static var _blur_uis: Array[UIBase] = []
 
@@ -47,6 +46,8 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 	if bool(ui.config.get("close_on_blur", false)) and not _blur_uis.has(ui):
 		_blur_uis.append(ui)
 	_place(ui, anchor)
+	# 新开的排到最前（也会顺带把它的窗口提到最前，见 UIInteract_SetTop）
+	UIInteract_SetTop.set_top(ui)
 	return ui
 
 
@@ -127,27 +128,26 @@ static func _place(ui: UIBase, anchor: UIBase) -> void:
 ## 为什么放在这里：失焦要关的只可能是**开出来的**、写了 `close_on_blur` 的 UI（配置子元素不会被单独关），
 ## 所以候选就记在 open 那里（`_blur_uis`），这里只做判定与关。
 
-## 有没有"配了 `close_on_blur` 且正显示"的 UI。
-## 被谁用：PointerDetect.key（先判一下，省掉没必要的命中刷新与遍历）。
-static func has_blur_ui() -> bool:
-	for ui: UIBase in _blur_uis:
-		if ui.control != null and ui.control.is_visible_in_tree():
-			return true
-	return false
-
-
-## 关掉"指针已经不在上面"的 UI：遍历候选列表（= 配了 `close_on_blur` 且 open 过的 UI），
-## 指针不在它（或它的子孙元素/子孙 UI）上 → 走本文件的 close（hide + 广播）。
+## 关掉"指针已经不在上面"的 UI：遍历候选列表（= 配了 `close_on_blur` 且正开着的 UI），
+## 指针不在它（或它的子孙元素/子孙 UI）上 → 走本文件的 close（hide + 广播 + 从候选里摘掉）。
 ## 判定只要 parent 链，不需要"父子菜单链"这种登记：菜单链本身就是一棵子树
 ## （子菜单挂在触发它的菜单项下，见 UiSys 文件头的挂载规则），所以鼠标在子菜单上时，
 ## 父菜单沿链就能找到自己 ⇒ 不关；父 UI 一 hide，链上的子 UI 也随可见性继承一起不可见。
+## 实现上**边遍历边 close 会改到 `_blur_uis`**（close 里要摘掉候选），所以先收集再关。
 ## 被谁用：PointerDetect.key（派发完按键事件、刷新命中之后）。
 static func close_blur_ui(hover_ui: UIBase) -> void:
+	var closing: Array[UIBase] = []
 	for ui: UIBase in _blur_uis:
-		if ui.control == null or not ui.control.is_visible_in_tree():
+		# 尺寸还没算出来的（布局还没跑）先当它"还在指针下"：否则 get_global_rect() 是退化矩形
+		# → 误判成"指针在外面" → 同一帧就把它自己关掉（"第一次能开、之后再也开不了"就是这么来的）。
+		var rect: Rect2 = ui.control.get_global_rect()
+		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 			continue
 		if not _is_inside(ui, hover_ui):
-			close(ui)
+			closing.append(ui)
+	for ui: UIBase in closing:
+		close(ui)
+		_blur_uis.erase(ui)
 
 
 ## 指针是否在这个 UI 上：hover 沿 parent 链向上能找到 ui 即为"内"（所以它的子元素也算）。

@@ -8,12 +8,13 @@ extends BaseClass
 ## 指针当前位置（屏幕坐标）。
 ## 被谁用：PointerDetect.update_targets（命中判定）、UiSys._place（POINTER 策略开菜单）。
 static var mouse_position: Vector2 = Vector2.ZERO
-## 本帧累计的指针位移：一帧内多个 MouseMotion 事件相加，帧末由 end_frame() 清零。
+## 本帧累计的指针位移：一帧内多个 MouseMotion 事件相加，**帧末**由 _clear_mouse_delta 清零
+## （_process 里用 call_deferred 把它排到帧末，见下）。
 ## 消费方一律是"每帧调用一次"的（拖拽类指令），所以必须按帧对齐，否则：
 ##   指针停下后没有 MouseMotion 事件，旧位移会被每帧重复叠加 → 一直漂；
 ##   一帧内多个事件只用最后一个 → 快移时丢距离（跟不上光标）。
-## "一帧"= Sys._process 覆盖的范围：_input 累计 → InputSys._process（按键类消费）
-## → TimeSys._process（Tick 类消费，拖拽走这里）→ end_frame() 清零。
+## "一帧"= 一次 _process 覆盖的范围：_input 累计 → InputSys._process（按键类消费）
+## → TimeSys._process（Tick 类消费，拖拽走这里）→ **本帧所有 _process 都跑完**（deferred 队列 flush）才清零。
 ## 被谁用：UIInteract.drag。
 static var mouse_delta: Vector2 = Vector2.ZERO
 ## 是否处于"编辑输入"模式（要录键位时置 true，避免输入的键被当成游戏按键）。
@@ -44,19 +45,21 @@ static func _input(event: InputEvent):
         # print(mouse_position)
     @warning_ignore_restore("unsafe_property_access")
 
-## 每帧给所有按住的键发一次 HOLD（逐帧状态就是靠它驱动的，如 "Mouse Left | Hold | Tick" 拖动）。
+## 每帧给所有按住的键发一次 HOLD（逐帧状态就是靠它驱动的，如 "Mouse Left | Tick" 拖动）。
+## 顺带把"清空本帧指针位移"排到帧末（见 _clear_mouse_delta）：所以 Sys._process 那边不用再收尾。
 ## 被谁用：Sys._process。
 static func _process(_delta: float) -> void:
     for key in keys_holding:
         Msg.send_key_hold(key)
+    _clear_mouse_delta.call_deferred()
 
 
 ## 帧末结算：清空本帧累计的指针位移，供下一帧重新累计（指针不动则下一帧即 (0,0)，不会漂）。
-## 必须在本帧所有消费方都跑完之后调用（由 Sys._process 最后调用）。
-## 注意不能在 _process 里清零：拖拽是被 TimeSys._process 的 send_tick()（Tick 状态）触发的，
-## 晚于本函数，早清零会让拖拽永远读到 (0,0)。
-## 被谁用：Sys._process（末尾）。
-static func end_frame() -> void:
+## 由 _process 用 call_deferred 排到**帧末**执行——deferred 队列在本帧所有 _process 跑完之后才 flush，
+## 所以晚于 _process 的消费方（TimeSys._process 的 Tick → 拖拽/缩放）仍读得到本帧位移。
+## **不能改成在 _process 里直接清零**：那会早于 Tick，拖拽就永远读到 (0,0)。
+## 被谁用：_process（deferred）。
+static func _clear_mouse_delta() -> void:
     mouse_delta = Vector2.ZERO
 
 ## 按下 → 记进 keys_holding 并发 PRESS；松开 → 移出并发 RELEASE。

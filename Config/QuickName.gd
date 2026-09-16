@@ -11,10 +11,10 @@ static var pointer_move := "Pointer Move"
 static var pointer_enter := "Pointer Enter"     # hover 进入（不是状态，由 PointerDetect 直接派发）
 static var pointer_exit := "Pointer Exit"       # hover 离开（同上）
 static var mouseLeft_press := "Mouse Left | Press"
-static var mouseLeft_hold := "Mouse Left | Hold"
-static var mouseLeft_hold_tick := "Mouse Left | Hold | Tick"
+static var mouseLeft := "Mouse Left"
+static var mouseLeft_tick := "Mouse Left | Tick"
 static var mouseLeft_release := "Mouse Left | Release"
-static var mouseRight_hold := "Mouse Right | Hold"
+static var mouseRight := "Mouse Right"
 static var right := "Right"
 static var up := "Up"
 static var left := "Left"
@@ -28,3 +28,8 @@ static var day_advance := "Day Advance"
 static var xun_advance := "Xun Advance"
 static var month_advance := "Month Advance"
 static var year_advance := "Year Advance"
+
+# ---- UI 事件（config["events"] 列表里的一项 = [事件名, 指令串]）----
+## 常用的整体绑定放这儿，配置里直接填变量（指令里写 `$QName.UI_event_mouseLeft_drag`），
+## 于是同一条绑定只有一处写法（见 UIPreset_Menu 的 EnableDrag：往宿主 events 里开关它）。
+static var UI_event_mouseLeft_drag := [QName.mouseLeft, "UIInteract.drag $self $event"]

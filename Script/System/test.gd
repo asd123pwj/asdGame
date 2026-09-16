@@ -83,7 +83,6 @@ func ui_test() -> void:
     Msg.send_cmd("UIInteract.open " + kb_id + " CloseButton " + kb_id)
     Msg.send_cmd("UIInteract.open " + kb_id + " ResizeButton " + kb_id)
 
-
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:

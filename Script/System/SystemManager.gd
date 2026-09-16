@@ -37,16 +37,9 @@ static var autoSys: AutoSys
 ## 被谁用：Attributes 取世界默认值、状态里以 SYS 为主体的判定。
 static var sys_status: Character
 
-## 用户配置目录（存盘位置）。被谁用：ConfigBase。
-## 放项目内的 `res://tmp/Config/`：RESET=true 时每次启动都会重新生成一份，属于**可随时删的产物**，
-## 放项目里方便对照代码看，又不至于把 json 堆在根目录（`tmp/` 已在 .gitignore 里）。
-## 若以后 RESET=false、要长期保留用户改动，把它改回 `user://Config/` 更合适。
-static var USER_CONFIG_DIR := "res://tmp/Config/"
-## 系统配置目录（代码里的预设来源）。被谁用：PresetRegister._scan。
-static var SYS_CONFIG_DIR := "res://Config/"
-## 是否每次启动都用代码里的 values 重写用户配置（true = 不读旧 json）。
-## 被谁用：ConfigBase.save_or_init。
-static var RESET := true
+## 配置目录与"是否重置配置"都不在这里：它们是常量，放在 SysCfg（Config/SystemConfig.gd）
+## 的 `USER_CONFIG_DIR` / `SYS_CONFIG_DIR` / `RESET`——唯一使用者（ConfigBase / PresetRegister）
+## 那边更近，而且常量不会有"静态变量取到空值"这类时序问题。
 
 ## 测试入口（见 Test）。被谁用：_ready。
 var _test = Test.new()
@@ -69,9 +62,9 @@ func _input(event: InputEvent) -> void:
 ## 被谁用：引擎。
 func _process(delta: float) -> void:
     InputSys._process(delta)
-    TimeSys._process(delta)   # 末尾 send_tick()，逐帧状态（如 "Mouse Left | Hold | Tick"）在这里满足
-    # 帧末结算：本帧累计的指针位移已被各消费方（拖拽类指令）用完，清空供下一帧重新累计
-    InputSys.end_frame()
+    TimeSys._process(delta)   # 末尾 send_tick()，逐帧状态（如 "Mouse Left | Tick"）在这里满足
+    AutoSys._process(delta)
+    # 指针位移的清零不在这儿：InputSys._process 末尾用 deferred 排到"帧末"自己清（见 InputSystem）
 
 ## 物理帧转发给角色系统（角色的物理相关行为）。被谁用：引擎。
 func _physics_process(delta: float) -> void:

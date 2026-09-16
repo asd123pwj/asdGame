@@ -20,7 +20,7 @@
 
 ## ConfigBase.gd（extends BaseClass）
 - 子类声明 `values: Array[Dictionary]` + 字段。
-- `_init`：读/存用户 json(`Sys.USER_CONFIG_DIR`)，无则保存默认；`RESET` 时重置。
+- `_init`：读/存用户 json(`SysCfg.USER_CONFIG_DIR`)，无则保存默认；`RESET` 时重置。路径必须是 `res://`/`user://` 绝对路径，否则报错跳过（避免落到项目根目录）。
 - 提供 `_assign_property`(给对象按字段名赋值)、`script.get_global_name()` 等。
 - 供谁调用：一切配置类(Archetype_Basic/UIPreset_Basic 等)继承它。
 

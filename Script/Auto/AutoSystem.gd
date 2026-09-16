@@ -2,7 +2,7 @@ class_name AutoSys
 extends BaseClass
 ## 状态驱动执行器（设计见 Script/Auto/Auto.md）。
 ## 一句话：**"某角色某状态满足期间，每帧跑一个函数"**。
-## 一条登记 = `[角色, 状态名, Callable]`；每帧 update() 过一遍：
+## 一条登记 = `[角色, 状态名, Callable]`；每帧 _process() 过一遍：
 ##   状态还满足 → 调这个 Callable；状态不满足（松手/结束）→ 直接删掉这条登记。
 ##
 ## 为什么需要：有些交互要"按住期间一直做"，但指针会离开元素——
@@ -15,7 +15,7 @@ extends BaseClass
 ## 写法见那两对函数：Script/UI/UIInteract_Drag.gd（drag + dragging）、
 ## Script/UI/UIInteract_Rescale.gd（rescale + rescaling）。
 ##
-## 被谁用：UIInteract.drag / UIInteract.rescale（登记）；每帧由 Tick 的快捷指令 `AutoSys.update` 驱动。
+## 被谁用：UIInteract.drag / UIInteract.rescale（登记）；每帧由 Tick 的快捷指令 `AutoSys._process` 驱动。
 
 ## 登记项：`[Character, 状态名, Callable]`。同一组可以并存多条（各自独立判存亡）。
 static var autos: Array = []
@@ -33,7 +33,7 @@ static func run_until_unsatisfied(char_: Character, status_name: String, callbac
 	autos.append([char_, status_name, callback])
 
 
-## 手动注销该角色该状态名下的全部登记。一般用不到（状态不满足时 update 会自己删）。
+## 手动注销该角色该状态名下的全部登记。一般用不到（状态不满足时 _process 会自己删）。
 ## 被谁用：想提前收尾的调用方。
 static func stop(char_: Character, status_name: String) -> void:
 	for i in range(autos.size() - 1, -1, -1):
@@ -46,7 +46,7 @@ static func stop(char_: Character, status_name: String) -> void:
 ## 用副本遍历：回调里可能又登记/注销（例如开关换来换去）。
 ## 状态没装（名字写错）按不满足处理，顺手删掉，免得一直空转。
 ## 被谁用：Tick 的快捷指令（Config/Character/Archetype/Archetype_System.gd 的"指针交互"组）。
-static func update() -> void:
+static func _process(_delta: float) -> void:
 	for entry: Array in autos.duplicate():
 		var char_: Character = entry[0]
 		if char_ == null or not char_.statuses.check_exist(entry[1]) \

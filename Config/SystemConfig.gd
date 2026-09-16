@@ -1,6 +1,20 @@
 class_name SysCfg
 extends ConfigBase
 
+## ---- 配置目录（全项目读写 json 的路径只在这里，而且是**常量**：不存在"取到空值"的时序问题）----
+## 用户配置目录（存盘位置）。被谁用：ConfigBase（唯一读写 json 的地方，按"类名.json"找）。
+## 放项目内的 `res://tmp/Config/`：RESET=true 时每次启动都会重新生成一份，属于**可随时删的产物**，
+## 放项目里方便对照代码看，又不至于把 json 堆在根目录（`tmp/` 已在 .gitignore 里）。
+## 若以后 RESET=false、要长期保留用户改动，把它改回 `user://Config/` 更合适。
+## 必须留在 `res://` / `user://` 下：拼路径时若是相对路径，文件会落到项目根目录
+## （就是"项目根莫名多出一堆配置 json"那个坑；ConfigBase._init 另有一道兜底校验）。
+const USER_CONFIG_DIR := "res://tmp/Config/"
+## 系统配置目录（代码里的预设来源）。被谁用：PresetRegister._scan。
+const SYS_CONFIG_DIR := "res://Config/"
+## 是否每次启动都用代码里的 values 重写用户配置（true = 不读旧 json）。
+## 被谁用：ConfigBase.save_or_init。
+## 注意：对"已存盘的枚举整数"也有效——Enums 里改枚举时新值只能追加（插在中间会让旧 json 里的值串位）。
+const RESET := true
 
 
 var random_seed: String = "20230204"

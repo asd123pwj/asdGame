@@ -17,7 +17,7 @@
 ## SystemManager.gd（Sys，extends Node）
 - **唯一引擎回调**：`_ready`(初始化并跑 test)、`_input/_process/_physics_process`(转发给各系统，见设计文档 §八)。
 - 静态单例注册表：`static var sysCfg/randSys/msgBus/shaders/timeSys/charSys/presets/inputSys/tmapSys/cmdSys/sys`。
-- 静态常量目录：`USER_CONFIG_DIR="user://Config/"`、`SYS_CONFIG_DIR="res://Config/"`、`RESET`。
+- 配置目录不在这里：`USER_CONFIG_DIR` / `SYS_CONFIG_DIR` 是 **`SysCfg` 的常量**（见 Config/SystemConfig.gd）；`RESET`（是否每次用代码里的 values 重写用户 json）仍在这里。
 - `init_sub_system()`：逐个 new 上面各系统并赋给静态字段。启动顺序即各系统就绪顺序。
 - 供谁调用：全项目经 `Sys.xxx` 拿系统/配置。
 

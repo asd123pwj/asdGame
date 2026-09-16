@@ -20,7 +20,7 @@
 
 ```gdscript
 # 配置（元素自己的 events）
-"events": [["Mouse Left | Hold", "UIInteract.rescale $parent $event"]]
+"events": [["Mouse Left", "UIInteract.rescale $parent $event"]]
 
 # UIInteract 里成对的两个函数
 static func rescale(target: UIBase, status_name: String) -> void:      # 登记入口
@@ -57,5 +57,5 @@ static func rescaling(target: UIBase) -> void:                        # 每帧�
 
 - **不用 `UiSys` 存逐帧回调**：那只是"每帧跑一个 Callable"，谁在按、什么时候停都得调用方自己记着（要额外的捕获/退订机制）。挂到状态上，开始与结束都由状态层给出，调用方零负担。
 - **不用 `Msg.listen_status_unsatisfied` 的一次性监听**：那也能收尾，但每次交互都要临时挂/退订一条消息监听；`update()` 每帧顺手看一眼状态更简单（`once` 仍保留在消息层，供别的场合用）。
-- **不用 `"Mouse Left | Hold | Tick"` 这类逐帧状态**：① 配置里现在也没有它（`Archetype_System` 里注释着）；② 即使有，那种事件也只发给指针当前 hover 的元素——指针一离开就断。现在的"每帧"统一由本类的 `update()` 驱动（消费者：`UIInteract.rescaling` 等比缩放、`UIInteract.dragging` 按住拖动）。
+- **不用 `"Mouse Left | Tick"` 这类逐帧状态**：① 配置里现在也没有它（`Archetype_System` 里注释着）；② 即使有，那种事件也只发给指针当前 hover 的元素——指针一离开就断。现在的"每帧"统一由本类的 `update()` 驱动（消费者：`UIInteract.rescaling` 等比缩放、`UIInteract.dragging` 按住拖动）。
 - **登记用 Callable，不用指令串**：指定"每帧跑什么"如果写成指令串，那条字符串就等于把函数名散落在代码里（改函数名/统一调整时 grep 不全）。UI 侧的约定是成对写两个函数（登记入口 + 每帧执行），只有**配置**里才出现指令。

@@ -14,9 +14,9 @@
 - 静态状态：`mouse_position`、`mouse_delta`(本帧累计指针位移，帧末清零)、`on_edit`、`keys_holding`(当前按住集合)。
 - `static _input(event)`：被 `Sys._input` 调；区分 Key/MouseButton/MouseMotion，按键按下/抬起调 `_send_key_status`。
 - `static _process(delta)`：对按住中的 key 每帧 `Msg.send_key_hold`（按键类状态的消费发生在这里）。
-- `static end_frame()`：**帧末把 `mouse_delta` 清零**，由 `Sys._process` 最后调用。
+- `static _clear_mouse_delta()`：**帧末把 `mouse_delta` 清零**——由 `_process` 用 `call_deferred` 排到帧末（deferred 队列在本帧所有 `_process` 跑完之后才 flush），所以 `Sys` 那边不用再收尾。
 - **位移的时间基准是"帧"**（一帧 = `Sys._process` 的范围）：
-  `_input` 累计 → `InputSys._process`（按键类消费）→ `TimeSys._process`（Tick 类消费，**拖拽走这里**）→ `end_frame()` 清零。
+  `_input` 累计 → `InputSys._process`（按键类消费）→ `TimeSys._process`（Tick 类消费，**拖拽走这里**）→ **帧末**（deferred flush）`_clear_mouse_delta()` 清零。
   一帧内多个 MouseMotion 事件累加，拖拽类指令按帧消费一次，因此指针停下时位移为 (0,0)（不漂），快移时拿到本帧总位移（不丢距离）。
   **清零只能在帧末**：若放在 `InputSys._process` 里，晚于它才被 Tick 触发的拖拽就永远读到 (0,0)。
 - `static _send_key_status(key, isDown)`：按下→(首按则)入集合 + `Msg.send_key_press`；抬起→出集合 + `Msg.send_key_release`。
