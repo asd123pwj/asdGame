@@ -33,6 +33,13 @@ extends BaseClass
 ## 被谁用：execute（查）、_register_source_methods（写）、_lazy_load。
 static var _commands: Dictionary = {}   # cmd_name -> { callable, arg_meta }
 
+## 「命令前缀组」约定：类可以写 `const CMD_HOST := "UIInteract"` 声明"我的静态方法挂在哪个前缀下"，
+## 于是**一个命令宿主能按功能拆成多个文件**，对外仍只有一套指令名：
+##   Script/UI/Interact/ 下的 UIInteractBase.gd（基类，声明一次）、UIInteract_OpenClose.gd、
+##   UIInteract_Drag.gd … 全部注册成 `UIInteract.xxx`（前缀写在基类上，子类继承即可）。
+## 没写这个常量的类，前缀就是它自己的类名（默认行为不变）。
+const CMD_HOST_KEY := "CMD_HOST"
+
 
 # 初始化（幂等）：注册命令 + 监听消息总线的 "COMMAND"。
 # 由系统启动时 new 一次触发，例如 SystemManager.init_sub_system() 里 CmdSys.new()。
@@ -76,10 +83,11 @@ static func _descends_from(entry: Dictionary, root_name: String, by_name: Dictio
 	return false
 
 
-# 把某个命令源脚本里非 "_" 开头的静态方法注册为命令。
-# class_name_: 类名（命令名前缀）；script: 对应脚本。
+# 把某个命令源脚本里的静态方法注册为命令。
+# class_name_: 类名（没写 CMD_HOST 时的默认前缀）；script: 对应脚本。
 # 被谁用：_scan_all_sources、_lazy_load。
 static func _register_source_methods(class_name_: String, script: GDScript) -> void:
+	var prefix: String = _cmd_host(script, class_name_)
 	for m_raw in script.get_script_method_list():
 		var m: Dictionary = m_raw
 		var method_name: String = m["name"]
@@ -88,8 +96,21 @@ static func _register_source_methods(class_name_: String, script: GDScript) -> v
 		# 只收 static（get_script_method_list 的 flags 含 METHOD_FLAG_STATIC）
 		if m.get("flags", 0) & METHOD_FLAG_STATIC == 0:
 			continue
-		var cmd_name: String = class_name_ + "." + method_name
+		var cmd_name: String = prefix + "." + method_name
 		_commands[cmd_name] = { "callable": Callable(script, method_name), "arg_meta": _make_arg_meta(m) }
+
+
+# 取某个命令源脚本要注册到哪个前缀下：脚本（或它的基类）写了 `const CMD_HOST := "xxx"` 就用它，
+# 否则用类名自己（见 CMD_HOST_KEY 的说明）。**沿继承链找**，所以前缀可以只在基类声明一次。
+# 被谁用：_register_source_methods、_lazy_load（判断某个前缀该收拢哪些文件）。
+static func _cmd_host(script: GDScript, fallback: String) -> String:
+	var s: GDScript = script
+	while s != null:
+		var host: Variant = s.get_script_constant_map().get(CMD_HOST_KEY)
+		if host != null and not str(host).is_empty():
+			return str(host)
+		s = s.get_base_script()
+	return fallback
 
 
 # 从反射到的方法信息构造参数元信息数组。
@@ -146,7 +167,9 @@ static func clear_cache() -> void:
 	CommandParser.clear_cache()
 
 
-# 懒注册：命令形如 "类名.方法名"，据此定位并加载宿主类脚本，注册其命令。
+# 懒注册：命令形如 "类名.方法名"，据此定位并加载宿主脚本，注册其命令。
+# 前缀可能由**多个文件**提供（命令前缀组，见 CMD_HOST_KEY）：类名正好等于前缀的（如 UIInteract.gd）、
+# 以及写了 `const CMD_HOST` 挂到此前缀下的（如 UIInteract_Drag.gd），两类一起收。
 # 被谁用：execute（命令表里没有时）。
 static func _lazy_load(cmd_name: String) -> void:
 	var dot := cmd_name.rfind(".")
@@ -158,14 +181,13 @@ static func _lazy_load(cmd_name: String) -> void:
 	for e in entries:
 		by_name[e["class"]] = e
 	for cls in entries:
-		if cls["class"] != class_name_:
-			continue
 		if not _descends_from(cls, "BaseClass", by_name):
 			continue
 		var script: GDScript = load(cls["path"])
-		if script != null:
-			_register_source_methods(class_name_, script)
-		return
+		if script == null:
+			continue
+		if cls["class"] == class_name_ or _cmd_host(script, cls["class"]) == class_name_:
+			_register_source_methods(cls["class"], script)
 
 
 # 按反射参数元信息，把位置/命名参数组装成与方法签名顺序一致的全参数数组。

@@ -44,7 +44,7 @@ static func _input(event: InputEvent):
         # print(mouse_position)
     @warning_ignore_restore("unsafe_property_access")
 
-## 每帧给所有按住的键发一次 HOLD（逐帧状态就是靠它驱动的，如 "Mouse Left | Tick" 拖动）。
+## 每帧给所有按住的键发一次 HOLD（逐帧状态就是靠它驱动的，如 "Mouse Left | Hold | Tick" 拖动）。
 ## 被谁用：Sys._process。
 static func _process(_delta: float) -> void:
     for key in keys_holding:

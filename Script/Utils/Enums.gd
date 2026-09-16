@@ -48,14 +48,15 @@ enum KeyStatus{
     POINTER_EXIT, # 不支持键位绑定，键值统一用 MOUSE_BUTTON_NONE 占位（任意占位均可，项目内保持一致）
 }
 
-## UI 的开启位置策略（由被开启 UI 自己的 config["open_at"] 声明，见 UiSys.open_ui/_place）。
+## UI 的开启位置策略（由被开启 UI 自己的 config["open_at"] 声明，见 UIInteract_OpenClose.open/_place）。
 ## 开独立 UI 与开菜单/提示是一回事：读配置 → 建 UI → 挂到锚点/宿主或 UI 根；差的只是摆在哪。
-## 注意 open_ui 的 anchor 参数不只用在这里：它同时是**挂载点**（决定挂在谁下面），见 UiSys 文件头。
+## 注意 open 的 anchor 参数不只用在这里：它同时是**挂载点**（决定挂在谁下面），见该函数的说明。
 enum OpenAt {
     POINTER,          # 开在指针处（右键菜单）
     ANCHOR_TOP_RIGHT, # 开在"锚点 UI"的右上角顶点（多级菜单：锚点 = 触发它的那个菜单项）
     CONFIG,           # 摆回配置里声明的 position（独立面板；被拖动过就回到初值）——不写 open_at 时的默认
     ANCHOR_TOP_RIGHT_IN, # 开在"锚点 UI"**内部**的右上角（按自己的宽度内缩；如给面板加的 "X" 关闭按钮）
+    ANCHOR_BOTTOM_RIGHT_IN, # 开在"锚点 UI"**内部**的右下角（如缩放手柄）
     # 注意：新值一律追加在末尾——已存盘的 json 里记的是枚举整数（见 Sys.RESET），插在中间会让旧值串位。
 }
 

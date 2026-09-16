@@ -31,12 +31,17 @@ static var cmdSys: CmdSys
 ## 这里的实例只用于启动时跑一次 `UiSys._init()`（建 UI 根）。被谁用：Sys.init_sub_system。
 static var uiSys: UiSys
 
+static var autoSys: AutoSys
+
 ## "SYS" 角色：世界默认值、系统级状态（如全局 Tick）挂在它身上。
 ## 被谁用：Attributes 取世界默认值、状态里以 SYS 为主体的判定。
 static var sys_status: Character
 
 ## 用户配置目录（存盘位置）。被谁用：ConfigBase。
-static var USER_CONFIG_DIR := "user://Config/"
+## 放项目内的 `res://tmp/Config/`：RESET=true 时每次启动都会重新生成一份，属于**可随时删的产物**，
+## 放项目里方便对照代码看，又不至于把 json 堆在根目录（`tmp/` 已在 .gitignore 里）。
+## 若以后 RESET=false、要长期保留用户改动，把它改回 `user://Config/` 更合适。
+static var USER_CONFIG_DIR := "res://tmp/Config/"
 ## 系统配置目录（代码里的预设来源）。被谁用：PresetRegister._scan。
 static var SYS_CONFIG_DIR := "res://Config/"
 ## 是否每次启动都用代码里的 values 重写用户配置（true = 不读旧 json）。
@@ -64,7 +69,7 @@ func _input(event: InputEvent) -> void:
 ## 被谁用：引擎。
 func _process(delta: float) -> void:
     InputSys._process(delta)
-    TimeSys._process(delta)   # 末尾 send_tick()，逐帧状态（如 "Mouse Left | Tick"）在这里满足
+    TimeSys._process(delta)   # 末尾 send_tick()，逐帧状态（如 "Mouse Left | Hold | Tick"）在这里满足
     # 帧末结算：本帧累计的指针位移已被各消费方（拖拽类指令）用完，清空供下一帧重新累计
     InputSys.end_frame()
 
@@ -79,6 +84,7 @@ func init_sub_system() -> void:
     cmdSys = CmdSys.new()
     randSys = RandSys.new()
     msgBus = MsgBus.new()
+    autoSys = AutoSys.new()
     shaders = ShaderManager.new()
     timeSys = TimeSys.new()
     charSys = CharSys.new()

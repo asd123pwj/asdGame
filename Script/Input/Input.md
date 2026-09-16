@@ -35,10 +35,12 @@
 - 职责：监控指针目标，把交互键派发到命中目标（UI 走 UI 操作，角色/地图暂忽略，留待扩展）。
 - **只提供执行函数，不监听按键**：按键→状态→SystemShortcut→指令 的链路由 `Character` 的 Status/SystemShortcut 声明（见 `Character/SystemShortcut/SystemShortcut.md`），此处不再 `Msg.listen_key_*`。
 - 静态状态：`hover_ui`(指针下 UI) / `hover_char`(指针下角色) / `map_position`(指针地图格，逻辑坐标 y 向上)。
-- **按需计算**：`static update_targets()` 按 `InputSys.mouse_position` 刷新 `hover_ui/hover_char/map_position`；hover 变化时对新旧 UI 派发 `EVENT_POINTER_ENTER / EVENT_POINTER_EXIT`（两个内置事件名）。
+- **按需计算**：`static update_targets()` 按 `InputSys.mouse_position` 刷新 `hover_ui/hover_char/map_position`；hover 变化时对新旧 UI 派发 `QName.pointer_enter / QName.pointer_exit`（两个内置事件名，放在 Config/QuickName.gd）。
 - 执行函数只有一个：`static key(status_name)`（指令串 `PointerDetect.key "状态名"`）：
   - **不区分 press/hold/release/move，也不涉及键位**——"哪个状态满足了"由状态层判定，这里只把状态名当事件名派发。
+  - **派发目标**：当前 hover 的 UI —— 指针不锁定（按住后指针会离开元素，所以"按住期间的事"不走这里）。
   - 命中刷新由每帧 Tick 的 `update_targets` 负责（不再在派发前重复刷新）。
   - 命中 UI 时调 `ui.on_event(状态名)`，UI 侧按状态名等值匹配 `config["events"]` 里的指令。
+  - **"按住期间每帧要做的事"不走这里**：走 `AutoSys`（`Script/Auto/Auto.md`：挂在状态上、每帧执行指令、状态不满足自动删）——指针层不参与，也就不需要捕获机制。
 - 命中判定：UI 按 `UiSys.uis` 加入顺序取最上层、`control.get_global_rect()` 矩形命中；角色按身体 `CollisionShape2D` 矩形；地图按世界坐标 / `TileSpritePreset.tileset.tile_size` 换算（y 取反）。
 - 驱动链路：`StatusPreset_Pointer` 定义按键状态（Pointer Press/Hold/Release、Submit）→ `SystemShortcutPreset_Pointer` 声明"状态满足→`PointerDetect.key` 指令"→ 满足时 `Msg.send_cmd`。输入全部来自 `InputSys` 的 `Msg` 消息，不用引擎 `gui_input`。

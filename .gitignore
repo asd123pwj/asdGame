@@ -1,5 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
+# 运行时产物（配置存盘等，见 Sys.USER_CONFIG_DIR）
+/tmp/
 /android/
 .vscode/
 **/*.uid
@@ -14,3 +16,4 @@ icon.svg
 Plugins/
 Debug/
 **/UI_Unity/
+/tmp/

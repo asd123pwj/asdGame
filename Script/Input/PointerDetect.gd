@@ -7,12 +7,12 @@ extends BaseClass
 ##
 ## **事件派发只有一个入口 `key(status_name)`**：不区分 press/hold/release/move，也不碰键位——
 ## 键位只存在于状态层（statuses 的 keys），这里只管"哪个状态满足了"，把它当事件名派发给 UI。
-## 参数由快捷指令串给出（如 `PointerDetect.key "Mouse Left"`），因此
+## 参数由快捷指令串给出（如 `PointerDetect.key "Mouse Left | Hold"`），因此
 ## "增删/改绑多功能键"只需改配置，不必动本文件。
 ## 指针移动**不锁定目标**：每次移动都派发给当前 hover 的 UI，由它 config 里配的指令决定做什么。
 
 ## 指针当前目标
-## 被谁用：key（事件派发给谁）、UiSys.close_blur_ui（失焦判定入参）。
+## 被谁用：key（事件派发给谁）、UIInteract_OpenClose.close_blur_ui（失焦判定入参）。
 static var hover_ui: UIBase = null
 ## 指针当前目标角色（占位功能，暂无人使用）。
 static var hover_char: Character = null
@@ -22,11 +22,10 @@ static var map_position: Vector2i = Vector2i.ZERO
 ## 被谁用：update_targets。
 static var _prev_hover_ui: UIBase = null
 
-## hover 变化的两个内置事件名：它们不是配置里的状态（由 update_targets 判定后直接派发），
-## UI 侧在 config["events"] 里用这两个常量绑同名的项即可。
-## 被谁用：update_targets（派发）、Config/UI 里绑 "Pointer Enter/Exit" 的项。
-const EVENT_POINTER_ENTER: String = "Pointer Enter"
-const EVENT_POINTER_EXIT: String = "Pointer Exit"
+## hover 变化的两个内置事件名放在 QName 里（Config/QuickName.gd 的 pointer_enter / pointer_exit）：
+## 它们不是配置里的状态，由 update_targets 判定后直接派发；
+## UI 侧在 config["events"] 里绑这两个名字即可。
+## 被谁用：update_targets（派发）。
 
 
 func _init() -> void:
@@ -44,9 +43,9 @@ static func update_targets() -> void:
 	if hover_ui != _prev_hover_ui:
 		# hover 变化不对应任何状态，直接用上面两个内置事件名派发
 		if _prev_hover_ui != null:
-			_prev_hover_ui.on_event(EVENT_POINTER_EXIT)
+			_prev_hover_ui.on_event(QName.pointer_exit)
 		if hover_ui != null:
-			hover_ui.on_event(EVENT_POINTER_ENTER)
+			hover_ui.on_event(QName.pointer_enter)
 		_prev_hover_ui = hover_ui
 
 
@@ -54,16 +53,18 @@ static func update_targets() -> void:
 ## UI 侧按状态名等值匹配 config["events"] 里的指令。
 ## 不区分 press/hold/release/move，也不涉及键位——"哪个状态满足了"已由状态层判定。
 ## 命中刷新由每帧的 `PointerDetect.update_targets`（Tick 状态驱动）负责，这里不重复刷新。
-## 指针移动不锁定任何 UI —— 被拖的元素跟随光标，hover 始终是它。
+## **"按住期间每帧要做的事"不走这里**：指针会离开元素（如等比缩放），那类交给 `AutoSys`
+## （Script/Auto/Auto.md：挂在状态上，状态满足期间每帧执行指令，不满足自动删）——
+## 所以不需要"把松开事件送到元素手上"这类捕获机制，指针层也不参与收尾。
 ## 被谁用：状态层 shortcuts 里的 `PointerDetect.key "<状态名>"`（见 Config/Character/Archetype）。
 static func key(status_name: String) -> void:
 	if hover_ui != null:
 		hover_ui.on_event(status_name)
 	# 按键后清理：配了 close_on_blur 的 UI（菜单就是这种，没有任何专属类），指针不在它上面就关掉。
 	# 先刷新一次命中：这类 UI 常是刚在这一帧打开、或挪到了指针处，用旧的 hover 会误判成"在外面"。
-	if UiSys.has_blur_ui():
+	if UIInteract_OpenClose.has_blur_ui():
 		update_targets()
-		UiSys.close_blur_ui(hover_ui)
+		UIInteract_OpenClose.close_blur_ui(hover_ui)
 
 
 ## 指针命中的 UI（按加入顺序取最上层）。

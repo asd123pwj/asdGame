@@ -98,3 +98,22 @@ var cache_command_max := 1024
 """
 # 游戏时间周期：每经过 hour_period 秒，TimeSys 推进一个时辰
 var hour_period := 2.0
+
+
+
+
+"""
+░████   ░██ ░██ 
+░██░██  ░██ ░██ 
+░██ ░██ ░██ ░██ 
+░██ ░██ ░██ ░██ 
+░██ ░██ ░██ ░██ 
+░██ ░██  ░██░██  
+"""
+# ---- UI 交互参数（集中在这里，不要在 UIInteract 里写死）----
+static var resize_min_scale := 0.2      # 等比缩放的下限（拖再狠也不会缩成 0）
+static var resize_max_scale := 5.0      # 等比缩放的上限（拖再狠也不会涨到天上去）
+static var rescale_epsilon := 0.001     # 缩放里"上帧距离"作除数时的保护下限
+
+# 找"当底的 stylebox 槽"时的顺序：哪个控件有哪个就用哪个（见 UIBase._background_slot）。
+static var ui_background_slots: Array[String] = ["panel", "normal", "background"]

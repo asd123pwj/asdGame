@@ -8,6 +8,8 @@ extends MsgBus
 ##      后面成串的 `send_yyy()` / `listen_yyy()` 都是**同模板的薄包装**（一行 send / 一行 listen）。
 ##      所以：**改 ID 规则只改 `_format_x`；要查某条消息谁在用，直接 grep 那个 `send_/listen_` 函数名。**
 ##   3. 角色域的名字支持 "名字@identity"（定位到其它角色），解析与迁移见 `_resolve_target` / `_listen_character`。
+##   4. 所有 `listen_*` 都能多传一个 `once = true`：**一次性监听**，广播一次后由 MsgBus 自动摘掉
+##      （"临时的收尾函数"用它，就不必自己保存监听 ID 再 unlisten）。
 
 """
 为了方便用Msg.send统一发送消息，而不是MsgHubChar这么长
@@ -39,14 +41,14 @@ static func send_destory(char_: Character) -> Array:
     return super.send("DESTORY", char_)
 
 
-static func listen_char_create(callback: Callable) -> String:
-    return super.listen("CHAR_CREATE", callback)
+static func listen_char_create(callback: Callable, once: bool = false) -> String:
+    return super.listen("CHAR_CREATE", callback, false, once)
 
-static func listen_spawn(callback: Callable) -> String:
-    return super.listen("SPAWN", callback)
+static func listen_spawn(callback: Callable, once: bool = false) -> String:
+    return super.listen("SPAWN", callback, false, once)
 
-static func listen_destory(callback: Callable) -> String:
-    return super.listen("DESTORY", callback)
+static func listen_destory(callback: Callable, once: bool = false) -> String:
+    return super.listen("DESTORY", callback, false, once)
 
 
 """      
@@ -69,15 +71,15 @@ static func _send_time(type: String, message: Variant) -> Array:
     return send(_format_time(type), message)
 
 ## 按时间域规则登记监听（供本段各 listen_* 复用）。被谁用：本段各 listen_*。
-static func _listen_time(type: String, callback: Callable) -> String:
-    return listen(_format_time(type), callback)
+static func _listen_time(type: String, callback: Callable, once: bool = false) -> String:
+    return listen(_format_time(type), callback, false, once)
 
 """ ---------- ADVANCE ---------- """
 static func send_tick(message: Variant = null) -> Array:
     return _send_time("TICK", message)
 
-static func listen_tick(callback: Callable) -> String:
-    return _listen_time("TICK", callback)
+static func listen_tick(callback: Callable, once: bool = false) -> String:
+    return _listen_time("TICK", callback, once)
 
 """ ---------- ADVANCE ---------- """
 static func send_advance_year(message: Variant) -> Array:
@@ -98,20 +100,20 @@ static func send_advance_hour(message: Variant) -> Array:
 # static func send_advance(message: Variant) -> Array:
 #     return _send_time("ADVANCE", message)
 
-static func listen_advance_year(callback: Callable) -> String:
-    return _listen_time("ADVANCE_YEAR", callback)
+static func listen_advance_year(callback: Callable, once: bool = false) -> String:
+    return _listen_time("ADVANCE_YEAR", callback, once)
 
-static func listen_advance_month(callback: Callable) -> String:
-    return _listen_time("ADVANCE_MONTH", callback)
+static func listen_advance_month(callback: Callable, once: bool = false) -> String:
+    return _listen_time("ADVANCE_MONTH", callback, once)
 
-static func listen_advance_xun(callback: Callable) -> String:
-    return _listen_time("ADVANCE_XUN", callback)
+static func listen_advance_xun(callback: Callable, once: bool = false) -> String:
+    return _listen_time("ADVANCE_XUN", callback, once)
 
-static func listen_advance_day(callback: Callable) -> String:
-    return _listen_time("ADVANCE_DAY", callback)
+static func listen_advance_day(callback: Callable, once: bool = false) -> String:
+    return _listen_time("ADVANCE_DAY", callback, once)
 
-static func listen_advance_hour(callback: Callable) -> String:
-    return _listen_time("ADVANCE_HOUR", callback)
+static func listen_advance_hour(callback: Callable, once: bool = false) -> String:
+    return _listen_time("ADVANCE_HOUR", callback, once)
 
 # static func listen_advance(callback: Callable) -> String:
 #     return _listen_time("ADVANCE", callback)
@@ -150,10 +152,10 @@ static func _send_input(key: Variant, status: Enums.KeyStatus) -> Array:
         InputCombo.unlisten(key)
     return results
         
-static func _listen_input(key: Variant, status: Enums.KeyStatus, callback: Callable) -> String:
+static func _listen_input(key: Variant, status: Enums.KeyStatus, callback: Callable, once: bool = false) -> String:
     if typeof(key) == TYPE_ARRAY:
         InputCombo.add_if_not_exist(key)
-    return listen(_format_input(key, status), callback)
+    return listen(_format_input(key, status), callback, false, once)
 
 ## 单键（对外接口层）：与上面同域，只是把 hold/press/release/pointer_move 拆成便于配置引用的名字。
 ## 被谁用：StatusPreset.listen（按键监听）、InputCombo._listen、PointerDetect 的下游。
@@ -172,17 +174,17 @@ static func send_pointer_move() -> Array:
     return _send_input(MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE)
 
 
-static func listen_key_hold(key: Variant, callback: Callable) -> String:
-    return _listen_input(key, Enums.KeyStatus.HOLD, callback)
+static func listen_key_hold(key: Variant, callback: Callable, once: bool = false) -> String:
+    return _listen_input(key, Enums.KeyStatus.HOLD, callback, once)
 
-static func listen_key_press(key: Variant, callback: Callable) -> String:
-    return _listen_input(key, Enums.KeyStatus.PRESS, callback)
+static func listen_key_press(key: Variant, callback: Callable, once: bool = false) -> String:
+    return _listen_input(key, Enums.KeyStatus.PRESS, callback, once)
 
-static func listen_key_release(key: Variant, callback: Callable) -> String:
-    return _listen_input(key, Enums.KeyStatus.RELEASE, callback)
+static func listen_key_release(key: Variant, callback: Callable, once: bool = false) -> String:
+    return _listen_input(key, Enums.KeyStatus.RELEASE, callback, once)
 
-static func listen_pointer_move(callback: Callable) -> String:
-    return _listen_input(MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE, callback)
+static func listen_pointer_move(callback: Callable, once: bool = false) -> String:
+    return _listen_input(MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE, callback, once)
 
     
 """
@@ -206,8 +208,8 @@ static func send_cmd0(message: Variant) -> Variant:
 static func send_cmd00(message: Variant) -> Variant:
     return send_cmd(message)[0][0]
 
-static func listen_cmd(callback: Callable) -> String:
-    return super.listen("COMMAND", callback)
+static func listen_cmd(callback: Callable, once: bool = false) -> String:
+    return super.listen("COMMAND", callback, false, once)
 
 
 """
@@ -254,14 +256,15 @@ static func _send_character(char_: Character, type: String, type_name: String, a
 
 ## 角色域通用监听：解析目标 → 拼 ID → 登记；名字带 @identity 时记为"身份接收器"，
 ## 以后该 identity 换角色会自动迁到新节点（见 MsgBus.bind_identity_receiver）。
+## once 为 true 时登记为**一次性接收器**（广播一次后自动移除，见 MsgBus.listen / send）。
 ## 被谁用：本文件里角色域的所有 listen_*。
-static func _listen_character(char_: Character, type: String, type_name: String, action: String, callback: Callable) -> String:
+static func _listen_character(char_: Character, type: String, type_name: String, action: String, callback: Callable, once: bool = false) -> String:
     var resolved := _resolve_target(char_, type_name)
     var node_ID = _format_character(resolved[0], type, resolved[1], action)
     # 含 @identity 的监听记为"身份接收器"：照常广播，但 identity 换角色时会被迁到新节点。
     # 这样 identity 未出现时先监听也有效（等它出现时迁到正确节点）。
     var identity_bound: bool = "@" in type_name
-    var msg_ID := listen(node_ID, callback, identity_bound)
+    var msg_ID := listen(node_ID, callback, identity_bound, once)
     if identity_bound:
         var parts := type_name.split("@")
         var pure_name: String = parts[0]
@@ -298,11 +301,11 @@ static func send_attr_changed(char_: Character, type_name: String) -> Array:
 static func send_any_attr_changed(char_: Character, type_name: String) -> Array:
     return _send_character(char_, "ANY_ATTR", "ANY", "changed", type_name)
 
-static func listen_attr_changed(char_: Character, type_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "ATTR", type_name, "changed", callback)
+static func listen_attr_changed(char_: Character, type_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "ATTR", type_name, "changed", callback, once)
 
-static func listen_any_attr_changed(char_: Character, callback: Callable) -> String:
-    return _listen_character(char_, "ANY_ATTR", "ANY", "changed", callback)
+static func listen_any_attr_changed(char_: Character, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "ANY_ATTR", "ANY", "changed", callback, once)
 
 
 """
@@ -330,17 +333,17 @@ static func send_buff_consume(char_: Character, buff_name: String) -> Array:
 static func send_buff_depleted(char_: Character, buff_name: String) -> Array:
     return _send_character(char_, "BUFF", buff_name, "depleted")
 
-static func listen_buff_add(char_: Character, buff_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "BUFF", buff_name, "add", callback)
+static func listen_buff_add(char_: Character, buff_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "BUFF", buff_name, "add", callback, once)
 
-static func listen_buff_remove(char_: Character, buff_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "BUFF", buff_name, "remove", callback)
+static func listen_buff_remove(char_: Character, buff_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "BUFF", buff_name, "remove", callback, once)
 
-static func listen_buff_consume(char_: Character, buff_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "BUFF", buff_name, "consume", callback)
+static func listen_buff_consume(char_: Character, buff_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "BUFF", buff_name, "consume", callback, once)
 
-static func listen_buff_depleted(char_: Character, buff_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "BUFF", buff_name, "depleted", callback)
+static func listen_buff_depleted(char_: Character, buff_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "BUFF", buff_name, "depleted", callback, once)
 
 
 """
@@ -383,20 +386,20 @@ static func send_status_detected(char_: Character, status_name: String, target: 
 # static func send_status_undetected(char_: Character, status_name: String, target: Variant) -> Array:
 #     return _send_character(char_, "STATUS", status_name, "undetected", target)
 
-static func listen_status_satisfied(char_: Character, status_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "STATUS", status_name, "satisfied", callback)
+static func listen_status_satisfied(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "satisfied", callback, once)
 
-static func listen_status_unsatisfied(char_: Character, status_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "STATUS", status_name, "unsatisfied", callback)
+static func listen_status_unsatisfied(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "unsatisfied", callback, once)
 
-static func listen_status_add(char_: Character, status_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "STATUS", status_name, "add", callback)
+static func listen_status_add(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "add", callback, once)
 
-static func listen_status_remove(char_: Character, status_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "STATUS", status_name, "remove", callback)
+static func listen_status_remove(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "remove", callback, once)
 
-static func listen_status_detected(char_: Character, status_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "STATUS", status_name, "detected", callback)
+static func listen_status_detected(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "detected", callback, once)
 
 ## 我觉得这玩意用不到
 # static func listen_status_undetected(char_: Character, status_name: String, callback: Callable) -> String:
@@ -456,14 +459,14 @@ static func send_interaction_remove(char_: Character, interaction_name: String) 
 static func send_interaction_act(char_: Character, interaction_name: String) -> Array:
     return _send_character(char_, "INTERACTION", interaction_name, "act")
     
-static func listen_interaction_add(char_: Character, interaction_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "INTERACTION", interaction_name, "add", callback)
+static func listen_interaction_add(char_: Character, interaction_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "INTERACTION", interaction_name, "add", callback, once)
 
-static func listen_interaction_remove(char_: Character, interaction_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "INTERACTION", interaction_name, "remove", callback)
+static func listen_interaction_remove(char_: Character, interaction_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "INTERACTION", interaction_name, "remove", callback, once)
 
-static func listen_interaction_act(char_: Character, interaction_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "INTERACTION", interaction_name, "act", callback)
+static func listen_interaction_act(char_: Character, interaction_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "INTERACTION", interaction_name, "act", callback, once)
 
 
 """
@@ -489,14 +492,14 @@ static func send_skill_remove(char_: Character, skill_name: String) -> Array:
 static func send_skill_act(char_: Character, skill_name: String) -> Array:
     return _send_character(char_, "SKILL", skill_name, "act")
 
-static func listen_skill_add(char_: Character, skill_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "SKILL", skill_name, "add", callback)
+static func listen_skill_add(char_: Character, skill_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "SKILL", skill_name, "add", callback, once)
 
-static func listen_skill_remove(char_: Character, skill_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "SKILL", skill_name, "remove", callback)
+static func listen_skill_remove(char_: Character, skill_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "SKILL", skill_name, "remove", callback, once)
 
-static func listen_skill_act(char_: Character, skill_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "SKILL", skill_name, "act", callback)
+static func listen_skill_act(char_: Character, skill_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "SKILL", skill_name, "act", callback, once)
 
 
 """
@@ -524,17 +527,17 @@ static func send_collision_enter(char_: Character, collision_name: String, body:
 static func send_collision_exit(char_: Character, collision_name: String, body: Node) -> Array:
     return _send_character(char_, "COLLISION", collision_name, "exit", body)
 
-static func listen_collision_add(char_: Character, collision_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "COLLISION", collision_name, "add", callback)
+static func listen_collision_add(char_: Character, collision_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "COLLISION", collision_name, "add", callback, once)
 
-static func listen_collision_remove(char_: Character, collision_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "COLLISION", collision_name, "remove", callback)
+static func listen_collision_remove(char_: Character, collision_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "COLLISION", collision_name, "remove", callback, once)
 
-static func listen_collision_enter(char_: Character, collision_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "COLLISION", collision_name, "enter", callback)
+static func listen_collision_enter(char_: Character, collision_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "COLLISION", collision_name, "enter", callback, once)
 
-static func listen_collision_exit(char_: Character, collision_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "COLLISION", collision_name, "exit", callback)
+static func listen_collision_exit(char_: Character, collision_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "COLLISION", collision_name, "exit", callback, once)
 
 
 """
@@ -558,11 +561,11 @@ static func send_inventory_remove(char_: Character, inventory_name: String) -> A
     return _send_character(char_, "INVENTORY", inventory_name, "remove")
 
 
-static func listen_inventory_add(char_: Character, inventory_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "INVENTORY", inventory_name, "add", callback)
+static func listen_inventory_add(char_: Character, inventory_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "INVENTORY", inventory_name, "add", callback, once)
 
-static func listen_inventory_remove(char_: Character, inventory_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "INVENTORY", inventory_name, "remove", callback)
+static func listen_inventory_remove(char_: Character, inventory_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "INVENTORY", inventory_name, "remove", callback, once)
 
 
 ## 快捷域：ID = ["CHAR", 角色, "SHORTCUT", 快捷名, 动作]。
@@ -578,14 +581,14 @@ static func send_shortcut_remove(char_: Character, shortcut_name: String) -> Arr
 static func send_shortcut_act(char_: Character, shortcut_name: String) -> Array:
     return _send_character(char_, "SHORTCUT", shortcut_name, "act")
 
-static func listen_shortcut_add(char_: Character, shortcut_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "SHORTCUT", shortcut_name, "add", callback)
+static func listen_shortcut_add(char_: Character, shortcut_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "SHORTCUT", shortcut_name, "add", callback, once)
 
-static func listen_shortcut_remove(char_: Character, shortcut_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "SHORTCUT", shortcut_name, "remove", callback)
+static func listen_shortcut_remove(char_: Character, shortcut_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "SHORTCUT", shortcut_name, "remove", callback, once)
 
-static func listen_shortcut_act(char_: Character, shortcut_name: String, callback: Callable) -> String:
-    return _listen_character(char_, "SHORTCUT", shortcut_name, "act", callback)
+static func listen_shortcut_act(char_: Character, shortcut_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "SHORTCUT", shortcut_name, "act", callback, once)
 
 """
 ░██     ░██ ░██████
@@ -606,11 +609,11 @@ static func _send_ui(ui: UIBase, action: String, message: Variant = null) -> Arr
         return send(node_ID, message)
     return send(node_ID, ui)
 
-static func _listen_ui(ui: UIBase, action: String, callback: Callable) -> String:
-    return listen(_format_ui(ui, action), callback)
+static func _listen_ui(ui: UIBase, action: String, callback: Callable, once: bool = false) -> String:
+    return listen(_format_ui(ui, action), callback, false, once)
 
 ## UI 生命周期域（与上面的 Character 域不同，这里以**UI 实例**为 ID 段）。
-## 被谁用：UiSys._build_open（send_ui_create）、UIInteract.close（send_ui_close）。
+## 被谁用：UIInteract_OpenClose._build_open（send_ui_create）、UIInteract_OpenClose.close（send_ui_close）。
 ## 注意：**send_ui_remove 当前没有任何发送方**——UI 关闭是 hide 复用，项目里已没有"销毁 UI"的路径；
 ## 保留它是为了以后真要销毁时（那时记得同时把 listen_ui_remove 的接收方也接上）。
 """ ---------- Life Cycle ---------- """
@@ -620,11 +623,11 @@ static func send_ui_create(ui: UIBase) -> Array:
 static func send_ui_remove(ui: UIBase) -> Array:
     return super.send("UI_REMOVE", ui)
 
-static func listen_ui_create(callback: Callable) -> String:
-    return super.listen("UI_CREATE", callback)
+static func listen_ui_create(callback: Callable, once: bool = false) -> String:
+    return super.listen("UI_CREATE", callback, false, once)
 
-static func listen_ui_remove(callback: Callable) -> String:
-    return super.listen("UI_REMOVE", callback)
+static func listen_ui_remove(callback: Callable, once: bool = false) -> String:
+    return super.listen("UI_REMOVE", callback, false, once)
 
 ## UI 交互域：fade / scale / submit 等"对 UI 做了什么"的消息。
 ## 被谁用：UIInteract（fade_to 等指令）、需要监听 UI 交互的外部逻辑。
@@ -650,23 +653,23 @@ static func send_ui_scale(ui: UIBase) -> Array:
 static func send_ui_fade(ui: UIBase, target: float) -> Array:
     return _send_ui(ui, "FADE", target)
 
-static func listen_ui_press(ui: UIBase, callback: Callable) -> String:
-    return _listen_ui(ui, "PRESS", callback)
+static func listen_ui_press(ui: UIBase, callback: Callable, once: bool = false) -> String:
+    return _listen_ui(ui, "PRESS", callback, once)
 
-static func listen_ui_drag(ui: UIBase, callback: Callable) -> String:
-    return _listen_ui(ui, "DRAG", callback)
+static func listen_ui_drag(ui: UIBase, callback: Callable, once: bool = false) -> String:
+    return _listen_ui(ui, "DRAG", callback, once)
 
-static func listen_ui_release(ui: UIBase, callback: Callable) -> String:
-    return _listen_ui(ui, "RELEASE", callback)
+static func listen_ui_release(ui: UIBase, callback: Callable, once: bool = false) -> String:
+    return _listen_ui(ui, "RELEASE", callback, once)
 
-static func listen_ui_submit(ui: UIBase, callback: Callable) -> String:
-    return _listen_ui(ui, "SUBMIT", callback)
+static func listen_ui_submit(ui: UIBase, callback: Callable, once: bool = false) -> String:
+    return _listen_ui(ui, "SUBMIT", callback, once)
 
-static func listen_ui_close(ui: UIBase, callback: Callable) -> String:
-    return _listen_ui(ui, "CLOSE", callback)
+static func listen_ui_close(ui: UIBase, callback: Callable, once: bool = false) -> String:
+    return _listen_ui(ui, "CLOSE", callback, once)
 
-static func listen_ui_scale(ui: UIBase, callback: Callable) -> String:
-    return _listen_ui(ui, "SCALE", callback)
+static func listen_ui_scale(ui: UIBase, callback: Callable, once: bool = false) -> String:
+    return _listen_ui(ui, "SCALE", callback, once)
 
-static func listen_ui_fade(ui: UIBase, callback: Callable) -> String:
-    return _listen_ui(ui, "FADE", callback)
+static func listen_ui_fade(ui: UIBase, callback: Callable, once: bool = false) -> String:
+    return _listen_ui(ui, "FADE", callback, once)

@@ -14,12 +14,12 @@ extends ConfigBase
   左右修饰键（Shift/Ctrl/Alt 各有左右两个）在 Godot 里 keycode 相同、靠 `InputEventKey.location` 区分，
   所以它们多一列 `KEY_LOCATION_LEFT/RIGHT`；元素名也带 `_L`/`_R` 后缀，不然两个键会撞名互相覆盖。
 - x/行/尺寸照原样写 Unity 那版的表达式（`32*2`、`row1 = -36*2`…），统一再乘 SCALE（1.0 = 与 Unity 同尺寸）。
-- 整块面板可以按住拖动（`Mouse Left | Tick` → `drag $self`，和 MiniHUD 标题栏同一套）。
+- 整块面板可以按住拖动（按住 → `UIInteract.drag $self $event` 登记 → 每帧 `dragging`，和 MiniHUD 标题栏同一套）。
 - 底图：`background`（九宫格拉伸）+ 字色/字号（`font_color` / `font_size`，主题默认是接近白色的字，
   配在浅色键底上会看不见，所以必须显式给深色）。
 - 以后给某个键绑操作：改它的描述文本即可，登记名 = `Keyboard/键名/Desc`
   （键名由键码生成，如 `Keyboard/Key_Q/Desc`、`Keyboard/Key_Kp8/Desc`、`Keyboard/Key_Shift_L/Desc`）。
-- 开启：独立 UI，`UIInteract.open_ui --preset_name Keyboard`；
+- 开启：独立 UI，`UIInteract.open --preset_name Keyboard`；
   右上角的 "X" 就是普通预设 CloseButton（见 UIPreset_Basic），开启方一并开/关即可（见 Test.ui_test）。
 """
 
@@ -29,8 +29,11 @@ extends ConfigBase
 const SCALE: float = 1.0
 
 ## 整块面板的底图 / 每个键的底图（留空 = 不打底，用默认主题样式）。
+## 九宫格切分**跟着图走**（不同图圆角不同，不能统一默认值）：这两张都是 32×32 圆角方块，圆角≈8px。
 const PANEL_BG: String = "res://Material/Texture/UI/RoundedIcon_32.png"
 const KEY_BG: String = "res://Material/Texture/UI/RoundedIcon_32.png"
+const PANEL_BG_SLICE: int = 8
+const KEY_BG_SLICE: int = 8
 ## 键里文字的字号、字色（Unity 的 UIKeyName/UIKeyDescription 是 16；这里取 13，比原文小一点键里放得下）。
 ## 注意字号**不跟着 SCALE 走**，改 SCALE 后要自己看着调。
 ## 主题重写不向下传，所以配在每个键的那两行文本身上；字色必须给（主题默认接近白色，浅底上看不见）。
@@ -218,7 +221,7 @@ static func _build_layout() -> Dictionary:
 			"free": true,                                      # 绝对定位：键盘按坐标摆，不进父级竖排布局
 			"position": [float(k[1]) * SCALE, -row * SCALE],    # 行的负值（Unity 向下）→ 本项目的正坐标
 			"size": [key_size.x * SCALE, key_size.y * SCALE],
-			"background": KEY_BG,
+			"background": KEY_BG, "background_slice": KEY_BG_SLICE,
 			# 这个键的身份：以后"点它 → 绑到某操作"就是拿这两个值造 InputEventKey
 			"key_code": code,
 			"key_location": location,
@@ -238,9 +241,11 @@ var values: Array[Array] = [
     ["Keyboard", "UI_Panel", {
         "position": [PANEL_POSITION.x, PANEL_POSITION.y],
         "size": _layout["size"],
-        "background": PANEL_BG,
-        # 整块面板按住拖动（子元素没配这个事件时会冒泡到这里）；和 MiniHUD 标题栏是同一套
-        "events": [["Mouse Left | Tick", "UIInteract.drag $self"]],
+        "background": PANEL_BG, "background_slice": PANEL_BG_SLICE,
+        # 整块面板按住拖动（子元素没配这个事件时会冒泡到这里）；和 MiniHUD 标题栏是同一套。
+        # events_2 是给菜单"启用拖拽"用的另一套（这套不含拖动）——点一下就 events ↔ events_2 对调。
+        "events": [[QName.mouseLeft_hold, "UIInteract.drag $self $event"]],
+        "events_2": [],
         "children": _layout["children"],
     }],
 ]

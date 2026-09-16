@@ -5,7 +5,7 @@ extends RefCounted
 ## 于是继承者带一个实例 ID，指令串里可以用 $@ID 指到具体实例。
 
 ## 实例 ID（等于引擎的 instance id）。
-## 被谁用：UIInteract.resolve_cmd（把 $self/$parent 换成 $@ID）、指令系统按 $@ID 取回实例。
+## 被谁用：UIBase._resolve_cmd（把 $self/$parent 换成 $@ID）、指令系统按 $@ID 取回实例。
 var ID: int = get_instance_id()
 
 """ ---------- 指令化函数基类 ---------- """

@@ -1,0 +1,30 @@
+class_name QName
+extends BaseClass
+## 全局"名字表"：状态名之类的字符串集中在这里，避免同一个字符串散落多处（改名只改这一处）。
+##
+## 命名：一律**小写下划线**；只有 mouseLeft / mouseRight 保留驼峰。
+## 这些名字是**同一个字符串的多处身份**：状态定义里的 name、快捷里的依赖状态名、
+## UI 配置里的事件名 / `PointerDetect.key "<状态名>"` 里那个字符串——所以都用这里，改一处即可。
+
+# ---- 输入监控（指针 / 键）----
+static var pointer_move := "Pointer Move"
+static var pointer_enter := "Pointer Enter"     # hover 进入（不是状态，由 PointerDetect 直接派发）
+static var pointer_exit := "Pointer Exit"       # hover 离开（同上）
+static var mouseLeft_press := "Mouse Left | Press"
+static var mouseLeft_hold := "Mouse Left | Hold"
+static var mouseLeft_hold_tick := "Mouse Left | Hold | Tick"
+static var mouseLeft_release := "Mouse Left | Release"
+static var mouseRight_hold := "Mouse Right | Hold"
+static var right := "Right"
+static var up := "Up"
+static var left := "Left"
+static var down := "Down"
+static var submit := "Submit"
+
+# ---- 时间周期 ----
+static var tick := "Tick"
+static var hour_advance := "Hour Advance"
+static var day_advance := "Day Advance"
+static var xun_advance := "Xun Advance"
+static var month_advance := "Month Advance"
+static var year_advance := "Year Advance"

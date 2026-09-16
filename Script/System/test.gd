@@ -52,16 +52,16 @@ func run() -> void:
 
 
 
-## UI 演示：**开启路径与游戏内完全一致**（发指令 UIInteract.open_ui，不直接调内部函数）。
+## UI 演示：**开启路径与游戏内完全一致**（发指令 UIInteract.open，不直接调内部函数）。
 ## 被谁用：run。
 func ui_test() -> void:
-    # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 → UiSys.open_ui 统一开启 → UIBase 包装 Control。
-    # 开启方式与游戏里**完全一致**：发指令（UIInteract.open_ui），不直接调内部函数——
+    # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 → UIInteract_OpenClose.open 统一开启 → UIBase 包装 Control。
+    # 开启方式与游戏里**完全一致**：发指令（UIInteract.open），不直接调内部函数——
     # 全项目开 UI 只有这一条路，改了才会全都被改到。想手动开关就绑快捷键到这个指令上。
-    Msg.send_cmd("UIInteract.open_ui --preset_name MiniHUD")
+    Msg.send_cmd("UIInteract.open --preset_name MiniHUD")
     var ui: UIBase = UiSys.get_ui("MiniHUD")
     if ui == null:
-        print("UI: MiniHUD 没开出来（查预设与 open_ui）")
+        print("UI: MiniHUD 没开出来（查预设与 UIInteract.open）")
         return
     # 交互一律走 Msg（不用自定义 signal）；指针输入由 PointerDetect 用 InputSys 检测命中后派发。
     Msg.listen_ui_close(ui, func(_m): print("UI close"))
@@ -75,12 +75,13 @@ func ui_test() -> void:
             lines.append("第 %d 行：滚动查看内容。" % i)
         info.set_content("\n".join(lines))
 
-    # 键盘快捷键界面（见 Config/UI/UIPreset_Keyboard.gd）：独立 UI + 它右上角的关闭按钮。
-    # "给面板加个 X"就是开一个普通预设（CloseButton），不写专门函数；指令里引用实例要写 $@ID
-    # （配置里那套 $parent/$self 是 resolve_cmd 在发送前换成 $@ID 的，这里手动拼同样的形式）。
-    Msg.send_cmd("UIInteract.open_ui --preset_name Keyboard")
+    # 键盘快捷键界面（见 Config/UI/UIPreset_Keyboard.gd）：独立 UI + 右上角关闭按钮 / 右下角缩放手柄。
+    # "给面板加个按钮"就是开一个普通预设（CloseButton / ResizeButton），不写专门函数；
+    # 指令里引用实例要写 $@ID（配置里那套 $parent/$self 是 UIBase._resolve_cmd 在发送前换成 $@ID 的，这里手动拼同样的形式）。
+    Msg.send_cmd("UIInteract.open --preset_name Keyboard")
     var kb_id: String = "$@" + str(UiSys.get_ui("Keyboard").ID)
-    Msg.send_cmd("UIInteract.open_ui " + kb_id + " CloseButton " + kb_id)
+    Msg.send_cmd("UIInteract.open " + kb_id + " CloseButton " + kb_id)
+    Msg.send_cmd("UIInteract.open " + kb_id + " ResizeButton " + kb_id)
 
 
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。

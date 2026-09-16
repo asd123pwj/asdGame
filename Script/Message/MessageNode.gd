@@ -11,6 +11,13 @@ var receivers: Array[Callable] = []
 ## 唯一区别是 identity 换角色时，这些接收器会被迁到新角色对应的节点上
 ## （见 MsgBus.rebind_identity / _move_identity_receiver）。
 var identity_receivers: Array[Callable] = []
+## 一次性接收器：被 send 调用**一次后自动移除**（临时的监听用它，就不用手工 unlisten）。
+## 参与广播，只是排在上面两个之后；同类之间按登记顺序。
+## 被谁用：MsgBus.listen(..., once = true) / send。
+var once_receivers: Array[Callable] = []
+## 一次性 + 绑定 identity：规则同 once_receivers，identity 换角色时照样迁移。
+## 被谁用：MsgBus.listen(..., identity_bound = true, once = true) / send。
+var once_identity_receivers: Array[Callable] = []
 ## 最近一次发到这个节点的消息内容（"取上一次消息"用）。
 ## 被谁用：MsgBus.send（写）、MsgBus.get_message（读）。
 var message: Variant = null

@@ -6,21 +6,19 @@ extends BaseClass
 ## 交互**不用开关**（draggable/closeable 等已移除），而是"事件→指令"：
 ## config["events"] 是 [事件名, 指令串] 的列表，事件发生即发送对应指令。
 ## 事件名就是**状态名**（如 "Mouse Left"）：UI 不关心键位，键位只在状态层（statuses 的 keys）配置；
-## hover 变化不对应任何状态，用 PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT。
+## hover 变化不对应任何状态，用 QName.pointer_enter / QName.pointer_exit。
 ## 占位符解析与交互实现都在 UIInteract（UIBase 只存"何时发什么指令"）；
-## 开启与登记在 UiSys.open_ui（**全项目唯一的开启入口**）。
+## 登记与寻址在 UiSys（登记表 + 登记名规则）；**开启**在 UIInteract_OpenClose.open
+## （**全项目唯一的开启入口**，指令形式 `UIInteract.open`）。
 ## 显示内容统一挂 var content，子类 refresh() 把它刷到控件上。
 
 ## 元素名：登记名的一段（独立 UI 就是预设名，子元素就是配置里写的名字）。
 ## 被谁用：UiSys._register_tree / find_name（拼登记名）、各处的警告文案。
 var name: String = ""
 
-## 背景图九宫格的边距（像素）：config["background"] 的图是 32×32 圆角方块，圆角≈8px。
-## 被谁用：_make_background。
-const BG_SLICE: int = 8
-## 找"当底的 stylebox 槽"时的顺序（哪个控件有哪个，见类文档里的实测表）。
-## 被谁用：_background_slot。
-const BACKGROUND_SLOTS: Array[String] = ["panel", "normal", "background"]
+## 背景图九宫格的边距**每张图各自给**：写在 config["background_slice"]（不写 = 0，整张拉伸）。
+## 别用统一默认值——不同底图的圆角不一样，切多切少都会变形（见 _make_background）。
+## "找当底的 stylebox 槽"的顺序放全局参数里：SysCfg.ui_background_slots（Config/SystemConfig.gd）。
 ## 本元素的配置（见 Config/UI/）。公共属性：position/size/content/children/events/visible/free，
 ## 各子类另有自己的（如菜单的 open_at / close_on_blur）。
 ## 被谁用：_apply_config、_build_children、on_event、UiSys._place（读 open_at）。
@@ -35,8 +33,8 @@ var control: Control
 var content: Variant = null
 
 ## 挂载对象（父 UI）：组装子元素时由父元素注入，即指令占位符 $parent 的指向。
-## 被谁用：_build_children / add_child_element（注入）、UIInteract.resolve_cmd（$parent 链）、
-##         on_event（事件冒泡）、UiSys._is_inside（判"指针是否在这个 UI 上"）。
+## 被谁用：_build_children / add_child_element（注入）、_resolve_cmd（$parent 链）、
+##         on_event（事件冒泡）、UIInteract_OpenClose._is_inside（判"指针是否在这个 UI 上"）。
 var parent: UIBase = null
 
 ## 子元素：build() 按 config["children"] 组装，每项 [child_name, ui_class, child_config]。
@@ -54,7 +52,7 @@ func _init(name_: String = "", config_: Dictionary = {}) -> void:
 
 ## 生成控件树并组装子元素，返回 control（供 UiSystem 挂载）。
 ## 顺序不能换：建控件 → 应用配置 → 刷内容 → 建子元素 → 补尺寸（子元素建完才知道内容多大）。
-## 被谁用：UiSys._build_open（独立 UI 与寄主型都走它）、_build_children / add_child_element（子元素）。
+## 被谁用：UIInteract_OpenClose._build_open（独立 UI 与寄主型都走它）、_build_children / add_child_element（子元素）。
 func build() -> Control:
 	control = _create_control()
 	_apply_config()
@@ -115,8 +113,11 @@ func swap_config(key_a: String, key_b: String) -> void:
 	if key_a == "" or key_b == "" or key_a == key_b:
 		push_warning("UIBase「%s」.swap_config: 键名不合法（%s / %s）" % [name, key_a, key_b])
 		return
-	if not config.has(key_a) and not config.has(key_b):
-		push_warning("UIBase「%s」.swap_config: %s 与 %s 都不在 config 里" % [name, key_a, key_b])
+	# 两套配置必须都写过：只写了一套时**什么都不做**（否则会把写了的那套换成 null，
+	# 等于把 events 整个抹掉——那种"点了菜单项结果交互全没了"的坑很难查）。
+	if not config.has(key_a) or not config.has(key_b):
+		push_warning("UIBase「%s」.swap_config: %s / %s 没有成套写在 config 里，不切换"
+			% [name, key_a, key_b])
 		return
 	var a: Variant = config.get(key_a)
 	var b: Variant = config.get(key_b)
@@ -218,19 +219,19 @@ func _apply_background(path: String) -> void:
 	control.add_theme_stylebox_override(slot, style)
 
 
-## 本元素用哪个 stylebox 槽当底：按 BACKGROUND_SLOTS 取第一个存在的；一个都没有 → 空串。
+## 本元素用哪个 stylebox 槽当底：按 SysCfg.ui_background_slots 取第一个存在的；一个都没有 → 空串。
 ## 被谁用：_apply_background。（UI_Panel 不走这里：它把图套在内层 PanelContainer 的 "panel" 上）
 func _background_slot() -> String:
 	if control == null:
 		return ""
-	for slot in BACKGROUND_SLOTS:
+	for slot in SysCfg.ui_background_slots:
 		if control.has_theme_stylebox(slot):
 			return slot
 	return ""
 
 
 ## 造一张九宫格背景样式（供 config["background"] 用）；路径为空/图片不存在/加载失败返回 null。
-## 九宫格的边距取 config["background_slice"]（不写就用 BG_SLICE）：
+## 九宫格的边距取 config["background_slice"]（**每张图各自指定**，不写 = 0 = 整张拉伸）：
 ## 每张图的圆角半径不一样（Unity 那边每张 sprite 也自带自己的九宫格参数），所以要能逐个指定。
 ## 被谁用：_apply_background（本类与 UI_Panel 的覆写）。
 func _make_background(path: String) -> StyleBoxTexture:
@@ -244,7 +245,7 @@ func _make_background(path: String) -> StyleBoxTexture:
 		return null
 	var style: StyleBoxTexture = StyleBoxTexture.new()
 	style.texture = tex
-	style.set_texture_margin_all(int(config.get("background_slice", BG_SLICE)))  # 九宫格：圆角不被拉伸
+	style.set_texture_margin_all(int(config.get("background_slice", 0)))  # 九宫格：圆角不被拉伸
 	return style
 
 
@@ -273,15 +274,16 @@ func _build_children() -> void:
 
 
 ## 唯一事件入口（PointerDetect 派发）：参数是事件名——状态驱动的事件就是配置里的状态名
-## （如 "Mouse Left"、"Mouse Left | Tick"；UI 不感知按键，键位只在状态层出现），
-## hover 变化用 PointerDetect.EVENT_POINTER_ENTER / EVENT_POINTER_EXIT。
+## （如 "Mouse Left"、"Mouse Left | Hold | Tick"；UI 不感知按键，键位只在状态层出现），
+## hover 变化用 QName.pointer_enter / QName.pointer_exit。
 ## 事件→指令：在 config["events"]（[事件名, 指令串] 列表）里按等值取指令串，取到才发送。
 ## 自己没配的事件**冒泡给父级**：于是"整块面板的行为"在它的子元素上同样生效
 ## （如菜单面板启用拖拽后，按住菜单项也能拖；$self/$parent 以配了指令的那个元素为基准）。
 ## 冒泡到根仍没有配置就什么都不做（元素没有隐式行为）。
 ## 用列表而不是字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），
 ## 且要加新事件只需往列表里加一项。
-## 占位符（$self/$parent 链）由 UIInteract.resolve_cmd 解析。
+## 占位符（$self/$parent 链/$event）由本类的 _resolve_cmd 解析——它是 on_event 的私有助手，
+## 不挂在 UIInteract 的指令面上（没有第二个使用者）。
 ## 被谁用：PointerDetect.key（状态事件）、PointerDetect.update_targets（enter/exit）、本函数自身（冒泡）。
 func on_event(event_name: Variant) -> void:
 	for entry in config.get("events", []):
@@ -291,17 +293,60 @@ func on_event(event_name: Variant) -> void:
 		var pair: Array = entry
 		if pair.size() >= 2 and pair[0] == event_name:
 			var cmd: String = pair[1]
-			Msg.send_cmd(UIInteract.resolve_cmd(cmd, self))
+			Msg.send_cmd(_resolve_cmd(cmd, str(event_name)))
 			return
 	if parent != null:
 		parent.on_event(event_name)
+
+
+## 解析指令串占位符（发送前调用）：
+##   $self   → 自身实例（$@ID）
+##   $parent → 父 UI；$parent.parent → 祖父，链式任意级。级别不足时警告并用可达的最高级 parent 替代；
+##             链尾若还跟着 ".xxx" 原样保留（成为 $@ID.xxx，指令系统会继续按表达式取该属性）。
+##   $event  → 触发这次事件的**事件名**（= 状态名 / Key 名），**自带引号**——名字里通常有空格
+##             （如 "Mouse Left | Hold"），指令要把整串当一个参数，所以这里补上引号；
+##             于是配置可以写 `UIInteract.drag $parent $event`，不必把状态名再抄一遍。
+## 被谁用：on_event（唯一调用方）。
+func _resolve_cmd(cmd: String, event_name: String = "") -> String:
+	cmd = cmd.replace("$self", "$@" + str(ID))
+	if event_name != "":
+		cmd = cmd.replace("$event", "\"" + event_name + "\"")
+	var out := ""
+	var i := 0
+	while i < cmd.length():
+		if cmd.substr(i, 7) == "$parent":
+			var j := i + 7
+			var levels := 1
+			while cmd.substr(j, 7) == ".parent":
+				levels += 1
+				j += 7
+			out += "$@" + str(_climb_parent(levels).ID)
+			i = j
+		else:
+			out += cmd[i]
+			i += 1
+	return out
+
+
+## 从自身沿 parent 向上爬 levels 级；不足时警告并返回可达的最高级。
+## 被谁用：_resolve_cmd。
+func _climb_parent(levels: int) -> UIBase:
+	var cur: UIBase = self
+	var climbed := 0
+	for i in levels:
+		if cur.parent == null:
+			push_warning("UIBase「%s」只向上 %d 级 parent（配置请求 %d 级），用可达的最高级替代" % [name, climbed, levels])
+			return cur
+		cur = cur.parent
+		climbed += 1
+	return cur
 
 
 ## 运行时追加一个子元素（如菜单里后加的关闭按钮），返回新元素。
 ## 生成控件 → 挂到 _content_box()/_free_box() → 记进 children → 交给 UiSys 登记
 ## （登记后才可能被指针命中；登记名规则在 UiSys）。
 ## 登记名走 UiSys 唯一那条规则（`挂载点登记名/名字`），所以"开出来的 UI"与"配置里的子元素"命名一致。
-## 被谁用：UiSys._build_open（挂到宿主/锚点下的 UI）、UIInteract.close_ui 的取件路径（UiSys.get_child_ui）。
+## 被谁用：UIInteract_OpenClose._build_open（挂到宿主/锚点下的 UI）、UIInteract_OpenClose.close 的取件路径（_child_ui）。
 func add_child_element(child_name: String, ui_class: String, child_config: Dictionary = {}) -> UIBase:
 	var child: UIBase = UIPreset.create_element(child_name, ui_class, child_config)
 	if child == null:
@@ -316,11 +361,3 @@ func add_child_element(child_name: String, ui_class: String, child_config: Dicti
 	box.add_child(child.control)
 	UiSys.register_child(self, child)
 	return child
-
-
-## 运行时追加一条事件绑定（如"启用拖拽"）。语义与 config["events"] 完全一致，随时可加。
-## 被谁用：UIInteract.enable_drag。
-func add_event(event_name: String, cmd: String) -> void:
-	var events: Array = config.get("events", [])
-	events.append([event_name, cmd])
-	config["events"] = events

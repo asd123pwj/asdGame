@@ -27,18 +27,26 @@ static func _init_message_node(id: String) -> void:
     _nodes[id] = MessageNode.new()
 
 ## identity_bound 为 true 时记入 identity_receivers（同样参与广播，identity 变更时会迁移）。
+## once 为 true 时记入一次性列表：**广播一次后自动移除**（临时监听用它，不必再手工 unlisten）。
 ## 返回 ID 本身（调用方要拿它去 unlisten）。
 ## 被谁用：MessageHub 的各 listen_*。
-static func listen(id: String, receiver: Callable, identity_bound: bool = false) -> String:
+static func listen(id: String, receiver: Callable, identity_bound: bool = false, once: bool = false) -> String:
     if not _nodes.has(id):
         _init_message_node(id)
-    if identity_bound:
-        _nodes[id].identity_receivers.append(receiver)
+    var node: MessageNode = _nodes[id]
+    if once:
+        if identity_bound:
+            node.once_identity_receivers.append(receiver)
+        else:
+            node.once_receivers.append(receiver)
+    elif identity_bound:
+        node.identity_receivers.append(receiver)
     else:
-        _nodes[id].receivers.append(receiver)
+        node.receivers.append(receiver)
     return id
 
-## 注销接收器：从普通与 identity 两个列表里都删（并清掉 identity 登记），空了就删节点。
+## 注销接收器：四个列表里都删（并清掉 identity 登记），空了就删节点。
+## 一次性接收器通常不用手工注销（send 调完自己就移除了），但要提前取消也得删得掉。
 ## 被谁用：MessageHub 的各 unlisten_*（也用于"换绑"时先退订）。
 static func unlisten(id: String, receiver: Callable) -> void:
     # 同步清理 identity 登记，避免 identity 之后出现时把已注销的接收器又迁回来
@@ -53,7 +61,10 @@ static func unlisten(id: String, receiver: Callable) -> void:
     var node: MessageNode = _nodes[real_id]
     node.receivers.erase(receiver)
     node.identity_receivers.erase(receiver)
-    if node.receivers.is_empty() and node.identity_receivers.is_empty():
+    node.once_receivers.erase(receiver)
+    node.once_identity_receivers.erase(receiver)
+    if node.receivers.is_empty() and node.identity_receivers.is_empty() \
+            and node.once_receivers.is_empty() and node.once_identity_receivers.is_empty():
         _nodes.erase(real_id)
 
 
@@ -82,17 +93,23 @@ static func rebind_identity(identity: String, char_: Character) -> void:
         _move_identity_receiver(old_id, new_id, receiver)
         item[0] = new_id
 
-## 把 receiver 从 old_id 的 identity_receivers 搬到 new_id 的 identity_receivers。
+## 把 receiver 从 old_id 的 identity 列表搬到 new_id 的 identity 列表（一次性身份接收器也照样搬）。
 ## 被谁用：rebind_identity。
 static func _move_identity_receiver(old_id: String, new_id: String, receiver: Callable) -> void:
+    var was_once: bool = false
     if _nodes.has(old_id):
         var old_node: MessageNode = _nodes[old_id]
+        was_once = old_node.once_identity_receivers.has(receiver)
         old_node.identity_receivers.erase(receiver)
-        if old_node.receivers.is_empty() and old_node.identity_receivers.is_empty():
+        old_node.once_identity_receivers.erase(receiver)
+        if old_node.receivers.is_empty() and old_node.identity_receivers.is_empty() \
+                and old_node.once_receivers.is_empty() and old_node.once_identity_receivers.is_empty():
             _nodes.erase(old_id)
     _init_message_node(new_id)
-    if not _nodes[new_id].identity_receivers.has(receiver):
-        _nodes[new_id].identity_receivers.append(receiver)
+    var new_node: MessageNode = _nodes[new_id]
+    var target_list: Array[Callable] = new_node.once_identity_receivers if was_once else new_node.identity_receivers
+    if not target_list.has(receiver):
+        target_list.append(receiver)
     _aliases[old_id] = new_id
 
 ## 顺着别名链解析出节点当前的真实 ID。
@@ -106,17 +123,28 @@ static func _resolve_alias(id: String) -> String:
 
 ## ---------- 收发 ----------
 
-## 把消息发给该 ID 的所有接收器，返回所有返回值（按登记顺序）。
+## 把消息发给该 ID 的所有接收器（普通 → identity → 一次性 → 一次性身份），返回所有返回值（按登记顺序）。
 ## 同时把消息记在节点上（get_message 可取"上一次的消息"）。
 ## 被谁用：MessageHub 的所有 send_*。没有该节点就返回空数组（没人听，不算错误）。
 static func send(id: String, message: Variant) -> Array:
     if not _nodes.has(id):
         return []
-    _nodes[id]["message"] = message
+    var node: MessageNode = _nodes[id]
+    node.message = message
     var result := []
-    for receiver in _nodes[id].receivers:
+    for receiver in node.receivers:
         result.append(receiver.call(message))
-    for receiver in _nodes[id].identity_receivers:
+    for receiver in node.identity_receivers:
+        result.append(receiver.call(message))
+    # 一次性接收器：**先摘下来再调**（回调里再注册同一个监听不会被误删），
+    # 回调里新注册的一次性监听留到下一次广播（也就不会自我循环）。
+    var once_list: Array[Callable] = node.once_receivers.duplicate()
+    node.once_receivers.clear()
+    for receiver in once_list:
+        result.append(receiver.call(message))
+    var once_identity_list: Array[Callable] = node.once_identity_receivers.duplicate()
+    node.once_identity_receivers.clear()
+    for receiver in once_identity_list:
         result.append(receiver.call(message))
     return result
 
