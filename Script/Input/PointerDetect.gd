@@ -5,10 +5,11 @@ extends BaseClass
 ## 本类**只提供执行函数，不监听按键**：按键→状态→SystemShortcut→执行指令的链路
 ## 由 Character 的 Status 与 SystemShortcut 声明（状态满足即执行对应 CmdSys 指令）。
 ##
-## **事件派发只有一个入口 `key(status_name)`**：不区分 press/hold/release/move，也不碰键位——
-## 键位只存在于状态层（statuses 的 keys），这里只管"哪个状态满足了"，把它当事件名派发给 UI。
-## 参数由快捷指令串给出（如 `PointerDetect.key "Mouse Left"`），因此
-## "增删/改绑多功能键"只需改配置，不必动本文件。
+## **事件派发分两类**（都不碰键位：键位只存在于状态层 statuses 的 keys，增删/改绑只改配置）：
+##   ① 指针自己的三件事——`Pointer Enter` / `Pointer Exit`（hover 变化时）与 `Pointer Move`
+##      （本帧位移不为 0 时）——由本文件的 `_process` **直接派发**，不占状态、也不占快捷指令；
+##   ② 状态类事件（按键的 press/hold/release，如 "Mouse Left"）：由状态层 → 快捷指令
+##      `PointerDetect.key "<状态名>"` 调进来，这里把它当事件名派发给当前 hover 的 UI。
 ## 指针移动**不锁定目标**：每次移动都派发给当前 hover 的 UI，由它 config 里配的指令决定做什么。
 
 ## 指针当前目标
@@ -19,13 +20,20 @@ static var hover_char: Character = null
 ## 指针当前目标地图格（占位功能，暂无人使用）。
 static var map_position: Vector2i = Vector2i.ZERO
 ## 上次的 hover_ui，用于判 hover 变化并发 enter/exit
-## 被谁用：update_targets。
+## 被谁用：_process。
 static var _prev_hover_ui: UIBase = null
+## 上一帧派发过事件（key）⇒ 下一次刷新命中时顺手判一次失焦关闭。
+## 为什么不在 key 里当场判：那时 hover 还是**上一次刷新**的结果，而菜单往往是这次派发里刚开出来的
+## ⇒ 会把它当成"指针在外面"当场关掉（表现为"关过一次之后就再也开不出来"）。
+## 也不能改成"派发完再刷一次命中"：**命中检测一帧只该有一次**（就是下面 _process，早于派发），
+## 多刷一次除了白跑，还会让 enter/exit 之类的派发在同帧里出现两次、顺序变乱。
+## 被谁用：key（置位）、_process（消费）。
+static var _blur_pending: bool = false
 
 ## hover 变化的两个内置事件名放在 QName 里（Config/QuickName.gd 的 pointer_enter / pointer_exit）：
-## 它们不是配置里的状态，由 update_targets 判定后直接派发；
+## 它们不是配置里的状态，由 _process 判定后直接派发；
 ## UI 侧在 config["events"] 里绑这两个名字即可。
-## 被谁用：update_targets（派发）。
+## 被谁用：_process（派发）。
 
 
 func _init() -> void:
@@ -33,10 +41,11 @@ func _init() -> void:
 
 
 ## 刷新指针下的目标；hover_ui 变化时对新旧目标发 enter/exit。
-## 由 Tick 状态 → 快捷指令 `PointerDetect.update_targets` 每帧驱动
-## （hover 展开子菜单依赖它，所以这里会每帧被调用）。
-## 被谁用：Tick 状态的快捷指令；以及 key() 里"派发完按键后补刷一次"。
-static func update_targets() -> void:
+## **一帧只跑这一次**（由 InputSys._process 在派发按键之前调，所以派发用的就是这个 hover）。
+## （hover 展开子菜单依赖它，所以这里会每帧被调用。）
+## 尾巴上顺手收尾"派发过的失焦关闭"（见 _blur_pending）：那里必须晚于派发、且复用这一次检测结果。
+## 被谁用：InputSys._process。
+static func _process(_delta: float) -> void:
 	hover_ui = _ui_at(InputSys.mouse_position)
 	hover_char = _char_at()
 	map_position = _map_at()
@@ -47,12 +56,23 @@ static func update_targets() -> void:
 		if hover_ui != null:
 			hover_ui.on_event(QName.pointer_enter)
 		_prev_hover_ui = hover_ui
+	# 指针移动：本帧位移不为 0 就算"动过"，派发 `Pointer Move`（和上面的 enter/exit 一样直接派发）。
+	# 位移由 InputSys._input 累计、帧末清零，所以这里看到的正是"这一帧移动了没有"。
+	if InputSys.mouse_delta != Vector2.ZERO:
+		if hover_ui != null:
+			hover_ui.on_event(QName.pointer_move)
+	# 上一帧派发过（key）就顺手收尾：配了 close_on_blur 的 UI，指针不在它上面就关掉。
+	# **用的就是刚算出来的 hover**：判定晚于派发，这次派发里刚开出来的菜单才不会被误关。
+	if _blur_pending:
+		_blur_pending = false
+		UIInteract_OpenClose.close_blur_ui(hover_ui)
 
 
 ## 状态满足后的统一派发入口：把状态名当事件名派发给当前 hover 的 UI，
 ## UI 侧按状态名等值匹配 config["events"] 里的指令。
 ## 不区分 press/hold/release/move，也不涉及键位——"哪个状态满足了"已由状态层判定。
-## 命中刷新由每帧的 `PointerDetect.update_targets`（Tick 状态驱动）负责，这里不重复刷新。
+## 命中刷新由每帧的 `PointerDetect._process` 负责（InputSys._process 里，早于这里的派发）；
+## **这里不刷新命中**：一帧只检测一次，判定失焦关闭也放到下一次刷新里做（见 _blur_pending）。
 ## **"按住期间每帧要做的事"不走这里**：指针会离开元素（如等比缩放），那类交给 `AutoSys`
 ## （Script/Auto/Auto.md：挂在状态上，状态满足期间每帧执行指令，不满足自动删）——
 ## 所以不需要"把松开事件送到元素手上"这类捕获机制，指针层也不参与收尾。
@@ -64,11 +84,10 @@ static func key(status_name: String) -> void:
 		# 由 set_top 内部去重，不会每帧重排）。移出判断是因为悬停不该改前后层。
 		if not status_name in [QName.pointer_move, QName.pointer_enter, QName.pointer_exit]:
 			UIInteract_SetTop.set_top(hover_ui)
-	# 按键后清理：配了 close_on_blur 的 UI（菜单就是这种，没有任何专属类），指针不在它上面就关掉。
-	# **必须先刷新一次命中**：这类 UI 常是刚在这次调用里打开的（右键开菜单），
-	# 而 hover 是 Tick 每帧刷的（= 上一帧的指针位置）；不刷新就会拿旧 hover 判它 ⇒ 新菜单当场被关掉。
-	update_targets()
-	UIInteract_OpenClose.close_blur_ui(hover_ui)
+	# 失焦关闭（配了 close_on_blur 的 UI，菜单就是这种）不在这儿判：此刻 hover 还是上一次刷新的结果，
+	# 而 UI 常在这次派发里刚被 open 出来（右键开菜单）⇒ 只记一笔，交给下一次命中刷新
+	# （_process 的尾巴）用新 hover 判——命中检测一帧只有那一次。
+	_blur_pending = true
 
 
 ## 指针命中的 UI —— **沿 Godot 的控件树走**（不再遍历登记表）：
@@ -83,7 +102,7 @@ static func key(status_name: String) -> void:
 ## 要"元素极多也快"得靠空间索引（按矩形分桶之类），不是这里剪一刀。
 ## 用 is_visible_in_tree：父 UI 关闭(hide)后子元素也应视为不可命中。
 ## 注意 Rect2 退化（宽或高为 0）时永远命不中——UI 的 size 必须补足（见 UIBase._fit_size）。
-## 被谁用：update_targets。
+## 被谁用：_process。
 static func _ui_at(pos: Vector2) -> UIBase:
 	return _hit_in(UiSys.root, pos)
 
@@ -106,6 +125,7 @@ static func _hit_in(node: Node, pos: Vector2) -> UIBase:
 		# "does not have any 'meta' values with the key 'ui_base'"）
 		if not c.has_meta(UIBase.META_UI):
 			continue
+		@warning_ignore("unsafe_cast")
 		var ui: UIBase = c.get_meta(UIBase.META_UI) as UIBase
 		if ui != null and c.get_global_rect().has_point(pos):
 			return ui

@@ -20,7 +20,7 @@
   一帧内多个 MouseMotion 事件累加，拖拽类指令按帧消费一次，因此指针停下时位移为 (0,0)（不漂），快移时拿到本帧总位移（不丢距离）。
   **清零只能在帧末**：若放在 `InputSys._process` 里，晚于它才被 Tick 触发的拖拽就永远读到 (0,0)。
 - `static _send_key_status(key, isDown)`：按下→(首按则)入集合 + `Msg.send_key_press`；抬起→出集合 + `Msg.send_key_release`。
-- 鼠标移动：`keys_holding` 非空（拖拽中）才 `Msg.send_pointer_move()`，单纯悬停不发——"Pointer Move" 状态的语义即"按住拖动中的移动"。
+- 鼠标移动：这里只累计 `mouse_delta` / `mouse_position`，**不发事件**——`Pointer Move` 由 `PointerDetect._process` 判（本帧位移不为 0 就派发给 hover 的 UI，与 Pointer Enter / Pointer Exit 一样不经状态层）。
 - 供谁调用：被 `Sys._input/_process` 转发；`keys_holding` 被 InputCombo/其它读。
 
 ## InputCombo.gd（extends BaseClass）
@@ -35,11 +35,11 @@
 - 职责：监控指针目标，把交互键派发到命中目标（UI 走 UI 操作，角色/地图暂忽略，留待扩展）。
 - **只提供执行函数，不监听按键**：按键→状态→SystemShortcut→指令 的链路由 `Character` 的 Status/SystemShortcut 声明（见 `Character/SystemShortcut/SystemShortcut.md`），此处不再 `Msg.listen_key_*`。
 - 静态状态：`hover_ui`(指针下 UI) / `hover_char`(指针下角色) / `map_position`(指针地图格，逻辑坐标 y 向上)。
-- **按需计算**：`static update_targets()` 按 `InputSys.mouse_position` 刷新 `hover_ui/hover_char/map_position`；hover 变化时对新旧 UI 派发 `QName.pointer_enter / QName.pointer_exit`（两个内置事件名，放在 Config/QuickName.gd）。
+- **按需计算**：`static _process(delta)` 按 `InputSys.mouse_position` 刷新 `hover_ui/hover_char/map_position`；hover 变化时对新旧 UI 派发 `QName.pointer_enter / QName.pointer_exit`（两个内置事件名，放在 Config/QuickName.gd）。**一帧只跑这一次**：由 `InputSys._process` 在派发按键之前调，尾巴上再顺手收尾一次失焦关闭（`PointerDetect._blur_pending`，见 UI.md）。
 - 执行函数只有一个：`static key(status_name)`（指令串 `PointerDetect.key "状态名"`）：
   - **不区分 press/hold/release/move，也不涉及键位**——"哪个状态满足了"由状态层判定，这里只把状态名当事件名派发。
   - **派发目标**：当前 hover 的 UI —— 指针不锁定（按住后指针会离开元素，所以"按住期间的事"不走这里）。
-  - 命中刷新由每帧 Tick 的 `update_targets` 负责（不再在派发前重复刷新）。
+  - 命中刷新由 `InputSys._process` 里的 `PointerDetect._process` 负责（一帧一次、早于派发）；**派发里不再刷新命中**。
   - 命中 UI 时调 `ui.on_event(状态名)`，UI 侧按状态名等值匹配 `config["events"]` 里的指令。
   - **"按住期间每帧要做的事"不走这里**：走 `AutoSys`（`Script/Auto/Auto.md`：挂在状态上、每帧执行指令、状态不满足自动删）——指针层不参与，也就不需要捕获机制。
 - 命中判定：UI 按 `UiSys.uis` 加入顺序取最上层、`control.get_global_rect()` 矩形命中；角色按身体 `CollisionShape2D` 矩形；地图按世界坐标 / `TileSpritePreset.tileset.tile_size` 换算（y 取反）。

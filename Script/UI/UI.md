@@ -146,7 +146,8 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - 元素**不连接任何引擎信号**（含 `Button.pressed`）：点击/拖动等全部由 PointerDetect 命中 → 事件 → `on_event` → 指令/消息 派发，输入链路唯一。
 
 ## PointerDetect（Script/Input/PointerDetect.gd）
-- 两个入口：`update_targets()`（每帧刷新 hover，Tick 快捷驱动）与 `key(status_name)`（把状态名当事件名派发给 hover 的 UI）；状态→SystemShortcut→指令那条链在配置里。
+- 两个入口：`_process(delta)`（刷新 hover，由 `InputSys._process` 在派发之前调——**一帧只检测这一次**）与 `key(status_name)`（把状态名当事件名派发给 hover 的 UI）；状态→SystemShortcut→指令那条链在配置里。
+- **指针自己的三件事由 `_process` 直接派发**（不占状态、也不占快捷指令）：`Pointer Enter` / `Pointer Exit`（hover 变化时）与 `Pointer Move`（本帧 `InputSys.mouse_delta` 不为 0 时，即"这一帧动过"）。按键类事件仍走状态层 → `PointerDetect.key "<状态名>"`。
 - **指针不锁定**：事件永远派发给"当前 hover 的 UI"。所以"按住期间还要继续做的事"（等比缩放）不能靠它，走 `AutoSys`（挂在状态上，与指针在哪无关，状态结束自动停）；也就不需要"把松开事件送到元素手上"这类机制。
 - **命中沿 Godot 的控件树走**（`PointerDetect._ui_at`）：从 UI 根的孩子（窗口）**倒序**开始 → 每层 Control 也倒序（同级后画的在上面）→ 进一个 Control 先问它的孩子（孩子画在父之上），都不命中才算它自己。**不做"祖先矩形剪枝"**：自由定位元素（叠加层里那些）本来就画在父矩形之外，菜单还会伸出宿主，按父矩形剪掉子树 = 那些地方点不到（实测踩过：菜单被叠加层剪掉，点在菜单上却命中面板的文本）。反查 UIBase 用建控件时挂在 `control` 上的 meta（`UIBase.META_UI`），走到没挂 meta 的内部控件（PanelContainer/VBox/文本内部的 Label）就沿用外层那个元素。于是**命中顺序 ≡ 绘制顺序**，`uis` 只是"名字 → 实例"的字典（顺序无含义），`set_top` 也只需 `move_to_front()`。
 - 用 `control.is_visible_in_tree()`：父 UI 关闭(hide)后子元素不再可命中。
@@ -189,8 +190,10 @@ var values: Array[Array] = [
 - **菜单项里的"开关"**（如 `MenuEdit/CloseToggle`）：普通 `UI_Label` 上写两套配置，`"Mouse Left"` 一条串里做三件事——`open <宿主> CloseButton <宿主>`（另一套里是 `close <宿主> CloseButton`）\v `swap_config $self events events_2` \v `swap_config $self content content_2`，于是点第一次开关闭按钮、点第二次关它，文字也跟着换。关闭按钮就是 `Config/UI/UIPreset_Basic.gd` 里的普通预设（`open_at = Enums.OpenAt.ANCHOR_TOP_RIGHT_IN`：开在锚点**内部**右上角，按自己宽度内缩）。
 - **关掉 = 隐藏（实例复用）**：关闭统一走 `UIInteract.close`（`hide()` + 广播）；**父 UI 一 hide，挂在它下面的子 UI 随可见性继承一起不可见**，所以不需要"关父菜单时连子菜单一起关"这种递归。`open` 按登记名查——有就"显示 + 重新摆位"，没有才现场创建；同一登记名只有一份，隐藏的实例不参与指针命中、也不算"开着"。
 - **隐藏后怎么回来**：`close` 只是 `hide()`，实例还在 `uis` 里，所以重开不用重建——重开统一走 `UIInteract_OpenClose.open`（显示 + 按 `open_at` 摆位，不重建控件；指令形式就是 `UIInteract.open`）。**注意 `PointerDetect` 用 `is_visible_in_tree()` 判命中，隐藏的 UI 再也收不到任何事件**，所以重开的触发不能写在它自己身上（"再点一下"是点不到的），必须来自它仍可见的父级、或系统级的状态/快捷指令。
-- **失焦关闭（纯配置驱动）**：谁写了 `close_on_blur = true` 谁就有这个行为（与"是不是菜单"无关）。候选不是遍历登记表，而是 **open 登记、close 摘掉的一个小列表**（`UIInteract_OpenClose._blur_uis`：只有开出来的 UI 才可能配它，关过再开自动回来）。`PointerDetect.key` 派发完按键事件后就两行：`update_targets()` 刷新命中（这类 UI 常是刚在指针处打开的，用旧 hover 会误判成"外面"）→ `UIInteract_OpenClose.close_blur_ui(hover_ui)`：遍历候选，指针不在它（或它的子孙元素）上就 `close` 关掉。
-  - **尺寸为 0 的先不判**：开与判在同一次调用里（先派发事件 → 事件里 open 菜单 → 紧接着判失焦），而这一帧布局还没跑，`get_global_rect()` 是退化矩形（实测高 0，下一帧才 62）⇒ 直接跳过这一条，否则刚开出来的菜单会被自己这一帧的判定误关（表现为"第一次能开、关掉后再也开不了"）。
+- **失焦关闭（纯配置驱动）**：谁写了 `close_on_blur = true` 谁就有这个行为（与"是不是菜单"无关）。候选不是遍历登记表，而是 **open 登记、close 摘掉的一个小列表**（`UIInteract_OpenClose._blur_uis`：只有开出来的 UI 才可能配它，关过再开自动回来）。
+  - **判定晚于派发，且不另跑命中检测**：`key()` 派发时只置一个标记（`PointerDetect._blur_pending`），判定放在**下一次命中刷新**（`PointerDetect._process` 的尾巴）里做。两个理由：① 命中的那一刻，菜单往往正在被这次派发 open 出来（右键开菜单），拿"上次刷新的 hover"判会把它当成"指针在外面"当场关掉（表现为"关过一次之后就再也开不出来"）；② 命中检测一帧只该有一次（`InputSys._process` 里那次，早于派发），派发完再刷一遍既白跑，又会让 enter/exit 在同帧里派发两次。
+  - 判定本身：`UIInteract_OpenClose.close_blur_ui(hover_ui)` 遍历候选，指针不在它（或它的子孙元素）上就 `close` 关掉。
+  - **尺寸为 0 的先不判**（`get_global_rect()` 是退化矩形 ⇒ 会被误判成"指针在外面"）：判定挪到下一次刷新后这已经是第二道保险（那时布局早跑完了），留着防"控件还没进树/还没布局"的边缘情况。
 
 ## 键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）
 

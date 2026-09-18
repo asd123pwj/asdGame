@@ -61,8 +61,8 @@ static var _we: Dictionary[String, StatusPreset] = {}
 ## buffs: 支持Present, Absent
 ## statuses: 支持Satisfied, Unsatisfied
 ## interactions: 支持Present, Absent, Act
-## keys: 支持Enums.KeyStatus.PRESS, Enums.KeyStatus.HOLD, Enums.KeyStatus.RELEASE,
-##       Enums.KeyStatus.POINTER_MOVE（指针移动不绑键位，键值统一填 MOUSE_BUTTON_NONE 占位）
+## keys: 支持Enums.KeyStatus.PRESS, Enums.KeyStatus.HOLD, Enums.KeyStatus.RELEASE
+##       （指针类事件不进状态层：Pointer Enter / Exit / Move 由 PointerDetect._process 直接派发给 UI）
 ## time: name支持Year, Month, Xun, Aay, Hour, Tick
 ##       condition支持Advance
 ## with_detect: 使用外部检测信号，用send_status_detected发送
@@ -373,17 +373,6 @@ func listen(char_: Character) -> void:
                 _key_triggers[char_][listener.name] = false
                 execute(char_)
             msg_ID = Msg.listen_key_release(key_internal, trigger_func)
-            _trigger_funcs[char_][msg_ID] = trigger_func
-
-        elif listener.match_type == Enums.KeyStatus.POINTER_MOVE:
-            # 指针移动不绑定具体按键，键值约定用 MOUSE_BUTTON_NONE 占位
-            trigger_func = func(_msg):
-                latest_message[char_] = _msg
-                _key_triggers[char_][listener.name] = true
-                execute(char_)
-                _key_triggers[char_][listener.name] = false
-                execute(char_)
-            msg_ID = Msg.listen_pointer_move(trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
         else:

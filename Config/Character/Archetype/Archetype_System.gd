@@ -18,7 +18,7 @@ var values: Array[Dictionary] = [
     {
         "name": "输入监控",
         "statuses": [
-            {"name": QName.pointer_move, "keys": [[MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE]],},
+            # 指针移动不在状态层：它和 Pointer Enter / Pointer Exit 一样，由 PointerDetect._process 直接派发
             # 一个鼠标键三个状态：按下 / 按住 / 松开
             {"name": QName.mouseLeft, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.HOLD]],},
             # {"name": QName.mouseLeft_press, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.PRESS]],},
@@ -36,14 +36,14 @@ var values: Array[Dictionary] = [
     {
         "name": "指针交互",
         "shortcuts": [
-            # 每帧刷新指针目标（hover 变化时发 enter/exit），菜单 hover 展开依赖它
-            ["Pointer Refresh", QName.tick, "PointerDetect.update_targets"],
+            # 每帧刷新指针目标（hover 变化时发 enter/exit），菜单 hover 展开依赖它：
+            # 已挪进 InputSys._process（在派发按键之前，一帧只检测这一次），不再占一条 Tick 快捷
+            # ["Pointer Refresh", QName.tick, "PointerDetect._process"],
             # 统一入口 PointerDetect.key <状态名>：状态名 = 上面 statuses 的 name，也是 UI 侧 config["events"] 的事件名
-            [QName.pointer_move, QName.pointer_move, "PointerDetect.key \"" + QName.pointer_move + "\""],
             [QName.submit, QName.submit, "PointerDetect.key \"" + QName.submit + "\""],
-            [QName.mouseLeft_press, QName.mouseLeft_press, "PointerDetect.key \"" + QName.mouseLeft_press + "\""],
+            # [QName.mouseLeft_press, QName.mouseLeft_press, "PointerDetect.key \"" + QName.mouseLeft_press + "\""],
             [QName.mouseLeft, QName.mouseLeft, "PointerDetect.key \"" + QName.mouseLeft + "\""],
-            [QName.mouseLeft_release, QName.mouseLeft_release, "PointerDetect.key \"" + QName.mouseLeft_release + "\""],
+            # [QName.mouseLeft_release, QName.mouseLeft_release, "PointerDetect.key \"" + QName.mouseLeft_release + "\""],
             [QName.mouseRight, QName.mouseRight, "PointerDetect.key \"" + QName.mouseRight + "\""],
         ],
     },

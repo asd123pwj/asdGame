@@ -43,9 +43,10 @@ enum KeyStatus{
     HOLD,
     PRESS,
     RELEASE,
-    POINTER_MOVE, # 不支持键位绑定，键值统一用 MOUSE_BUTTON_NONE 占位（任意占位均可，项目内保持一致）
-    POINTER_ENTER, # 不支持键位绑定，键值统一用 MOUSE_BUTTON_NONE 占位（任意占位均可，项目内保持一致）
-    POINTER_EXIT, # 不支持键位绑定，键值统一用 MOUSE_BUTTON_NONE 占位（任意占位均可，项目内保持一致）
+    POINTER_MOVE, # 指针移动：不绑键位。**不经状态层**——由 PointerDetect._process 直接派发（位移不为 0 时）
+    POINTER_ENTER, # hover 进入：不绑键位，同上（由 PointerDetect._process 直接派发）
+    POINTER_EXIT, # hover 离开：不绑键位，同上（由 PointerDetect._process 直接派发）
+    # 注意：这三个指针值即使暂时没有使用者也别删——删中间值会让已存盘 json 里的枚举整数串位（见 SysCfg.RESET）。
 }
 
 ## UI 的开启位置策略（由被开启 UI 自己的 config["open_at"] 声明，见 UIInteract_OpenClose.open/_place）。

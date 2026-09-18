@@ -14,7 +14,7 @@
 | `Utils.gd` | 通用小工具(字典嵌套读写)。 |
 
 ## Enums.gd
-- `enum Code`(NULL/OK/NOT_MODIFIED/FORBIDDEN/NOT_FOUND)、`ValueType`(BASE/CUR/MIN/FINAL/MULTIPLIER)、`ModificationMethod`(ADD/SUBTRACT/...)、`KeyStatus`(HOLD/PRESS/RELEASE/POINTER_MOVE/POINTER_ENTER/POINTER_EXIT；指针类事件不绑键位，键值用 `MOUSE_BUTTON_NONE` 占位)、`LayerType`(地图层)。
+- `enum Code`(NULL/OK/NOT_MODIFIED/FORBIDDEN/NOT_FOUND)、`ValueType`(BASE/CUR/MIN/FINAL/MULTIPLIER)、`ModificationMethod`(ADD/SUBTRACT/...)、`KeyStatus`(HOLD/PRESS/RELEASE/POINTER_MOVE/POINTER_ENTER/POINTER_EXIT；指针类不绑键位、也不进状态层——由 `PointerDetect._process` 直接派发给 UI)、`LayerType`(地图层)。
 - `static StrValueType`、`StrLayerType` 字符串数组(配/显用)；`layer_can_match/layer_incompatible`(地图层匹配/不兼容表)。
 - 供谁调用：全项目统一枚举。
 

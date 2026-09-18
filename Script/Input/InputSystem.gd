@@ -6,7 +6,7 @@ extends BaseClass
 ## 被谁用：Sys._input 把引擎事件转进来；PointerDetect / UIInteract / 各状态读这里的鼠标数据。
 
 ## 指针当前位置（屏幕坐标）。
-## 被谁用：PointerDetect.update_targets（命中判定）、UiSys._place（POINTER 策略开菜单）。
+## 被谁用：PointerDetect._process（命中判定）、UIInteract_OpenClose._place（POINTER 策略开菜单）。
 static var mouse_position: Vector2 = Vector2.ZERO
 ## 本帧累计的指针位移：一帧内多个 MouseMotion 事件相加，**帧末**由 _clear_mouse_delta 清零
 ## （_process 里用 call_deferred 把它排到帧末，见下）。
@@ -15,7 +15,7 @@ static var mouse_position: Vector2 = Vector2.ZERO
 ##   一帧内多个事件只用最后一个 → 快移时丢距离（跟不上光标）。
 ## "一帧"= 一次 _process 覆盖的范围：_input 累计 → InputSys._process（按键类消费）
 ## → TimeSys._process（Tick 类消费，拖拽走这里）→ **本帧所有 _process 都跑完**（deferred 队列 flush）才清零。
-## 被谁用：UIInteract.drag。
+## 被谁用：UIInteract.drag（拖拽按帧消费位移）、PointerDetect._process（位移不为 0 就派发 Pointer Move）。
 static var mouse_delta: Vector2 = Vector2.ZERO
 ## 是否处于"编辑输入"模式（要录键位时置 true，避免输入的键被当成游戏按键）。
 ## 被谁用：需要录键位的界面/流程（如改绑快捷键）。
@@ -27,8 +27,8 @@ static var keys_holding: Array[Variant] = []
 func _init() -> void:
     pass
 
-## 引擎输入入口（由 Sys._input 转发）：键/鼠标键 → 按键消息；鼠标移动 → 累计位移。
-## 只按住的键才发指针移动（单纯悬停不算拖拽）。
+## 引擎输入入口（由 Sys._input 转发）：键/鼠标键 → 按键消息；鼠标移动 → 只累计位移。
+## 要不要发 `Pointer Move` 由 PointerDetect._process 判（本帧位移不为 0 就派发给 hover 的 UI）。
 ## 被谁用：Sys._input。
 static func _input(event: InputEvent):
     @warning_ignore_start("unsafe_property_access")
@@ -39,9 +39,7 @@ static func _input(event: InputEvent):
     elif event is InputEventMouseMotion:
         mouse_delta += event.position - mouse_position
         mouse_position = event.position
-        # 只有按住某键时才算"拖拽中的移动"（单纯悬停不该触发 Pointer Move 状态/拖拽类指令）
-        if not keys_holding.is_empty():
-            Msg.send_pointer_move()
+        # 这里只累计，不发事件：要不要发 `Pointer Move` 由 PointerDetect._process 判（位移不为 0 就发）
         # print(mouse_position)
     @warning_ignore_restore("unsafe_property_access")
 
@@ -49,6 +47,7 @@ static func _input(event: InputEvent):
 ## 顺带把"清空本帧指针位移"排到帧末（见 _clear_mouse_delta）：所以 Sys._process 那边不用再收尾。
 ## 被谁用：Sys._process。
 static func _process(_delta: float) -> void:
+    PointerDetect._process(_delta)
     for key in keys_holding:
         Msg.send_key_hold(key)
     _clear_mouse_delta.call_deferred()

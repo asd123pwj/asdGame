@@ -66,6 +66,10 @@ static func close(target: UIBase, preset_name: String = "") -> void:
 	if preset_name != "":
 		ui = _child_ui(ui, preset_name)
 		if ui == null:
+			# 分开两种情况：预设名压根不存在 ⇒ 指令写错了（要提醒，不然静默）；
+			# 预设存在、只是没开过 ⇒ 幂等（什么都不做是对的，不吵）
+			if UIPreset.get_(preset_name) == null:
+				push_warning("UIInteract.close: 没有「%s」这个预设（名字写错了吗？见 Config/UI/）" % preset_name)
 			return
 	if ui.control != null:
 		ui.control.hide()
@@ -134,12 +138,12 @@ static func _place(ui: UIBase, anchor: UIBase) -> void:
 ## （子菜单挂在触发它的菜单项下，见 UiSys 文件头的挂载规则），所以鼠标在子菜单上时，
 ## 父菜单沿链就能找到自己 ⇒ 不关；父 UI 一 hide，链上的子 UI 也随可见性继承一起不可见。
 ## 实现上**边遍历边 close 会改到 `_blur_uis`**（close 里要摘掉候选），所以先收集再关。
-## 被谁用：PointerDetect.key（派发完按键事件、刷新命中之后）。
+## 被谁用：PointerDetect._process（每帧刷新命中之后，且仅当上一帧派发过事件）。
 static func close_blur_ui(hover_ui: UIBase) -> void:
 	var closing: Array[UIBase] = []
 	for ui: UIBase in _blur_uis:
-		# 尺寸还没算出来的（布局还没跑）先当它"还在指针下"：否则 get_global_rect() 是退化矩形
-		# → 误判成"指针在外面" → 同一帧就把它自己关掉（"第一次能开、之后再也开不了"就是这么来的）。
+		# 尺寸还没算出来的先当它"还在指针下"：布局没跑时 get_global_rect() 是退化矩形，
+		# 会被误判成"指针在外面"当场关掉。（判定已挪到下一次刷新，这里算第二道保险。）
 		var rect: Rect2 = ui.control.get_global_rect()
 		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 			continue

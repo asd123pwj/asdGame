@@ -20,6 +20,10 @@ static func switch_value(target: UIBase, key: String, value: Variant) -> void:
 	if ui == null:
 		return 
 	var raw: Variant = ui.config.get(key)
+	if raw == null and not ui.config.has(key):
+		# 键名写错（如 "event" ↔ "events"）最典型：照旧按"新建列表"处理，但要说一声——
+		# 否则指令写错了什么反应都没有，只能靠猜
+		push_warning("UIInteract.switch_value: config 里没有 \"%s\" 这个键（写错了吗？按新建列表处理）" % key)
 	if raw != null and not (raw is Array):
 		push_warning("UIInteract.switch_value: config[\"%s\"] 不是列表（是 %s），不切换"
 			% [key, type_string(typeof(raw))])

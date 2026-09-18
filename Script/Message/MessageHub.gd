@@ -136,9 +136,8 @@ static func listen_advance_hour(callback: Callable, once: bool = false) -> Strin
 ## 被谁用：InputSys._send_key_status（send_key_press/release）、InputSys._process（send_key_hold）；
 ##          listen 侧主要是 StatusPreset 的按键监听与 InputCombo。
 """ ---------- Single Key Basic ---------- """
-## 输入域 ID 规则：["KEY", 键值, 状态]（键值用 Godot 常量；指针类事件键值统一 MOUSE_BUTTON_NONE 占位）。
-## 被谁用：下面 send_key_*/send_pointer_move 与 listen_key_*/listen_pointer_move；再由
-##          PointerDetect/StatusPreset/InputCombo 等上层调用。
+## 输入域 ID 规则：["KEY", 键值, 状态]（键值用 Godot 常量）。
+## 被谁用：下面 send_key_* / listen_key_*；再由 InputSys / StatusPreset / InputCombo 等上层调用。
 static func _format_input(key: Variant, status: Enums.KeyStatus) -> String:
     if typeof(key) == TYPE_ARRAY:
         return format_ID(["Input", " ".join(key), str(status)])
@@ -157,8 +156,9 @@ static func _listen_input(key: Variant, status: Enums.KeyStatus, callback: Calla
         InputCombo.add_if_not_exist(key)
     return listen(_format_input(key, status), callback, false, once)
 
-## 单键（对外接口层）：与上面同域，只是把 hold/press/release/pointer_move 拆成便于配置引用的名字。
-## 被谁用：StatusPreset.listen（按键监听）、InputCombo._listen、PointerDetect 的下游。
+## 单键（对外接口层）：与上面同域，只是把 hold/press/release 拆成便于配置引用的名字。
+## 被谁用：StatusPreset.listen（按键监听）、InputCombo._listen。
+## 指针移动不在这里：它不绑键位、也不经状态层（PointerDetect._process 直接派发 Pointer Move）。
 """ ---------- Single Key ---------- """
 static func send_key_hold(key: Variant) -> Array:
     return _send_input(key, Enums.KeyStatus.HOLD)
@@ -169,10 +169,6 @@ static func send_key_press(key: Variant) -> Array:
 static func send_key_release(key: Variant) -> Array:
     return _send_input(key, Enums.KeyStatus.RELEASE)
 
-## 指针移动不绑定具体按键：键值统一用 MOUSE_BUTTON_NONE 占位（与 statuses 里那条配置保持一致）。
-static func send_pointer_move() -> Array:
-    return _send_input(MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE)
-
 
 static func listen_key_hold(key: Variant, callback: Callable, once: bool = false) -> String:
     return _listen_input(key, Enums.KeyStatus.HOLD, callback, once)
@@ -182,9 +178,6 @@ static func listen_key_press(key: Variant, callback: Callable, once: bool = fals
 
 static func listen_key_release(key: Variant, callback: Callable, once: bool = false) -> String:
     return _listen_input(key, Enums.KeyStatus.RELEASE, callback, once)
-
-static func listen_pointer_move(callback: Callable, once: bool = false) -> String:
-    return _listen_input(MOUSE_BUTTON_NONE, Enums.KeyStatus.POINTER_MOVE, callback, once)
 
     
 """

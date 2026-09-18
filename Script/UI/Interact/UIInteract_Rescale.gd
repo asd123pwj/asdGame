@@ -21,7 +21,7 @@ static func rescale(target: UIBase, status_name: String) -> void:
 ## 沿对角线拖是像素级跟手；垂直于对角线的位移在数学上跟不了（等比只有一个自由度），这是固有代价。
 ## 上下限与保护值取自 Config/SystemConfig.gd（SysCfg.resize_min_scale / resize_max_scale / rescale_epsilon）。
 ## 指针移出 UI 也照缩 —— 执行由 AutoSys（状态层）驱动，与 hover 派发无关。
-## 被谁用：AutoSys.update（经 rescale 登记）。参数由 rescale 绑定，这里不必再校验（不做重复判断）。
+## 被谁用：AutoSys._process（经 rescale 登记）。参数由 rescale 绑定，这里不必再校验（不做重复判断）。
 static func rescaling(ui: UIBase) -> void:
 	ui.control.pivot_offset = Vector2.ZERO     # 缩放中心钉在左上角（不设就绕控件中心缩、位置乱跑）
 	var anchor: Vector2 = ui.control.get_global_rect().position     # 左上角（pivot 为 0，缩放时它不动）

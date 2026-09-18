@@ -292,7 +292,7 @@ func _build_children() -> void:
 ## 且要加新事件只需往列表里加一项。
 ## 占位符（$self/$parent 链/$event）由本类的 _resolve_cmd 解析——它是 on_event 的私有助手，
 ## 不挂在 UIInteract 的指令面上（没有第二个使用者）。
-## 被谁用：PointerDetect.key（状态事件）、PointerDetect.update_targets（enter/exit）、本函数自身（冒泡）。
+## 被谁用：PointerDetect.key（状态事件）、PointerDetect._process（enter/exit）、本函数自身（冒泡）。
 func on_event(event_name: Variant) -> void:
 	for entry in config.get("events", []):
 		if not (entry is Array):

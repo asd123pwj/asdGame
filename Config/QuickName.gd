@@ -7,8 +7,8 @@ extends BaseClass
 ## UI 配置里的事件名 / `PointerDetect.key "<状态名>"` 里那个字符串——所以都用这里，改一处即可。
 
 # ---- 输入监控（指针 / 键）----
-static var pointer_move := "Pointer Move"
-static var pointer_enter := "Pointer Enter"     # hover 进入（不是状态，由 PointerDetect 直接派发）
+static var pointer_move := "Pointer Move"       # 指针移动（不是状态，由 PointerDetect 直接派发）
+static var pointer_enter := "Pointer Enter"     # hover 进入（同上）
 static var pointer_exit := "Pointer Exit"       # hover 离开（同上）
 static var mouseLeft_press := "Mouse Left | Press"
 static var mouseLeft := "Mouse Left"

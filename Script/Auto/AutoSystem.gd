@@ -15,7 +15,7 @@ extends BaseClass
 ## 写法见那两对函数：Script/UI/UIInteract_Drag.gd（drag + dragging）、
 ## Script/UI/UIInteract_Rescale.gd（rescale + rescaling）。
 ##
-## 被谁用：UIInteract.drag / UIInteract.rescale（登记）；每帧由 Tick 的快捷指令 `AutoSys._process` 驱动。
+## 被谁用：UIInteract.drag / UIInteract.rescale（登记）；每帧由 `Sys._process` 直接调（见下）。
 
 ## 登记项：`[Character, 状态名, Callable]`。同一组可以并存多条（各自独立判存亡）。
 static var autos: Array = []
@@ -45,7 +45,7 @@ static func stop(char_: Character, status_name: String) -> void:
 ## 每帧过一遍：状态不满足就删，满足就调它的回调。
 ## 用副本遍历：回调里可能又登记/注销（例如开关换来换去）。
 ## 状态没装（名字写错）按不满足处理，顺手删掉，免得一直空转。
-## 被谁用：Tick 的快捷指令（Config/Character/Archetype/Archetype_System.gd 的"指针交互"组）。
+## 被谁用：Sys._process（排在 InputSys / TimeSys 之后，所以本帧的 mouse_delta 已经能用了）。
 static func _process(_delta: float) -> void:
 	for entry: Array in autos.duplicate():
 		var char_: Character = entry[0]
