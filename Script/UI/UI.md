@@ -20,6 +20,7 @@ Script/UI/
 │  ├─ UIInteract_Rescale.gd     # rescale + 每帧 rescaling
 │  ├─ UIInteract_Fade.gd        # fade_to
 │  ├─ UIInteract_Edit.gd        # begin_edit / end_edit
+│  ├─ UIInteract_Fold.gd        # fold / unfold / toggle_fold（收起 / 展开，见"长内容"一节）
 │  ├─ UIInteract_SwitchValue.gd # switch_value（列表里"有就删、没有就加"）
 │  └─ UIInteract_SetTop.gd     # set_top（点击置顶：绘制 + 命中都提前）
 ├─ UIBase.gd             # 元素基类（extends BaseClass，持有 control: Control）
@@ -38,7 +39,7 @@ Script/UI/
 |---|---|
 | `UIPreset.gd` | UI 预设：一条 UI 配置；`create_element(ui_name, name, config)` 为根 UI 与子元素共用的实例化工厂。 |
 | `UiSystem.gd` | UI 系统 `UiSys`：开启/登记**整棵 UI 树**（子元素一并登记），成员全静态，日常直接 `UiSys.xxx`。 |
-| `Interact/UIInteractBase.gd` | **交互组基类**：指令前缀（`const CMD_HOST := "UIInteract"`）+ 组内共用校验 `_as_ui`。交互按"一个交互一个文件"拆在 `Interact/` 下（`UIInteract_OpenClose.gd`、`UIInteract_Drag.gd`、`UIInteract_Rescale.gd`、`UIInteract_Fade.gd`、`UIInteract_Edit.gd`、`UIInteract_SwitchValue.gd`、`UIInteract_SetTop.gd`，都 `extends UIInteractBase`），所以**对外只有一套指令名** `UIInteract.open/close/drag/rescale/fade_to/begin_edit/end_edit/switch_value/set_top`。元素自己的普通方法不必包成交互——指令系统能直接调：整行写 `self.refresh("content")`（见下）。加一个交互 = 加一个 `UIInteract_Xxx.gd` + 静态方法，指令名自动是 `UIInteract.xxx`（机制见 `CmdSys` 的命令前缀组）。**开启（open + 摆位 + 子方法 + 失焦关闭）也在这个组里**（`UIInteract_OpenClose.gd`）。 |
+| `Interact/UIInteractBase.gd` | **交互组基类**：指令前缀（`const CMD_HOST := "UIInteract"`）+ 组内共用校验 `_as_ui`。交互按"一个交互一个文件"拆在 `Interact/` 下（`UIInteract_OpenClose.gd`、`UIInteract_Drag.gd`、`UIInteract_Rescale.gd`、`UIInteract_Fade.gd`、`UIInteract_Edit.gd`、`UIInteract_Fold.gd`、`UIInteract_SwitchValue.gd`、`UIInteract_SetTop.gd`，都 `extends UIInteractBase`），所以**对外只有一套指令名** `UIInteract.open/close/drag/rescale/fade_to/begin_edit/end_edit/fold/unfold/toggle_fold/switch_value/set_top`。元素自己的普通方法不必包成交互——指令系统能直接调：整行写 `self.refresh("content")`（见下）。加一个交互 = 加一个 `UIInteract_Xxx.gd` + 静态方法，指令名自动是 `UIInteract.xxx`（机制见 `CmdSys` 的命令前缀组）。**开启（open + 摆位 + 子方法 + 失焦关闭）也在这个组里**（`UIInteract_OpenClose.gd`）。 |
 | `../Auto/AutoSystem.gd` | `AutoSys`：**状态驱动执行器**（状态满足期间每帧执行一条指令，不满足自动删）。按住类交互（等比缩放）靠它，见 `Script/Auto/Auto.md`。 |
 | `UIBase.gd` | 元素基类：`build()` 生成控件并组装子元素；持 `config`/`children`/`parent`；指针事件→指令。 |
 | `UI/UI_*.gd` | 原子元素实现（容器/文本/图片/滚动）。 |
@@ -92,7 +93,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
   - 自己没配的事件**冒泡给父级**，冒泡到根都没有才什么都不做（元素没有隐式行为）；于是"整块面板的行为"在子元素上同样生效（如菜单面板启用拖拽后，按住菜单项也能拖），`self/self.parent` 以"配了指令的那个元素"为基准。
 - **运行时增改**：`add_child_element(name, ui_class, config, reg_name := "")` 加子元素（内部交给 `UiSys.register_child` 登记，登记后才可被指针命中；`reg_name` 由开 UI 的路径显式指定，普通子元素留空）；对调两项配置用 `Utils.swap`（`Utils.gd`，两条路径写出来）、`switch_value(键, 值)` 在一个列表里"有就删、没有就加"（两者都是开关式按钮的底座：菜单的"启用关闭按钮"用前者、"启用拖拽"用后者——直接开关宿主 `events` 里的那一条绑定，不必预摆两套）。"关闭按钮"连新指令都不需要：它是普通预设 `CloseButton`，用 `open` / `close` 开关。
 - **开关式按钮（可选框）**：不需要专门元素——同一个元素上放两套配置（`events` / `content` 与 `events_2` / `content_2`），点击时"做事 + `Utils.swap` 对调"，下次点击自然走另一套；**只加减一项**（如给宿主加/减一条绑定）用 `switch_value`，连第二套配置都不用写。事件串里多条命令用 `\v` 分隔（见 `CmdSys.execute`）。
-- **config 可选属性**：`position` / `size` / `content` / `children` / `events` / `visible` / `free`（自由定位：挂到叠加层的非容器挂载点，`position`/`size` 不被父级布局覆盖，用于"右上角的关闭按钮""菜单""键盘的每个键"这类元素）。**配置子元素与运行时加的子元素共用这条规则**（`_build_children` 与 `add_child_element` 一致）：配了 `free` 就进叠加层任意摆，没配才进内容盒（容器类 = 竖排）。
+- **config 可选属性**：`position` / `size` / `content` / `children` / `events` / `visible` / `free`（自由定位：挂到叠加层的非容器挂载点，`position`/`size` 不被父级布局覆盖，用于"右上角的关闭按钮""菜单""键盘的每个键"这类元素）；`collapsed`（父元素）/ `collapse_keep`（子元素自己标"收起时留我"）不是 UIBase 读的，是**收起/展开交互**（`UIInteract.fold`）读的，见"长内容与收回 / 展开"一节。**配置子元素与运行时加的子元素共用这条规则**（`_build_children` 与 `add_child_element` 一致）：配了 `free` 就进叠加层任意摆，没配才进内容盒（容器类 = 竖排）。
   - `font_size`（字号）/ `font_color`（字色）与 `background`（背景图路径）是**公共属性**（都在 `UIBase._apply_config` 里读，不是某个元素独有）：
     - `font_size` / `font_color` 作用在**配它的那个控件**上——主题重写不向下传，所以要小字/深色字就配在真正显示文本的元素上。**不配字色就是主题默认（接近白色）**，配在浅色底图上会看不见。
     - `background`（九宫格底图）由 `UIBase._apply_background` 统一实现：找本元素控件的 stylebox 槽套上去（槽名由 `_background_slot` 按 `panel → normal → background` 取第一个存在的）。**实测各元素对应哪个槽**：
@@ -107,6 +108,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
       控件一个槽都没有时警告一次、不画——要"带底"就换有槽的元素（文字带底 = `UI_Panel` 里放 `UI_Label`，键盘的键就是这么做的）。**整块底图走它，不要放 Image 元素当背景**——Image 属于内容，摆在叠加层上会盖住别的子元素。
     - 九宫格边距 = `background_slice`（**每张底图各自给**，跟着图的圆角走；不写 = 0 = 整张拉伸）。
   - `size` 里为 **0 的那一维按"内容最小尺寸"补足**（`_fit_size()`；"内容要多大"由可覆写的 `_content_size()` 给出）：`[150, 0]` = 宽固定、高随内容；`[0, 0]` = 完全由内容决定。**必须补**——控件尺寸为 0 时 `get_global_rect()` 是退化矩形，PointerDetect 永远命中不到它（菜单"一打开就没了"就是这么来的：矩形高度 0 → 失焦判定以为指针在菜单外 → 同一帧里就把它关了）。
+    - **补完还会把结果发布成控件的最小尺寸**（`custom_minimum_size`）：本元素的根控件是普通 `Control`，它自己不汇总内容最小尺寸，而"面板套面板"（容器里的 `UI_Panel`，如可折叠分组）要靠这个最小尺寸才能往外撑——不发布的话内层面板在父容器眼里高度永远是 0，整棵子树都长不出来（做"可收回分组"时实测踩到：嵌套分组的高度一直停在标题那一点）。所以 `_fit_size()` 读"配置想要多大"要读 `config["size"]`（`_config_size()`），不能读 `custom_minimum_size`（那个值已被覆盖成"内容实际多大"）。
   - **`UI_Panel` 的 `_content_size()` 必须问内部的 `PanelContainer`，不能问根控件**：根是普通 `Control`，**不会汇总子元素的最小尺寸**，问它只会得到 `custom_minimum_size`（`[150, 0]` → 高度就是 0）。而且建时还没进树、字体主题都问不出来，所以要挂在 `_panel.minimum_size_changed` 上再补一次。
   - 指令串参数：**只有中间带空格时才需要引号**（如 `"Mouse Left | Tick"`），其余直接写名字（如 `open_menu self Menu`）。
   - **自由定位元素不要设 `Control.top_level`**：那会让它不再继承父级可见性（宿主 `hide()` 后它还留在屏幕上、也还能被命中）。摆放时把屏幕坐标换算成**宿主坐标系的 `position`**（挂载点原点即宿主原点）；也不要用 `set_global_position`——它按"当前全局变换求逆"算，重复摆会跟旧 position 复合，越摆越偏。
@@ -145,6 +147,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | `UIInteract.set_top self.parent` | 把 target 所在的**窗口**（沿 `parent` 爬到最外层那个 UI）提到最前：只需一句 `control.move_to_front()`——命中已与绘制同序（见下），不用再维护登记顺序。**一般不用写**：`PointerDetect.key` 里"点它"就会自动调（`open` 也会调，新开的排最前） | 点一下谁谁在最上面 |
 | `UIInteract.close([宿主], [预设名])` | 关闭（隐藏）：**不写预设名 = 关 target 自己**；写了 = 关"挂在 target 下的那个预设 UI"（按"挂载点 + 预设名"查，没开过就什么都不做）。与 `open` 成对：给某个 UI 加/减东西 = 开/关一个预设 | 关闭"按钮"、开关式按钮的"移除"一侧：`UIInteract.close(宿主, "CloseButton")` |
 | `UIInteract.toggle([目标], [预设名])` | **开关**：现在显示着就关、否则开（开/关都走本文件那两条，复用与摆位照旧）。键状态只在"满足变化"时给一次，写两条指令做不到判断该开还是该关，所以要有它 | `J → UIInteract.toggle(preset_name="TestShow")` |
+| `UIInteract.fold(target, collapsed=?)` / `UIInteract.unfold(target)` / `UIInteract.toggle_fold(target)` | **收起 / 展开**（隐藏子元素，不是关闭）：收起只留子元素里**自己标了 `collapse_keep = true`** 的，其余 `hide()`；不可见的子元素不参与布局 ⇒ 容器按内容收缩（"高随内容"的面板自己变短），实例还在。状态记在 `config["collapsed"]`。见"长内容与收回 / 展开" | 收回按键：`UIInteract.toggle_fold(self.parent)`\v`Utils.swap` 换文字 |
 
 ## 原子元素（Script/UI/UI/）
 | 类 | 职责 | 事件配置示例 |
@@ -210,6 +213,32 @@ var values: Array[Array] = [
   - 点关的判定时机：`key()` 派发时只置标记（`PointerDetect._blur_pending`），判定放在**下一次命中刷新**的尾巴上。两个理由：① 判定的那一刻，菜单往往正在被这次派发 open 出来（右键开菜单），拿"上次刷新的 hover"判会把它当成"指针在外面"当场关掉（表现为"关过一次之后就再也开不出来"）；② 命中检测一帧只该有一次（`InputSys._process` 里那次，早于派发），派发完再刷一遍既白跑、又会让 enter/exit 在同帧里派发两次。移开关则挂在 `PointerDetect._process` 的"本帧位移不为 0"分支里（没动就不必重复判）。
   - **尺寸为 0 的先不判**（`get_global_rect()` 是退化矩形 ⇒ 会被误判成"指针在外面"）：布局还没跑时先当它"还在指针下"（多级菜单"一开就没"就是这么来的）。
     - 反过来说：**尺寸被谁压成 0 的 UI 会永远跳过判定 ⇒ 永远关不掉**。踩过这个坑：菜单（free 子元素）被挂进了 `ScrollContainer`（滚动容器会按视口改子节点尺寸），于是它高度 0、菜单既显示不全又关不掉。⇒ 自由定位的子元素必须挂"非容器"的叠加层（`UI_Panel` / `UI_Scroll` 都各有一个 `Overlay`）。
+
+## 长内容与"收回 / 展开"（UIInteract.fold，实现 Interact/UIInteract_Fold.gd）
+
+- **要解决的问题**：一块 UI 的配置太长（菜单项、配置项一大串）时会顶出屏幕下边——子 UI 的"管理菜单"就是这种情况。
+- **解法是收起（隐藏）而不是关闭**：`UIInteract.fold(目标, true)` ⇒ 只留**自己标了 `collapse_keep = true`** 的子元素（就是那一行"可折叠标题"），其余子元素 `hide()`；**实例不销毁**，展开回来一切照旧（`close` 是把整个 UI 隐藏，所以不能用来"只收起一段"）。
+- **实现只在交互里**（`Script/UI/Interact/UIInteract_Fold.gd`），**`UIBase` 里没有折叠代码**：这事只是"把子元素的 visible 设一下"，不值得让基类为它多记状态、多几个方法。
+- **两个配置键，都在元素自己的 config 里**（一份数据一处真相，和别的配置键一个待遇）：
+  - 父元素上 `collapsed`：收起态（默认 false = 展开）；
+  - **子元素自己**标 `collapse_keep = true`：表示"收起时留着我"（默认不标 = 跟着收起）⇒ "谁留下"写在自己身上，**父元素不用维护名字清单**（子元素改名、加删，都不用回头改父级配置）。
+- **为什么收起后就不占屏幕了**：不可见的子元素**不参与容器布局** ⇒ 容器按内容收缩 ⇒ `size` 里为 0 的那一维（"宽固定、高随内容"，菜单/面板都这么配）自己就变短了。
+- **一行搞定："可折叠标题"片段**（推荐用法）——`UIPreset_Fold.make_fold_title("标题")` 返回一条普通 `UI_Label` 配置：它自己**既是标题也是收回按键**（显示 `▾ 标题` / `▸ 标题`，点它收起/展开它所在的分组，自带 `collapse_keep: true`）。给一段内容加"收 / 展"就是**加这一行**：
+  ```gdscript
+  static func make_fold_title(what: String) -> Array:
+      return ["Title", "UI_Label", {
+          "content": "▾ %s" % what, "content_2": "▸ %s" % what,   # 两套文字对调换箭头（见"开关式按钮"）
+          "collapse_keep": true,                                   # 它自己声明"收起时留我"
+          "events": [[QName.mouseLeft, 'UIInteract.toggle_fold(self.parent)'
+              + '\vUtils.swap("self.config.content", "self.config.content_2")'
+              + '\vself.refresh("content")']],
+      }]
+  ```
+  别的预设直接 `children.append(UIPreset_Fold.make_fold_title("一段很长的配置"))`；想换样子（标题带底、或者另放一个 `[+]` / `[-]` 按钮）照抄这段改 `content` / `events` 即可。
+- **从外面调**也一样：`UIInteract.fold(UiSys.get_ui("FoldDemo"))` / `unfold(...)`（按键快捷、别的 UI、菜单项都能触发）。想"开出来就是收起的"：在 `open` 那一句后面接一条 `fold`。
+- **可以套娃**：外层收起时里面整片一起不可见；外层展开后，里面每一段仍保持它自己收起/展开的状态（状态各自记在各自的 `config` 里）。
+- **注意**：**可折叠标题要标 `collapse_keep: true`**（`make_fold_title` 已经带了），否则收起来就再也没有东西能点开它；收起期间**运行时新加的子元素**不会自动跟着藏（加完再调一次 `fold`）。
+- 例子见 `Config/UI/UIPreset_Fold.gd`（`FoldDemo`：整块可收 + 三段各自可收，`Test.ui_test` 里默认开出来）。
 
 ## 按名称绑定（复制名称 / 绑定 ▸）与重名后缀
 

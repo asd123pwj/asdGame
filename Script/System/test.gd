@@ -89,6 +89,9 @@ func ui_test() -> void:
     Msg.send_cmd("UIInteract.open(preset_name=\"TestShow\")")
     Msg.send_cmd("UIInteract.open(preset_name=\"TestInput\")")
 
+    # 长内容 / 可收回演示（Config/UI/UIPreset_Fold.gd）：整块能收成一个标题，三段各自也能收
+    Msg.send_cmd("UIInteract.open(preset_name=\"FoldDemo\")")
+
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:

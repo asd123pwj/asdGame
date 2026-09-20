@@ -20,7 +20,8 @@ var name: String = ""
 ## 别用统一默认值——不同底图的圆角不一样，切多切少都会变形（见 _make_background）。
 ## "找当底的 stylebox 槽"的顺序放全局参数里：SysCfg.ui_background_slots（Config/SystemConfig.gd）。
 ## 本元素的配置（见 Config/UI/）。公共属性：position/size/content/children/events/visible/free，
-## 各子类另有自己的（如菜单的 open_at / close_on_blur）。
+## 各子类另有自己的（如菜单的 open_at / close_on_blur）；收起/展开那两个键（父元素的 collapsed、
+## 子元素自己的 collapse_keep）不在这里读——由交互 UIInteract.fold 读（见 Interact/UIInteract_Fold.gd）。
 ## 被谁用：_apply_config、_build_children、on_event、UiSys._place（读 open_at）。
 var config: Dictionary = {}
 ## 真正的引擎控件（本元素外观的根，子节点也挂在它下面）。
@@ -76,14 +77,36 @@ func build() -> Control:
 ## 于是 [宽, 0] = 宽固定、高随内容；[0, 0] = 完全由内容决定。
 ## 注意必须补：控件尺寸为 0 时 get_global_rect() 是退化矩形，
 ## PointerDetect 永远命中不到它（菜单这类"宽固定、高随内容"的面板就靠这一步）。
+## **补完还把结果发布成控件的最小尺寸**（custom_minimum_size）：本元素的根控件是普通 Control，
+## 它自己不汇总内容最小尺寸，而"面板套面板"（容器里的 UI_Panel，如可折叠分组）要靠这个最小尺寸
+## 才能往外撑——不发布的话内层面板在父容器眼里高度就是 0，整棵子树都长不出来
+## （实测：嵌套分组的高度一直停在标题那一点，只有被容器排到才动一下）。
 ## 被谁用：build()；UI_Panel 另在 _panel.minimum_size_changed 时重调
 ##         （建时还没进树、字体主题问不出来，内容多大要等容器排完版才知道）。
 func _fit_size() -> void:
-	var want: Vector2 = control.custom_minimum_size
+	var want: Vector2 = _config_size()
 	if want.x > 0.0 and want.y > 0.0:
+		control.custom_minimum_size = want
+		control.size = want
 		return
 	var need: Vector2 = _content_size()
-	control.size = Vector2(want.x if want.x > 0.0 else need.x, want.y if want.y > 0.0 else need.y)
+	var out: Vector2 = Vector2(want.x if want.x > 0.0 else need.x, want.y if want.y > 0.0 else need.y)
+	control.custom_minimum_size = out
+	control.size = out
+
+
+## config["size"] 里写的尺寸（没写 / 不足两项 = 0，即"由内容决定"）。
+## **不要读 control.custom_minimum_size 当"配置想要多大"**：那个值会被 _fit_size 覆盖成
+## "内容实际多大"，于是分不清"配置要什么"和"内容给了多少"（宽固定、高随内容这种就废了）。
+## 被谁用：_fit_size。
+func _config_size() -> Vector2:
+	var s: Variant = config.get("size")
+	if not (s is Array):
+		return Vector2.ZERO
+	var arr: Array = s
+	if arr.size() >= 2:
+		return Vector2(float(arr[0]), float(arr[1]))
+	return Vector2.ZERO
 
 
 ## 内容本身需要多大（默认取控件的最小尺寸）。

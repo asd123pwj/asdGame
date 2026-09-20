@@ -9,6 +9,7 @@ extends BaseClass
 ##   Interact/UIInteract_Rescale.gd     等比缩放      → UIInteract.rescale（+ 每帧 rescaling）
 ##   Interact/UIInteract_Fade.gd        渐隐 / 渐显   → UIInteract.fade_to
 ##   Interact/UIInteract_Edit.gd        开始/结束编辑 → UIInteract.begin_edit / end_edit
+##   Interact/UIInteract_Fold.gd        收起/展开     → UIInteract.fold / unfold / toggle_fold
 ##   （改显示内容 / 对调配置不需要专门交互：写 config + 刷新是 `Utils.write` / `Utils.swap` + `self.refresh`）
 ##
 ## 拆文件对外看不出区别：**指令前缀在本类声明一次**（`CMD_HOST`），子类继承它，
