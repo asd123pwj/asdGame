@@ -51,7 +51,7 @@ func _init(archetype_type: String, identity: String="", name: String="") -> void
     init_done()
 
 ## 按 ID 取角色（没有会报错，注意先判断）。
-## 被谁用：指令里的 $@ID、需要按 ID 反查的地方。
+## 被谁用：指令里的 @ID、需要按 ID 反查的地方。
 static func get_(id: int) -> Character:
     return _we[id]
 

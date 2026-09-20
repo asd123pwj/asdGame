@@ -8,19 +8,19 @@ extends UIBase
 ##   ["Name", "UI_Input", {
 ##       "size": [240, 0],
 ##       "events": [
-##           [QName.mouseLeft, 'UIInteract.begin_edit $self'],          # 点它进编辑（换事件就改这一条）
+##           [QName.mouseLeft, 'UIInteract.begin_edit self'],          # 点它进编辑（换事件就改这一条）
 ##           [QName.input_submit,
 ##               # 送到绑定名指的那个 UI：宿主是"算出来的"，路径要用双引号包住（不然被当取值式）
-##               'Utils.write "$UiSys.get_ui($self.parent.config.bind).config.content" $self.control.text'
-##               + '\vUtils.write "$self.config.content"'               # 不写值 = 清空框（content 置 null）
-##               + '\vUIInteract.end_edit $self'                        # 先退出编辑（想"提交完继续打字"就不写这条）
-##               + '\v$UiSys.get_ui($self.parent.config.bind).refresh("content")'   # 只刷改过的那一项
-##               + '\v$self.refresh("content")']],                                   # 自己也是只改了 content
+##               'Utils.write "UiSys.get_ui(self.parent.config.bind).config.content" self.control.text'
+##               + '\vUtils.write "self.config.content"'               # 不写值 = 清空框（content 置 null）
+##               + '\vUIInteract.end_edit self'                        # 先退出编辑（想"提交完继续打字"就不写这条）
+##               + '\vUiSys.get_ui(self.parent.config.bind).refresh("content")'   # 只刷改过的那一项
+##               + '\vself.refresh("content")']],                                   # 自己也是只改了 content
 ##           # **改了什么就刷什么**；顺序别反——编辑中的输入框会跳过刷新，先刷就把"清空"漏掉了
 ##       ],
 ##   }]
-## 框里正在打的字**不往 content 同步**：要用就用取值链直接读 `$self.control.text`（见 UI.md）。
-## "送到哪"由绑定名给出：`$self.parent.config.bind` 是宿主上记的那个名字；
+## 框里正在打的字**不往 content 同步**：要用就用取值链直接读 `self.control.text`（见 UI.md）。
+## "送到哪"由绑定名给出：`self.parent.config.bind` 是宿主上记的那个名字；
 ## 名字没设 / 对应 UI 不在登记表里时，整条路径写不进去，Utils.write 会警告一声（不静默）。
 ##
 ## 编辑状态记在 InputSys（`edit_ui`）：`UIInteract_Edit.begin_edit` 抢焦点并置上它；
@@ -34,8 +34,8 @@ func _create_control() -> Control:
 
 ## config["content"] → 框里的文字（配置初值、或被写过的 content）。
 ## **正在编辑时不动**：框里的字还没进 content（不同步），这时候回写等于把人打的字冲掉。
-## 框里**正在打的字不回写 content**：要用就用取值链直接读 `$self.control.text`（见文件头）。
-## 被谁用：build() 末尾、配置里改完 content 紧跟的 `$self.refresh("content")`。
+## 框里**正在打的字不回写 content**：要用就用取值链直接读 `self.control.text`（见文件头）。
+## 被谁用：build() 末尾、配置里改完 content 紧跟的 `self.refresh("content")`。
 func refresh(key: String = "") -> void:
 	super.refresh(key)
 	if key != "" and key != "content":

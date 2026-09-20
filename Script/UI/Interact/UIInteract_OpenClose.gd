@@ -21,7 +21,7 @@ extends UIInteractBase
 ## 开启一个 UI —— **全项目唯一的开启入口**（不要再写第二个；普通 UI 与菜单同一条路，没有任何按类型特判）。
 ## 指令入口就是本函数：`UIInteract.open`。
 ##   target      = 宿主（挂载点）。没有 anchor 时挂到它下面；
-##                 **target 与 anchor 都不给就是独立 UI**（挂 UI 根）——指令里用 `--preset_name xxx` 跳过它。
+##                 **target 与 anchor 都不给就是独立 UI**（挂 UI 根）——指令里写 `preset_name="xxx"` 跳过它。
 ##   preset_name = 预设名（见 Config/UI/）
 ##   anchor      = 位置锚点，同时也是**挂载点**（锚点优先于宿主）：多级菜单传"触发它的那个菜单项"，
 ##                 子菜单挂在该菜单项下 ⇒ 整条菜单链是一棵子树（关父级全关、失焦判定沿 parent 链）
@@ -35,9 +35,9 @@ extends UIInteractBase
 ## 类型就是 bool，字符串/数字怎么变 bool 由指令系统按签名处理（CmdSys._coerce），这里不再自己认。
 ##
 ## 指令写法：
-##   UIInteract.open $self Menu $self --close_on_blur                 面板右键 → 指针处开菜单（点别处关）
-##   UIInteract.open --preset_name MiniHUD                            独立 UI → 开在配置声明的位置
-##   UIInteract.open $self MenuEdit $self --close_on_move             hover 展开的子菜单：挪开就收
+##   UIInteract.open(self, "Menu", self, close_on_blur=true)       面板右键 → 指针处开菜单（点别处关）
+##   UIInteract.open(preset_name="MiniHUD")                        独立 UI → 开在配置声明的位置
+##   UIInteract.open(self, "MenuEdit", self, close_on_move=true)   hover 展开的子菜单：挪开就收
 ## 被谁用：Config/UI 里各预设的 "events"、Test.ui_test（测试也走指令，不抄近路）、外部想直接拿实例时。
 ## 返回：开出来的 UI（找不到预设/建不出来为 null）。
 static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase = null,
@@ -67,7 +67,7 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 ## 关闭（隐藏）UI —— **一个函数管两种情况**：
 ##   只有 target          → 关 target 自己；
 ##   还给了 preset_name   → 关"挂在 target 下的那个预设 UI"（按挂载点 + 预设名查回来再关）。
-## 为什么要第二种：菜单项深处手上只有一个"面板"的引用（`$self.parent.parent.parent.parent`）和一个预设名，
+## 为什么要第二种：菜单项深处手上只有一个"面板"的引用（`self.parent.parent.parent.parent`）和一个预设名，
 ## 而它要关的是挂在那个面板下的子 UI（如 CloseButton），不是面板自己。
 ## 只是 hide，实例留在原地；**重开统一走 UIInteract.open**（显示 + 按 open_at 重新摆位，不重建控件）。
 ## 查不到（没开过）就什么都不做（幂等）。
@@ -94,8 +94,8 @@ static func close(target: UIBase, preset_name: String = "") -> void:
 
 ## 开关：现在**显示着**就关掉，否则开出来。开/关两条路都走本文件的 open / close（含复用与摆位）。
 ## 指令写法：
-##   UIInteract.toggle --preset_name TestShow        独立 UI（不写 target，只给预设名）
-##   UIInteract.toggle $self.parent.parent CloseButton    挂在 target 下的某个预设 UI
+##   UIInteract.toggle(preset_name="TestShow")            独立 UI（不写 target，只给预设名）
+##   UIInteract.toggle(self.parent.parent, "CloseButton") 挂在 target 下的某个预设 UI
 ## 为什么要有它：绑到一个键上时，"按一下开、再按一下关"是最常见的用法，写两条指令做不到
 ## （键状态只在"满足变化"时给一次，没法在同一个事件里判断该开还是该关）。
 ## 被谁用：状态层的按键快捷（如 Test 的 J / K）、想用一个按钮开关某个子 UI 的场合。

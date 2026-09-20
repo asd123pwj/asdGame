@@ -14,12 +14,12 @@ extends ConfigBase
   左右修饰键（Shift/Ctrl/Alt 各有左右两个）在 Godot 里 keycode 相同、靠 `InputEventKey.location` 区分，
   所以它们多一列 `KEY_LOCATION_LEFT/RIGHT`；元素名也带 `_L`/`_R` 后缀，不然两个键会撞名互相覆盖。
 - x/行/尺寸照原样写 Unity 那版的表达式（`32*2`、`row1 = -36*2`…），统一再乘 SCALE（1.0 = 与 Unity 同尺寸）。
-- 整块面板可以按住拖动（按住 → `UIInteract.drag $self $event` 登记 → 每帧 `dragging`，和 MiniHUD 标题栏同一套）。
+- 整块面板可以按住拖动（按住 → `UIInteract.drag self event` 登记 → 每帧 `dragging`，和 MiniHUD 标题栏同一套）。
 - 底图：`background`（九宫格拉伸）+ 字色/字号（`font_color` / `font_size`，主题默认是接近白色的字，
   配在浅色键底上会看不见，所以必须显式给深色）。
 - 以后给某个键绑操作：改它的描述文本即可，登记名 = `Keyboard/键名/Desc`
   （键名由键码生成，如 `Keyboard/Key_Q/Desc`、`Keyboard/Key_Kp8/Desc`、`Keyboard/Key_Shift_L/Desc`）。
-- 开启：独立 UI，`UIInteract.open --preset_name Keyboard`；
+- 开启：独立 UI，`UIInteract.open(preset_name="Keyboard")`；
   右上角的 "X" 就是普通预设 CloseButton（见 UIPreset_Basic），开启方一并开/关即可（见 Test.ui_test）。
 """
 
@@ -244,7 +244,7 @@ var values: Array[Array] = [
         "background": PANEL_BG, "background_slice": PANEL_BG_SLICE,
         # 整块面板按住拖动（子元素没配这个事件时会冒泡到这里）；和 MiniHUD 标题栏是同一套。
         # 这条绑定也随时能被菜单项"启用/移除拖拽"加删（switch_value 直接开关这个列表，见 UIPreset_Menu）。
-        "events": [[QName.mouseLeft, "UIInteract.drag $self $event"]],
+        "events": [QName.UI_event_mouseLeft_drag],
         "children": _layout["children"],
     }],
 ]

@@ -29,13 +29,13 @@ var control: Control
 
 ## 显示内容：指明该 UI 展示什么（文本/多行文本/纹理路径…由子类解释）。
 ## **就是 config["content"] 这一个键，不另设成员变量**——一份数据一处真相，不会两边不一致。
-## 改内容 = `Utils.write "$self.config.content" 新值`，再在**下一条**接刷新（`$self.refresh`）；
+## 改内容 = `Utils.write "self.config.content" 新值`，再在**下一条**接刷新（`self.refresh`）；
 ## 子类 refresh() 负责把它刷到控件上（见 UI.md 的"改了什么就刷什么"）。
 ## 为什么不做成属性 set 自动刷：那样要拦截的就不止 content 一项（config 里还有 events/size/…），
 ## 而 config 是 Dictionary、拦不了写入（要拦得把它换成带 _set/_get 的对象，读点太多、得不偿失）。
 
-## 挂载对象（父 UI）：组装子元素时由父元素注入，即指令里 `$self.parent` 的指向。
-## 被谁用：_build_children / add_child_element（注入）、_resolve_cmd（$self 链上的 .parent）、
+## 挂载对象（父 UI）：组装子元素时由父元素注入，即指令里 `self.parent` 的指向。
+## 被谁用：_build_children / add_child_element（注入）、_resolve_cmd（self 链上的 .parent）、
 ##         on_event（事件冒泡）、UIInteract_OpenClose._is_inside（判"指针是否在这个 UI 上"）。
 var parent: UIBase = null
 
@@ -107,10 +107,10 @@ func _create_control() -> Control:
 ## 认识的公共键：visible（可见性）、position（摆放位置）。
 ## **position 只有显式 `refresh("position")` 才刷**：不传 key 的"全刷"不碰摆放——
 ## 拖动/摆位是运行时的临时偏离，不该被一次普通刷新拽回 config 里那个位置。
-## **只改了一项就传那一项**（`$self.refresh("content")`）——跟"改了什么刷什么"对上，也省掉别的项的无谓同步；
+## **只改了一项就传那一项**（`self.refresh("content")`）——跟"改了什么刷什么"对上，也省掉别的项的无谓同步；
 ## 不传 key 的"全刷"留着给"一次改了好几项 / 不确定"的场合。
 ## 实现者：UI_Label / UI_Scroll / UI_Image / UI_Input（各自的键见它们的 refresh）。
-## 被谁用：build()（全部）、配置里改完 config 后紧跟的 `$self.refresh("content")`、
+## 被谁用：build()（全部）、配置里改完 config 后紧跟的 `self.refresh("content")`、
 ##         UIInteract_OpenClose._place（position）。
 func refresh(key: String = "") -> void:
 	if (key == "" or key == "visible") and control != null and config.has("visible"):
@@ -240,7 +240,7 @@ func _make_background(path: String) -> StyleBoxTexture:
 
 
 ## 组装子元素：config["children"] 每项 [child_name, ui_class, child_config]。
-## 子元素的挂载对象（parent）即本元素（父 UI），其指令里的 `$self.parent` 指向本元素。
+## 子元素的挂载对象（parent）即本元素（父 UI），其指令里的 `self.parent` 指向本元素。
 ## 挂载点与运行时那条路**同一套规则**（见 add_child_element）：配了 free 的挂到叠加层
 ## （绝对定位，position/size 不被父级布局改），没配的进内容盒（容器类 = 竖排）。
 ## 被谁用：build()。（运行时加子元素走 add_child_element，那条路要额外登记。）
@@ -269,11 +269,11 @@ func _build_children() -> void:
 ## hover 变化用 QName.pointer_enter / QName.pointer_exit。
 ## 事件→指令：在 config["events"]（[事件名, 指令串] 列表）里按等值取指令串，取到才发送。
 ## 自己没配的事件**冒泡给父级**：于是"整块面板的行为"在它的子元素上同样生效
-## （如菜单面板启用拖拽后，按住菜单项也能拖；$self 与它上面的取值链都以配了指令的那个元素为基准）。
+## （如菜单面板启用拖拽后，按住菜单项也能拖；self 与它上面的取值链都以配了指令的那个元素为基准）。
 ## 冒泡到根仍没有配置就什么都不做（元素没有隐式行为）。
 ## 用列表而不是字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），
 ## 且要加新事件只需往列表里加一项。
-## 占位符（$self 及它上面的取值链、$event）由本类的 _resolve_cmd 解析——它是 on_event 的私有助手，
+## 占位符（self 及它上面的取值链、event）由本类的 _resolve_cmd 解析——它是 on_event 的私有助手，
 ## 不挂在 UIInteract 的指令面上（没有第二个使用者）。
 ## 被谁用：PointerDetect.key（状态事件）、PointerDetect._process（enter/exit）、本函数自身（冒泡）。
 func on_event(event_name: Variant) -> void:
@@ -290,25 +290,77 @@ func on_event(event_name: Variant) -> void:
 		parent.on_event(event_name)
 
 
-## 解析指令串占位符（发送前调用）：**只认两个占位符**，其余一律靠 `$self` 上的取值链。
-##   $self  → 自身实例（`$@ID`）。链尾可以继续跟取值链，由指令系统按表达式解析：
-##              `$self.parent`           → 父 UI（挂载对象）
-##              `$self.parent.parent`    → 祖父（级数任意，菜单链每深一层就多一级）
-##              `$self.config.content`   → 自己的显示内容（就是要写/读的那个 config 键）
-##            **不再有 $parent / $text**：能从 self 上取到的就不另立占位符——
-##            少一套语法、少一处"级数写错"的坑，写的人也只要记住"成员怎么读"。
-##            取不到时指令系统按表达式失败给 null，目标指令自己会警告（如 _as_ui 的"target 为空"）。
-##   $event → 触发这次事件的**事件名**（= 状态名 / Key 名），**自带引号**——名字里通常有空格
-##            （如 "Mouse Left"），指令要把整串当一个参数，所以这里补上引号；
-##            于是配置可以写 `UIInteract.drag $self.parent $event`，不必把状态名再抄一遍。
-## 另：**路径参数用双引号包住**（`Utils.write "$self.config.content" 值`）——顶层引号 = 字面字符串，
-## 里面的 `$` 不再被当成取值式，路径就原样传进函数（`CommandParser._tokenize` 会给它补转义）。
+## 解析指令串占位符（发送前调用）：**只认两个词**，其余一律靠它们上面的取值链。
+##   self → 自身实例（换成 `@ID`，就是取值链的宿主）。链尾继续跟取值链，由指令系统按表达式解析：
+##            `self.parent`           → 父 UI（挂载对象）
+##            `self.parent.parent`    → 祖父（级数任意，菜单链每深一层就多一级）
+##            `self.config.content`   → 自己的显示内容（就是要写/读的那个 config 键）
+##            `Utils.write("self.config.content", 值)` → 路径字符串里的 self 也一样换掉
+##          **不再有 $parent / $text**：能从 self 上取到的就不另立占位符——
+##          少一套语法、少一处"级数写错"的坑，写的人也只要记住"成员怎么读"。
+##          取不到时指令系统按表达式失败给 null，目标指令自己会警告（如 _as_ui 的"target 为空"）。
+##   event → 触发这次事件的**事件名**（= 状态名 / Key 名），**自带引号**——名字里通常有空格
+##           （如 "Mouse Left"），指令要把整串当一个参数，所以这里补上引号；
+##           于是配置可以写 `UIInteract.drag(self.parent, event)`，不必把状态名再抄一遍。
+## 为什么不用 `$` 前缀了：参数里**字符串必须带引号**（`"Menu"`），不带引号的一律当"值"求
+## ⇒ `self` / `event` 这种词不会和字符串混淆，`$` 就成了多余的一套写法。
 ## 被谁用：on_event（唯一调用方）。
 func _resolve_cmd(cmd: String, event_name: String = "") -> String:
-	cmd = cmd.replace("$self", "$@" + str(ID))
+	cmd = _self_to_id(cmd)
 	if event_name != "":
-		cmd = cmd.replace("$event", "\"" + event_name + "\"")
+		cmd = _event_to_name(cmd, event_name)
 	return cmd
+
+
+## 把独立的 `self` 词换成 `@ID`（当"值"和当"路径字符串"都适用：字符串只是带引号的文本，
+## 里面的 self 也一并换掉，于是 `Utils.write("self.config.content", 值)` 里的路径才对得上）。
+## 只认"独立词"：左右都不是标识符字符（`self` 上一步已换掉、`selfish` 这种不动）。
+## 被谁用：_resolve_cmd。
+func _self_to_id(cmd: String) -> String:
+	var out := ""
+	var i := 0
+	var n := cmd.length()
+	while i < n:
+		if cmd[i] == "s" and cmd.substr(i, 4) == "self":
+			var prev: String = cmd[i - 1] if i > 0 else ""
+			var next: String = cmd[i + 4] if i + 4 < n else ""
+			if not _is_word_char(prev) and not _is_word_char(next):
+				out += "@" + str(ID)
+				i += 4
+				continue
+		out += cmd[i]
+		i += 1
+	return out
+
+
+## 把独立的 `event` 词换成"事件名"（**自带引号**：名字里通常有空格，如 "Mouse Left"）。
+## 与 _self_to_id 同一套"独立词"判定。
+## 被谁用：_resolve_cmd。
+func _event_to_name(cmd: String, event_name: String) -> String:
+	var out := ""
+	var i := 0
+	var n := cmd.length()
+	while i < n:
+		if cmd[i] == "e" and cmd.substr(i, 5) == "event":
+			var prev: String = cmd[i - 1] if i > 0 else ""
+			var next: String = cmd[i + 5] if i + 5 < n else ""
+			if not _is_word_char(prev) and not _is_word_char(next):
+				out += "\"" + event_name + "\""
+				i += 5
+				continue
+		out += cmd[i]
+		i += 1
+	return out
+
+
+## 标识符字符（字母 / 数字 / 下划线 / `@`）——判上面的 `self` / `event` 是不是独立词。
+## 被谁用：_self_to_id、_event_to_name。
+func _is_word_char(c: String) -> bool:
+	if c == "":
+		return false
+	if c == "_" or c == "@":
+		return true
+	return (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or (c >= "0" and c <= "9")
 
 
 ## 运行时追加一个子元素（如菜单里后加的关闭按钮），返回新元素。

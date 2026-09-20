@@ -1,4 +1,5 @@
-## 继承于BaseClass的类的属性/方法可作为指令调用。
+## 指令 = **一行一个表达式**（解析在 CommandParser，本类负责"查命令 + 组参数 + 调用"）。
+## 继承于 BaseClass 的类的**静态方法**可作为指令：命令名就是 `类名.方法名`。
 ##     class_name Test
 ##     static var test_int := [{"value": [{"value": 5}]}] # [0].value[0].value
 ##     static var test_int2 := {"value": [-10]}
@@ -6,35 +7,41 @@
 ##     static func test_func(a: int, b: int) -> int:
 ##		   return a + b
 ##     var char_a := Character.new()
-## 使用静态函数：
-##     Msg.send_cmd("MapSys.place 0 5 -10 门 2 -1 true")
-##	   Msg.send_cmd("MapSys.place --layer_id 0 --x 10 --source_name 门 --tile_name 2 --force_space")
-## 嵌套使用静态函数/变量，参数前加$，
-##   下面为使用静态变量，访问字典用".key"，访问数组用"[index]"：
-##     Msg.send_cmd("MapSys.place $Test.a 5 -10 门 2 -1 true")
-##     Msg.send_cmd("MapSys.place $Test.a $Test.test_int[0].value[0].value $Test.test_int2.value[0] 门 2 -1 true")
-##   下面为使用静态函数，用()包裹参数：
-##     Msg.send_cmd("MapSys.place 0 $Test.test_func($Test.a, 4) $Test.test_int2.value[0] 门 2 -1 true")
-## 调用（做事，不返回值）：**整行写成取值链**，末尾是方法就调它（写不写 () 都行）：
-##     Msg.send_cmd("$self.refresh")                          调实例方法
-##     Msg.send_cmd("$UiSys.get_ui(名字).refresh")             目标算出来再调
-## 返回变量值，开头用&：
-##     Msg.send_cmd("&Test.a")
-## 使用实例，用"@实例ID"来代替"类名"，其它与类的使用一致：
-##     Msg.send_cmd("&@Test.char_a")
-## send_cmd 返回的是"每条指令结果"的数组，取值再按下标：
-##     Msg.send_cmd("&@Test.char_a")[0]          单条指令：取该指令的结果
-##     Msg.send_cmd("CharSys.spawn 人类")[0]      单条指令：取该指令的结果
+## **命令调用**（位置参数 + 关键字参数；没写的参数用签名里的默认值，可跳着给）：
+##     Msg.send_cmd('MapSys.place(0, 5, -10, "门", 2, -1, true)')
+##	   Msg.send_cmd("MapSys.place(layer_id=0, x=10, source_name=\"门\", tile_name=2, force_space=true)")
+##     Msg.send_cmd("UIInteract.open(self, \"Menu\", self, close_on_blur=true)")
+## 参数里引用变量/函数（直接写取值链，链式：字典 .key、数组 [index]、函数 ()）：
+##     Msg.send_cmd("MapSys.place(Test.a, 5, -10, \"门\", 2, -1, true)")
+##     Msg.send_cmd("MapSys.place(0, Test.test_func(Test.a, 4), Test.test_int2.value[0], \"门\", 2, -1, true)")
+## **取值一行**（拿值，不一定调用）：末尾带 () 就"调完拿返回值"，不带 () 就取这个值本身：
+##     Msg.send_cmd("Test.a")                     读静态变量
+##     Msg.send_cmd("self.control.text")          读实例属性（self 在发送前换成 @ID）
+##     Msg.send_cmd("UiSys.get_ui(\"MiniHUD\").refresh(\"content\")")   取值链末尾带 () = 调用
+## 用实例：把"类名"换成 `@实例ID`，其它一样：
+##     Msg.send_cmd("@678965479816.hp")
+## send_cmd 返回的是"每行结果"的数组，取值再按下标：
+##     Msg.send_cmd("Test.a")[0]                  单行：取该行的结果
+##     Msg.send_cmd("CharSys.spawn(\"人类\")")[0]  单行：取该行的结果
 class_name CmdSys
 extends BaseClass
 ## 指令系统：把字符串指令变成方法调用（解析在 CommandParser，本类负责"找命令 + 组参数 + 调用"）。
-## 命令 = "类名.静态方法名"，参数可位置或 `--名字`（可跳过带默认值的参数）。
+## 命令 = "类名.静态方法名(参数)"，参数用 `(…)` 包住：位置参数 + `名字=值`（可跳过带默认值的参数）。
+## 私有方法（`_` 开头）**也照常注册**为命令（有意为之，见 _register_source_methods）。
 ## 被谁用：Msg.send_cmd（唯一入口，落到 MessageHub 的 COMMAND → 本类 execute）。
 
 
-## 命令表：cmd_name -> { callable, arg_meta }。
+## 命令表：cmd_name -> { callable, arg_meta, arg_index }（arg_index = 参数名 → 下标，注册时算一次）。
 ## 被谁用：execute（查）、_register_source_methods（写）、_lazy_load。
-static var _commands: Dictionary = {}   # cmd_name -> { callable, arg_meta }
+static var _commands: Dictionary = {}   # cmd_name -> { callable, arg_meta, arg_index }
+
+## 源缓存：BaseClass 后代的脚本 + 它的命令前缀（见 _all_sources）。
+## ProjectSettings.get_global_class_list() 每次都会新建数组，而 _lazy_load 会在"命令表里没有"时被调，
+## 所以整张表只扫一遍、结果缓存在这里；clear_cache 里清。
+static var _sources: Array = []
+static var _sources_ready := false
+## 懒注册过的前缀：同一个前缀不重复全扫（一个前缀的所有文件第一次就都收进来了）。
+static var _loaded_prefixes: Dictionary = {}
 
 ## 「命令前缀组」约定：类可以写 `const CMD_HOST := "UIInteract"` 声明"我的静态方法挂在哪个前缀下"，
 ## 于是**一个命令宿主能按功能拆成多个文件**，对外仍只有一套指令名：
@@ -55,10 +62,13 @@ func _init() -> void:
 	)
 
 
-# 扫描所有最终继承 BaseClass 的类（含间接继承，如父类的父类是 BaseClass），
-# 注册其非私有静态方法为命令。命令名 = "类名.方法名"（class_name 取自全局类表）。
-# 被谁用：_init（非懒注册模式）。
-static func _scan_all_sources() -> void:
+# 扫一遍全局类表，挑出所有**最终继承 BaseClass** 的源（含间接继承），缓存脚本与命令前缀。
+# 返回 [{ class: 类名, script: GDScript, host: 命令前缀 }]。整表只扫一次（clear_cache 里失效）。
+# 被谁用：_scan_all_sources、_lazy_load。
+static func _all_sources() -> Array:
+	if _sources_ready:
+		return _sources
+	_sources_ready = true
 	var entries := ProjectSettings.get_global_class_list()
 	var by_name := {}
 	for e in entries:
@@ -69,7 +79,15 @@ static func _scan_all_sources() -> void:
 		var script: GDScript = load(cls["path"])
 		if script == null:
 			continue
-		_register_source_methods(cls["class"], script)
+		_sources.append({ "class": cls["class"], "script": script, "host": _cmd_host(script, cls["class"]) })
+	return _sources
+
+
+# 把所有命令源的静态方法注册为命令（非懒注册模式：_init 里调一次）。
+# 被谁用：_init。
+static func _scan_all_sources() -> void:
+	for src in _all_sources():
+		_register_source_methods(src)
 
 
 # 判断某个全局类记录（entry）是否最终继承自 root_name（沿 base 链上溯）。
@@ -86,21 +104,28 @@ static func _descends_from(entry: Dictionary, root_name: String, by_name: Dictio
 	return false
 
 
-# 把某个命令源脚本里的静态方法注册为命令。
-# class_name_: 类名（没写 CMD_HOST 时的默认前缀）；script: 对应脚本。
+# 把某个命令源里的静态方法注册为命令（src 见 _all_sources）。
+# 私有方法（`_` 开头）**照常注册**：私有只是写法习惯，想调就调，不调也只是表里多一条（有意为之）。
 # 被谁用：_scan_all_sources、_lazy_load。
-static func _register_source_methods(class_name_: String, script: GDScript) -> void:
-	var prefix: String = _cmd_host(script, class_name_)
+static func _register_source_methods(src: Dictionary) -> void:
+	var prefix: String = src["host"]
+	var script: GDScript = src["script"]
 	for m_raw in script.get_script_method_list():
 		var m: Dictionary = m_raw
 		var method_name: String = m["name"]
-		# if method_name.begins_with("_"):
-		# 	continue
 		# 只收 static（get_script_method_list 的 flags 含 METHOD_FLAG_STATIC）
 		if m.get("flags", 0) & METHOD_FLAG_STATIC == 0:
 			continue
-		var cmd_name: String = prefix + "." + method_name
-		_commands[cmd_name] = { "callable": Callable(script, method_name), "arg_meta": _make_arg_meta(m) }
+		var arg_meta: Array = _make_arg_meta(m)
+		# 参数名 → 下标：注册时算一次，组装参数时 O(1) 查（不再每次线性找一遍）
+		var arg_index: Dictionary = {}
+		for i in arg_meta.size():
+			arg_index[str(arg_meta[i]["name"])] = i
+		_commands[prefix + "." + method_name] = {
+			"callable": Callable(script, method_name),
+			"arg_meta": arg_meta,
+			"arg_index": arg_index,
+		}
 
 
 # 取某个命令源脚本要注册到哪个前缀下：脚本（或它的基类）写了 `const CMD_HOST := "xxx"` 就用它，
@@ -139,13 +164,10 @@ static func _make_arg_meta(m: Dictionary) -> Array:
 # 被谁用：_init 注册的 COMMAND 监听（即 Msg.send_cmd 的落地）。
 static func execute(command_str: String) -> Array:
 	var results: Array = []
-	for single in command_str.split("\v"):
-		var cmd: String = single.strip_edges()
-		if cmd.is_empty():
-			continue
-		# 解析（含 $ 定位）与参数组装由 CommandParser 的两级缓存承担；
+	for cmd in CommandParser.split_lines(command_str):
+		# 拆行、解析（含取值链定位）都在 CommandParser 的缓存里；
 		# 这里只做"查命令 + 组装参数 + 调用"，不再另设执行缓存。
-		var parsed: Dictionary = CommandParser.parse(cmd)
+		var parsed: Dictionary = CommandParser.parse(str(cmd))
 		if parsed.get("is_value", false):
 			results.append(parsed.get("value"))
 			continue
@@ -160,7 +182,7 @@ static func execute(command_str: String) -> Array:
 			continue
 		var desc: Dictionary = desc_raw
 		var callable: Callable = desc["callable"]
-		results.append(callable.callv(_build_args(desc["arg_meta"], parsed)))
+		results.append(callable.callv(_build_args(desc["arg_meta"], desc["arg_index"], parsed["args"])))
 	return results
 
 
@@ -168,69 +190,112 @@ static func execute(command_str: String) -> Array:
 # 被谁用：手动调用（调试）。
 static func clear_cache() -> void:
 	CommandParser.clear_cache()
+	_sources.clear()
+	_sources_ready = false
+	_loaded_prefixes.clear()
 
 
-# 懒注册：命令形如 "类名.方法名"，据此定位并加载宿主脚本，注册其命令。
+# 懒注册：命令形如 "类名.方法名"，据此在源缓存里找出提供这个前缀的源并注册。
 # 前缀可能由**多个文件**提供（命令前缀组，见 CMD_HOST_KEY）：类名正好等于前缀的（如 UIInteract.gd）、
 # 以及写了 `const CMD_HOST` 挂到此前缀下的（如 UIInteract_Drag.gd），两类一起收。
+# 同一个前缀只扫一次：第一次就把该前缀的所有文件都收进来了（_loaded_prefixes）。
 # 被谁用：execute（命令表里没有时）。
 static func _lazy_load(cmd_name: String) -> void:
 	var dot := cmd_name.rfind(".")
 	if dot <= 0:
 		return
-	var class_name_: String = cmd_name.substr(0, dot)
-	var entries := ProjectSettings.get_global_class_list()
-	var by_name := {}
-	for e in entries:
-		by_name[e["class"]] = e
-	for cls in entries:
-		if not _descends_from(cls, "BaseClass", by_name):
-			continue
-		var script: GDScript = load(cls["path"])
-		if script == null:
-			continue
-		if cls["class"] == class_name_ or _cmd_host(script, cls["class"]) == class_name_:
-			_register_source_methods(cls["class"], script)
+	var prefix: String = cmd_name.substr(0, dot)
+	if _loaded_prefixes.has(prefix):
+		return
+	_loaded_prefixes[prefix] = true
+	for src in _all_sources():
+		if src["class"] == prefix or src["host"] == prefix:
+			_register_source_methods(src)
 
 
-# 按反射参数元信息，把位置/命名参数组装成与方法签名顺序一致的全参数数组。
-# 优先级：命名参数 > 位置参数 > 方法默认值 > 该类型的零值。
+# 按反射参数元信息，把"位置参数 + 名字=值"组装成与方法签名顺序一致的全参数数组。
+# 规则（与 Python 一致）：位置参数**按序落到还没填的槽**；`名字=值` 落到名字对应的槽（可跳过中间的参数）；
+# 都没给的用方法默认值，最后兜零值。位置参数写在命名参数之后、名字不存在、参数给重了都给一声警告。
+# arg_index = 参数名 → 下标（注册时算好，见 _register_source_methods）。
 # 被谁用：execute。
-static func _build_args(arg_meta: Array, parsed: Dictionary) -> Array:
+static func _build_args(arg_meta: Array, arg_index: Dictionary, args: Array) -> Array:
+	# 快路：全是位置参数（最常见的写法）——按序落槽、后面取默认值，不必建 slots/filled 两张表
+	var all_positional := true
+	for a_raw in args:
+		@warning_ignore("UNSAFE_CAST")
+		if str((a_raw as Dictionary)["name"]) != "":
+			all_positional = false
+			break
+	if all_positional:
+		if args.size() > arg_meta.size():
+			push_warning("CmdSys: %s 的参数太多了（多出来的被忽略）" % str(arg_meta.size()))
+		var quick: Array = []
+		for i in arg_meta.size():
+			var meta: Dictionary = arg_meta[i]
+			@warning_ignore("UNSAFE_CAST")
+			var v: Variant = (args[i] as Dictionary)["value"] if i < args.size() else meta["def"]
+			quick.append(_coerce(v, meta["type"]))
+		return quick
+	var slots: Array = []
+	var filled: Array = []
+	for i in arg_meta.size():
+		slots.append(null)
+		filled.append(false)
+	var next_pos := 0
+	var seen_named := false
+	for a_raw in args:
+		var a: Dictionary = a_raw
+		var arg_name: String = str(a["name"])
+		if arg_name == "":
+			if seen_named:
+				push_warning("CmdSys: 位置参数不能写在命名参数后面（%s 被忽略）" % str(a["value"]))
+				continue
+			while next_pos < slots.size() and filled[next_pos]:
+				next_pos += 1
+			if next_pos >= slots.size():
+				push_warning("CmdSys: %s 的参数太多了（多出来的被忽略）" % str(arg_meta.size()))
+				continue
+			slots[next_pos] = a["value"]
+			filled[next_pos] = true
+			next_pos += 1
+			continue
+		seen_named = true
+		var idx: int = arg_index.get(arg_name, -1)
+		if idx < 0:
+			push_warning("CmdSys: 没有参数名「%s」（有效名见方法签名）" % arg_name)
+			continue
+		if filled[idx]:
+			push_warning("CmdSys: 参数「%s」给了两次（用后给的那个）" % arg_name)
+		slots[idx] = a["value"]
+		filled[idx] = true
 	var full: Array = []
-	var positional: Array = parsed["positional"]
-	var named: Dictionary = parsed["named"]
 	for i in arg_meta.size():
 		var meta: Dictionary = arg_meta[i]
-		var key: String = meta["name"]
-		var v: Variant
-		if named.has(key):
-			v = named[key]
-		elif i < positional.size():
-			v = positional[i]
-		elif meta["def"] != null:
-			v = meta["def"]
-		else:
-			v = _type_zero(meta["type"])
+		var v: Variant = slots[i] if filled[i] else meta["def"]
 		full.append(_coerce(v, meta["type"]))
 	return full
 
 
-# 把解析出的 Variant 值，按反射到的目标参数类型强制转换。
-# 例如 --tile_name 2 里的 "2" 会被解析成 int，但目标参数是 String，
-# callv 不会隐式转换，这里统一转成正确类型。
+# 把解析出的值，按反射到的目标参数类型转换；**value 为 null**（参数没给、方法也没默认值）时给该类型的零值。
+# 例如 tile_name=2 里的 2 会被解析成 int，但目标参数是 String，callv 不会隐式转换，这里统一转成正确类型。
 # 被谁用：_build_args。
 static func _coerce(value: Variant, type: int) -> Variant:
 	match type:
 		TYPE_INT:
+			if value == null:
+				return 0
 			if value is bool:
 				return 1 if value else 0
 			return int(value)
 		TYPE_FLOAT:
-			return float(value)
+			return 0.0 if value == null else float(value)
 		TYPE_STRING:
+			if value == null:
+				return ""
 			return value if value is String else str(value)
 		TYPE_BOOL:
+			if value == null:
+				return false
 			if value is bool:
 				return value
 			if value is int:
@@ -239,23 +304,7 @@ static func _coerce(value: Variant, type: int) -> Variant:
 				var s: String = value
 				return s.to_lower() == "true"
 			return bool(value)
+		TYPE_VECTOR2:
+			return Vector2.ZERO if value == null else value
 		_:
 			return value
-
-
-# 某类型的零值（参数没给、方法也没默认值时用）。
-# 被谁用：_build_args。
-static func _type_zero(type: int):
-	match type:
-		TYPE_INT:
-			return 0
-		TYPE_FLOAT:
-			return 0.0
-		TYPE_BOOL:
-			return false
-		TYPE_STRING:
-			return ""
-		TYPE_VECTOR2:
-			return Vector2.ZERO
-		_:
-			return null

@@ -48,7 +48,7 @@ func _create_control() -> Control:
 
 
 ## 把 config["content"] 刷成文本（多行文本直接写，\n 换行）。
-## 被谁用：UIBase.build() 末尾、配置里改完 content 紧跟的 `$self.refresh("content")`。
+## 被谁用：UIBase.build() 末尾、配置里改完 content 紧跟的 `self.refresh("content")`。
 func refresh(key: String = "") -> void:
 	super.refresh(key)
 	if key != "" and key != "content":

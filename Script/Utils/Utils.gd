@@ -46,12 +46,11 @@ static func get_or_set_dict(dict: Dictionary, keys: Array, default_value: Varian
 ##   Utils.write "@123.config.content" 值        ← 实例成员 / 字典键，想写几层写几层
 ##   Utils.write "Test.int1" 7                   ← 类脚本的 static 变量
 ##   Utils.write "arr[2]" 值 / "a.b[0].c" 值     ← 中间夹列表下标
-## 路径可以带前导 `$`（和取值式一样），也可以不带；
-## **配置里用双引号包住**即可（`Utils.write "$self...." 值`）：顶层引号 = 字面字符串，
-## `$` 开头也不会被当成取值式（见 CommandParser._tokenize）；手写的 `\$` 转义同样有效。
-## 前导反斜杠/缺 `$` 都在这里规范化掉（CommandParser._normalize_path）。
+## 路径写成**带引号的字符串**即可：`Utils.write("self.config.content", 值)`——
+## 引号里的内容不再被当成取值式，路径原样传进来；带不带前导 `$` 都行（等价）。
+## 缺 `$` 由 CommandParser._normalize_path 补上。
 ## 宿主/中间层取不到、最后一步不可写时返回 false 并**警告一声**（多半是路径写错）。
-## 指令写法：Utils.write "$self.parent.parent.parent.parent.config.bind" $self.control.text
+## 指令写法：Utils.write("self.parent.parent.parent.parent.config.bind", self.control.text)
 ## 被谁用：配置里按路径写值（如"绑定"）。
 static func write(path: Variant, value: Variant) -> bool:
     if CommandParser.write(str(path), value):
@@ -62,11 +61,11 @@ static func write(path: Variant, value: Variant) -> bool:
 
 ## 对调**两条路径**上的值（A ↔ B）——开关式按钮的"换一套配置"就是它。
 ## 也是**只有两个参数**（两条路径），走的是同一套路径解析（CommandParser.read / write）：
-##   Utils.swap "$self.config.events" "$self.config.events_2"
-##   Utils.swap "$self.config.content" "$self.config.content_2"
-## 路径用双引号包住（顶层引号 = 字面字符串，`$` 开头不会被当取值式，见 CommandParser._tokenize）。
+##   Utils.swap("self.config.events", "self.config.events_2")
+##   Utils.swap("self.config.content", "self.config.content_2")
+## 路径用双引号包住写成字符串（引号里的内容不再被当取值式）。
 ## 读不到 / 任一侧写不进就返回 false 并警告一声。
-## **界面刷新不在这里**：UI 侧改完 config，在配置里紧接一条 `$self.refresh("content")`（改了什么刷什么）。
+## **界面刷新不在这里**：UI 侧改完 config，在配置里紧接一条 `self.refresh("content")`（改了什么刷什么）。
 ## 被谁用：开关式按钮的配置（原来那条 UIInteract.swap_config）。
 static func swap(path_a: Variant, path_b: Variant) -> bool:
     var sa: String = str(path_a)
@@ -83,7 +82,7 @@ static func swap(path_a: Variant, path_b: Variant) -> bool:
 
 ## 把文本复制到**系统剪贴板**（平台没有剪贴板功能时警告，等于没复制成功）。
 ## 典型用法是内嵌取值：
-##   Utils.copy $self.parent.parent.config.reg_name        ← 右键菜单的"复制名称"
+##   Utils.copy self.parent.parent.config.reg_name        ← 右键菜单的"复制名称"
 ## 被谁用：需要往外复制文本的配置（如"复制名称"）。
 static func copy(text: Variant = "") -> void:
     var s: String = "" if text == null else str(text)

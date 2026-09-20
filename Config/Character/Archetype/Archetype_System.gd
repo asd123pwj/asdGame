@@ -43,15 +43,16 @@ var values: Array[Dictionary] = [
             # 每帧刷新指针目标（hover 变化时发 enter/exit），菜单 hover 展开依赖它：
             # 已挪进 InputSys._process（在派发按键之前，一帧只检测这一次），不再占一条 Tick 快捷
             # ["Pointer Refresh", QName.tick, "PointerDetect._process"],
-            # 统一入口 PointerDetect.key <状态名>：状态名 = 上面 statuses 的 name，也是 UI 侧 config["events"] 的事件名
-            [QName.submit, QName.submit, "PointerDetect.key \"" + QName.submit + "\""],
-            # [QName.mouseLeft_press, QName.mouseLeft_press, "PointerDetect.key \"" + QName.mouseLeft_press + "\""],
-            [QName.mouseLeft, QName.mouseLeft, "PointerDetect.key \"" + QName.mouseLeft + "\""],
-            # [QName.mouseLeft_release, QName.mouseLeft_release, "PointerDetect.key \"" + QName.mouseLeft_release + "\""],
-            [QName.mouseRight, QName.mouseRight, "PointerDetect.key \"" + QName.mouseRight + "\""],
+            # 统一入口 PointerDetect.key("状态名")：状态名 = 上面 statuses 的 name，也是 UI 侧 config["events"] 的事件名。
+            # 指令串用 %s 模板拼（别用 + 拼引号，容易把两头的引号写丢）
+            [QName.submit, QName.submit, 'PointerDetect.key("%s")' % QName.submit],
+            # [QName.mouseLeft_press, QName.mouseLeft_press, 'PointerDetect.key("%s")' % QName.mouseLeft_press],
+            [QName.mouseLeft, QName.mouseLeft, 'PointerDetect.key("%s")' % QName.mouseLeft],
+            # [QName.mouseLeft_release, QName.mouseLeft_release, 'PointerDetect.key("%s")' % QName.mouseLeft_release],
+            [QName.mouseRight, QName.mouseRight, 'PointerDetect.key("%s")' % QName.mouseRight],
             # 测试用：J / K 开关两个测试 UI（独立 UI，只给预设名；toggle = 显示着就关、否则开）
-            [QName.key_j, QName.key_j, "UIInteract.toggle --preset_name TestShow"],
-            [QName.key_k, QName.key_k, "UIInteract.toggle --preset_name TestInput"],
+            [QName.key_j, QName.key_j, 'UIInteract.toggle(preset_name="TestShow")'],
+            [QName.key_k, QName.key_k, 'UIInteract.toggle(preset_name="TestInput")'],
         ],
     },
     {

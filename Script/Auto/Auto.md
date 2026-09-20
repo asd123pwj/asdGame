@@ -20,7 +20,7 @@
 
 ```gdscript
 # 配置（元素自己的 events）
-"events": [["Mouse Left", "UIInteract.rescale $self.parent $event"]]
+"events": [["Mouse Left", "UIInteract.rescale self.parent event"]]
 
 # UIInteract 里成对的两个函数
 static func rescale(target: UIBase, status_name: String) -> void:      # 登记入口
@@ -30,7 +30,7 @@ static func rescaling(target: UIBase) -> void:                        # 每帧�
     ...
 ```
 
-- `$event` 由 `UIBase._resolve_cmd` 换成**带引号的触发事件名**（也就是状态名 / Key 名），
+- `event` 由 `UIBase._resolve_cmd` 换成**带引号的触发事件名**（也就是状态名 / Key 名），
   所以配置不必把状态名再抄一遍，换键位只改状态层。
 - 第一个参数是**角色**：UI 里是 `Sys.sys_status`（系统状态都挂在它身上），任意角色都行。
 

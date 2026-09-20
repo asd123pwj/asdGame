@@ -8,7 +8,7 @@ static var test_int := [{"value": [{"value": 5}]}] # [0].value[0].value
 static var test_int2 := {"value": [-10]}
 static var int1 := 1
 ## 指令系统的取值示例（见 CommandSystem.gd 顶部说明）：
-## 用 `$Test.test_int[0].value[0].value`、`$Test.test_func($Test.int1, 4)` 这类写法把静态成员/函数当参数。
+## 用 `Test.test_int[0].value[0].value`、`Test.test_func(Test.int1, 4)` 这类写法把静态成员/函数当参数。
 ## 被谁用：delay_loop_test 里的 Msg.send_cmd 示例。
 static func test_func(a: int, b: int) -> int:
     return a + b
@@ -58,7 +58,7 @@ func ui_test() -> void:
     # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 → UIInteract_OpenClose.open 统一开启 → UIBase 包装 Control。
     # 开启方式与游戏里**完全一致**：发指令（UIInteract.open），不直接调内部函数——
     # 全项目开 UI 只有这一条路，改了才会全都被改到。想手动开关就绑快捷键到这个指令上。
-    Msg.send_cmd("UIInteract.open --preset_name MiniHUD")
+    Msg.send_cmd("UIInteract.open(preset_name=\"MiniHUD\")")
     var ui: UIBase = UiSys.get_ui("MiniHUD")
     if ui == null:
         print("UI: MiniHUD 没开出来（查预设与 UIInteract.open）")
@@ -78,23 +78,23 @@ func ui_test() -> void:
 
     # 键盘快捷键界面（见 Config/UI/UIPreset_Keyboard.gd）：独立 UI + 右上角关闭按钮 / 右下角缩放手柄。
     # "给面板加个按钮"就是开一个普通预设（CloseButton / ResizeButton），不写专门函数；
-    # 指令里引用实例要写 $@ID（配置里那套 $self.parent/$self 是 UIBase._resolve_cmd 在发送前换成 $@ID 的，这里手动拼同样的形式）。
-    Msg.send_cmd("UIInteract.open --preset_name Keyboard")
-    var kb_id: String = "$@" + str(UiSys.get_ui("Keyboard").ID)
-    Msg.send_cmd("UIInteract.open " + kb_id + " CloseButton " + kb_id)
-    Msg.send_cmd("UIInteract.open " + kb_id + " ResizeButton " + kb_id)
+    # 指令里引用实例要写 @ID（配置里那套 self.parent/self 是 UIBase._resolve_cmd 在发送前换成 @ID 的，这里手动拼同样的形式）。
+    Msg.send_cmd("UIInteract.open(preset_name=\"Keyboard\")")
+    var kb_id: String = "@%s" % UiSys.get_ui("Keyboard").ID
+    Msg.send_cmd('UIInteract.open(%s, "CloseButton", %s)' % [kb_id, kb_id])
+    Msg.send_cmd('UIInteract.open(%s, "ResizeButton", %s)' % [kb_id, kb_id])
 
     # 测试用的两个 UI：显示（TestShow）/ 输入（TestInput）——J / K 键开关它们
     # 玩法：右键 TestShow → 复制名称 → 右键 TestInput → 绑定 ▸ → 回车，然后在输入框里打字回车
-    Msg.send_cmd("UIInteract.open --preset_name TestShow")
-    Msg.send_cmd("UIInteract.open --preset_name TestInput")
+    Msg.send_cmd("UIInteract.open(preset_name=\"TestShow\")")
+    Msg.send_cmd("UIInteract.open(preset_name=\"TestInput\")")
 
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:
     var info: String = char_.name
     # for attr_type_name in char_.attrs.attributes.keys():
-    for attr_type_name in Msg.send_cmd00("&@" + str(char_.ID) + ".attrs.attributes").keys():
+    for attr_type_name in Msg.send_cmd00("@%s.attrs.attributes" % char_.ID).keys():
         info += " %s: %d" % [attr_type_name, char_.attrs.get_(attr_type_name)]
     print(info)
 
@@ -113,9 +113,9 @@ func delay_loop_test() -> void:
         await Sys.sys.get_tree().create_timer(1).timeout
         
         MapSys.place(0, 5, -15, "门", "2", -1, true)
-        # Msg.send_cmd("MapSys.place 0 $Test.test_int[0].value[0].value $Test.test_int2.value[0] 门 2 -1 true")
-        Msg.send_cmd("MapSys.place 0 $Test.test_func($Test.int1, 4) $Test.test_int2.value[0] 门 2 -1 true")
-        Msg.send_cmd("MapSys.place --layer_id 0 --x 10 --y -10 --source_name 门 --tile_name 2 --force_space")
+        # Msg.send_cmd("MapSys.place 0 Test.test_int[0].value[0].value Test.test_int2.value[0] 门 2 -1 true")
+        Msg.send_cmd("MapSys.place(0, Test.test_func(Test.int1, 4), Test.test_int2.value[0], \"门\", 2, -1, true)")
+        Msg.send_cmd("MapSys.place(layer_id=0, x=10, y=-10, source_name=\"门\", tile_name=2, force_space=true)")
         MapSys.build()
         # Sys.timeSys.advance()
         # if RandSys.rand.randi_range(0, 1) == 0:

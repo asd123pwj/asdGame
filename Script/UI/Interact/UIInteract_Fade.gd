@@ -7,7 +7,7 @@ extends UIInteractBase
 ## 透明度渐隐/渐显：alpha 为目标透明度(0~1)，duration 为补间秒数。
 ## 指令里可以只写到 alpha（不写就用签名里的默认值——CmdSys._build_args 会填默认值），
 ## 但建议写全，一眼看得出时长。
-## 被谁用：预设里 "UIInteract.fade_to $self.parent 0.0 0.5" 这类配置。
+## 被谁用：预设里 "UIInteract.fade_to self.parent 0.0 0.5" 这类配置。
 static func fade_to(target: UIBase, alpha: float, duration: float = 0.25) -> void:
 	var ui := _as_ui(target, "fade_to")
 	if (ui == null) or (ui.control == null):

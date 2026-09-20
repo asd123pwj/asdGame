@@ -14,7 +14,7 @@ extends BaseClass
 ## 状态满足期间每帧执行一条指令，状态不满足自动删——与指针在哪无关）。
 ##
 ## **UI 树怎么长**（挂载规则：anchor 优先 → 宿主 → UI 根）见 `UIInteract_OpenClose.open`——
-## 它决定了"关谁连谁一起关"，也决定了指令里的 `$self.parent` 链（菜单链是一棵单链子树，
+## 它决定了"关谁连谁一起关"，也决定了指令里的 `self.parent` 链（菜单链是一棵单链子树，
 ## `MiniHUD → Menu → Edit(菜单项) → MenuEdit → …`），所以失焦判定沿 parent 链就能认出"指针在我这条链上"
 ## （见 UIInteract_OpenClose.close_blur_ui）；关父级时整条链随可见性继承一起消失。
 ##
@@ -63,11 +63,11 @@ static func get_ui(name: String) -> UIBase:
 
 
 ## 让所有已登记的 UI 的界面跟自己的 config 一致（见 UIBase.refresh）。
-## **首选不是它**：改了什么就刷什么（`$self.refresh` / `$UiSys.get_ui(名字).refresh`），
+## **首选不是它**：改了什么就刷什么（`self.refresh` / `UiSys.get_ui(名字).refresh`），
 ## 一条改值指令配一条刷新。这里只是"实在要一把刷"时的兜底（如调试期、或改动散在很多 UI 上）。
 ## 成本 = UI 数量 × 一次刷新（都很轻：只镜像 + 设文本/可见性；位置不在这里，见 UIBase.refresh）。
 ## 正在编辑的输入框会自己跳过（别把人打的字冲掉，见 UI_Input.refresh）。
-## 被谁用：配置里 `$UiSys.refresh_all`（要一把刷时的兜底）。
+## 被谁用：配置里 `UiSys.refresh_all`（要一把刷时的兜底）。
 static func refresh_all() -> void:
 	for ui: UIBase in uis.values():
 		ui.refresh()
@@ -114,7 +114,7 @@ static func _reg_name(mount: UIBase, preset_name: String) -> String:
 static func _register_tree(ui: UIBase, full_name: String) -> void:
 	uis[full_name] = ui
 	# 登记名**热更新进配置**：于是"这个 UI 叫什么名字"是**读值**能拿到的数据
-	# （指令里写 `$@ID.config.reg_name`），不需要"反查名字"的函数。
+	# （指令里写 `@ID.config.reg_name`），不需要"反查名字"的函数。
 	# 改动/重开/追加子元素都会重新登记，所以它始终跟登记表一致。
 	ui.config["reg_name"] = full_name
 	for child in ui.children:
