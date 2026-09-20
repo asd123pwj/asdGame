@@ -5,12 +5,12 @@ extends UIInteractBase
 
 
 ## 在 target 的 config[key] 列表里开关一个值：列表里**已经有（按内容比）就删掉，没有就追加**。
-## 与 swap_config 的分工：
-##   swap_config  对调两套配置（两套都写死在元素上，整份换）——适合"开关式按钮"连行为带文案一起换；
+## 与 `Utils.swap`（对调两条路径）的分工：
+##   Utils.swap   对调两套配置（两套都写死在元素上，整份换）——适合"开关式按钮"连行为带文案一起换；
 ##   switch_value 只加减**一项**——适合"给宿主加/减一条绑定"（如菜单里的"启用拖拽"），
 ##                不必为此在宿主预设里预先摆两套 events 并手工保持同步。
 ## 为什么改完就生效：config 是"数据"，`events` 这类列表在派发时（UIBase.on_event）才读；
-## 但 content 这种要镜像到运行时字段的键不在本函数职责内（那是 swap_config 顺手做的事）。
+## 但 content 这种要刷到控件上的键不在本函数职责内（改完在配置里接一条 `$self.refresh("content")`）。
 ## 值怎么给：指令里可以直接引变量，如 `$QName.UI_event_mouseLeft_drag`
 ##   （见 Config/QuickName.gd：`[QName.mouseLeft, "UIInteract.drag $self $event"]`）——
 ##   常用的那条绑定只写一处，配置里填空即可。

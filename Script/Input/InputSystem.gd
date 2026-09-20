@@ -17,9 +17,11 @@ static var mouse_position: Vector2 = Vector2.ZERO
 ## → TimeSys._process（Tick 类消费，拖拽走这里）→ **本帧所有 _process 都跑完**（deferred 队列 flush）才清零。
 ## 被谁用：UIInteract.drag（拖拽按帧消费位移）、PointerDetect._process（位移不为 0 就派发 Pointer Move）。
 static var mouse_delta: Vector2 = Vector2.ZERO
-## 是否处于"编辑输入"模式（要录键位时置 true，避免输入的键被当成游戏按键）。
-## 被谁用：需要录键位的界面/流程（如改绑快捷键）。
-static var on_edit: bool = false
+## 正在编辑输入的 UI（**开始编辑时登记**，见 UIInteract_Edit.begin_edit）；null = 没在编辑。
+## 它本身就是"编辑模式"这个开关（不再另设 bool：两处状态没法保证同步）。
+## 被谁用：_input（编辑中按键不进状态层、只把回车翻成提交事件）、UIInteract_Edit（登记 / 结束）、
+##         PointerDetect.key（点别处时收掉）。
+static var edit_ui: UIBase = null
 ## 当前按住的键（键值，Godot 常量）。按住期间每帧发 HOLD，松开立刻移出。
 ## 被谁用：_input（维护）、_process（逐帧发 HOLD）、鼠标移动判断"是否在拖拽中"。
 static var keys_holding: Array[Variant] = []
@@ -33,6 +35,16 @@ func _init() -> void:
 static func _input(event: InputEvent):
     @warning_ignore_start("unsafe_property_access")
     if event is InputEventKey:
+        # 正在用输入框打字（UI_Input 抢了焦点）：这些键只归它，不再翻译成状态，
+        # 否则打字会顺手触发 UI 指令。
+        if edit_ui != null:
+            # 只有回车往外走：翻成项目自己的事件（QName.input_submit）派给正在编辑的那个输入框。
+            # 为什么在这儿翻：这样"回车提交"就走**唯一输入链路**，UI_Input 不必去连引擎的
+            # text_submitted 信号（全项目不连引擎信号，见 Script/UI/UI.md）。
+            # echo = 按住不放的重复触发，不算提交。
+            if event.pressed and not event.echo and event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+                edit_ui.on_event(QName.input_submit)
+            return
         _send_key_status(event.keycode, event.pressed)
     elif event is InputEventMouseButton:
         _send_key_status(event.button_index, event.pressed)
@@ -51,6 +63,16 @@ static func _process(_delta: float) -> void:
     for key in keys_holding:
         Msg.send_key_hold(key)
     _clear_mouse_delta.call_deferred()
+
+
+## 结束编辑：清掉编辑目标，顺手把控件焦点也放掉（提交/被关掉那条路走过来时它还持有焦点）。
+## 谁在编辑是 InputSys 的状态（按键翻译的开关就在 _input 里），所以"结束"也归这里——
+## 放在 PointerDetect 里就要伸手改别的系统的状态，反而更绕。
+## 被谁用：PointerDetect.key（点别处，见它开头那两行）、UIInteract_Edit.end_edit（指令）。
+static func end_edit() -> void:
+    if edit_ui != null and edit_ui.control != null:
+        edit_ui.control.release_focus()
+    edit_ui = null
 
 
 ## 帧末结算：清空本帧累计的指针位移，供下一帧重新累计（指针不动则下一帧即 (0,0)，不会漂）。

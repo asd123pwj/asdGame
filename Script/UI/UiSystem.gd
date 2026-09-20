@@ -14,7 +14,7 @@ extends BaseClass
 ## 状态满足期间每帧执行一条指令，状态不满足自动删——与指针在哪无关）。
 ##
 ## **UI 树怎么长**（挂载规则：anchor 优先 → 宿主 → UI 根）见 `UIInteract_OpenClose.open`——
-## 它决定了"关谁连谁一起关"，也决定了指令里的 `$parent` 链（菜单链是一棵单链子树，
+## 它决定了"关谁连谁一起关"，也决定了指令里的 `$self.parent` 链（菜单链是一棵单链子树，
 ## `MiniHUD → Menu → Edit(菜单项) → MenuEdit → …`），所以失焦判定沿 parent 链就能认出"指针在我这条链上"
 ## （见 UIInteract_OpenClose.close_blur_ui）；关父级时整条链随可见性继承一起消失。
 ##
@@ -62,6 +62,17 @@ static func get_ui(name: String) -> UIBase:
 	return uis.get(name)
 
 
+## 让所有已登记的 UI 的界面跟自己的 config 一致（见 UIBase.refresh）。
+## **首选不是它**：改了什么就刷什么（`$self.refresh` / `$UiSys.get_ui(名字).refresh`），
+## 一条改值指令配一条刷新。这里只是"实在要一把刷"时的兜底（如调试期、或改动散在很多 UI 上）。
+## 成本 = UI 数量 × 一次刷新（都很轻：只镜像 + 设文本/可见性；位置不在这里，见 UIBase.refresh）。
+## 正在编辑的输入框会自己跳过（别把人打的字冲掉，见 UI_Input.refresh）。
+## 被谁用：配置里 `$UiSys.refresh_all`（要一把刷时的兜底）。
+static func refresh_all() -> void:
+	for ui: UIBase in uis.values():
+		ui.refresh()
+
+
 ## 给已登记的 UI 追加一个子元素并登记（由 UIBase.add_child_element 调用）。
 ## 登记后才可能被指针命中；父元素没登记就警告（子元素会永远收不到事件）。
 ## 命名就用 _reg_name 那一套（挂载点名 + "/" + 名字），所以"开出来的 UI"与"配置里的子元素"是同一套名字。
@@ -102,13 +113,10 @@ static func _reg_name(mount: UIBase, preset_name: String) -> String:
 ## 被谁用：UIInteract_OpenClose._build_open（独立 UI）、register_child（子元素）。
 static func _register_tree(ui: UIBase, full_name: String) -> void:
 	uis[full_name] = ui
+	# 登记名**热更新进配置**：于是"这个 UI 叫什么名字"是**读值**能拿到的数据
+	# （指令里写 `$@ID.config.reg_name`），不需要"反查名字"的函数。
+	# 改动/重开/追加子元素都会重新登记，所以它始终跟登记表一致。
+	ui.config["reg_name"] = full_name
 	for child in ui.children:
 		_register_tree(child, full_name + "/" + child.name)
 
-
-## 失焦关闭（配 `close_on_blur` 的 UI 指针一离开就关）不在这里：候选只有"开出来的 UI"才可能有，
-## 所以它在开/关那边（Script/UI/Interact/UIInteract_OpenClose.gd 的 close_blur_ui）。
-
-
-## 逐帧回调与"按住期间每帧执行"都搬到 AutoSys 了（见 Script/Auto/Auto.md）：
-## 那边按"角色 + 状态名 + 指令"登记，状态一端满足就自动停，不用在这里存 Callable。

@@ -20,7 +20,7 @@
 
 ```gdscript
 # 配置（元素自己的 events）
-"events": [["Mouse Left", "UIInteract.rescale $parent $event"]]
+"events": [["Mouse Left", "UIInteract.rescale $self.parent $event"]]
 
 # UIInteract 里成对的两个函数
 static func rescale(target: UIBase, status_name: String) -> void:      # 登记入口

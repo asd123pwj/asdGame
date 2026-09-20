@@ -10,7 +10,7 @@ extends BaseClass
 ## 占位符解析与交互实现都在 UIInteract（UIBase 只存"何时发什么指令"）；
 ## 登记与寻址在 UiSys（登记表 + 登记名规则）；**开启**在 UIInteract_OpenClose.open
 ## （**全项目唯一的开启入口**，指令形式 `UIInteract.open`）。
-## 显示内容统一挂 var content，子类 refresh() 把它刷到控件上。
+## 显示内容就是 config["content"]（**没有同名成员变量**），由子类 refresh() 刷到控件上。
 
 ## 元素名：登记名的一段（独立 UI 就是预设名，子元素就是配置里写的名字）。
 ## 被谁用：UiSys._register_tree / find_name（拼登记名）、各处的警告文案。
@@ -28,12 +28,14 @@ var config: Dictionary = {}
 var control: Control
 
 ## 显示内容：指明该 UI 展示什么（文本/多行文本/纹理路径…由子类解释）。
-## 修改展示 = set_content(v)（内部自动 refresh），或改 content 后手动调 refresh()。
-## 被谁用：_apply_config（从配置取）、子类 refresh（读）、UIInteract.set_content（指令写）。
-var content: Variant = null
+## **就是 config["content"] 这一个键，不另设成员变量**——一份数据一处真相，不会两边不一致。
+## 改内容 = `Utils.write "$self.config.content" 新值`，再在**下一条**接刷新（`$self.refresh`）；
+## 子类 refresh() 负责把它刷到控件上（见 UI.md 的"改了什么就刷什么"）。
+## 为什么不做成属性 set 自动刷：那样要拦截的就不止 content 一项（config 里还有 events/size/…），
+## 而 config 是 Dictionary、拦不了写入（要拦得把它换成带 _set/_get 的对象，读点太多、得不偿失）。
 
-## 挂载对象（父 UI）：组装子元素时由父元素注入，即指令占位符 $parent 的指向。
-## 被谁用：_build_children / add_child_element（注入）、_resolve_cmd（$parent 链）、
+## 挂载对象（父 UI）：组装子元素时由父元素注入，即指令里 `$self.parent` 的指向。
+## 被谁用：_build_children / add_child_element（注入）、_resolve_cmd（$self 链上的 .parent）、
 ##         on_event（事件冒泡）、UIInteract_OpenClose._is_inside（判"指针是否在这个 UI 上"）。
 var parent: UIBase = null
 
@@ -99,52 +101,24 @@ func _create_control() -> Control:
 	return Control.new()
 
 
-## 虚接口：把 content 刷到控件上（子类覆写）。
-## 被谁用：build() 末尾、set_content()。实现者：UI_Label / UI_Scroll / UI_Image。
-func refresh() -> void:
-	pass
-
-
-## 修改显示内容并立即刷新。
-## 被谁用：UIInteract.set_content（指令）、外部直接调（如 Test.ui_test 改滚动区文本）。
-func set_content(value: Variant) -> void:
-	content = value
-	refresh()
-
-
-## 对调 config 里两项的值（A ↔ B），如 `events` ↔ `events_2`、`content` ↔ `content_2`。
-## 这就是"开关式按钮"的做法：**两套配置同时写在元素上**，点一下"做事 + 换一套配置"，
-## 于是同一个元素（Label/Image/任意元素）在两次点击里走两套行为，不需要专门的开关元素。
-## config 是"数据"，元素的界面状态是从运行时字段读的，所以换完必须同步镜像再刷新，否则界面不跟着变。
-## 被谁用：UIInteract.swap_config（指令）。
-func swap_config(key_a: String, key_b: String) -> void:
-	if key_a == "" or key_b == "" or key_a == key_b:
-		push_warning("UIBase「%s」.swap_config: 键名不合法（%s / %s）" % [name, key_a, key_b])
-		return
-	# 两套配置必须都写过：只写了一套时**什么都不做**（否则会把写了的那套换成 null，
-	# 等于把 events 整个抹掉——那种"点了菜单项结果交互全没了"的坑很难查）。
-	if not config.has(key_a) or not config.has(key_b):
-		push_warning("UIBase「%s」.swap_config: %s / %s 没有成套写在 config 里，不切换"
-			% [name, key_a, key_b])
-		return
-	var a: Variant = config.get(key_a)
-	var b: Variant = config.get(key_b)
-	config[key_a] = b
-	config[key_b] = a
-	_sync_from_config(key_a)
-	_sync_from_config(key_b)
-	refresh()
-
-
-## 把 config 的某个键同步到对应的运行时字段（换配置后界面才会跟着变）。
-## 目前是镜像关系的只有 content（显示内容）与 visible（可见性）；
-## 以后再加"config 键 → 运行时字段"的镜像，记得也加进这里。
-## 被谁用：swap_config。
-func _sync_from_config(key: String) -> void:
-	if key == "content":
-		content = config.get("content")
-	elif key == "visible" and control != null:
-		control.visible = bool(config.get("visible", true))
+## 刷新界面：**不传 key = 把 config 里认识的项全部同步**（应用到控件）；
+## 传 key = 只刷那一项。子类覆写时先 `super.refresh(key)`，再处理自己新增的键。
+## 基类只管公共的 visible / position；**content 由各子类自己读 config["content"] 刷**（见实现者）。
+## 认识的公共键：visible（可见性）、position（摆放位置）。
+## **position 只有显式 `refresh("position")` 才刷**：不传 key 的"全刷"不碰摆放——
+## 拖动/摆位是运行时的临时偏离，不该被一次普通刷新拽回 config 里那个位置。
+## **只改了一项就传那一项**（`$self.refresh("content")`）——跟"改了什么刷什么"对上，也省掉别的项的无谓同步；
+## 不传 key 的"全刷"留着给"一次改了好几项 / 不确定"的场合。
+## 实现者：UI_Label / UI_Scroll / UI_Image / UI_Input（各自的键见它们的 refresh）。
+## 被谁用：build()（全部）、配置里改完 config 后紧跟的 `$self.refresh("content")`、
+##         UIInteract_OpenClose._place（position）。
+func refresh(key: String = "") -> void:
+	if (key == "" or key == "visible") and control != null and config.has("visible"):
+		control.visible = bool(config["visible"])
+	if key == "position" and control != null and config.has("position") and config["position"] is Array:
+		var p: Array = config["position"]
+		if p.size() >= 2:
+			control.position = Vector2(float(p[0]), float(p[1]))
 
 
 ## 摆到指定**屏幕坐标**并显示（按 open_at 策略开的 UI 用，见 UiSys._place）。
@@ -161,15 +135,25 @@ func show_at(pos: Vector2) -> void:
 	control.show()
 
 
-## 摆回配置里声明的位置（config["position"]）；没配就不动。
-## 被谁用：_apply_config（建时）、UiSys._place（CONFIG 策略：被拖动过的 UI 重开时回初值）。
-func reset_position() -> void:
-	if control == null:
-		return
-	if config.has("position") and config["position"] is Array:
-		var p: Array = config["position"]
-		if p.size() >= 2:
-			control.position = Vector2(float(p[0]), float(p[1]))
+## 取一个在本元素下**唯一**的子元素名：没重名就原样，重名加后缀 `_2`、`_3`…
+## 为什么按"同一挂载点下不重名"判：登记名 = `挂载点登记名/名字`（见 UiSys._reg_name），
+## 同一挂载点下同名 = 同一个登记名 = 互相覆盖（后建的把先建的挤掉，指针也只命中一个）。
+## 后缀只是"补一个没被占的"，所以没重名时名字保持原样（`Title` 还是 `Title`，不是 `Title_1`）。
+## 判重看的是**本元素已有的子元素**（配置里的与运行时加的都算），不查登记表：
+## 建树时父元素自己还没登记，查表反而不准。
+## 名字就是"复制名称"复制出去、用来绑定的那个东西，所以生成规则只此一处。
+## 被谁用：_build_children、add_child_element。
+func _unique_child_name(want: String) -> String:
+	var base: String = want if want != "" else "Child"
+	var taken: Array[String] = []
+	for child in children:
+		taken.append(child.name)
+	if not taken.has(base):
+		return base
+	var i: int = 2
+	while taken.has(base + "_" + str(i)):
+		i += 1
+	return base + "_" + str(i)
 
 
 ## 子元素挂载点（默认直接挂 control；容器类覆写返回内部布局节点）。
@@ -188,16 +172,14 @@ func _free_box() -> Control:
 ## 应用 config 里的公共属性：position / size / content / visible / font_size / font_color / background。
 ## 被谁用：build()。子类覆写时必须先 super()（如 UI_Scroll 之后再调内层 label 的宽度）。
 func _apply_config() -> void:
-	reset_position()
+	refresh("position")
 	if config.has("size") and config["size"] is Array:
 		var s: Array = config["size"]
 		if s.size() >= 2:
 			control.custom_minimum_size = Vector2(float(s[0]), float(s[1]))
 			control.size = control.custom_minimum_size
-	if config.has("content"):
-		content = config["content"]
-	if config.has("visible"):
-		control.visible = bool(config["visible"])
+	# visible / position 不在这里设：它们由 refresh() 统一"让界面跟 config 一致"
+	# （build 里紧跟着就会调 refresh()，位置用 refresh("position")；content 由子类 refresh 读）
 	# 字号/字色是通用属性（谁都能配），作用在**本元素的控件**上：
 	# 主题重写只在配它的那个控件上生效，**不会自动传给子控件**——要小字号/深色字请配到真正显示文本的那个元素上。
 	# （不配字色就用主题默认：Godot 默认主题是接近白色的，画在浅色底图上会看不见。）
@@ -258,7 +240,7 @@ func _make_background(path: String) -> StyleBoxTexture:
 
 
 ## 组装子元素：config["children"] 每项 [child_name, ui_class, child_config]。
-## 子元素的挂载对象（parent）即本元素（父 UI），其指令里的 $parent 指向本元素。
+## 子元素的挂载对象（parent）即本元素（父 UI），其指令里的 `$self.parent` 指向本元素。
 ## 挂载点与运行时那条路**同一套规则**（见 add_child_element）：配了 free 的挂到叠加层
 ## （绝对定位，position/size 不被父级布局改），没配的进内容盒（容器类 = 竖排）。
 ## 被谁用：build()。（运行时加子元素走 add_child_element，那条路要额外登记。）
@@ -274,6 +256,7 @@ func _build_children() -> void:
 		if child == null:
 			continue
 		child.parent = self
+		child.name = _unique_child_name(child.name)     # 重名自动加后缀（同一挂载点下不重名）
 		child.build()
 		children.append(child)
 		# free 的挂到叠加层（非容器，位置/尺寸保持配置值），否则进内容盒（竖排布局）
@@ -286,11 +269,11 @@ func _build_children() -> void:
 ## hover 变化用 QName.pointer_enter / QName.pointer_exit。
 ## 事件→指令：在 config["events"]（[事件名, 指令串] 列表）里按等值取指令串，取到才发送。
 ## 自己没配的事件**冒泡给父级**：于是"整块面板的行为"在它的子元素上同样生效
-## （如菜单面板启用拖拽后，按住菜单项也能拖；$self/$parent 以配了指令的那个元素为基准）。
+## （如菜单面板启用拖拽后，按住菜单项也能拖；$self 与它上面的取值链都以配了指令的那个元素为基准）。
 ## 冒泡到根仍没有配置就什么都不做（元素没有隐式行为）。
 ## 用列表而不是字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），
 ## 且要加新事件只需往列表里加一项。
-## 占位符（$self/$parent 链/$event）由本类的 _resolve_cmd 解析——它是 on_event 的私有助手，
+## 占位符（$self 及它上面的取值链、$event）由本类的 _resolve_cmd 解析——它是 on_event 的私有助手，
 ## 不挂在 UIInteract 的指令面上（没有第二个使用者）。
 ## 被谁用：PointerDetect.key（状态事件）、PointerDetect._process（enter/exit）、本函数自身（冒泡）。
 func on_event(event_name: Variant) -> void:
@@ -307,47 +290,25 @@ func on_event(event_name: Variant) -> void:
 		parent.on_event(event_name)
 
 
-## 解析指令串占位符（发送前调用）：
-##   $self   → 自身实例（$@ID）
-##   $parent → 父 UI；$parent.parent → 祖父，链式任意级。级别不足时警告并用可达的最高级 parent 替代；
-##             链尾若还跟着 ".xxx" 原样保留（成为 $@ID.xxx，指令系统会继续按表达式取该属性）。
-##   $event  → 触发这次事件的**事件名**（= 状态名 / Key 名），**自带引号**——名字里通常有空格
-##             （如 "Mouse Left"），指令要把整串当一个参数，所以这里补上引号；
-##             于是配置可以写 `UIInteract.drag $parent $event`，不必把状态名再抄一遍。
+## 解析指令串占位符（发送前调用）：**只认两个占位符**，其余一律靠 `$self` 上的取值链。
+##   $self  → 自身实例（`$@ID`）。链尾可以继续跟取值链，由指令系统按表达式解析：
+##              `$self.parent`           → 父 UI（挂载对象）
+##              `$self.parent.parent`    → 祖父（级数任意，菜单链每深一层就多一级）
+##              `$self.config.content`   → 自己的显示内容（就是要写/读的那个 config 键）
+##            **不再有 $parent / $text**：能从 self 上取到的就不另立占位符——
+##            少一套语法、少一处"级数写错"的坑，写的人也只要记住"成员怎么读"。
+##            取不到时指令系统按表达式失败给 null，目标指令自己会警告（如 _as_ui 的"target 为空"）。
+##   $event → 触发这次事件的**事件名**（= 状态名 / Key 名），**自带引号**——名字里通常有空格
+##            （如 "Mouse Left"），指令要把整串当一个参数，所以这里补上引号；
+##            于是配置可以写 `UIInteract.drag $self.parent $event`，不必把状态名再抄一遍。
+## 另：**路径参数用双引号包住**（`Utils.write "$self.config.content" 值`）——顶层引号 = 字面字符串，
+## 里面的 `$` 不再被当成取值式，路径就原样传进函数（`CommandParser._tokenize` 会给它补转义）。
 ## 被谁用：on_event（唯一调用方）。
 func _resolve_cmd(cmd: String, event_name: String = "") -> String:
 	cmd = cmd.replace("$self", "$@" + str(ID))
 	if event_name != "":
 		cmd = cmd.replace("$event", "\"" + event_name + "\"")
-	var out := ""
-	var i := 0
-	while i < cmd.length():
-		if cmd.substr(i, 7) == "$parent":
-			var j := i + 7
-			var levels := 1
-			while cmd.substr(j, 7) == ".parent":
-				levels += 1
-				j += 7
-			out += "$@" + str(_climb_parent(levels).ID)
-			i = j
-		else:
-			out += cmd[i]
-			i += 1
-	return out
-
-
-## 从自身沿 parent 向上爬 levels 级；不足时警告并返回可达的最高级。
-## 被谁用：_resolve_cmd。
-func _climb_parent(levels: int) -> UIBase:
-	var cur: UIBase = self
-	var climbed := 0
-	for i in levels:
-		if cur.parent == null:
-			push_warning("UIBase「%s」只向上 %d 级 parent（配置请求 %d 级），用可达的最高级替代" % [name, climbed, levels])
-			return cur
-		cur = cur.parent
-		climbed += 1
-	return cur
+	return cmd
 
 
 ## 运行时追加一个子元素（如菜单里后加的关闭按钮），返回新元素。
@@ -360,6 +321,7 @@ func add_child_element(child_name: String, ui_class: String, child_config: Dicti
 	if child == null:
 		return null
 	child.parent = self
+	child.name = _unique_child_name(child.name)             # 重名自动加后缀（同一挂载点下不重名）
 	child.build()
 	children.append(child)
 	# 配置里声明 free 的当"自由定位"元素：挂到叠加层，位置才不会被父级容器布局覆盖。

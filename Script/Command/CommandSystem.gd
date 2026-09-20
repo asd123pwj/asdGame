@@ -15,6 +15,9 @@
 ##     Msg.send_cmd("MapSys.place $Test.a $Test.test_int[0].value[0].value $Test.test_int2.value[0] 门 2 -1 true")
 ##   下面为使用静态函数，用()包裹参数：
 ##     Msg.send_cmd("MapSys.place 0 $Test.test_func($Test.a, 4) $Test.test_int2.value[0] 门 2 -1 true")
+## 调用（做事，不返回值）：**整行写成取值链**，末尾是方法就调它（写不写 () 都行）：
+##     Msg.send_cmd("$self.refresh")                          调实例方法
+##     Msg.send_cmd("$UiSys.get_ui(名字).refresh")             目标算出来再调
 ## 返回变量值，开头用&：
 ##     Msg.send_cmd("&Test.a")
 ## 使用实例，用"@实例ID"来代替"类名"，其它与类的使用一致：

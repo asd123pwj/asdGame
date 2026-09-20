@@ -61,6 +61,9 @@ static func _process(_delta: float) -> void:
 	if InputSys.mouse_delta != Vector2.ZERO:
 		if hover_ui != null:
 			hover_ui.on_event(QName.pointer_move)
+		# 顺手收尾"移开关"的那批 UI（hover 展开的子菜单、绑定菜单）：指针一动就判，挪开即关。
+		# 放在"本帧动过"里面：没动就不必重复判——移开关的语义是"挪开就收"，不动就该保持现状。
+		UIInteract_OpenClose.close_move_blur_ui(hover_ui)
 	# 上一帧派发过（key）就顺手收尾：配了 close_on_blur 的 UI，指针不在它上面就关掉。
 	# **用的就是刚算出来的 hover**：判定晚于派发，这次派发里刚开出来的菜单才不会被误关。
 	if _blur_pending:
@@ -78,6 +81,11 @@ static func _process(_delta: float) -> void:
 ## 所以不需要"把松开事件送到元素手上"这类捕获机制，指针层也不参与收尾。
 ## 被谁用：状态层 shortcuts 里的 `PointerDetect.key "<状态名>"`（见 Config/Character/Archetype）。
 static func key(status_name: String) -> void:
+	# "点了别处就退出编辑"：任何一次点击派发都先当作"离开输入框"——
+	# 点到别处自然退出（不会卡在编辑模式）；点回输入框的话，下面那次派发会再进编辑
+	# （输入框配置里那条 `mouseLeft → UIInteract.begin_edit`），所以这里不用先判断点的是谁。
+	if InputSys.edit_ui != null:
+		InputSys.end_edit()
 	if hover_ui != null:
 		hover_ui.on_event(status_name)
 		# "点一下谁，谁在最上面"：除指针移动外的派发都算一次"点它"（HOLD 每帧都派发，

@@ -10,7 +10,7 @@ extends UIInteractBase
 ## 状态不满足时 AutoSys 自己删（见 Script/Auto/Auto.md），调用方不用写"松开"。
 
 
-## 按住拖动 —— **登记入口**，配置里写 `UIInteract.drag $parent $event`
+## 按住拖动 —— **登记入口**，配置里写 `UIInteract.drag $self.parent $event`
 ## （`$event` 由 UIBase._resolve_cmd 补成带引号的状态名，即"按住哪个状态时拖"）。
 ## 被谁用：MiniHUD 标题栏、整块键盘面板（UIPreset_Keyboard）。
 static func drag(target: UIBase, status_name: String) -> void:

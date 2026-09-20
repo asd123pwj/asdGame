@@ -1,19 +1,8 @@
 class_name UIInteract_SwapConfig
 extends UIInteractBase
-## UI 交互：**对调配置两项**（`UIInteract.swap_config`）——开关式按钮的底座。
-## 组内共用与指令前缀见基类 Script/UI/Interact/UIInteractBase.gd（`_as_ui` 由基类提供）。
-
-
-## 对调目标 UI 的 config 里两项（A ↔ B），实现"点一下换一套配置"的开关式按钮。
-## 典型用法是把两套 `events` / `content` 都写在元素上，点击时"做事 + 换一套"——
-## 一条事件串可以写多条命令（用 `\v` 分隔，见 CmdSys.execute），所以：
-##   "Mouse Left" → UIInteract.open <宿主> CloseButton <宿主> \v swap_config $self events events_2
-##                  \v swap_config $self content content_2
-## 换完 `config["events"]` 就是另一套（下一次点击自然走那套），`content` 与显示同步刷新。
-## 于是普通 UI_Label / UI_Image 就能当开关用，不需要专门的开关元素。
-## 被谁用：预设里配 `"Mouse Left"` 的项（Config/UI/UIPreset_Menu.gd 的 MenuEdit/CloseToggle、EnableDrag）。
-static func swap_config(target: UIBase, key_a: String, key_b: String) -> void:
-	var ui := _as_ui(target, "swap_config")
-	if ui == null:
-		return
-	ui.swap_config(key_a, key_b)
+## （已退役）原来只有一条 `UIInteract.swap_config`：现在"对调两项"是 `Utils.swap`，
+## 两条路径直接写出来，后面接一条刷新（换的是自己那两项就 `$self`）：
+##   Utils.swap "$self.config.events" "$self.config.events_2"
+##   + '\vUtils.swap "$self.config.content" "$self.config.content_2"'
+##   + '\v$self.refresh("content")'
+## 保留本文件只是不让 .uid / 引用悬空，确认没人引用后可以整个删掉。

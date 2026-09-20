@@ -39,3 +39,59 @@ static func get_or_set_dict(dict: Dictionary, keys: Array, default_value: Varian
     if not current.has(last_key):
         current[last_key] = default_value
     return current[last_key]
+
+
+## 通用"按路径写一个值"——**只有两个参数**（路径里已经带了宿主）。
+## 路径语法与指令里**读值那套完全一致**（走的就是指令解析器，见 CommandParser.write）：
+##   Utils.write "@123.config.content" 值        ← 实例成员 / 字典键，想写几层写几层
+##   Utils.write "Test.int1" 7                   ← 类脚本的 static 变量
+##   Utils.write "arr[2]" 值 / "a.b[0].c" 值     ← 中间夹列表下标
+## 路径可以带前导 `$`（和取值式一样），也可以不带；
+## **配置里用双引号包住**即可（`Utils.write "$self...." 值`）：顶层引号 = 字面字符串，
+## `$` 开头也不会被当成取值式（见 CommandParser._tokenize）；手写的 `\$` 转义同样有效。
+## 前导反斜杠/缺 `$` 都在这里规范化掉（CommandParser._normalize_path）。
+## 宿主/中间层取不到、最后一步不可写时返回 false 并**警告一声**（多半是路径写错）。
+## 指令写法：Utils.write "$self.parent.parent.parent.parent.config.bind" $self.control.text
+## 被谁用：配置里按路径写值（如"绑定"）。
+static func write(path: Variant, value: Variant) -> bool:
+    if CommandParser.write(str(path), value):
+        return true
+    push_warning("Utils.write: 写不进「%s」（路径取不到 / 最后一步不可写）" % str(path))
+    return false
+
+
+## 对调**两条路径**上的值（A ↔ B）——开关式按钮的"换一套配置"就是它。
+## 也是**只有两个参数**（两条路径），走的是同一套路径解析（CommandParser.read / write）：
+##   Utils.swap "$self.config.events" "$self.config.events_2"
+##   Utils.swap "$self.config.content" "$self.config.content_2"
+## 路径用双引号包住（顶层引号 = 字面字符串，`$` 开头不会被当取值式，见 CommandParser._tokenize）。
+## 读不到 / 任一侧写不进就返回 false 并警告一声。
+## **界面刷新不在这里**：UI 侧改完 config，在配置里紧接一条 `$self.refresh("content")`（改了什么刷什么）。
+## 被谁用：开关式按钮的配置（原来那条 UIInteract.swap_config）。
+static func swap(path_a: Variant, path_b: Variant) -> bool:
+    var sa: String = str(path_a)
+    var sb: String = str(path_b)
+    var ra: Array = CommandParser.read(sa)
+    var rb: Array = CommandParser.read(sb)
+    if not ra[0] or not rb[0]:
+        push_warning("Utils.swap: 读不到「%s」或「%s」（路径取不到？）" % [sa, sb])
+        return false
+    if not write(sa, rb[1]) or not write(sb, ra[1]):
+        return false
+    return true
+
+
+## 把文本复制到**系统剪贴板**（平台没有剪贴板功能时警告，等于没复制成功）。
+## 典型用法是内嵌取值：
+##   Utils.copy $self.parent.parent.config.reg_name        ← 右键菜单的"复制名称"
+## 被谁用：需要往外复制文本的配置（如"复制名称"）。
+static func copy(text: Variant = "") -> void:
+    var s: String = "" if text == null else str(text)
+    if s == "":
+        push_warning("Utils.copy: 收到空文本（取值失败？目标还没登记、config 里没有 reg_name？）")
+        return
+    if DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+        DisplayServer.clipboard_set(s)
+        print("[Utils.copy] 已复制：", s)
+    else:
+        push_warning("Utils.copy: 当前平台没有剪贴板，没复制成功：%s" % s)

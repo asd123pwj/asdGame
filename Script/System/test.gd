@@ -73,15 +73,21 @@ func ui_test() -> void:
         var lines: PackedStringArray = PackedStringArray()
         for i in range(40):
             lines.append("第 %d 行：滚动查看内容。" % i)
-        info.set_content("\n".join(lines))
+        info.config["content"] = "\n".join(lines)
+        info.refresh("content")     # 只改了 content 就只刷它（不传 key = 全刷）
 
     # 键盘快捷键界面（见 Config/UI/UIPreset_Keyboard.gd）：独立 UI + 右上角关闭按钮 / 右下角缩放手柄。
     # "给面板加个按钮"就是开一个普通预设（CloseButton / ResizeButton），不写专门函数；
-    # 指令里引用实例要写 $@ID（配置里那套 $parent/$self 是 UIBase._resolve_cmd 在发送前换成 $@ID 的，这里手动拼同样的形式）。
+    # 指令里引用实例要写 $@ID（配置里那套 $self.parent/$self 是 UIBase._resolve_cmd 在发送前换成 $@ID 的，这里手动拼同样的形式）。
     Msg.send_cmd("UIInteract.open --preset_name Keyboard")
     var kb_id: String = "$@" + str(UiSys.get_ui("Keyboard").ID)
     Msg.send_cmd("UIInteract.open " + kb_id + " CloseButton " + kb_id)
     Msg.send_cmd("UIInteract.open " + kb_id + " ResizeButton " + kb_id)
+
+    # 测试用的两个 UI：显示（TestShow）/ 输入（TestInput）——J / K 键开关它们
+    # 玩法：右键 TestShow → 复制名称 → 右键 TestInput → 绑定 ▸ → 回车，然后在输入框里打字回车
+    Msg.send_cmd("UIInteract.open --preset_name TestShow")
+    Msg.send_cmd("UIInteract.open --preset_name TestInput")
 
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。

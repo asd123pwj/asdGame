@@ -11,8 +11,10 @@
 | `PointerDetect.gd` | `PointerDetect`：监控指针目标(UI/角色/地图)，把交互键派发到命中目标。 |
 
 ## InputSystem.gd（InputSys，extends BaseClass）
-- 静态状态：`mouse_position`、`mouse_delta`(本帧累计指针位移，帧末清零)、`on_edit`、`keys_holding`(当前按住集合)。
-- `static _input(event)`：被 `Sys._input` 调；区分 Key/MouseButton/MouseMotion，按键按下/抬起调 `_send_key_status`。
+- 静态状态：`mouse_position`、`mouse_delta`(本帧累计指针位移，帧末清零)、`edit_ui`(正在编辑的输入框 UI，null = 没在编辑)、`keys_holding`(当前按住集合)。
+- `edit_ui`：**正在编辑输入的 UI**（`UIInteract_Edit.begin_edit` 登记，提交 / 被关掉 / 点别处时清空）⇒ `_input` 里跳过按键翻译，打的字不会顺手触发 UI 指令或状态；**只有回车例外**——翻成 `QName.input_submit` 事件派给 `edit_ui`，于是"回车提交"也走在唯一输入链路上。
+- `static _input(event)`：被 `Sys._input` 调；区分 Key/MouseButton/MouseMotion，按键按下/抬起调 `_send_key_status`（`edit_ui` 非空时不翻译按键，只把回车翻成提交事件）。
+- `static end_edit()`：清掉 `edit_ui` 并释放控件焦点（由 `UIInteract.end_edit` 命令、以及 `PointerDetect.key` 开头的"点别处"调）。
 - `static _process(delta)`：对按住中的 key 每帧 `Msg.send_key_hold`（按键类状态的消费发生在这里）。
 - `static _clear_mouse_delta()`：**帧末把 `mouse_delta` 清零**——由 `_process` 用 `call_deferred` 排到帧末（deferred 队列在本帧所有 `_process` 跑完之后才 flush），所以 `Sys` 那边不用再收尾。
 - **位移的时间基准是"帧"**（一帧 = `Sys._process` 的范围）：

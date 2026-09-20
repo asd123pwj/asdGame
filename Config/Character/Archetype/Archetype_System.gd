@@ -30,6 +30,10 @@ var values: Array[Dictionary] = [
             {"name": QName.left, "match_any": true, "keys": [[KEY_LEFT, Enums.KeyStatus.HOLD], [KEY_A, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.down, "match_any": true, "keys": [[KEY_DOWN, Enums.KeyStatus.HOLD], [KEY_S, Enums.KeyStatus.HOLD]],},
             {"name": QName.submit, "match_any": true, "keys": [[KEY_ENTER, Enums.KeyStatus.HOLD], [KEY_KP_ENTER, Enums.KeyStatus.HOLD]],},
+            # 测试用：J / K 开关两个测试 UI（见 Config/UI/UIPreset_Test.gd）
+            # 用 PRESS 而不是 HOLD：HOLD 每帧都满足（开关会被按帧反复切），PRESS 只在按下的那一下满足
+            {"name": QName.key_j, "keys": [[KEY_J, Enums.KeyStatus.PRESS]],},
+            {"name": QName.key_k, "keys": [[KEY_K, Enums.KeyStatus.PRESS]],},
         
         ],
     },
@@ -45,6 +49,9 @@ var values: Array[Dictionary] = [
             [QName.mouseLeft, QName.mouseLeft, "PointerDetect.key \"" + QName.mouseLeft + "\""],
             # [QName.mouseLeft_release, QName.mouseLeft_release, "PointerDetect.key \"" + QName.mouseLeft_release + "\""],
             [QName.mouseRight, QName.mouseRight, "PointerDetect.key \"" + QName.mouseRight + "\""],
+            # 测试用：J / K 开关两个测试 UI（独立 UI，只给预设名；toggle = 显示着就关、否则开）
+            [QName.key_j, QName.key_j, "UIInteract.toggle --preset_name TestShow"],
+            [QName.key_k, QName.key_k, "UIInteract.toggle --preset_name TestInput"],
         ],
     },
     {

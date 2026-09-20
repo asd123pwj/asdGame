@@ -21,8 +21,9 @@ extends BaseClass
 #   $Test.test_func($Test.int1, -1)   调静态函数，参数用括号逗号分隔，可递归 $ 表达式
 #   $Test.test_func($Test.test_int[0].value[0].value, "s")  嵌套读值 / 字符串参数
 #
-# 转义:
-#   \$                           普通字符串里的字面 $（\$ 还原成 $，不作表达式前缀）
+# 字面 $ 的两种写法（都一样，先在配置里用引号那种）:
+#   "$self.config.content"       顶层双引号 = 字面字符串：$ 开头也**不当**取值式（引号内补一个 \，见 _tokenize）
+#   \$self.config.content        手写转义：\$ 还原成 $（不作表达式前缀），效果同上
 #
 # 参数形式:
 #   - 位置参数  : 不带头，按序出现，对应命令签名
@@ -53,6 +54,113 @@ static var _l2_ring: Array[Dictionary] = []  # 时间桶数组：每个桶是一
 static var _l2_index: Dictionary = {} # key -> 桶下标（O(1) 查询/计数，size() 即 L2 条目数）
 static var _l2_hand: int = 0         # 时钟指针：指向"最旧"的桶（下次轮转时清空）
 static var _l2_last_tick: float = 0.0 # 上次轮转时刻(秒)
+
+## 把路径规范化：去掉配置里为"不当成取值式"而写的前导反斜杠，再补上前导 `$`。
+## 被谁用：read / write。
+static func _normalize_path(path: String) -> String:
+	var p: String = path.strip_edges()
+	if p.begins_with("\\"):
+		p = p.substr(1)
+	if not p.begins_with("$"):
+		p = "$" + p
+	return p
+
+
+## 按 `$` 路径**读**一个值（取值式 `&...` 的"函数版"），返回 [ok, value]。
+## 路径语法与取值式一致：`@123.config.content`、`Test.int1`、`a.b[0].c`、`$UiSys.get_ui("名字").config.content`。
+## 被谁用：Utils.swap（对调要先读出来）。
+static func read(path: String) -> Array:
+	var p: String = _normalize_path(path)
+	if p == "$":
+		return [false, null]
+	var body: String = p.substr(1)
+	var paren: int = _find_top_level_paren(body)
+	if paren >= 0:
+		# 带函数头：函数算出来当宿主，尾巴继续按 ops 走（读取时同理，见 _compile_expr 只编译到右括号）
+		var close: int = _match_paren(body, paren)
+		if close < 0:
+			return [false, null]
+		var head: Array = _run_expr(_compile_expr("$" + body.substr(0, close + 1)))
+		if not head[0]:
+			return [false, null]
+		return _run_ops(head[1], _compile_ops(body.substr(close + 1)))
+	return _run_expr(_compile_expr(p))
+
+
+## 按 `$` 路径**写入**一个值 —— 取值式的对称操作，同一套路径语法：
+##   @123.config.content / a.b[0].c      实例成员、字典键、列表项（想写几层写几层）
+##   Test.int1                           类脚本的 static 变量
+##   $UiSys.get_ui("名字").config.content  带函数头的路径（先算函数当宿主，尾巴按 ops 写）
+## **只有两个参数**（路径、值）：路径里已经带了宿主，不必再传一个"宿主"参数。
+## 路径可以带前导 `$`（与取值式一致）也可以不带；配置里怕被当成取值式就写转义 `\$self....`
+## （前导反斜杠在这里去掉）。
+## 成功返回 true；宿主/中间层取不到、最后一步不是可写的成员/下标时返回 false（不报错，调用方去提示）。
+## 被谁用：Utils.write（指令 `Utils.write "<路径>" <值>`）。
+static func write(path: String, value: Variant) -> bool:
+	var p: String = _normalize_path(path)
+	if p == "$":
+		return false
+	var body: String = p.substr(1)
+	var plan: Dictionary = {}
+	var ops: Array = []
+	var paren: int = _find_top_level_paren(body)
+	if paren >= 0:
+		var close: int = _match_paren(body, paren)
+		if close < 0:
+			return false
+		plan = _compile_expr("$" + body.substr(0, close + 1))
+		ops = _compile_ops(body.substr(close + 1))
+	else:
+		plan = _compile_expr(p)
+		@warning_ignore("unsafe_method_access")
+		ops = plan.get("ops", [])
+	var host: Variant = null
+	match str(plan.get("kind", "")):
+		"instance":
+			host = instance_from_id(int(plan["id"]))
+		"member":
+			# $类名.<成员链>：宿主是类脚本（写 static 变量走这一支）
+			host = _find_class_script(str(plan["owner"]))
+		"func":
+			var got: Array = _run_expr(plan)
+			if not got[0]:
+				return false
+			host = got[1]
+		_:
+			return false
+	if host == null or ops.is_empty():
+		return false
+	var steps: Array = ops.duplicate()
+	var last: Dictionary = steps.pop_back()
+	if not steps.is_empty():
+		var walked: Array = _run_ops(host, steps)      # 先走到"最后一步的宿主"上
+		if not walked[0]:
+			return false
+		host = walked[1]
+	match str(last.get("op", "")):
+		"field":
+			var n: String = str(last["name"])
+			if host is Dictionary:
+				var d: Dictionary = host
+				d[n] = value
+				return true
+			if host is Object:
+				# 类脚本（GDScript）也是 Object：静态变量与实例成员都走这里
+				var o: Object = host
+				if n in o:
+					o.set(n, value)
+					return true
+			return false
+		"index":
+			var idx: int = int(last["idx"])
+			if host is Array:
+				var arr: Array = host
+				if idx >= 0 and idx < arr.size():
+					arr[idx] = value
+					return true
+			return false
+	return false
+
 
 ## 解析一条命令（多条命令由 CmdSys 按 '\v' 拆开再逐条调这里）。
 ## 返回 { is_value, name, positional, named } 或（取值式）{ is_value:true, value }。
@@ -269,7 +377,17 @@ static func _compile(input: String) -> Dictionary:
 	#   &@ID.hp          读实例属性
 	#   &Test.func(1)    调函数并把结果作为值
 	if input.begins_with("&"):
-		return { "is_value": true, "expr": _compile_expr("$" + input.substr(1)) }
+		# 兼容 "&$self.refresh()" 这种写法：$self 在发送前已经换成 $@ID，这里别再补一个 $
+		var expr_src := input.substr(1)
+		if not expr_src.begins_with("$"):
+			expr_src = "$" + expr_src
+		return { "is_value": true, "expr": _compile_expr(expr_src) }
+	# $ 开头的**整行** = **调用**（做事，和普通命令一样不返回值）：
+	#   $self.refresh                 末尾是方法 ⇒ 调用它（写不写 () 都行）
+	#   $UiSys.get_ui(名字).refresh   目标算出来再调也一样
+	# 与 & 的分工：& 是"取值"（返回变量值），$ 开头这一行是"调用"（做事）。
+	if input.begins_with("$"):
+		return { "is_call": true, "expr": _compile_expr(input) }
 	var tokens := _tokenize(input)
 	if tokens.is_empty():
 		tokens = ["NOCOMMAND"]
@@ -300,6 +418,17 @@ static func _compile(input: String) -> Dictionary:
 ## 执行计划，得到 parse() 的结果字典。
 ## 被谁用：parse（缓存命中与未命中都走它）。
 static func _run_plan(plan: Dictionary) -> Dictionary:
+	if plan.get("is_call", false):
+		# $ 开头的整行：求出表达式的值；末尾是方法（Callable）就调它，否则就是带 () 写法的调用结果
+		@warning_ignore("unsafe_cast")
+		var cv: Array = _run_expr(plan["expr"] as Dictionary)
+		if not cv[0]:
+			return { "is_value": true, "name": "", "value": null }
+		var got: Variant = cv[1]
+		if got is Callable:
+			var cb: Callable = got
+			return { "is_value": true, "name": "", "value": cb.callv([]) }
+		return { "is_value": true, "name": "", "value": got }
 	if plan.get("is_value", false):
 		@warning_ignore("unsafe_cast")
 		var ev: Array = _run_expr(plan["expr"] as Dictionary)
@@ -338,7 +467,8 @@ static func _run_arg(p: Variant) -> Variant:
 # 分词。
 #  - 顶层空格切分 token；
 #  - 括号内的空格并入（使函数调用 $Test.func($Test.int1, -1) 保持整体）；
-#  - 顶层双引号成对包裹的字符串作为单 token 且去掉引号。
+#  - 顶层双引号成对包裹的字符串作为单 token 且去掉引号（**内容以 $ 开头时补一个 \**，
+#    使它被当成字面字符串而不是取值式——配置里写路径就用这个，不必手写 `\$`）。
 ## 被谁用：_compile。
 static func _tokenize(input: String) -> Array:
 	var tokens: Array = []
@@ -357,7 +487,9 @@ static func _tokenize(input: String) -> Array:
 				in_quote = false
 				if quote_at_top:
 					if cur != "":
-						tokens.append(cur)   # 顶层字符串去引号后成 token
+						# 顶层双引号 = **字面字符串**：`$` 开头也补个反斜杠，使它不当取值式
+						# （与手写 `\$self...` 等价，配置里写路径因此不必再手写转义）。
+						tokens.append("\\" + cur if cur.begins_with("$") else cur)
 						cur = ""
 				else:
 					cur += ch   # 表达式内闭合引号，原样保留
@@ -385,7 +517,7 @@ static func _tokenize(input: String) -> Array:
 # 计划用 dict 表示，把"定位"固化下来，运行时只做必需的最后一步取值：
 #   { "kind": "instance", "id": int, "ops": [...] }              $@ID.<ops>
 #   { "kind": "member", "owner": String(类名), "ops": [...] }     $类.<成员链>
-#   { "kind": "func", "callable": Callable, "args": [<plan>...] } $类.函数(...)
+#   { "kind": "func", "callable": Callable, "args": [<plan>...], "ops": [...] } $类.函数(...) 后面接着的成员链
 #   { "kind": "literal", "value": Variant }                      字面量（函数/方法参数）
 # ops 每项：
 #   { "op": "field", "name": String }            .名称
@@ -413,12 +545,17 @@ static func _compile_expr(s: String) -> Dictionary:
 		return { "kind": "member", "owner": head, "ops": _compile_ops(rest) }
 	# 函数调用：定位静态函数（Callable 固化），参数编译成子计划
 	var func_expr := body.substr(0, paren)
-	var args_str := body.substr(paren + 1, body.rfind(")") - paren - 1)
+	var close := _match_paren(body, paren)
+	var args_end: int = body.rfind(")") if close < 0 else close
+	var args_str := body.substr(paren + 1, args_end - paren - 1)
 	var resolved_func := _try_resolve_method(func_expr)
 	if not resolved_func[0]:
 		return { "kind": "invalid" }
 	var arg_plans: Array = _compile_args(args_str)
-	return { "kind": "func", "callable": resolved_func[1], "args": arg_plans }
+	# 函数尾巴还能继续接成员链（`$UiSys.get_ui("x").config.content`、`$self.get_x().refresh()`）：
+	# 编进 ops，执行时对函数结果继续走（与 read / write 里的处理一致）。
+	var tail_ops: Array = _compile_ops(body.substr(close + 1)) if close >= 0 else []
+	return { "kind": "func", "callable": resolved_func[1], "args": arg_plans, "ops": tail_ops }
 
 ## 执行已编译的表达式计划，返回 [ok, value]。
 ## 被谁用：_run_plan、_run_arg、_run_ops（方法参数）、_run_expr（函数参数，递归）。
@@ -439,7 +576,12 @@ static func _run_expr(plan: Dictionary) -> Array:
 				if not av[0]:
 					return [false, null]
 				args.append(av[1])
-			return [true, callable.callv(args)]
+			var result: Variant = callable.callv(args)
+			@warning_ignore("unsafe_method_access")
+			var tail: Array = plan.get("ops", [])       # 函数后面接的成员链（可能为空）
+			if tail.is_empty():
+				return [true, result]
+			return _run_ops(result, tail)
 		"literal":
 			return [true, plan["value"]]
 		_:
@@ -536,20 +678,27 @@ static func _run_ops(v: Variant, ops: Array) -> Array:
 		match op["op"]:
 			"field":
 				if v is GDScript:
-					# 类脚本：先当静态属性读，读不到再查常量表（const 不在属性列表里）
+					# 类脚本：先当静态属性读，读不到再查常量表（const 不在属性列表里），
+					# 再读不到就当方法名给个 Callable（与 GDScript 的 `类.方法` 一致）
 					var s: GDScript = v
 					if op["name"] in s:
 						v = s.get(op["name"])
 					else:
 						var consts: Dictionary = s.get_script_constant_map()
-						if not consts.has(op["name"]):
+						if consts.has(op["name"]):
+							v = consts[op["name"]]
+						elif s.has_method(op["name"]):
+							v = Callable(s, op["name"])
+						else:
 							return [false, null]
-						v = consts[op["name"]]
 				elif v is Object:
 					var obj: Object = v
-					if not op["name"] in obj:
+					if op["name"] in obj:
+						v = obj.get(op["name"])
+					elif obj.has_method(op["name"]):
+						v = Callable(obj, op["name"])   # 方法名读成可调用值（与 GDScript 的 obj.method 一致）
+					else:
 						return [false, null]
-					v = obj.get(op["name"])
 				elif v is Dictionary:
 					var d: Dictionary = v
 					if not d.has(op["name"]):

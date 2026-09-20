@@ -9,13 +9,13 @@ extends UIInteractBase
 ## UiSys 现在只剩"登记表 + 登记名规则 + 登记 + 取件"，既不管开启、也不管失焦关闭。
 ## 组内共用与指令前缀见基类 Script/UI/Interact/UIInteractBase.gd。
 ##
-## 失焦关闭（close_blur_ui）也在这个文件：**只有"开出来的 UI"才可能配 `close_on_blur`**，
-## 所以 open 顺手把它记进候选列表 `_blur_uis`，失焦判定只遍历这个小列表（不必每次扫整张登记表）。
-
-## 失焦关闭的候选：**当前开着、且配置里写了 `close_on_blur` 的 UI**。
-## **open 登记、close 摘掉**（所以关过再开能自动回来，列表也始终只装着"当前真的在开着的那几个"）。
-## 注：按 open 那一刻的配置登记——运行时改 close_on_blur 的玩法目前没有（真要有就再登记一次）。
-static var _blur_uis: Array[UIBase] = []
+## 失焦关闭（点关 / 移开关）也在这个文件：**只有"开出来的 UI"才可能有这两种行为**，
+## 所以 open 顺手把它们记进候选表，判定只遍历这两张小表（不必每次扫整张登记表）。
+##
+## 两种关闭行为：
+##   close_on_blur：**点关** —— 有按键派发时判一次（右键菜单：点别处才关，鼠标划过不会把它关掉）
+##   close_on_move：**移开关** —— 指针一动就判（"鼠标移上去自动展开"的子菜单：挪开就收起来）
+## 两者都能由 open 的参数临时给（推荐，见 open 的说明），也能写在被开 UI 自己的 config 里。
 
 
 ## 开启一个 UI —— **全项目唯一的开启入口**（不要再写第二个；普通 UI 与菜单同一条路，没有任何按类型特判）。
@@ -26,11 +26,22 @@ static var _blur_uis: Array[UIBase] = []
 ##   anchor      = 位置锚点，同时也是**挂载点**（锚点优先于宿主）：多级菜单传"触发它的那个菜单项"，
 ##                 子菜单挂在该菜单项下 ⇒ 整条菜单链是一棵子树（关父级全关、失焦判定沿 parent 链）
 ## 复用规则：按（挂载点 + 预设名）查登记名——**已存在就只显示 + 重新摆位，不重建控件**。
-## 指令写法：UIInteract.open $self Menu $self        （面板右键 → 指针处开菜单）
-##           UIInteract.open --preset_name MiniHUD  （独立 UI → 开在配置声明的位置）
+##
+## 关闭行为两个开关（bool，默认 false = 不启用）：
+##   close_on_blur = true  点关：有按键派发时，指针不在它上面就关 —— 右键菜单那种
+##   close_on_move = true  移开关：指针一动，不在它（或其挂载点）上就关 —— hover 展开的子菜单那种
+## **要在开的这一句直接给**（不是写进预设）：它们取决于"在哪开、为什么开"，与"这个预设长什么样"无关；
+## 写进预设的话，每加一层子菜单就得记得抄一遍，漏一处那个 UI 就永远关不掉。
+## 类型就是 bool，字符串/数字怎么变 bool 由指令系统按签名处理（CmdSys._coerce），这里不再自己认。
+##
+## 指令写法：
+##   UIInteract.open $self Menu $self --close_on_blur                 面板右键 → 指针处开菜单（点别处关）
+##   UIInteract.open --preset_name MiniHUD                            独立 UI → 开在配置声明的位置
+##   UIInteract.open $self MenuEdit $self --close_on_move             hover 展开的子菜单：挪开就收
 ## 被谁用：Config/UI 里各预设的 "events"、Test.ui_test（测试也走指令，不抄近路）、外部想直接拿实例时。
 ## 返回：开出来的 UI（找不到预设/建不出来为 null）。
-static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase = null) -> UIBase:
+static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase = null,
+		close_on_blur: bool = false, close_on_move: bool = false) -> UIBase:
 	var preset: UIPreset = UIPreset.get_(preset_name)
 	if preset == null or preset.ui_name == "":
 		push_warning("UIInteract.open: 找不到预设「%s」（见 Config/UI/）" % preset_name)
@@ -42,19 +53,21 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 		ui = _build_open(preset, preset_name, mount)
 	if ui == null:
 		return null
-	# 只有开出来的 UI 才可能是"失焦要关"的：配了就记进候选（重复开同一个不会重复记）
-	if bool(ui.config.get("close_on_blur", false)) and not _blur_uis.has(ui):
-		_blur_uis.append(ui)
+	# 关闭行为：**总是按参数写**（默认 false = 不启用）。要哪种就在开的这一句写出来，
+	# 预设里不再声明它——"在哪开、为什么开"只有开的那一句知道。
+	ui.config["close_on_blur"] = close_on_blur
+	ui.config["close_on_move"] = close_on_move
 	_place(ui, anchor)
 	# 新开的排到最前（也会顺带把它的窗口提到最前，见 UIInteract_SetTop）
 	UIInteract_SetTop.set_top(ui)
+	_reg_blur(ui)
 	return ui
 
 
 ## 关闭（隐藏）UI —— **一个函数管两种情况**：
 ##   只有 target          → 关 target 自己；
 ##   还给了 preset_name   → 关"挂在 target 下的那个预设 UI"（按挂载点 + 预设名查回来再关）。
-## 为什么要第二种：菜单项深处手上只有一个"面板"的引用（`$parent.parent.parent.parent`）和一个预设名，
+## 为什么要第二种：菜单项深处手上只有一个"面板"的引用（`$self.parent.parent.parent.parent`）和一个预设名，
 ## 而它要关的是挂在那个面板下的子 UI（如 CloseButton），不是面板自己。
 ## 只是 hide，实例留在原地；**重开统一走 UIInteract.open**（显示 + 按 open_at 重新摆位，不重建控件）。
 ## 查不到（没开过）就什么都不做（幂等）。
@@ -74,6 +87,31 @@ static func close(target: UIBase, preset_name: String = "") -> void:
 	if ui.control != null:
 		ui.control.hide()
 	Msg.send_ui_close(ui)
+	# 从两张失焦候选表里都摘掉（关过再开时 open 会重新登记 ⇒"显示着"与"在表里"始终一致）
+	_blur_uis.erase(ui)
+	_move_blur_uis.erase(ui)
+
+
+## 开关：现在**显示着**就关掉，否则开出来。开/关两条路都走本文件的 open / close（含复用与摆位）。
+## 指令写法：
+##   UIInteract.toggle --preset_name TestShow        独立 UI（不写 target，只给预设名）
+##   UIInteract.toggle $self.parent.parent CloseButton    挂在 target 下的某个预设 UI
+## 为什么要有它：绑到一个键上时，"按一下开、再按一下关"是最常见的用法，写两条指令做不到
+## （键状态只在"满足变化"时给一次，没法在同一个事件里判断该开还是该关）。
+## 被谁用：状态层的按键快捷（如 Test 的 J / K）、想用一个按钮开关某个子 UI 的场合。
+static func toggle(target: UIBase = null, preset_name: String = "") -> void:
+	# 先按"开的时候会用哪个登记名"把实例找出来（找不到就是还没开过 ⇒ 走开）
+	var ui: UIBase = null
+	if preset_name == "":
+		ui = target
+	elif target != null:
+		ui = _child_ui(target, preset_name)
+	else:
+		ui = UiSys.uis.get(preset_name)
+	if ui != null and ui.control != null and ui.control.is_visible_in_tree():
+		close(ui)                                   # 正显示着 ⇒ 关它自己（隐藏，实例留着复用）
+		return
+	open(target, preset_name)
 
 
 ## 按"挂载点 + 预设名"取已登记的 UI —— 开（复用查找）与关（找要关的子 UI）共用的那把钥匙。
@@ -124,38 +162,71 @@ static func _place(ui: UIBase, anchor: UIBase) -> void:
 		var y: float = rect.end.y - ui.control.size.y if bottom else rect.position.y
 		ui.show_at(Vector2(x, y))
 	else:
-		ui.reset_position()
+		ui.refresh("position")
 		ui.control.show()
 
 
-## ---------- 失焦关闭（纯配置驱动，与"是不是菜单"无关）----------
-## 为什么放在这里：失焦要关的只可能是**开出来的**、写了 `close_on_blur` 的 UI（配置子元素不会被单独关），
-## 所以候选就记在 open 那里（`_blur_uis`），这里只做判定与关。
+## ---------- 失焦关闭（点关 / 移开关，与"是不是菜单"无关）----------
+## 为什么放在这里：能失焦关闭的只可能是**开出来的** UI（配置里的子元素不会被单独关），
+## 所以候选在 open 那里登记，这里只做判定与关。
+##
+## 两张候选表：两套行为各一张（都由 open 登记、close 摘掉，只装"当前真的开着的那几个"）。
+static var _blur_uis: Array[UIBase] = []        # close_on_blur：点关
+static var _move_blur_uis: Array[UIBase] = []   # close_on_move：移开关
 
-## 关掉"指针已经不在上面"的 UI：遍历候选列表（= 配了 `close_on_blur` 且正开着的 UI），
-## 指针不在它（或它的子孙元素/子孙 UI）上 → 走本文件的 close（hide + 广播 + 从候选里摘掉）。
+
+## 点关：遍历候选，指针不在它（或它的子孙元素/子孙 UI）上就关掉。
 ## 判定只要 parent 链，不需要"父子菜单链"这种登记：菜单链本身就是一棵子树
 ## （子菜单挂在触发它的菜单项下，见 UiSys 文件头的挂载规则），所以鼠标在子菜单上时，
 ## 父菜单沿链就能找到自己 ⇒ 不关；父 UI 一 hide，链上的子 UI 也随可见性继承一起不可见。
-## 实现上**边遍历边 close 会改到 `_blur_uis`**（close 里要摘掉候选），所以先收集再关。
-## 被谁用：PointerDetect._process（每帧刷新命中之后，且仅当上一帧派发过事件）。
+## 被谁用：PointerDetect._process（每次"派发过事件"的下一次刷新里）。
 static func close_blur_ui(hover_ui: UIBase) -> void:
+	_close_outside(_blur_uis, hover_ui, false)
+
+
+## 移开关：给"鼠标移上去自动展开"的 UI 用（多级菜单 hover 展开那种）。
+## 判"在不在它上面"比点关**多算一层挂载点**：子菜单开在触发项旁边（不在触发项的矩形里），
+## 指针通常还停在触发项上 ⇒ 只算自己的话，它一开出来就会被自己关掉。
+## 被谁用：PointerDetect._process（本帧位移不为 0 时）。
+static func close_move_blur_ui(hover_ui: UIBase) -> void:
+	_close_outside(_move_blur_uis, hover_ui, true)
+
+
+## 两套关闭行为共用的判定：候选里"指针已经不在上面"的先收集再关。
+## with_mount = 连"它的挂载点（触发它的那个菜单项）"也算"在它上面"（移开关要，点关不要）。
+## **边遍历边 close 会改到候选表**（close 里要摘掉候选），所以先收集再关。
+## 被谁用：close_blur_ui、close_move_blur_ui。
+static func _close_outside(uis_list: Array[UIBase], hover_ui: UIBase, with_mount: bool) -> void:
 	var closing: Array[UIBase] = []
-	for ui: UIBase in _blur_uis:
+	for ui: UIBase in uis_list:
 		# 尺寸还没算出来的先当它"还在指针下"：布局没跑时 get_global_rect() 是退化矩形，
-		# 会被误判成"指针在外面"当场关掉。（判定已挪到下一次刷新，这里算第二道保险。）
+		# 会被误判成"指针在外面"当场关掉（多级菜单"一开就没"就是这么来的）。
+		# 反过来说：**尺寸被谁压成 0 的 UI 会永远跳过判定 ⇒ 永远关不掉**（free 子元素别挂进滚动容器，见 UI_Scroll）。
 		var rect: Rect2 = ui.control.get_global_rect()
 		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 			continue
-		if not _is_inside(ui, hover_ui):
-			closing.append(ui)
+		if _is_inside(ui, hover_ui):
+			continue
+		if with_mount and _is_inside(ui.parent, hover_ui):
+			continue
+		closing.append(ui)
 	for ui: UIBase in closing:
 		close(ui)
-		_blur_uis.erase(ui)
+
+
+## 按被开 UI 自己的 config 记进对应的候选表（两套行为各一张，重复开同一个不会重复记）。
+## 只记"开出来的"：配置里的子元素不会单独失焦关闭，不必进这两张表。
+## 被谁用：open。
+static func _reg_blur(ui: UIBase) -> void:
+	if bool(ui.config.get("close_on_blur", false)) and not _blur_uis.has(ui):
+		_blur_uis.append(ui)
+	if bool(ui.config.get("close_on_move", false)) and not _move_blur_uis.has(ui):
+		_move_blur_uis.append(ui)
 
 
 ## 指针是否在这个 UI 上：hover 沿 parent 链向上能找到 ui 即为"内"（所以它的子元素也算）。
-## 被谁用：close_blur_ui。
+## ui 传 null 时恒为 false（"没有挂载点"就是判断为不在）。
+## 被谁用：_close_outside。
 static func _is_inside(ui: UIBase, hover_ui: UIBase) -> bool:
 	var cur: UIBase = hover_ui
 	while cur != null:
