@@ -38,10 +38,10 @@ var values: Array[Array] = [
                         # 路径写成**带引号的字符串**：引号里的内容不再被当成取值式，路径原样传给函数。
                         # **指令串外层用单引号**：里面那对双引号就不用转义成 `\"`（Godot 两种引号都行）。
                         # 顺序别反——编辑中的输入框会跳过刷新（免得把正在打的字冲掉），先刷就把"清空"漏掉了。
-                        'Utils.write("UiSys.get_ui(self.parent.config.bind).config.content", self.control.text)'
+                        'Utils.write("UiSys.get_ui(host.config.bind).config.content", self.control.text)'
                         + '\vUtils.write("self.config.content")'                        # 不写值 = 清空框
                         + '\vUIInteract.end_edit(self)'                                 # 想"提交完继续打字"就不写这条
-                        + '\vUiSys.get_ui(self.parent.config.bind).refresh("content")'   # 只刷改过的那一项
+                        + '\vUiSys.get_ui(host.config.bind).refresh("content")'          # 只刷改过的那一项
                         + '\vself.refresh("content")'],                                   # 自己也是只改了 content
                 ],
             }],

@@ -9,9 +9,11 @@ config: Dictionary
 交互不是开关，而是"事件→指令"：config["events"] 是 [事件名, 指令串] 的列表，事件发生即发指令。
 事件名就是状态名（见 Archetype_System 的 statuses，如 "Mouse Left"）——UI 不关心键位，
 键位只在状态层配置；hover 变化用 QName.pointer_enter / QName.pointer_exit。
-占位符只有 self（自身）与 event（事件名）；取父级/内容一律在它上面接着写取值链：
-  self.parent = 挂载对象（父 UI），self.parent.parent = 祖父（链式任意级，与指令系统读成员同一套语法），
-  self.config.content = 自己的显示内容。
+占位符只有 self（自身）、host（本条链的**管理对象**）与 event（事件名）；
+取父级/内容一律在它上面接着写取值链：
+  self.parent = 挂载对象（父 UI），self.config.content = 自己的显示内容，
+  host = 管理对象（默认沿 parent 爬到顶那个 UI；也可以在某一层 config["host"] 写**实例 ID** 指定成别的 UI，
+         或 open 时给 host=self）——菜单项/深层子元素用它，不必数 self.parent 的级数。
 交互指令宿主为 UIInteract（close/open/toggle/drag/rescale/fade_to/begin_edit/end_edit/switch_value/set_top）；
 "写内容 / 对调配置"不需要专门交互：通用指令 Utils.write / Utils.swap + 一条刷新（详见 Script/UI/UI.md）。
 
@@ -32,23 +34,23 @@ config: Dictionary
 var values: Array[Array] = [
     ["MiniHUD", "UI_Panel", {
         "position": [30, 30], "size": [320, 220],
-        # 右键这块 UI → 开"Menu"（菜单挂在这个面板下，菜单项里 self.parent.parent 就指回它）
+        # 右键这块 UI → 开"Menu"（菜单挂在这个面板下，菜单项里用 host 就指回它——不必数级数）
         # 第一/第三个参数都传 self：第一个没有 anchor 时才用来当挂载点，第三个既是位置锚点
         # 又是挂载点（菜单链因此是一棵子树）；摆在哪由 Menu 自己的 open_at 声明（POINTER = 指针处）
         # 整块面板的"按住可拖"不写死在这儿：菜单项"启用拖拽"用 switch_value 往这个列表里加/减
-        # QName.UI_event_mouseLeft_drag（默认没有 ⇒ 面板体不可拖，只有标题栏能拖）。
+        # QName.UI_event_mouseLeft_drag（默认没有 ⇒ 面板体不可拖；标题栏用的是 _host 版那两条）。
         "events": [QName.UI_event_mouseRight_menu],
         "children": [
-            # 标题栏：只显示文本；按住 → drag 登记后由 AutoSys 每帧拖它整个父 UI
+            # 标题栏：只显示文本；按住 → drag 登记后由 AutoSys 每帧拖这个窗口（host）
             # （event = 事件名 = 状态名 = Key 名，由 UIBase._resolve_cmd 补成带引号的参数；松手 AutoSys 自动停）
             ["Title", "UI_Label", {
                 "content": "MiniHUD（按住拖动）",
-                "events": [QName.UI_event_mouseLeft_drag_parent],
+                "events": [QName.UI_event_mouseLeft_drag_host],
             }],
-            # 关闭"按钮"：就是文本元素 + "Mouse Left"(左键按住) 指令（点它关闭挂载对象即父 UI）
+            # 关闭"按钮"：就是文本元素 + "Mouse Left"(左键按住) 指令（点它关掉这个窗口）
             ["Close", "UI_Label", {
                 "content": "[关闭]",
-                "events": [QName.UI_event_mouseLeft_close_parent],
+                "events": [QName.UI_event_mouseLeft_close_host],
             }],
             # 滚动内容：展示本元素 config["content"]（改内容 = 写它 + self.refresh("content")）
             # ScrollContainer 最小尺寸为 0，必须给 size 配置可视高度
@@ -70,8 +72,8 @@ var values: Array[Array] = [
         "size": [16 * 2, 16 * 2],
         "free": true,                                  # 自由定位：挂到宿主叠加层，位置不被父级布局覆盖
         "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,   # 开在锚点（宿主自己）内部的右上角
-        # 点它就关掉它挂着的那个 UI（self.parent = 它的挂载点 = 宿主）
-        "events": [QName.UI_event_mouseLeft_close_parent],
+        # 点它关掉它所在的窗口（host = 沿 parent 爬到顶那个 UI ⇒ 挂到谁身上都指得对）
+        "events": [QName.UI_event_mouseLeft_close_host],
     }],
     # 缩放按钮：贴到"锚点 UI"的右下角，按住拖动等比缩放它挂着的那个 UI（像 Windows 拖窗口角，但是等比）。
     # 元素侧只有这一条"按住"：rescale 登记后由 AutoSys 每帧调 rescaling 缩放它挂着的 UI；
@@ -82,6 +84,6 @@ var values: Array[Array] = [
         "size": [16 * 2, 16 * 2],
         "free": true,
         "open_at": Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN,   # 开在锚点（宿主自己）内部的右下角
-        "events": [QName.UI_event_mouseLeft_rescale_parent],
+        "events": [QName.UI_event_mouseLeft_rescale_host],
     }],
 ]

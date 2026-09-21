@@ -43,14 +43,15 @@ static func get_or_set_dict(dict: Dictionary, keys: Array, default_value: Varian
 
 ## 通用"按路径写一个值"——**只有两个参数**（路径里已经带了宿主）。
 ## 路径语法与指令里**读值那套完全一致**（走的就是指令解析器，见 CommandParser.write）：
-##   Utils.write "@123.config.content" 值        ← 实例成员 / 字典键，想写几层写几层
-##   Utils.write "Test.int1" 7                   ← 类脚本的 static 变量
-##   Utils.write "arr[2]" 值 / "a.b[0].c" 值     ← 中间夹列表下标
-## 路径写成**带引号的字符串**即可：`Utils.write("self.config.content", 值)`——
-## 引号里的内容不再被当成取值式，路径原样传进来；带不带前导 `$` 都行（等价）。
-## 缺 `$` 由 CommandParser._normalize_path 补上。
+##   Utils.write("@123.config.content", 值)          ← 实例成员 / 字典键，想写几层写几层
+##   Utils.write("Test.int1", 7)                     ← 类脚本的 static 变量
+##   Utils.write("arr[2]", 值) / ("a.b[0].c", 值)    ← 中间夹列表下标
+## 路径写成**带引号的字符串**即可：引号里的内容不再被当成取值式，路径原样传进来；
+## 带不带前导 `$` 都行（等价，缺 `$` 由 CommandParser._normalize_path 补上）。
+## 路径里的占位符照常由 UIBase._resolve_cmd 先换掉（`self` / `host` / `event`）——
+## 所以"写到宿主上"直接写 `Utils.write("host.config.bind", 值)`，不必数 self.parent 级数。
 ## 宿主/中间层取不到、最后一步不可写时返回 false 并**警告一声**（多半是路径写错）。
-## 指令写法：Utils.write("self.parent.parent.parent.parent.config.bind", self.control.text)
+## 指令写法：Utils.write("host.config.bind", self.control.text)
 ## 被谁用：配置里按路径写值（如"绑定"）。
 static func write(path: Variant, value: Variant) -> bool:
     if CommandParser.write(str(path), value):
@@ -82,7 +83,7 @@ static func swap(path_a: Variant, path_b: Variant) -> bool:
 
 ## 把文本复制到**系统剪贴板**（平台没有剪贴板功能时警告，等于没复制成功）。
 ## 典型用法是内嵌取值：
-##   Utils.copy self.parent.parent.config.reg_name        ← 右键菜单的"复制名称"
+##   Utils.copy(host.config.reg_name)        ← 右键菜单的"复制名称"（host = 那个窗口）
 ## 被谁用：需要往外复制文本的配置（如"复制名称"）。
 static func copy(text: Variant = "") -> void:
     var s: String = "" if text == null else str(text)

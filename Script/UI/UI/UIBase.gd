@@ -313,72 +313,129 @@ func on_event(event_name: Variant) -> void:
 		parent.on_event(event_name)
 
 
-## 解析指令串占位符（发送前调用）：**只认两个词**，其余一律靠它们上面的取值链。
+## 解析指令串占位符（发送前调用）：**只认三个词**，其余一律靠它们上面的取值链。
 ##   self → 自身实例（换成 `@ID`，就是取值链的宿主）。链尾继续跟取值链，由指令系统按表达式解析：
 ##            `self.parent`           → 父 UI（挂载对象）
-##            `self.parent.parent`    → 祖父（级数任意，菜单链每深一层就多一级）
 ##            `self.config.content`   → 自己的显示内容（就是要写/读的那个 config 键）
 ##            `Utils.write("self.config.content", 值)` → 路径字符串里的 self 也一样换掉
-##          **不再有 $parent / $text**：能从 self 上取到的就不另立占位符——
-##          少一套语法、少一处"级数写错"的坑，写的人也只要记住"成员怎么读"。
-##          取不到时指令系统按表达式失败给 null，目标指令自己会警告（如 _as_ui 的"target 为空"）。
+##   host → **本条链的管理对象**（`@ID`）——解析规则见 _find_host：从自己往上，**最近一个在 config 里
+##          写了 `host`（实例 ID）的元素**说了算；谁都没写就回退到**最外层 UI**（窗口本身）。
+##          于是"管理对象"可以是**任意一个 UI**（不必是顶层），而指令里也不必再数 `self.parent` 的级数
+##          （"包裹一层分组就多写一个 .parent"这种坑不存在了）。路径字符串里同样适用：
+##          `Utils.write("host.config.bind", 值)`。
 ##   event → 触发这次事件的**事件名**（= 状态名 / Key 名），**自带引号**——名字里通常有空格
 ##           （如 "Mouse Left"），指令要把整串当一个参数，所以这里补上引号；
-##           于是配置可以写 `UIInteract.drag(self.parent, event)`，不必把状态名再抄一遍。
+##           于是配置可以写 `UIInteract.drag(host, event)`，不必把状态名再抄一遍。
+## 取不到时指令系统按表达式失败给 null，目标指令自己会警告（如 _as_ui 的"target 为空"）。
 ## 为什么不用 `$` 前缀了：参数里**字符串必须带引号**（`"Menu"`），不带引号的一律当"值"求
-## ⇒ `self` / `event` 这种词不会和字符串混淆，`$` 就成了多余的一套写法。
+## ⇒ `self` / `host` / `event` 这种词不会和字符串混淆，`$` 就成了多余的一套写法。
 ## 被谁用：on_event（唯一调用方）。
 func _resolve_cmd(cmd: String, event_name: String = "") -> String:
 	cmd = _self_to_id(cmd)
+	cmd = _host_to_id(cmd)
 	if event_name != "":
 		cmd = _event_to_name(cmd, event_name)
 	return cmd
 
 
-## 把独立的 `self` 词换成 `@ID`（当"值"和当"路径字符串"都适用：字符串只是带引号的文本，
-## 里面的 self 也一并换掉，于是 `Utils.write("self.config.content", 值)` 里的路径才对得上）。
-## 只认"独立词"：左右都不是标识符字符（`self` 上一步已换掉、`selfish` 这种不动）。
-## 被谁用：_resolve_cmd。
+## 本条 UI 链的**管理对象**（宿主）——"最近声明优先，没声明回退顶层"：
+##   从自己往上找**最近一个在 config 里写了 `host` 的元素**（值是**实例 ID**，跟 `self` 换成 `@ID` 是同一个数），
+##   用 `instance_from_id` 取回实例 ⇒ 它就是这段子树的管理对象；
+##   谁都没写 ⇒ 回退到**最外层 UI**（挂 UI 根的"窗口"本身，也就是以往的行为）。
+## 于是管理对象可以是**任意一个 UI**（不一定是顶层），并且"一个管理菜单，不论它的子 UI 层级在哪，
+## 管理的都是同一个对象"——指令里不必写死级数。独立 UI（没挂在谁下面、也没声明）的宿主就是它自己。
+##
+## **为什么存"实例 ID"**：config 是数据（会被深拷贝、可能写盘成 json）——实例存不进去，
+## 而 ID 就是个整数（json 能存；64 位 ID 超出 JSON 数字精度 2^53，所以这里也认"数字字符串"，
+## 免得写盘再读回来就找不到）；而且它和 `self` 用的是同一套东西，所以**设置时直接用 `self`**：
+##   - 开的时候给：`UIInteract.open(self, "Menu", self, host=self)`（也可以给任何算得出实例的取值链）；
+##   - 运行中改：`Utils.write("<那个 UI 的路径>.config.host", self.ID)`
+##     （写成谁就是"以谁为界"：它下面的整棵子树都跟着走，各自的更近声明还能再覆盖）。
+##   **是"管理对象"不是"挂载点"**：挂在哪、摆在哪仍由 open 的 target / anchor + `open_at` 决定。
+## ID 取不到（那个 UI 已经被释放 / 写的不是 ID）⇒ 当"没声明"处理并**提醒一次**（见 _warn_host_once）：
+## 一个笔误不该让整条指令失效，但也不该静默地管错对象。
+## 被谁用：_host_to_id（host 占位符）。
+func _find_host() -> UIBase:
+	var fallback: UIBase = self
+	var ui: UIBase = self
+	while ui != null:
+		var declared: Variant = ui.config.get("host")
+		var id: int = 0
+		if declared is int:
+			id = declared
+		elif declared is String:
+			# 实例 ID 是 64 位整数，超出 JSON 数字精度（2^53）——真写盘再读回可能变成字符串，这里认一下
+			var as_text: String = declared
+			if as_text.is_valid_int():
+				id = int(as_text)
+		if id != 0:
+			@warning_ignore("unsafe_cast")
+			var found: UIBase = instance_from_id(id) as UIBase
+			if found != null:
+				return found
+			_warn_host_once(str(id))
+		elif declared != null:
+			_warn_host_once(str(declared))     # 写了但不是实例 ID（比如手写了个名字）
+		fallback = ui          # 一直没声明 ⇒ 循环结束时它是最外层那个
+		ui = ui.parent
+	return fallback
+
+
+## 已经警告过的 host 值（按值去重，一局只提示一次；见 _warn_host_once）。
+static var _warned_hosts: Dictionary = {}
+
+
+## host 值用不了时**提醒一次**（按值去重，一局只提示一次，不刷屏——这个解析每次派发都会跑）。
+## 提醒后按"当没声明"处理（继续往上 / 回退顶层）。被谁用：_find_host。
+static func _warn_host_once(raw: String) -> void:
+	if _warned_hosts.has(raw):
+		return
+	_warned_hosts[raw] = true
+	push_warning("UIBase: config[\"host\"] = %s 用不了（这里要写**实例 ID**：`host=self` 或 `Utils.write(..., self.ID)`；也可能是那个 UI 已经不在了）—— 当没声明处理" % raw)
+
+
+## 把独立的 `self` 词换成 `@ID`。被谁用：_resolve_cmd。
 func _self_to_id(cmd: String) -> String:
-	var out := ""
-	var i := 0
-	var n := cmd.length()
-	while i < n:
-		if cmd[i] == "s" and cmd.substr(i, 4) == "self":
-			var prev: String = cmd[i - 1] if i > 0 else ""
-			var next: String = cmd[i + 4] if i + 4 < n else ""
-			if not _is_word_char(prev) and not _is_word_char(next):
-				out += "@" + str(ID)
-				i += 4
-				continue
-		out += cmd[i]
-		i += 1
-	return out
+	return _word_to(cmd, "self", "@" + str(ID))
+
+
+## 把独立的 `host` 词换成宿主的 `@ID`（见 _find_host）。被谁用：_resolve_cmd。
+func _host_to_id(cmd: String) -> String:
+	return _word_to(cmd, "host", "@" + str(_find_host().ID))
 
 
 ## 把独立的 `event` 词换成"事件名"（**自带引号**：名字里通常有空格，如 "Mouse Left"）。
-## 与 _self_to_id 同一套"独立词"判定。
 ## 被谁用：_resolve_cmd。
 func _event_to_name(cmd: String, event_name: String) -> String:
+	return _word_to(cmd, "event", "\"" + event_name + "\"")
+
+
+## 把"独立词" `word` 整体换成 `text`（三个占位符共用这一份扫描，别再各写一遍）。
+## 只认独立词：左右都不是标识符字符（`selfish` / `hostess` / `events` 这种不动）。
+## 字符串里也一样换（字符串只是带引号的文本）：于是 `Utils.write("self.config.content", 值)`、
+## `Utils.write("host.config.bind", 值)` 这类**路径**里的占位符也能对上。
+## 被谁用：_self_to_id、_host_to_id、_event_to_name。
+static func _word_to(cmd: String, word: String, text: String) -> String:
 	var out := ""
 	var i := 0
 	var n := cmd.length()
+	var w: int = word.length()
 	while i < n:
-		if cmd[i] == "e" and cmd.substr(i, 5) == "event":
+		if cmd[i] == word[0] and cmd.substr(i, w) == word:
 			var prev: String = cmd[i - 1] if i > 0 else ""
-			var next: String = cmd[i + 5] if i + 5 < n else ""
+			var next: String = cmd[i + w] if i + w < n else ""
 			if not _is_word_char(prev) and not _is_word_char(next):
-				out += "\"" + event_name + "\""
-				i += 5
+				out += text
+				i += w
 				continue
 		out += cmd[i]
 		i += 1
 	return out
 
 
-## 标识符字符（字母 / 数字 / 下划线 / `@`）——判上面的 `self` / `event` 是不是独立词。
-## 被谁用：_self_to_id、_event_to_name。
-func _is_word_char(c: String) -> bool:
+## 标识符字符（字母 / 数字 / 下划线 / `@`）——判上面的 `self` / `host` / `event` 是不是独立词。
+## 被谁用：_word_to。
+static func _is_word_char(c: String) -> bool:
 	if c == "":
 		return false
 	if c == "_" or c == "@":

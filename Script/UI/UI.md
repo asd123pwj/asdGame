@@ -88,7 +88,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - **`var children: Array[UIBase]`**：按 `config["children"]`（每项 `[child_name, ui_class, child_config]`）组装，挂到 `_content_box()`（容器类覆写返回内部布局节点）。
 - **事件→指令**：唯一入口 `on_event(事件名)`（由 PointerDetect 派发）：
   - 事件名就是**状态名**（统一来自 `QName`，见 `Config/QuickName.gd`）——**UI 不感知按键**，键位只在状态层 `statuses` 的 `keys` 里配置；hover 变化不对应状态，用 `QName.pointer_enter / QName.pointer_exit`。
-  - 在 `config["events"]`（`[事件名, 指令串]` 列表）里**按等值**取指令串 → `Msg.send_cmd(_resolve_cmd(指令串, 事件名))`（`UIBase` 自己的私有助手，解析 `self.parent`/`self`/`event` 占位符）。
+  - 在 `config["events"]`（`[事件名, 指令串]` 列表）里**按等值**取指令串 → `Msg.send_cmd(_resolve_cmd(指令串, 事件名))`（`UIBase` 自己的私有助手，解析 `self` / `host` / `event` 三个占位符）。
   - 用列表而非字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），加新事件只需加一项。
   - 自己没配的事件**冒泡给父级**，冒泡到根都没有才什么都不做（元素没有隐式行为）；于是"整块面板的行为"在子元素上同样生效（如菜单面板启用拖拽后，按住菜单项也能拖），`self/self.parent` 以"配了指令的那个元素"为基准。
 - **运行时增改**：`add_child_element(name, ui_class, config, reg_name := "")` 加子元素（内部交给 `UiSys.register_child` 登记，登记后才可被指针命中；`reg_name` 由开 UI 的路径显式指定，普通子元素留空）；对调两项配置用 `Utils.swap`（`Utils.gd`，两条路径写出来）、`switch_value(键, 值)` 在一个列表里"有就删、没有就加"（两者都是开关式按钮的底座：菜单的"启用关闭按钮"用前者、"启用拖拽"用后者——直接开关宿主 `events` 里的那一条绑定，不必预摆两套）。"关闭按钮"连新指令都不需要：它是普通预设 `CloseButton`，用 `open` / `close` 开关。
@@ -118,7 +118,11 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - **这些都是纯副作用指令（`-> void`）**：只做 close/hide、改 position、起 Tween、转发消息，不返回值。因此被指令系统调用时不会在 `send_cmd` 的结果数组里多套一层，无需 `[0]` 剥离。
 - **参数类型 `target: UIBase`**：指令里的 `self.parent/self` 由 `UIBase._resolve_cmd` 转成 `@ID`，指令系统执行 `$` 表达式时用 `instance_from_id` 取出**实例**再传入，所以这里收到的必然是 UIBase，不是 ID 也不是名字。
 - **`_as_ui(target, cmd_name)`**：只做校验、不再做"名字→实例"归一化（该路径已由指令系统承担）。target 为空、或目标尚未 `build()`（`control == null`）时 **`push_warning` 指明是哪个指令**，而不是静默 return——避免配置/组装写错却无提示。
-- **`UIBase._resolve_cmd(cmd, event_name)`**：解析占位符——**只认两个**：`self`→自身（`@ID`）、`event`→触发事件名（**自带引号**，因为事件名里常有空格）；路径参数交给"双引号 = 字面字符串"那条规则。父级/内容一律在 `self` 上接着写取值链，交给指令系统按表达式解析：`self.parent`→父 UI、`self.parent.parent`→祖父（级数任意）、`self.config.content`→自身显示内容——**没有 `$parent` / `$text` 这类专用占位符**（能从 `self` 取到的就不另立语法；取不到时表达式给 null，由目标指令自己警告）。它是 `on_event` 的私有助手，放在 `UIBase` 里（没有第二个使用者）。
+- **`UIBase._resolve_cmd(cmd, event_name)`**：解析占位符——**只认三个词**（实现见 `UIBase._word_to`，三个共用一份"独立词"扫描）：
+  - `self` → 自身（`@ID`）：链尾接着写取值链，交给指令系统按表达式解析——`self.parent`→父 UI（挂载对象）、`self.config.content`→自身显示内容。
+  - `host` → **本条链的管理对象** → `@ID`（解析见 `UIBase._find_host`）：从自己往上，**最近一个在 config 里写了 `host` 的元素**说了算（值是**实例 ID**）；谁都没写就回退到**最外层 UI**（窗口本身）。**"管理对象"的唯一写法**：菜单项 / 深层子元素不必再数 `self.parent` 级数——中间套多少层（比如给菜单项再加一个可折叠分组）都指向同一个对象；而且管理对象**可以是任意一层 UI**（不一定是顶层）：开的时候给（`UIInteract.open(..., host=self)`，或任何算得出实例的取值链），或运行中改（`Utils.write("<某个 UI 的路径>.config.host", self.ID)`——写成谁就以谁为界，它下面的整棵子树都跟着）。**存的是实例 ID**（跟 `self` 换成 `@ID` 是同一个数）：config 是数据（会被深拷贝、可能写盘成 json），实例存不进去、ID 就是个整数；ID 取不到时当"没声明"处理并提醒一次。
+  - `event` → 触发事件名（**自带引号**，因为事件名里常有空格）。
+  三个词在**路径字符串里也一样换**（`Utils.write("self.config.content", 值)`、`Utils.write("host.config.bind", 值)`）。**没有 `$parent` / `$text` 这类专用占位符**（能从这三个词取到的就不另立语法；取不到时表达式给 null，由目标指令自己警告）。它是 `on_event` 的私有助手，放在 `UIBase` 里（没有第二个使用者）。
 **指令语法：一行 = 一个表达式**（和写函数调用一样，参数一律包在 `()` 里）：
 - `类.静态方法(参数, 名字=值)`：命令调用（命令只挂在"类.静态方法"这个命名上）。位置参数按签名顺序；**`名字=值` 可以跳过中间那些带默认值的参数**（像 Python 的关键字参数）；**不写的参数用签名里的默认值**。没有 flag 语法——bool 参数就写 `名字=true`。
 - 取值链（`self.control.text`、`Test.int1`、`@实例ID.xxx`）：末尾带 `()` 就"调完拿返回值"（`self.refresh("content")`），不带 `()` 就取这个值本身。**忘写 `()` 会警告**（取到的是函数本身，不是调用结果）。
@@ -128,18 +132,19 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | 指令 | 作用 | 典型配置 |
 |---|---|---|
 | `UIInteract.close self.parent` | 关闭（隐藏）目标 UI（发 `Msg.send_ui_close` + hide） | 关闭"按钮"的 press |
-| `UIInteract.open([宿主], 预设名, [锚点], close_on_blur=?, close_on_move=?)` | 开启/重开一个 UI（显示 + 按 `open_at` 摆位；不重建控件）。**锚点同时是挂载点**（子菜单挂到触发它的菜单项下）；宿主与锚点都不给 = 独立 UI（`UIInteract.open(preset_name="MiniHUD")`）。后两个是**关闭行为**（bool，**默认 false**）：`close_on_move=true` = 指针挪开就收（hover 展开的子菜单）、`close_on_blur=true` = 有按键派发时不在它上面就关（右键菜单）；**要哪种就在开的这一句写出来**——预设里不再声明它（"在哪开、为什么开"只有这一句知道） | 面板右键开菜单：`UIInteract.open(self, "Menu", self, close_on_blur=true)` |
-| `UIInteract.drag(self.parent, event)` | **按住拖动**（登记入口）：把"每帧拖 `self.parent`"挂到这个按住状态上，松手自动停 | MiniHUD 标题栏、整块键盘面板 |
-| `UIInteract.rescale self.parent event` | **等比缩放**（登记入口）：每帧 `scale *= |指针 - 面板左上角| / |上帧指针 - 面板左上角|`（增量式，以左上角为中心，上下限取 `SysCfg.resize_min_scale / resize_max_scale`） | 缩放手柄 `ResizeButton` |
-| `event` | 占位符，由 `resolve_cmd` 换成**带引号的触发事件名**（= 状态名 = Key 名），所以配置不必再抄一遍状态名 | 上两条都在用 |
+| `UIInteract.open([挂载点], 预设名, [锚点], close_on_blur=?, close_on_move=?, host=?)` | 开启/重开一个 UI（显示 + 按 `open_at` 摆位；不重建控件）。**锚点同时是挂载点**（子菜单挂到触发它的菜单项下）；挂载点与锚点都不给 = 独立 UI（`UIInteract.open(preset_name="MiniHUD")`）。`close_on_move=true` = 指针挪开就收（hover 展开的子菜单）、`close_on_blur=true` = 有按键派发时不在它上面就关（右键菜单）——**要哪种就在开的这一句写出来**，预设里不声明它（"在哪开、为什么开"只有这一句知道）。`host` = 这次开的 UI **要管理的对象**（见 `host` 占位符那行）：不给就沿链回退；**它不是挂载点**，挂哪/摆哪仍由前三个参数 + `open_at` 决定。复用路径也会更新这些指向 | 面板右键开菜单：`UIInteract.open(self, "Menu", self, close_on_blur=true)`；改管某个子 UI：`open(self, "Menu", self, host=UiSys.get_ui("MiniHUD/Info"))` |
+| `UIInteract.drag(host, event)` | **按住拖动**（登记入口）：把"每帧拖 host（那个窗口）"挂到这个按住状态上，松手自动停 | MiniHUD 标题栏、整块键盘面板 |
+| `UIInteract.rescale(host, event)` | **等比缩放**（登记入口）：每帧 `scale *= |指针 - 面板左上角| / |上帧指针 - 面板左上角|`（增量式，以左上角为中心，上下限取 `SysCfg.resize_min_scale / resize_max_scale`） | 缩放手柄 `ResizeButton` |
+| `host` | 占位符，由 `resolve_cmd` 换成**本条链的管理对象**的 `@ID`："最近一个在 config 里写了 `host`（**实例 ID**）的元素"说了算，谁都没写就回退到**最外层 UI**（窗口）⇒ 管理对象可以是**任意一层 UI**（不必顶层），指令里也不必数 `self.parent` 级数；路径字符串里也能用（`"host.config.bind"`）。写法：`UIInteract.open(..., host=self)`（开的时候给）或 `Utils.write("<某个UI>.config.host", self.ID)`（运行中改，以声明处为界）。**ID 用不了**（UI 已释放 / 写的不是 ID）⇒ 当没声明处理 + 提醒一次 | `UIInteract.close(host)`、`Utils.copy(host.config.reg_name)` |
+| `event` | 占位符，由 `resolve_cmd` 换成**带引号的触发事件名**（= 状态名 = Key 名），所以配置不必再抄一遍状态名 | 上面两条都在用 |
 
 > 按住类交互在代码里成对写：`drag`/`rescale` 是**登记入口**（配置里写它们），
 > `dragging`/`rescaling` 是**每帧执行**（不写配置，只由 `AutoSys` 调）。见 `Script/Auto/Auto.md`。
 | `UIInteract.fade_to self.parent 0.0 0.5` | 透明度渐隐/渐显（alpha, duration；**指令调用须写全参数**） | 提示淡出 |
-| `Utils.write("<路径>", <值>)` | **通用的"按路径写值"**（`Utils.gd`，两个参数：路径里已带宿主）：路径语法与取值式**完全一致**（`self.config.content`、`@ID.config.content`、`Test.int1`、`a.b[0].c`、`UiSys.get_ui(名字).config.content`——多层、列表下标、函数头都行），走的就是指令解析器（`CommandParser.write`）。**路径要写成字符串参数**（`"self.config.content"`：引号里的 `$` 不会被当成取值式）。**只写数据、不刷新界面** ⇒ 改完接一条 `self.refresh("content")` | `MenuBind` 回车：`Utils.write("self.parent.parent.parent.parent.config.bind", self.control.text)` |
+| `Utils.write("<路径>", <值>)` | **通用的"按路径写值"**（`Utils.gd`，两个参数：路径里已带宿主）：路径语法与取值式**完全一致**（`self.config.content`、`host.config.bind`、`@ID.config.content`、`Test.int1`、`a.b[0].c`、`UiSys.get_ui(名字).config.content`——多层、列表下标、函数头都行），走的就是指令解析器（`CommandParser.write`）。**路径要写成字符串参数**（`"self.config.content"`：引号里的内容不会被当成取值式）。**只写数据、不刷新界面** ⇒ 改完接一条 `self.refresh("content")` | `MenuBind` 回车：`Utils.write("host.config.bind", self.control.text)` |
 | `Utils.swap("<路径A>", "<路径B>")` | 通用的"两项对调"（字典键 / 实例成员 / 类脚本静态都行），开关式按钮的底座；**界面刷新不在这里** ⇒ 改完接一条 `self.refresh("content")` | 菜单 CloseToggle：`Utils.swap("self.config.events", "self.config.events_2")` |
-| `Utils.copy <文本>` | 把文本复制到**系统剪贴板**（平台不支持会警告）。名字靠取值链取：`Utils.copy self.parent.parent.config.reg_name` | 右键菜单"复制名称" |
-| `self.refresh("content")` | **调用**（`$` 开头的整行 = 做事，末尾是方法就调它；`()` 里可以带参数）：刷新界面不用包一条交互——指令系统本来就能调方法，`refresh(key)` 是 `UIBase` 上的普通方法（子类继承自然生效）。**改了什么就刷什么**：只改了 content 就传 `"content"`，一次改了好几项 / 不确定才不传 key（全刷）。目标算出来的也能调：`UiSys.get_ui(self.parent.config.bind).refresh("content")` | `Utils.write "self.config.content" 值\vself.refresh("content")` |
+| `Utils.copy(<文本>)` | 把文本复制到**系统剪贴板**（平台不支持会警告）。名字靠取值链取：`Utils.copy(host.config.reg_name)` | 右键菜单"复制名称" |
+| `self.refresh("content")` | **调用**（整行 = 做事，末尾是方法就调它；`()` 里可以带参数）：刷新界面不用包一条交互——指令系统本来就能调方法，`refresh(key)` 是 `UIBase` 上的普通方法（子类继承自然生效）。**改了什么就刷什么**：只改了 content 就传 `"content"`，一次改了好几项 / 不确定才不传 key（全刷）。目标算出来的也能调：`UiSys.get_ui(host.config.bind).refresh("content")` | `Utils.write("self.config.content", 值)\vself.refresh("content")` |
 | `UIInteract.begin_edit self.parent` | 让目标开始编辑（`UI_Input`：抢焦点 + 置 `InputSys.edit_ui`）——"打开后直接就能打字"用它 | `open … \v begin_edit …` |
 | `UIInteract.end_edit(target)` | 让目标结束编辑（清 `InputSys.edit_ui` + 放焦点）。**"提交后要不要退出编辑"由配置决定**：要退出就写它；搜索框那种"提交完继续打字"就别写 | `Utils.write(…)\vUIInteract.end_edit(self)\v…refresh("content")` |
 | ~~`UIInteract.swap_config`~~（已退役） | 对调两项改用 `Utils.swap`：两条路径直接写出来，后面接一条刷新（换的是自己那两项就 `self`）——**开关式按钮就靠它 + 多命令实现** | `Utils.swap "self.config.content" "self.config.content_2"\vself.refresh("content")` |
@@ -198,9 +203,12 @@ var values: Array[Array] = [
   - 有 `anchor`（多级菜单：触发它的那个菜单项）→ **挂在 anchor 下**，子菜单成为该菜单项的后代；只给 `host` → 挂在 host 下。
   - `Enums.OpenAt.CONFIG`（不写 `open_at` 时的默认）：摆回配置里的 `position`；`POINTER`：开在指针处（右键菜单——**仍然要传 anchor**，因为它决定挂在谁下面）；`ANCHOR_TOP_RIGHT`：开在 `anchor` 的右上角顶点（多级菜单把触发它的那个菜单项传进来）；`ANCHOR_TOP_RIGHT_IN` / `ANCHOR_BOTTOM_RIGHT_IN`：开在 `anchor` **内部**的右上角 / 右下角（按自己宽高内缩，关闭按钮与缩放手柄用的就是这两个）。
   - 位置换算（屏幕坐标 → 挂载点坐标系的 `position`）在 `UIBase.show_at`：**别用 `set_global_position`**（按当前全局变换求逆，重复摆会跟旧 position 复合、越摆越偏），**也别设 `Control.top_level`**（会失去父级可见性继承，宿主关掉后它还留在屏幕上、还能被命中）。
-- **菜单链是一棵子树**：`Menu` 挂在宿主下、子菜单挂在"触发它的菜单项"下（`MiniHUD → Menu → Edit → MenuEdit`），所以菜单项里 `self.parent` = 菜单本身，往上级数就是往上级 UI：`Menu` 的项用 2 级 = 宿主，`MenuEdit` 的项用 4 级 = 宿主（**链每深一层，到宿主多一级**）。菜单项的功能都作用在宿主上（"关闭"关宿主、"添加关闭按钮"给宿主加 X、"启用拖拽"拖宿主），菜单只是快捷方式——像右键窗口标题栏点"关闭"，关掉的是窗口。宿主一 `hide()`，整条链随之不可见、也不再被指针命中（可见性照常继承）。
+- **菜单链是一棵子树**：`Menu` 挂在宿主下、子菜单挂在"触发它的菜单项"下（`MiniHUD → Menu → Edit → MenuEdit`）。菜单项的功能都作用在宿主上（"关闭"关宿主、"添加关闭按钮"给宿主加 X、"启用拖拽"拖宿主），菜单只是快捷方式——像右键窗口标题栏点"关闭"，关掉的是窗口。宿主一 `hide()`，整条链随之不可见、也不再被指针命中（可见性照常继承）。
+  - **菜单项里管理宿主一律写 `host`**（不要数 `self.parent` 的级数）：链里层级深浅不一（`Menu` 的项 vs `MenuEdit` 的项差着好几层），但 `host` 无论深浅都指向同一个对象；给菜单项再套一层可折叠分组也不会指歪。`self` 留给"我自己的挂载点/锚点"（`UIInteract.open(self, "MenuEdit", self)` 用它）。
+  - **管理对象不一定是"最顶层那个窗口"**：只认"最近一处声明"——`UIInteract.open(..., host=self)` 或 `Utils.write("<某UI>.config.host", self.ID)` 写在谁身上，就以谁为界（它下面的整棵子树都跟它，更近的声明还能再覆盖，所以可以给不同子菜单挂不同的管理对象）。没写 `host` 的链才回退到最外层窗口。**写的是实例 ID**（整数，能进 json / 能深拷贝），所以"哪一层管谁"是可以存盘的配置。
+  - `MenuBind` 记绑定名写的是**窗口**的 config：`Utils.write("host.config.bind", self.control.text)`；发消息那边读也是 `UiSys.get_ui(host.config.bind)`。
 - **失焦判定也因此变简单**：`UIInteract_OpenClose.close_blur_ui` 判"指针是否在我要的链上"，鼠标在子菜单上时沿 parent 链能走回父菜单，所以父菜单不会被误关。
-- **触发**：宿主配置里写 `"events": [["Mouse Right", "UIInteract.open self Menu self"]]`；状态层只需 `Mouse Right → PointerDetect.key "Mouse Right"` 把事件派发给 hover 的 UI，**不需要系统级快捷**。
+- **触发**：宿主配置里写 `"events": [[QName.mouseRight, 'UIInteract.open(self, "Menu", self, close_on_blur=true)']]`（= `QName.UI_event_mouseRight_menu`）；状态层只需 `Mouse Right → PointerDetect.key "Mouse Right"` 把事件派发给 hover 的 UI，**不需要系统级快捷**。
 - **多级菜单 = 菜单开菜单**：菜单项的 `Pointer Enter` → `UIInteract.open self MenuEdit self`（第一个参数是挂载点，第二个是位置锚点，菜单项里都传 `self`），层数不写死。
 - **菜单项里的"开关"**（如 `MenuEdit/CloseToggle`）：普通 `UI_Label` 上写两套配置，`"Mouse Left"` 一条串里做三件事——`UIInteract.open(宿主, "CloseButton", 宿主)`（另一套里是 `UIInteract.close(宿主, "CloseButton")`）\v `Utils.swap "self.config.events" "self.config.events_2"` \v `Utils.swap "self.config.content" "self.config.content_2"` \v `self.refresh("content")`，于是点第一次开关闭按钮、点第二次关它，文字也跟着换。关闭按钮就是 `Config/UI/UIPreset_Basic.gd` 里的普通预设（`open_at = Enums.OpenAt.ANCHOR_TOP_RIGHT_IN`：开在锚点**内部**右上角，按自己宽度内缩）。
 - **关掉 = 隐藏（实例复用）**：关闭统一走 `UIInteract.close`（`hide()` + 广播）；**父 UI 一 hide，挂在它下面的子 UI 随可见性继承一起不可见**，所以不需要"关父菜单时连子菜单一起关"这种递归。`open` 按登记名查——有就"显示 + 重新摆位"，没有才现场创建；同一登记名只有一份，隐藏的实例不参与指针命中、也不算"开着"。

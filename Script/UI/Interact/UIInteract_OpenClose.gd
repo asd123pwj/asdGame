@@ -25,6 +25,10 @@ extends UIInteractBase
 ##   preset_name = 预设名（见 Config/UI/）
 ##   anchor      = 位置锚点，同时也是**挂载点**（锚点优先于宿主）：多级菜单传"触发它的那个菜单项"，
 ##                 子菜单挂在该菜单项下 ⇒ 整条菜单链是一棵子树（关父级全关、失焦判定沿 parent 链）
+##   host        = **这次打开的 UI 要管理的对象**，给一个 UI（如 `host=self`、`host=self.parent`；
+##                 不给 = 沿链回退，默认管最外层那个窗口）。**它不是挂载点**：挂在哪、摆在哪仍由
+##                 target / anchor 决定。解析规则见 UIBase._find_host（"最近声明优先，没声明回退顶层"）。
+##                 落地时把它的**实例 ID** 记进 config["host"]（config 是数据、可能写盘，实例存不进去）。
 ## 复用规则：按（挂载点 + 预设名）查登记名——**已存在就只显示 + 重新摆位，不重建控件**。
 ##
 ## 关闭行为两个开关（bool，默认 false = 不启用）：
@@ -38,10 +42,12 @@ extends UIInteractBase
 ##   UIInteract.open(self, "Menu", self, close_on_blur=true)       面板右键 → 指针处开菜单（点别处关）
 ##   UIInteract.open(preset_name="MiniHUD")                        独立 UI → 开在配置声明的位置
 ##   UIInteract.open(self, "MenuEdit", self, close_on_move=true)   hover 展开的子菜单：挪开就收
+##   UIInteract.open(self, "Menu", self, host=self)                这个菜单改管自己（不是最外层窗口）
+##   UIInteract.open(self, "Menu", self, host=self.parent)         或者管别的 UI（取值链能算出来就行）
 ## 被谁用：Config/UI 里各预设的 "events"、Test.ui_test（测试也走指令，不抄近路）、外部想直接拿实例时。
 ## 返回：开出来的 UI（找不到预设/建不出来为 null）。
 static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase = null,
-		close_on_blur: bool = false, close_on_move: bool = false) -> UIBase:
+		close_on_blur: bool = false, close_on_move: bool = false, host: UIBase = null) -> UIBase:
 	var preset: UIPreset = UIPreset.get_(preset_name)
 	if preset == null or preset.ui_name == "":
 		push_warning("UIInteract.open: 找不到预设「%s」（见 Config/UI/）" % preset_name)
@@ -53,6 +59,11 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 		ui = _build_open(preset, preset_name, mount)
 	if ui == null:
 		return null
+	# 管理对象：给了就把它**的实例 ID** 记在被开的这个 UI 上 ⇒ 它下面的整棵子树都跟着（见 UIBase._find_host）。
+	# 复用路径也要写一次（否则"重开一次换个管理对象"这种改不动）。
+	# 写 ID 而不是实例：config 是数据（会被深拷贝、可能写盘），实例存不进去；ID 就是个整数，还能跟 self 对上。
+	if host != null:
+		ui.config["host"] = host.ID
 	# 关闭行为：**总是按参数写**（默认 false = 不启用）。要哪种就在开的这一句写出来，
 	# 预设里不再声明它——"在哪开、为什么开"只有开的那一句知道。
 	ui.config["close_on_blur"] = close_on_blur
@@ -67,8 +78,8 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 ## 关闭（隐藏）UI —— **一个函数管两种情况**：
 ##   只有 target          → 关 target 自己；
 ##   还给了 preset_name   → 关"挂在 target 下的那个预设 UI"（按挂载点 + 预设名查回来再关）。
-## 为什么要第二种：菜单项深处手上只有一个"面板"的引用（`self.parent.parent.parent.parent`）和一个预设名，
-## 而它要关的是挂在那个面板下的子 UI（如 CloseButton），不是面板自己。
+## 为什么要第二种：菜单项手上只有"管理对象"（`host`）和一个预设名，
+## 而它要关的是挂在那个 UI 下的子 UI（如 CloseButton），不是那个 UI 自己。
 ## 只是 hide，实例留在原地；**重开统一走 UIInteract.open**（显示 + 按 open_at 重新摆位，不重建控件）。
 ## 查不到（没开过）就什么都不做（幂等）。
 ## 被谁用：关闭按钮 / 菜单的"关闭"项 / 开关式按钮的"移除"一侧；本文件的 close_blur_ui 也走它。
