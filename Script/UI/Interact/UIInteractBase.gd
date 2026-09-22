@@ -2,7 +2,7 @@ class_name UIInteractBase
 extends BaseClass
 ## UI 交互指令宿主 —— **交互组的基类**，只放各组共用的东西（设计见 Script/UI/UI.md）。
 ##
-## **对外只有一套指令名 `UIInteract.xxx`**（元素按事件发送，如 `UIInteract.close self.parent`），
+## **对外只有一套指令名 `UIInteract.xxx`**（元素按事件发送，如 `UIInteract.close @self.parent`），
 ## 实现**按"交互"拆成多个文件**（一个交互一个文件，免得一个文件越写越长），每个文件都 `extends UIInteractBase`：
 ##   Interact/UIInteract_OpenClose.gd   开 / 关       → UIInteract.open / UIInteract.close
 ##   Interact/UIInteract_Drag.gd        按住拖动      → UIInteract.drag（+ 每帧 dragging）
@@ -10,6 +10,7 @@ extends BaseClass
 ##   Interact/UIInteract_Fade.gd        渐隐 / 渐显   → UIInteract.fade_to
 ##   Interact/UIInteract_Edit.gd        开始/结束编辑 → UIInteract.begin_edit / end_edit
 ##   Interact/UIInteract_Fold.gd        收起/展开     → UIInteract.fold / unfold / toggle_fold
+##   （UI 编辑器没有专用交互：内容元素 Script/UI/UI/UI_Editor.gd 自己铺，展开用通用的 fold）
 ##   （改显示内容 / 对调配置不需要专门交互：写 config + 刷新是 `Utils.write` / `Utils.swap` + `self.refresh`）
 ##
 ## 拆文件对外看不出区别：**指令前缀在本类声明一次**（`CMD_HOST`），子类继承它，
@@ -18,10 +19,10 @@ extends BaseClass
 ## 指令名自动就是 `UIInteract.xxx`，不用再登记到任何表里。
 ##
 ## 各交互只做"指令参数 → 具体实现"的转发与校验；**共用的校验就是本类的 `_as_ui`**。
-## target 为目标 UI 实例（指令里的 self 由 UIBase._resolve_cmd 转成 @ID，链尾的 `.parent` 等由指令系统取值，
-## 指令系统执行时已用 instance_from_id 取出实例，故这里收到的就是 UIBase）。
+## target 为目标 UI 实例（指令里的 self/host 由 指令系统（`@self`/`@host`/`@event`） 转成 `@注册名`，链尾的 `.parent` 等由指令系统取值，
+## 指令系统执行时按注册名（或实例 ID，老配置）取出实例，故这里收到的就是 UIBase）。
 
-## 本组所有文件注册到哪个指令前缀下（子类继承；机制见 CmdSys.CMD_HOST_KEY）。
+## 本组所有文件注册到哪个指令前缀下（子类继承；机制见 CmdSys.CMD_HOST_CONST）。
 const CMD_HOST: String = "UIInteract"
 
 
@@ -30,8 +31,12 @@ const CMD_HOST: String = "UIInteract"
 ## 被谁用：本组各交互的指令（`UIInteract.open` 例外：它允许宿主为空 = 开独立 UI，故不校验）。
 static func _as_ui(target: UIBase, cmd_name: String) -> UIBase:
 	if target == null:
-		push_warning("UIInteract.%s: target 为空（检查指令里的 self / self.parent 链是否对着了元素）" % cmd_name)
+		push_warning("UIInteract.%s: target 为空（检查指令里的 self / @self.parent 链是否对着了元素）" % cmd_name)
 		return null
+	# 控件为空 = 这个元素已经没了。**别报警**：最常见的是"点了一下就让所在的内容整段重建"——
+	# 比如编辑器里点"[重建]"，命令把那一行（就是被点的元素自己）清掉重铺，而点击派发**之后**
+	# 还会按命中结果调 set_top / drag 之类，这时拿到的是一个刚被移除的元素。晚到的信号，忽略就好。
+	# （真正的配置写错是"引用解不出来" ⇒ target == null，上面那条会报。）
 	if target.control == null:
-		push_warning("UIInteract.%s: 目标 UI「%s」尚未 build()（control 为空）" % [cmd_name, target.name])
+		return null
 	return target

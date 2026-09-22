@@ -19,7 +19,7 @@ func _create_control() -> Control:
 
 
 ## 把 config["content"] 当纹理路径加载；空则清空贴图（load 有缓存，重复路径不重复读盘）。
-## 被谁用：UIBase.build() 末尾、配置里改完 content 紧跟的 `self.refresh("content")`。
+## 被谁用：UIBase.build() 末尾、配置里改完 content 紧跟的 `@self.refresh("content")`。
 func refresh(key: String = "") -> void:
 	super.refresh(key)
 	if key != "" and key != "content":

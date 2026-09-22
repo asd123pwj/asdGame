@@ -4,7 +4,7 @@ extends UIInteractBase
 ## 组内共用与指令前缀见基类 Script/UI/Interact/UIInteractBase.gd（`_as_ui` 由基类提供）。
 
 
-## 等比缩放 —— **登记入口**，配置里写 `UIInteract.rescale self.parent event`。
+## 等比缩放 —— **登记入口**，配置里写 `UIInteract.rescale @self.parent event`。
 ## 被谁用：ResizeButton 预设（见 UIPreset_Basic.gd）。
 static func rescale(target: UIBase, status_name: String) -> void:
 	var ui := _as_ui(target, "rescale")

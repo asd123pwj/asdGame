@@ -11,9 +11,9 @@ config: Dictionary
 键位只在状态层配置；hover 变化用 QName.pointer_enter / QName.pointer_exit。
 占位符只有 self（自身）、host（本条链的**管理对象**）与 event（事件名）；
 取父级/内容一律在它上面接着写取值链：
-  self.parent = 挂载对象（父 UI），self.config.content = 自己的显示内容，
-  host = 管理对象（默认沿 parent 爬到顶那个 UI；也可以在某一层 config["host"] 写**实例 ID** 指定成别的 UI，
-         或 open 时给 host=self）——菜单项/深层子元素用它，不必数 self.parent 的级数。
+  @self.parent = 挂载对象（父 UI），self.config.content = 自己的显示内容，
+  host = 管理对象（默认沿 parent 爬到顶那个 UI；也可以在某一层 config["host"] 写**注册名**（实例 ID 也认）指定成别的 UI，
+         或 open 时给 host=@self）——菜单项/深层子元素用它，不必数 @self.parent 的级数。
 交互指令宿主为 UIInteract（close/open/toggle/drag/rescale/fade_to/begin_edit/end_edit/switch_value/set_top）；
 "写内容 / 对调配置"不需要专门交互：通用指令 Utils.write / Utils.swap + 一条刷新（详见 Script/UI/UI.md）。
 
@@ -24,7 +24,7 @@ config: Dictionary
   UI_Scroll 滚动文本（content = 多行文本；写 config["content"] + refresh("content") 即改展示）
 组合按钮 = Panel(背景) + Label(文字) 直接用配置堆叠，不写子类。
 开关式按钮（可选框）也不用专门元素：同一个元素上写两套配置（events/content 与 events_2/content_2），
-点击时用 Utils.swap 对调、再 self.refresh("content") 即可——见 Config/UI/UIPreset_Menu.gd 的 CloseToggle。
+点击时用 Utils.swap 对调、再 @self.refresh("content") 即可——见 Config/UI/UIPreset_Menu.gd 的 CloseToggle。
 
 预设也是"普通 UI"，所以重复出现的东西（关闭按钮 CloseButton、缩放手柄 ResizeButton）都做成预设、
 用 UIInteract.open / close 开与关，不写专门函数。
@@ -42,7 +42,7 @@ var values: Array[Array] = [
         "events": [QName.UI_event_mouseRight_menu],
         "children": [
             # 标题栏：只显示文本；按住 → drag 登记后由 AutoSys 每帧拖这个窗口（host）
-            # （event = 事件名 = 状态名 = Key 名，由 UIBase._resolve_cmd 补成带引号的参数；松手 AutoSys 自动停）
+            # （event = 事件名 = 状态名 = Key 名，由 指令系统（`@self`/`@host`/`@event`） 补成带引号的参数；松手 AutoSys 自动停）
             ["Title", "UI_Label", {
                 "content": "MiniHUD（按住拖动）",
                 "events": [QName.UI_event_mouseLeft_drag_host],
@@ -52,7 +52,7 @@ var values: Array[Array] = [
                 "content": "[关闭]",
                 "events": [QName.UI_event_mouseLeft_close_host],
             }],
-            # 滚动内容：展示本元素 config["content"]（改内容 = 写它 + self.refresh("content")）
+            # 滚动内容：展示本元素 config["content"]（改内容 = 写它 + @self.refresh("content")）
             # ScrollContainer 最小尺寸为 0，必须给 size 配置可视高度
             ["Info", "UI_Scroll", {
                 "content": "初始内容",

@@ -27,9 +27,9 @@ static var inputSys: InputSys
 static var tmapSys: MapSys
 ## 指令系统（解析并执行指令串）。被谁用：Msg.send_cmd。
 static var cmdSys: CmdSys
-## UI 系统（开启/登记 UI）。成员都是静态的，日常直接用 `UiSys.xxx`；
-## 这里的实例只用于启动时跑一次 `UiSys._init()`（建 UI 根）。被谁用：Sys.init_sub_system。
-static var uiSys: UiSys
+## UI 系统（开启/登记 UI）。成员都是静态的，日常直接用 `UISys.xxx`；
+## 这里的实例只用于启动时跑一次 `UISys._init()`（建 UI 根）。被谁用：Sys.init_sub_system。
+static var uiSys: UISys
 
 static var autoSys: AutoSys
 
@@ -84,5 +84,5 @@ func init_sub_system() -> void:
     presets = PresetRegister.new()
     inputSys = InputSys.new()
     tmapSys = MapSys.new()
-    uiSys = UiSys.new()
+    uiSys = UISys.new()
     # print("init_done")

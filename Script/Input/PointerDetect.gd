@@ -112,7 +112,7 @@ static func key(status_name: String) -> void:
 ## 注意 Rect2 退化（宽或高为 0）时永远命不中——UI 的 size 必须补足（见 UIBase._fit_size）。
 ## 被谁用：_process。
 static func _ui_at(pos: Vector2) -> UIBase:
-	return _hit_in(UiSys.root, pos)
+	return _hit_in(UISys.root, pos)
 
 
 ## 在 node 的孩子里倒着找命中的控件，命中则返回它对应的 UIBase（都没命中返回 null）。

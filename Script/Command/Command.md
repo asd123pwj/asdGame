@@ -17,6 +17,15 @@
 - `clear_cache()`：级联清 `CommandParser` 的缓存 + 本类源表 / 已扫前缀（热重载/调试）。
 - 反射签名：`script.get_script_method_list()`，参数默认值取 `default_args` 末尾对齐。
 - 其它：`_lazy_load`（懒注册：只收前缀匹配的那些源，同一前缀只扫一次）、`_build_args`（"全位置参数"快路 + `arg_index` O(1) 查名）、`_coerce`（按目标类型转参；值为 null 即"没给也没默认值"时给该类型零值）、`_make_arg_meta`。
+- **「任意配置键」约定**（开放式配置的命令怎么收参数，实现在 `_build_args` 的 `config` 那一段）：
+  方法签名里有**叫 `config` 的参数**时，调用里凡是**没对上任何参数名**的命名参数，都塞进它（键名照抄）：
+  `UIInteract.open(@host, "Editor", @host, host=@host, content_cmd="host.config", size=[310, 210])`
+  —— 前几个对上签名，`size` 不在签名里 ⇒ `config["size"] = [310, 210]`。
+  规则：**只认命名参数**（位置参数照旧按序落槽）；显式写的 `config={…}` 与这些键**合并**（指令里直接写的覆盖字典里同名的）。
+  用途：元素 config 是**开放集合**（谁都能加键），这样不必为了"打开时给一项配置"去拼一个字典。
+  **代价**：没对上的名字不再报"参数名不存在"（`siz=[1,2]` 会静默变成 `config["siz"]`）⇒
+  **只有确实想要开放式配置的命令才加 `config` 参数**，参数固定的命令别加（保住报错能力）。
+  写 `config` 参数时别用 `Dictionary = {}` 当默认值（GDScript 的字典默认值是共享的），写 `config: Variant = null` 再在里面判 `is Dictionary`。
 - 供谁调用：被 `Msg.send_cmd`(MessageHub) 触发；UI 按钮 `cmd` 也走它。
 
 ## CommandParser.gd（extends BaseClass）
@@ -26,7 +35,7 @@
   - **`_compile_value` 是唯一的值编译**（`"字符串"` / `[数组]` / `true,false,数字` / 其余当取值表达式）：命令行参数、表达式参数、整行取值都走它 ⇒ 三处行为必然一致。取值链被编译成"取值计划"：
     - `类.函数(...)` → `{kind:"func", callable, args:[...]}`（Callable 固化）
     - `类.<成员链>` → `{kind:"member", owner, ops:[...]}`（`owner` 为类名，`ops` 为字段/下标/方法的固化序列）
-    - `@ID.<成员链>` → `{kind:"instance", id, ops:[...]}`
+    - `@注册名.<成员链>` → `{kind:"instance", id, ops:[...]}`
     - 参数同样是计划：`_compile_call_args`（命令行，带 `名字=`）/ `_compile_expr_args`（表达式里，纯位置）内部都调 `_compile_value`
   - `_run_plan` / `_run_expr` / `_run_ops` / `_run_arg` / `_run_arg_plans`：执行计划，**只做最后一步实时取值**（属性链的下标/取值、函数的实际调用）；函数参数与方法参数共用 `_run_arg_plans`。
 - **两级解析缓存**（key = 命令原文，value = plan）：
@@ -39,6 +48,7 @@
   - `_line_cache`：整串指令 → 拆好的非空行（`split_lines`，UI 事件是同一条串反复发）。
 - `_split_call` / `_is_call_name` / `_is_ident`：认"整行就是一个 `类.方法(…)` 调用"（配对括号必须在行尾）。`_find_top_level_assign`：认参数里的 `名字=值`（跳过可选参数用）。`_split_top_level_args`：按顶层逗号切参数。
 - `read(path)` / `write(path, value)`：按路径读/写（`Utils.read`/`Utils.write`/`Utils.swap` 用它）。两者共用 `_split_path`：整条路径编译成一个表达式计划，`write` 把**最后一步**摘出来当赋值目标（前面那段交给 `_run_expr` 走 ⇒ "kind → 宿主"的分派只有一份）；空路径 / 括号不配平 ⇒ `{}`（read 给 null，write 给 false）。
+- `parse_value(text)`：把一段文本当**一个值**求（数字 / `true` / `"字符串"` / `[数组]`，与命令行参数同一套 `_compile_value` + `_run_arg`）；**算不出给 null，不报错也不打印**。给"编辑器"用：`UIInteract.set_config` 把输入框里的字变成配置值（见 `Script/UI/UI.md` 的"UI 编辑器"）。
 - `_find_class_script` / `_class_scripts`：类名 → 脚本，懒缓存。
 - `clear_cache()`：清空类脚本、两级缓存与两张小表（热重载/调试）。
 - 供谁调用：CmdSys.execute；以及取值行（`self.xxx`、`Test.int1` 这类）被各配置/UI 复用。

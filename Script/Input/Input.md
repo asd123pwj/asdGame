@@ -44,5 +44,5 @@
   - 命中刷新由 `InputSys._process` 里的 `PointerDetect._process` 负责（一帧一次、早于派发）；**派发里不再刷新命中**。
   - 命中 UI 时调 `ui.on_event(状态名)`，UI 侧按状态名等值匹配 `config["events"]` 里的指令。
   - **"按住期间每帧要做的事"不走这里**：走 `AutoSys`（`Script/Auto/Auto.md`：挂在状态上、每帧执行指令、状态不满足自动删）——指针层不参与，也就不需要捕获机制。
-- 命中判定：UI 按 `UiSys.uis` 加入顺序取最上层、`control.get_global_rect()` 矩形命中；角色按身体 `CollisionShape2D` 矩形；地图按世界坐标 / `TileSpritePreset.tileset.tile_size` 换算（y 取反）。
+- 命中判定：UI 按**控件树倒序**（同级后画的在上，沿控件树先问孩子）取最上层、`control.get_global_rect()` 矩形命中；角色按身体 `CollisionShape2D` 矩形；地图按世界坐标 / `TileSpritePreset.tileset.tile_size` 换算（y 取反）。
 - 驱动链路：`StatusPreset_Pointer` 定义按键状态（Pointer Press/Hold/Release、Submit）→ `SystemShortcutPreset_Pointer` 声明"状态满足→`PointerDetect.key` 指令"→ 满足时 `Msg.send_cmd`。输入全部来自 `InputSys` 的 `Msg` 消息，不用引擎 `gui_input`。

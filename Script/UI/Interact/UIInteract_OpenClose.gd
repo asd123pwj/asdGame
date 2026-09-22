@@ -5,8 +5,8 @@ extends UIInteractBase
 ## 而 `close` 的第二个参数（关掉挂在 target 下的某个预设 UI）正好与 `open` 的开子 UI 对称。
 ##
 ## **开启和它的子方法都在本文件**（`open` / `_build_open` / `_place` / `_child_ui`）：
-## 它们只有开启与关闭用得到，所以按"子函数跟着调用者走"从 UiSys 搬了过来——
-## UiSys 现在只剩"登记表 + 登记名规则 + 登记 + 取件"，既不管开启、也不管失焦关闭。
+## 它们只有开启与关闭用得到，所以按"子函数跟着调用者走"从 UISys 搬了过来——
+## UISys 现在只剩"登记表 + 登记名规则 + 登记 + 取件"，既不管开启、也不管失焦关闭。
 ## 组内共用与指令前缀见基类 Script/UI/Interact/UIInteractBase.gd。
 ##
 ## 失焦关闭（点关 / 移开关）也在这个文件：**只有"开出来的 UI"才可能有这两种行为**，
@@ -25,10 +25,10 @@ extends UIInteractBase
 ##   preset_name = 预设名（见 Config/UI/）
 ##   anchor      = 位置锚点，同时也是**挂载点**（锚点优先于宿主）：多级菜单传"触发它的那个菜单项"，
 ##                 子菜单挂在该菜单项下 ⇒ 整条菜单链是一棵子树（关父级全关、失焦判定沿 parent 链）
-##   host        = **这次打开的 UI 要管理的对象**，给一个 UI（如 `host=self`、`host=self.parent`；
+##   host        = **这次打开的 UI 要管理的对象**，给一个 UI（如 `host=@self`、`host=@self.parent`；
 ##                 不给 = 沿链回退，默认管最外层那个窗口）。**它不是挂载点**：挂在哪、摆在哪仍由
 ##                 target / anchor 决定。解析规则见 UIBase._find_host（"最近声明优先，没声明回退顶层"）。
-##                 落地时把它的**实例 ID** 记进 config["host"]（config 是数据、可能写盘，实例存不进去）。
+##                 落地时把它的**注册名**记进 config["host"]（可读、能存盘；没登记名字才退回实例 ID）。
 ## 复用规则：按（挂载点 + 预设名）查登记名——**已存在就只显示 + 重新摆位，不重建控件**。
 ##
 ## 关闭行为两个开关（bool，默认 false = 不启用）：
@@ -39,31 +39,51 @@ extends UIInteractBase
 ## 类型就是 bool，字符串/数字怎么变 bool 由指令系统按签名处理（CmdSys._coerce），这里不再自己认。
 ##
 ## 指令写法：
-##   UIInteract.open(self, "Menu", self, close_on_blur=true)       面板右键 → 指针处开菜单（点别处关）
+##   UIInteract.open(@self, "Menu", @self, close_on_blur=true)       面板右键 → 指针处开菜单（点别处关）
 ##   UIInteract.open(preset_name="MiniHUD")                        独立 UI → 开在配置声明的位置
-##   UIInteract.open(self, "MenuEdit", self, close_on_move=true)   hover 展开的子菜单：挪开就收
-##   UIInteract.open(self, "Menu", self, host=self)                这个菜单改管自己（不是最外层窗口）
-##   UIInteract.open(self, "Menu", self, host=self.parent)         或者管别的 UI（取值链能算出来就行）
+##   UIInteract.open(@self, "MenuEdit", @self, close_on_move=true)   hover 展开的子菜单：挪开就收
+##   UIInteract.open(@self, "Menu", @self, host=@self)                这个菜单改管自己（不是最外层窗口）
+##   UIInteract.open(@self, "Menu", @self, host=@self.parent)         或者管别的 UI（取值链能算出来就行）
 ## 被谁用：Config/UI 里各预设的 "events"、Test.ui_test（测试也走指令，不抄近路）、外部想直接拿实例时。
 ## 返回：开出来的 UI（找不到预设/建不出来为 null）。
+## 独立 UI（没有挂载点）的登记名前缀：`UI/预设名`（见 UISys 的登记名规则）。
+const UI_ROOT: String = "UI/"
+
+
 static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase = null,
-		close_on_blur: bool = false, close_on_move: bool = false, host: UIBase = null) -> UIBase:
+		close_on_blur: bool = false, close_on_move: bool = false, host: UIBase = null,
+		content_cmd: String = "", config: Variant = null) -> UIBase:
 	var preset: UIPreset = UIPreset.get_(preset_name)
 	if preset == null or preset.ui_name == "":
 		push_warning("UIInteract.open: 找不到预设「%s」（见 Config/UI/）" % preset_name)
 		return null
 	# 挂载点：锚点优先（子菜单挂到菜单项下 ⇒ 菜单链是一棵子树），其次宿主，都没有就挂 UI 根
 	var mount: UIBase = anchor if anchor != null else target
+	# 管理对象先算出来——**必须在 build 之前就写进配置**：像 UI_Editor 这种"登记时就按 host 找目标、
+	# 然后把路径写进各行"的元素，晚一步写它就按**挂载点链上的老 host**铺内容了（实测踩过：
+	# 在编辑器里再开编辑器，第二层铺出来却指着最外层那个 UI）。**写注册名**（见 RegSys）。
+	var host_name: String = RegSys.name_of(host) if host != null else ""
+	# 这次打开要带上的一次性配置（**都要在 build 之前写**，理由同上）：
+	#   host        —— 管理对象；
+	#   content_cmd —— 要"监视 / 编辑"的对象（任何 UI 都能带：显示项见 UIBase.refresh，编辑器见 UI_Editor）；
+	#   config      —— **一份 config 片段**：写什么就覆盖预设里同名的那项。
+	#                  两种写法等价、可混用（见 CmdSys 的「任意配置键」约定）：
+	#                    · 直接写键名（推荐）：`content_cmd="host.config", size=[200, 0]`；
+	#                    · 或给一整份字典：`config={...}` / `config=某个静态变量`。
+	#                  直接写的键覆盖字典里同名的；`content_cmd` 是"要看 / 编辑哪个对象"的简写。
+	var extra: Dictionary = {}
+	if config is Dictionary:
+		extra = (config as Dictionary).duplicate(true)
+	if host_name != "":
+		extra["host"] = host_name
+	if content_cmd != "":
+		extra["content_cmd"] = content_cmd
 	var ui: UIBase = _child_ui(mount, preset_name)
 	if ui == null:
-		ui = _build_open(preset, preset_name, mount)
+		ui = _build_open(preset, preset_name, mount, extra)
 	if ui == null:
 		return null
-	# 管理对象：给了就把它**的实例 ID** 记在被开的这个 UI 上 ⇒ 它下面的整棵子树都跟着（见 UIBase._find_host）。
-	# 复用路径也要写一次（否则"重开一次换个管理对象"这种改不动）。
-	# 写 ID 而不是实例：config 是数据（会被深拷贝、可能写盘），实例存不进去；ID 就是个整数，还能跟 self 对上。
-	if host != null:
-		ui.config["host"] = host.ID
+	ui.config.merge(extra, true)             # 复用路径也写一次（"重开一次换个对象 / 换个管理对象"要改得动）
 	# 关闭行为：**总是按参数写**（默认 false = 不启用）。要哪种就在开的这一句写出来，
 	# 预设里不再声明它——"在哪开、为什么开"只有开的那一句知道。
 	ui.config["close_on_blur"] = close_on_blur
@@ -106,7 +126,7 @@ static func close(target: UIBase, preset_name: String = "") -> void:
 ## 开关：现在**显示着**就关掉，否则开出来。开/关两条路都走本文件的 open / close（含复用与摆位）。
 ## 指令写法：
 ##   UIInteract.toggle(preset_name="TestShow")            独立 UI（不写 target，只给预设名）
-##   UIInteract.toggle(self.parent.parent, "CloseButton") 挂在 target 下的某个预设 UI
+##   UIInteract.toggle(@self.parent.parent, "CloseButton") 挂在 target 下的某个预设 UI
 ## 为什么要有它：绑到一个键上时，"按一下开、再按一下关"是最常见的用法，写两条指令做不到
 ## （键状态只在"满足变化"时给一次，没法在同一个事件里判断该开还是该关）。
 ## 被谁用：状态层的按键快捷（如 Test 的 J / K）、想用一个按钮开关某个子 UI 的场合。
@@ -118,7 +138,7 @@ static func toggle(target: UIBase = null, preset_name: String = "") -> void:
 	elif target != null:
 		ui = _child_ui(target, preset_name)
 	else:
-		ui = UiSys.uis.get(preset_name)
+		ui = RegSys.get_(UI_ROOT + preset_name) as UIBase
 	if ui != null and ui.control != null and ui.control.is_visible_in_tree():
 		close(ui)                                   # 正显示着 ⇒ 关它自己（隐藏，实例留着复用）
 		return
@@ -126,24 +146,28 @@ static func toggle(target: UIBase = null, preset_name: String = "") -> void:
 
 
 ## 按"挂载点 + 预设名"取已登记的 UI —— 开（复用查找）与关（找要关的子 UI）共用的那把钥匙。
-## 登记名规则在 UiSys._reg_name（全项目唯一的一条寻址约定，登记与取件共用），本函数只是它的取件形式。
-## 原来叫 UiSys.get_child_ui：只有开/关用得到，就跟着搬到本文件了。
+## 登记名就是 `RegSys.join(挂载点, 预设名)`（全项目唯一的一条寻址约定，登记与取件共用），
+## 本函数只是它的取件形式。原来叫 UISys.get_child_ui：只有开/关用得到，就跟着搬到本文件了。
 ## 被谁用：open、close。
 static func _child_ui(mount: UIBase, preset_name: String) -> UIBase:
-	return UiSys.uis.get(UiSys._reg_name(mount, preset_name))
+	return RegSys.get_(RegSys.join(mount, preset_name)) as UIBase
 
 
 ## 现场造一个开启目标并登记：mount 为空 → 建预设自己那份挂 UI 根；有 mount → 挂到它下面。
 ## 挂到别处的一律用**深拷贝模板**（各实例互不影响："加按钮/加绑定"只改自己这一份）。
 ## 被谁用：open。
-static func _build_open(preset: UIPreset, preset_name: String, mount: UIBase) -> UIBase:
+static func _build_open(preset: UIPreset, preset_name: String, mount: UIBase, extra: Dictionary = {}) -> UIBase:
 	if mount == null:
 		var ui: UIBase = preset.ui
-		UiSys.root.add_child(ui.build())
-		UiSys._register_tree(ui, preset_name)
+		UISys.root.add_child(ui.build())
+		# 独立 UI 的登记名 = `UI/预设名`（见 UISys 的登记名规则）：UI 的东西都挂在 `UI/` 这棵根下面，
+		# 于是"这是 UI 还是别的东西"从名字上一眼分得清（将来角色 / 地图各有自己的根前缀）。
+		UISys._register_tree(ui, UI_ROOT + preset_name)
 		Msg.send_ui_create(ui)
 		return ui
-	return mount.add_child_element(preset_name, preset.ui_name, preset.config.duplicate(true))
+	var cfg: Dictionary = preset.config.duplicate(true)
+	cfg.merge(extra, true)             # **build 之前**写好（见 open 里的说明）
+	return mount.add_child_element(preset_name, preset.ui_name, cfg)
 
 
 ## 按被开启 UI 自己的 config["open_at"] 摆位置并显示（Enums.OpenAt）：
@@ -188,7 +212,7 @@ static var _move_blur_uis: Array[UIBase] = []   # close_on_move：移开关
 
 ## 点关：遍历候选，指针不在它（或它的子孙元素/子孙 UI）上就关掉。
 ## 判定只要 parent 链，不需要"父子菜单链"这种登记：菜单链本身就是一棵子树
-## （子菜单挂在触发它的菜单项下，见 UiSys 文件头的挂载规则），所以鼠标在子菜单上时，
+## （子菜单挂在触发它的菜单项下，见 UISys 文件头的挂载规则），所以鼠标在子菜单上时，
 ## 父菜单沿链就能找到自己 ⇒ 不关；父 UI 一 hide，链上的子 UI 也随可见性继承一起不可见。
 ## 被谁用：PointerDetect._process（每次"派发过事件"的下一次刷新里）。
 static func close_blur_ui(hover_ui: UIBase) -> void:

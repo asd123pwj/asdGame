@@ -10,8 +10,8 @@ extends UIInteractBase
 ##   · "点输入框就进编辑"就是一条普通事件：`[QName.mouseLeft, 'UIInteract.begin_edit self']`
 ##     （换成别的事件触发也行——元素不认键位）；
 ##   · "开某个菜单后直接开始打字""提交之后要不要退出编辑"同样写在配置里：
-##       'UIInteract.open(self, "MenuBind", self, close_on_move=true)\vUIInteract.begin_edit(输入框)'
-##       'Utils.write("…config.content", self.control.text)\vUIInteract.end_edit(self)'
+##       'UIInteract.open(@self, "Editor（内容对象）", @self, close_on_move=true)\vUIInteract.begin_edit(输入框)'
+##       'Utils.write("…config.content", @self.control.text)\vUIInteract.end_edit(@self)'
 ##     （搜索框那种"提交完继续打字"就不写最后那条。）
 ## 点别处的自动退出不在这里：那是 PointerDetect.key 开头顺手收掉的（每次点击派发前都会先结束编辑）。
 
@@ -22,14 +22,17 @@ static func begin_edit(target: UIBase) -> void:
 	var ui := _as_ui(target, "begin_edit")
 	if ui == null or ui.control == null:
 		return
-	if not (ui.control is LineEdit):
+	if not (ui.control is LineEdit or ui.control is TextEdit):
 		push_warning("UIInteract.begin_edit: 「%s」的控件不是输入框（%s），没法编辑"
 			% [ui.name, ui.control.get_class()])
 		return
 	InputSys.edit_ui = ui
-	var line: LineEdit = ui.control
-	line.grab_focus()
-	line.select_all()               # 进来就全选：直接打就是替换
+	ui.control.grab_focus()
+	# 进来就全选：直接打就是替换（单行 LineEdit / 多行 TextEdit 都有 select_all）
+	if ui.control is TextEdit:
+		(ui.control as TextEdit).select_all()
+	else:
+		(ui.control as LineEdit).select_all()
 
 
 ## 让目标结束编辑：清掉 InputSys 的编辑状态并放掉控件焦点（"谁在编辑"是 InputSys 的状态）。

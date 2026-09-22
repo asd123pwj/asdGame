@@ -24,7 +24,7 @@ extends BaseClass
 # **一行 = 一个表达式，这就是全部语法**（不再区分"命令"与"取值"两套写法）:
 #   类.静态方法(参数, 名字=值, …)   命令调用：位置参数按签名顺序；`名字=值` 可**跳过**可选参数（用签名的默认值）
 #   其它（取值链 / 路径 / 字面量）   取值：末尾带 () 就"调完拿返回值"，不带 () 就取这个值本身
-#   **取值链直接写**（`self.control.text`、`Test.int1`；`$` 前缀可写可不写，效果一样）
+#   **取值链直接写**（`@self.control.text`、`Test.int1`；`$` 前缀可写可不写，效果一样）
 #   **没有 flag 语法**——bool 参数直接写 `名字=true`。
 #   **参数值只有一套编译**（_compile_value）：命令行参数、表达式参数、整行取值都走它 ⇒ 三处行为一致。
 ## 本类只做"命令字符串 → 名字 + 参数"的解析（含取值链），执行在 CmdSys。
@@ -71,7 +71,7 @@ static func _normalize_path(path: String) -> String:
 
 
 ## 按路径**读**一个值（就是 `Utils.write` 那套路径语法的读版），返回 [ok, value]。
-## 路径语法与取值式一致：`@123.config.content`、`Test.int1`、`a.b[0].c`、`UiSys.get_ui("名字").config.content`。
+## 路径语法与取值式一致：`@123.config.content`、`Test.int1`、`a.b[0].c`、`UISys.get_ui("名字").config.content`。
 ## 编译结果进 _path_cache（与 write 共用同一张表）。
 ## 被谁用：Utils.swap（对调要先读出来）。
 static func read(path: String) -> Array:
@@ -84,9 +84,9 @@ static func read(path: String) -> Array:
 ## 按 `$` 路径**写入**一个值 —— 取值式的对称操作，同一套路径语法：
 ##   @123.config.content / a.b[0].c      实例成员、字典键、列表项（想写几层写几层）
 ##   Test.int1                           类脚本的 static 变量
-##   UiSys.get_ui("名字").config.content  带函数头的路径（先算函数当宿主，尾巴按 ops 写）
+##   UISys.get_ui("名字").config.content  带函数头的路径（先算函数当宿主，尾巴按 ops 写）
 ## **只有两个参数**（路径、值）：路径里已经带了宿主，不必再传一个"宿主"参数。
-## 路径写成带引号的字符串（`Utils.write("self.config.content", 值)`）：带不带前导 `$` 都行，等价。
+## 路径写成带引号的字符串（`Utils.write("@self.config.content", 值)`）：带不带前导 `$` 都行，等价。
 ## 成功返回 true；宿主/中间层取不到、最后一步不是可写的成员/下标时返回 false（不报错，调用方去提示）。
 ## 实现：路径编译成一个表达式计划后，把**最后一步**单独摘出来当赋值目标，前面那段交给 _run_expr 走
 ## （所以"kind → 宿主"的判断只有 _run_expr 一份，这里不再重复一遍）。
@@ -152,6 +152,15 @@ static func parse(input: String) -> Dictionary:
 		_cache_put(input, plan)
 		return _run_plan(plan)
 	return _run_plan(_compile(input))
+
+
+## 把一段文本当**一个值**求（与命令行参数、表达式参数、整行取值同一套编译：_compile_value）：
+## 数字 / true / false / "字符串" / [数组] 都能算，其余按"取值表达式"试（算不出给 null）。
+## 用途：编辑器那种"用户敲了一段字，要变成配置里的值"（如UI 编辑器改 config）。
+## **求不出值返回 null，不报错也不打印**——调用方自己决定怎么兜（如按原样字符串）。
+## 被谁用：CommandParser.parse_value（输入框里的字 → 配置值）。
+static func parse_value(text: String) -> Variant:
+	return _run_arg(_compile_value(text))
 
 ## 清空类脚本、两级解析缓存与两张小表（热重载 / 调试用）。
 ## 被谁用：CmdSys.clear_cache。
@@ -405,7 +414,7 @@ static func _as_expr(s: String) -> String:
 
 ## 拆"类.方法(参数)"：返回 { ok, name, args }。
 ## 只认"整行就是一个调用"：方法名是 `标识符.标识符`（命令只挂在这个命名上，见 CmdSys），
-## 且**第一个 `(` 的配对 `)` 正好在行尾**——`UiSys.get_ui("x").refresh("y")` 这种"尾巴还接着调用"
+## 且**第一个 `(` 的配对 `)` 正好在行尾**——`UISys.get_ui("x").refresh("y")` 这种"尾巴还接着调用"
 ## 就不是命令，交给"取值"那条路（整行当表达式求值）。
 ## 被谁用：_compile。
 static func _split_call(input: String) -> Dictionary:
@@ -482,10 +491,33 @@ static func _compile_call_args(args_str: String) -> Array:
 ##   "字符串"        → 字符串（唯一写法）
 ##   [a, b]          → 数组字面量（元素递归）
 ##   true / false / 12 / 1.5 → 布尔 / 整数 / 小数
-##   其它（self.xxx、QName.x、Test.int1、UiSys.get_ui("x").refresh("y")）→ 当表达式求值
+##   其它（self.xxx、QName.x、Test.int1、UISys.get_ui("x").refresh("y")）→ 当表达式求值
 ## 计划用 dict 表示：{ lit:true, value } / { lit:true, array:[子计划] } / { lit:false, expr }。
 ## 被谁用：_compile（整行取值）、_compile_call_args（命令参数）、_compile_expr_args（表达式参数）、
 ##         以及数组元素递归调它自己。
+## 找**顶层**的冒号（不在引号 / 括号里）——字典字面量 `"键": 值` 的分隔点。
+## 被谁用：_compile_value（字典分支）。
+static func _find_top_level_colon(s: String) -> int:
+	var depth: int = 0
+	var quote: String = ""
+	var i: int = 0
+	while i < s.length():
+		var c: String = s[i]
+		if quote != "":
+			if c == quote:
+				quote = ""
+		elif c == "\"" or c == "'":
+			quote = c
+		elif c == "[" or c == "{" or c == "(":
+			depth += 1
+		elif c == "]" or c == "}" or c == ")":
+			depth -= 1
+		elif c == ":" and depth == 0:
+			return i
+		i += 1
+	return -1
+
+
 static func _compile_value(raw: String) -> Dictionary:
 	var s: String = raw.strip_edges()
 	if s.begins_with("[") and s.ends_with("]"):
@@ -495,6 +527,23 @@ static func _compile_value(raw: String) -> Dictionary:
 			if not item.is_empty():
 				items.append(_compile_value(item))
 		return { "lit": true, "array": items }
+	if s.begins_with("{") and s.ends_with("}"):
+		# **字典字面量**：`{"键": 值, …}`——键 / 值各自还能是字面量、数组、字典或取值式（递归编）。
+		# 于是"打开时传一份配置片段"能直接写出来：`config={"content_cmd": "@UI/MiniHUD/Info.config"}`。
+		var keys: Array = []
+		var vals: Array = []
+		for pair_raw: String in _split_top_level_args(s.substr(1, s.length() - 2)):
+			var pair: String = pair_raw.strip_edges()
+			if pair.is_empty():
+				continue
+			var colon: int = _find_top_level_colon(pair)
+			if colon < 0:
+				break                     # 有一对没有冒号：整条退回表达式（判 invalid，不静默吃掉）
+			keys.append(_compile_value(pair.substr(0, colon)))
+			vals.append(_compile_value(pair.substr(colon + 1)))
+		if keys.size() == vals.size():
+			return { "lit": true, "dict_keys": keys, "dict_values": vals }
+		return { "lit": false, "expr": _compile_expr(_as_expr(s)) }
 	if s.length() >= 2 and s.begins_with("\"") and s.ends_with("\""):
 		return { "lit": true, "value": s.substr(1, s.length() - 2) }
 	var lit: Variant = _convert_literal(s)
@@ -535,6 +584,13 @@ static func _run_arg(p: Variant) -> Variant:
 			for item in d["array"]:
 				out.append(_run_arg(item))
 			return out
+		if d.has("dict_keys"):
+			var dict: Dictionary = {}
+			var ks: Array = d["dict_keys"]
+			var vs: Array = d["dict_values"]
+			for i in ks.size():
+				dict[_run_arg(ks[i])] = _run_arg(vs[i])
+			return dict
 		return d["value"]
 	return p
 
@@ -587,7 +643,7 @@ static func _find_top_level_assign(s: String) -> int:
 
 # ---------- $ 表达式的编译 / 执行 ----------
 # 计划用 dict 表示，把"定位"固化下来，运行时只做必需的最后一步取值：
-#   { "kind": "instance", "id": int, "ops": [...] }              @ID.<ops>
+#   { "kind": "instance", "ref": String, "ops": [...] }          @引用.<ops>（引用 = 实例 ID 或注册名）
 #   { "kind": "member", "owner": String(类名), "ops": [...] }     $类.<成员链>
 #   { "kind": "func", "callable": Callable, "args": [<plan>...], "ops": [...] } $类.函数(...) 后面接着的成员链
 #   { "kind": "literal", "value": Variant }                      字面量（函数/方法参数）
@@ -600,13 +656,15 @@ static func _find_top_level_assign(s: String) -> int:
 ## 被谁用：_compile_value（值 / 参数 / 整行取值都经它）、_split_path（read / write 的路径）。
 static func _compile_expr(s: String) -> Dictionary:
 	var body := s.substr(1)   # 去掉前导 $
-	# 实例访问：@ID.成员 或 @ID.方法(...)
+	# 实例 / 命名对象访问：@引用.成员 或 @引用.方法(...)；引用 = 实例 ID 或**注册名**（见 _chain_ref）
 	if body.begins_with("@"):
+		if body == "@event":
+			return { "kind": "event" }        # 当前事件名（字符串）；由 UIBase.on_event 设好上下文
 		var inst_expr := body.substr(1)
-		var id_res := _chain_id(inst_expr)
-		if not id_res[0]:
+		var ref_res := _chain_ref(inst_expr)
+		if not ref_res[0]:
 			return { "kind": "invalid" }
-		return { "kind": "instance", "id": id_res[1], "ops": _compile_ops(_chain_rest(inst_expr)) }
+		return { "kind": "instance", "ref": ref_res[1], "ops": _compile_ops(_chain_rest(inst_expr)) }
 	# 找第一个 "(" 判断是否为函数调用（没有 = 纯成员链）
 	var paren := body.find("(")
 	if paren < 0:
@@ -623,7 +681,7 @@ static func _compile_expr(s: String) -> Dictionary:
 	var resolved_func := _try_resolve_method(func_expr)
 	if not resolved_func[0]:
 		return { "kind": "invalid" }
-	# 函数尾巴还能继续接成员链（`UiSys.get_ui("x").config.content`、`self.get_x().refresh()`）：
+	# 函数尾巴还能继续接成员链（`UISys.get_ui("x").config.content`、`self.get_x().refresh()`）：
 	# 编进 ops，执行时对函数结果继续走。
 	return {
 		"kind": "func",
@@ -636,8 +694,10 @@ static func _compile_expr(s: String) -> Dictionary:
 ## 被谁用：_run_arg / _run_arg_plans、_run_ops（方法参数）、read（路径）、_run_expr（递归）。
 static func _run_expr(plan: Dictionary) -> Array:
 	match plan.get("kind", ""):
+		"event":
+			return [true, event_name]
 		"instance":
-			var obj := instance_from_id(plan["id"])
+			var obj: Object = _instance_of(str(plan.get("ref", "")))
 			if obj == null:
 				return [false, null]
 			return _run_ops(obj, plan["ops"])
@@ -657,7 +717,32 @@ static func _run_expr(plan: Dictionary) -> Array:
 		_:
 			return [false, null]   # invalid / 未知 kind
 
-## 拆分 "@ID.<...>" 得到 <...> 部分（去掉 ID）。
+## 当前正在派发事件的元素与事件名：`@self` / `@host` / `@event` 认它们。
+## 由 UIBase.on_event 在发送前设好——每次派发是**同步**的（send_cmd 跑完就回来），静态变量够用。
+## 不在这条链上的指令（测试、定时器）里别写 `@self`：那时它是上一次派发留下的 / 空的。
+static var event_ui: Object = null
+static var event_name: String = ""
+
+
+## 解析 `@引用` 得到那个实例。引用有四种：
+##   `self` / `host`  —— 当前派发事件的元素 / 它的管理对象（见 event_ui、UIBase._find_host）；
+##   实例 ID（数字，可带负号）—— 没登记名字的对象；判数字看首字符（64 位 ID 用 is_valid_int 会误判）；
+##   注册名           —— 其余一律按注册名查（`UI/MiniHUD/Info` 这种，见 RegSys）。
+## 被谁用：_run_expr（instance 分支）。
+static func _instance_of(ref: String) -> Object:
+	if ref.is_empty():
+		return null
+	if ref == "self":
+		return event_ui
+	if ref == "host":
+		var ui: UIBase = event_ui as UIBase
+		return ui._find_host() if ui != null else null
+	if ref[0] == "-" or (ref[0] >= "0" and ref[0] <= "9"):
+		return instance_from_id(int(ref))
+	return RegSys.get_(ref)
+
+
+## 拆分 "@引用.<...>" 得到 <...> 部分（去掉引用本身）。
 ## 被谁用：_compile_expr（instance 分支）。
 static func _chain_rest(inst_expr: String) -> String:
 	var i := 0
@@ -665,28 +750,22 @@ static func _chain_rest(inst_expr: String) -> String:
 		i += 1
 	return inst_expr.substr(i)
 
-## 取 "@ID.<...>" 里的 ID，返回 [ok, id]。
-## 注意：不能用 is_valid_int()——实例 ID 是 64 位且可能为负，is_valid_int() 按 int32 校验会误判；
-## 也不能用负数当"无效"哨兵（合法 ID 本身就可能为负），故用 [ok, id] 返回。
+## 取 "@引用.<...>" 里那段引用（第一个 `.` / `[` / `(` 之前的内容），返回 [ok, ref]。
+## **引用可以是实例 ID，也可以是注册名**（如 `@UI/MiniHUD/Menu`，见 RegSys）——交给 _instance_of 去分辨：
+## 数字 = ID，其余 = 注册名（名字里常有 `/`，所以这里只把 `.` `[` `(` 当结束符）。
+## 不能用 0 / 空串当"无效"哨兵（合法 ID 本身就可能为负）⇒ 用 [ok, ref] 返回。
 ## 被谁用：_compile_expr（instance 分支）。
-static func _chain_id(inst_expr: String) -> Array:
+static func _chain_ref(inst_expr: String) -> Array:
 	var i := 0
-	var id_str := ""
-	# 允许前导负号（get_instance_id() 的 64 位值高位为 1 时 str() 会带 "-"）
-	if i < inst_expr.length() and inst_expr[i] == "-":
-		id_str += "-"
-		i += 1
 	while i < inst_expr.length():
 		var c := inst_expr[i]
 		if c == "." or c == "[" or c == "(":
 			break
-		if c < "0" or c > "9":
-			return [false, 0]
-		id_str += c
 		i += 1
-	if id_str.is_empty() or id_str == "-":
-		return [false, 0]
-	return [true, int(id_str)]
+	var ref: String = inst_expr.substr(0, i).strip_edges()
+	if ref.is_empty() or ref == "-":
+		return [false, ""]
+	return [true, ref]
 
 ## 编译成员链（<...> 部分）为 ops 数组。
 ## 被谁用：_compile_expr（三种 kind 都编尾巴 ops）。
@@ -832,10 +911,10 @@ static func _split_top_level_args(args_str: String) -> Array:
 			cur += c
 		elif in_quote:
 			cur += c
-		elif c == "(" or c == "[":
+		elif c == "(" or c == "[" or c == "{":
 			depth += 1
 			cur += c
-		elif c == ")" or c == "]":
+		elif c == ")" or c == "]" or c == "}":
 			depth -= 1
 			cur += c
 		elif c == "," and depth == 0:

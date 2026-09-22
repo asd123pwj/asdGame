@@ -59,7 +59,7 @@ func ui_test() -> void:
     # 开启方式与游戏里**完全一致**：发指令（UIInteract.open），不直接调内部函数——
     # 全项目开 UI 只有这一条路，改了才会全都被改到。想手动开关就绑快捷键到这个指令上。
     Msg.send_cmd("UIInteract.open(preset_name=\"MiniHUD\")")
-    var ui: UIBase = UiSys.get_ui("MiniHUD")
+    var ui: UIBase = UISys.get_ui("UI/MiniHUD")
     if ui == null:
         print("UI: MiniHUD 没开出来（查预设与 UIInteract.open）")
         return
@@ -68,7 +68,7 @@ func ui_test() -> void:
     Msg.listen_ui_submit(ui, func(_m): print("UI submit"))
     Msg.listen_ui_fade(ui, func(m): print("UI fade -> ", m))
     # 展示 content/refresh 流程：修改内容属性即可更新滚动条 UI（不必重建控件）
-    var info: UIBase = UiSys.get_ui("MiniHUD/Info")
+    var info: UIBase = UISys.get_ui("UI/MiniHUD/Info")
     if info != null:
         var lines: PackedStringArray = PackedStringArray()
         for i in range(40):
@@ -78,11 +78,11 @@ func ui_test() -> void:
 
     # 键盘快捷键界面（见 Config/UI/UIPreset_Keyboard.gd）：独立 UI + 右上角关闭按钮 / 右下角缩放手柄。
     # "给面板加个按钮"就是开一个普通预设（CloseButton / ResizeButton），不写专门函数；
-    # 指令里引用实例要写 @ID（配置里那套 self.parent/self 是 UIBase._resolve_cmd 在发送前换成 @ID 的，这里手动拼同样的形式）。
+    # 指令里引用实例写 **`@注册名`**（配置里写的是 `@self` / `@host` / `@event`，由指令系统在派发时解析；
+    # 这里是"事件之外"发的指令，没有 `@self` 可解析，所以手写完整注册名——UI 的登记名都带 `UI/` 前缀）。
     Msg.send_cmd("UIInteract.open(preset_name=\"Keyboard\")")
-    var kb_id: String = "@%s" % UiSys.get_ui("Keyboard").ID
-    Msg.send_cmd('UIInteract.open(%s, "CloseButton", %s)' % [kb_id, kb_id])
-    Msg.send_cmd('UIInteract.open(%s, "ResizeButton", %s)' % [kb_id, kb_id])
+    Msg.send_cmd('UIInteract.open(@UI/Keyboard, "CloseButton", @UI/Keyboard)')
+    Msg.send_cmd('UIInteract.open(@UI/Keyboard, "ResizeButton", @UI/Keyboard)')
 
     # 测试用的两个 UI：显示（TestShow）/ 输入（TestInput）——J / K 键开关它们
     # 玩法：右键 TestShow → 复制名称 → 右键 TestInput → 绑定 ▸ → 回车，然后在输入框里打字回车
@@ -91,6 +91,12 @@ func ui_test() -> void:
 
     # 长内容 / 可收回演示（Config/UI/UIPreset_Fold.gd）：整块能收成一个标题，三段各自也能收
     Msg.send_cmd("UIInteract.open(preset_name=\"FoldDemo\")")
+
+    # UI 编辑器（外壳 Config/UI/UIPreset_Editor.gd + 内容元素 Script/UI/UI/UI_Editor.gd）：
+    # 平时从"右键 UI → 菜单编辑 → UI 编辑器"打开；这里默认开一份方便直接看效果。
+    # 开它就是**一条通用 open**（内容由编辑器元素按配置自己铺；没有专用的开启指令）
+    # （被编辑 UI 的 config 每项一行，子UI每段一行且**默认收起**，展开哪段才铺那段）
+    Msg.send_cmd('UIInteract.open(@UI/MiniHUD, "Editor", @UI/MiniHUD, host=@UI/MiniHUD)')
 
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。

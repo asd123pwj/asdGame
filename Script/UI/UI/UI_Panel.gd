@@ -5,6 +5,12 @@ extends UIBase
 ## 结构（内部节点都起了名，编辑器里看树一眼能认）：
 ##   root(Control，本元素的 control) → Panel → Margin → Box(VBoxContainer，普通子元素挂这里)
 ##                                   └→ Overlay(Control)：free 子的自由定位挂载点
+## 配了 `config["scroll"] = [上限宽, 上限高]`（0 = 该维不限制）时，中间多一层 ScrollContainer：
+##   … → Margin → Scroller → Box；面板尺寸按"**内容需要 ↔ 上限**"取小 ⇒ 内容一多就进去滚动、
+##   不再顶着屏幕往下长（UI 编辑器那种"内容长短不定"的就是它）。见 UI.md 的"面板滚动"。
+
+## 面板边距（_create_control 给 MarginContainer 的那四个常量；算"内容需要多大"时要加上）。
+const MARGIN_SIZE := Vector2(16, 12)
 
 ## 内层面板（真正的容器：含边距 + 内容）。
 ## 被谁用：_create_control（建）、_content_size（问内容多大）。
@@ -15,6 +21,9 @@ var _box: VBoxContainer
 ## free 子元素的挂载点（非容器，position 不会被布局覆盖）。
 ## 被谁用：_create_control（建）、_free_box。
 var _overlay: Control
+## 滚动容器：**只在配了 config["scroll"] 时才建**（没配就是 null，布局与以前完全一样）。
+## 被谁用：_create_control（建）、_content_size（滚动模式下按上限收口）。
+var _scroll: ScrollContainer
 
 
 ## 建控件树：外层普通 Control（position/size 由配置决定，绝对定位的子元素也挂在它下面）
@@ -35,15 +44,26 @@ func _create_control() -> Control:
 
 	var margin: MarginContainer = MarginContainer.new()
 	margin.name = "Margin"
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_top", 6)
-	margin.add_theme_constant_override("margin_bottom", 6)
+	margin.add_theme_constant_override("margin_left", int(MARGIN_SIZE.x / 2.0))
+	margin.add_theme_constant_override("margin_right", int(MARGIN_SIZE.x / 2.0))
+	margin.add_theme_constant_override("margin_top", int(MARGIN_SIZE.y / 2.0))
+	margin.add_theme_constant_override("margin_bottom", int(MARGIN_SIZE.y / 2.0))
 	_panel.add_child(margin)
+
+	# 配了 scroll 就多一层滚动容器：内容多了进去上下滚。横向**关掉**——让子元素按视口宽度排
+	# （长文本自己在框里换行，不用横向拖）。
+	if config.has("scroll"):
+		_scroll = ScrollContainer.new()
+		_scroll.name = "Scroller"
+		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		margin.add_child(_scroll)
 
 	_box = VBoxContainer.new()
 	_box.name = "Box"
-	margin.add_child(_box)
+	# 子元素最小尺寸一变就重算面板尺寸：滚动模式下"内容需要多大"只能问内容盒
+	# （有 ScrollContainer 时 _panel 报的是滚动容器的最小尺寸，跟内容无关，见 _content_size）。
+	_box.minimum_size_changed.connect(_fit_size)
+	(_scroll if _scroll != null else margin).add_child(_box)
 
 	# 叠加层：给"自由定位"的子元素（关闭按钮、菜单）用——它不是容器，position/size 不会被布局覆盖
 	_overlay = Control.new()
@@ -69,9 +89,31 @@ func _free_box() -> Control:
 ## 内容最小尺寸要问内部面板：根 Control 是普通 Control，不会汇总子元素的最小尺寸，
 ## 直接问它只会得到"配置里写的那点值"，[宽, 0] 就会变成高度 0 的退化矩形（画不出来也命中不到）。
 ## _panel 是真正的容器（含边距 + 内容），它才报得出内容需要多大。
+## **滚动模式**（config["scroll"]）改问**内容盒**并按上限收口：面板最多长到上限，多出来的进去滚动
+## ——所以"内容很长"不再是问题，也不会顶出屏幕（见文件头）。
 ## 被谁用：UIBase._fit_size。
 func _content_size() -> Vector2:
-	return _panel.get_combined_minimum_size()
+	if _scroll == null:
+		return _panel.get_combined_minimum_size()
+	var need: Vector2 = _box.get_combined_minimum_size() + MARGIN_SIZE
+	var cap: Vector2 = _scroll_cap()
+	if cap.x > 0.0:
+		need.x = minf(need.x, cap.x)
+	if cap.y > 0.0:
+		need.y = minf(need.y, cap.y)
+	return need
+
+
+## config["scroll"] 的上限（[宽, 高]，0 = 该维不限制）。没配 / 写得不全 = (0, 0) = 不限制。
+## 被谁用：_content_size。
+func _scroll_cap() -> Vector2:
+	var s: Variant = config.get("scroll")
+	if not (s is Array):
+		return Vector2.ZERO
+	var arr: Array = s
+	if arr.size() >= 2:
+		return Vector2(float(arr[0]), float(arr[1]))
+	return Vector2.ZERO
 
 
 ## 把 config["background"] 的图做成九宫格面板底。

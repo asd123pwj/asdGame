@@ -10,7 +10,7 @@ extends BaseClass
 static var pointer_move := "Pointer Move"       # 指针移动（不是状态，由 PointerDetect 直接派发）
 static var pointer_enter := "Pointer Enter"     # hover 进入（同上）
 static var pointer_exit := "Pointer Exit"       # hover 离开（同上）
-static var input_submit := "Input Submit"       # 输入框回车提交（编辑中按回车由 InputSys 派发；框里文字用 self.control.text 读）
+static var input_submit := "Input Submit"       # 输入框回车提交（编辑中按回车由 InputSys 派发；框里文字用 @self.control.text 读）
 static var mouseLeft_press := "Mouse Left | Press"
 static var mouseLeft := "Mouse Left"
 static var mouseLeft_tick := "Mouse Left | Tick"
@@ -35,11 +35,12 @@ static var year_advance := "Year Advance"
 # ---- UI 事件（config["events"] 列表里的一项 = [事件名, 指令串]）----
 ## 常用的整体绑定放这儿：配置里**直接填这个变量**（如 `"events": [QName.UI_event_mouseLeft_drag]`），
 ## 于是同一条绑定只有一处写法（见 UIPreset_Menu 的 EnableDrag：往宿主 events 里开关它）。
-## 带 `_host` 的那几条作用于**本条链的窗口**（`host`，见 UIBase._resolve_cmd），
+## 带 `_host` 的那几条作用于**本条链的窗口**（`host`，见 指令系统（`@self`/`@host`/`@event`）），
 ## 所以它们挂在谁身上都行——不会因为多包一层分组就指错对象。
-static var UI_event_mouseLeft_drag := [QName.mouseLeft, "UIInteract.drag(self, event)"]
-static var UI_event_mouseLeft_drag_host := [QName.mouseLeft, "UIInteract.drag(host, event)"]
-static var UI_event_mouseLeft_edit := [QName.mouseLeft, 'UIInteract.begin_edit(self)']
-static var UI_event_mouseRight_menu := [QName.mouseRight, 'UIInteract.open(self, "Menu", self, close_on_blur=true, host=self)']
-static var UI_event_mouseLeft_close_host := [QName.mouseLeft, "UIInteract.close(host)"]
-static var UI_event_mouseLeft_rescale_host := [QName.mouseLeft, "UIInteract.rescale(host, event)"]
+static var UI_event_mouseLeft_drag := [QName.mouseLeft, "UIInteract.drag(@self, @event)"]
+static var UI_event_mouseLeft_drag_host := [QName.mouseLeft, "UIInteract.drag(@host, @event)"]
+static var UI_event_mouseLeft_edit := [QName.mouseLeft, 'UIInteract.begin_edit(@self)']
+static var UI_event_mouseRight_menu := [QName.mouseRight, 'UIInteract.open(@self, "Menu", @self, close_on_blur=true, host=@self)']
+static var UI_event_mouseLeft_close_host := [QName.mouseLeft, "UIInteract.close(@host)"]
+static var UI_event_mouseLeft_close_parent := [QName.mouseLeft, "UIInteract.close(@self.parent)"]
+static var UI_event_mouseLeft_rescale_host := [QName.mouseLeft, "UIInteract.rescale(@host, @event)"]

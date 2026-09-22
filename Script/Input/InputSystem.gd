@@ -43,6 +43,9 @@ static func _input(event: InputEvent):
             # text_submitted 信号（全项目不连引擎信号，见 Script/UI/UI.md）。
             # echo = 按住不放的重复触发，不算提交。
             if event.pressed and not event.echo and event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+                # 多行输入框（TextEdit）默认会把回车当"插入换行"——这里显式吃掉这个事件，
+                # 让"回车 = 提交"对单行 / 多行一致（多行的换行只是**显示**上自动换行，见 UI_Input）。
+                Sys.sys.get_viewport().set_input_as_handled()
                 edit_ui.on_event(QName.input_submit)
             return
         _send_key_status(event.keycode, event.pressed)

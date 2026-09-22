@@ -10,19 +10,30 @@
 ## **命令调用**（位置参数 + 关键字参数；没写的参数用签名里的默认值，可跳着给）：
 ##     Msg.send_cmd('MapSys.place(0, 5, -10, "门", 2, -1, true)')
 ##	   Msg.send_cmd("MapSys.place(layer_id=0, x=10, source_name=\"门\", tile_name=2, force_space=true)")
-##     Msg.send_cmd("UIInteract.open(self, \"Menu\", self, close_on_blur=true)")
+##     Msg.send_cmd("UIInteract.open(@UI/MiniHUD, \"Menu\", @UI/MiniHUD, close_on_blur=true)")
 ## 参数里引用变量/函数（直接写取值链，链式：字典 .key、数组 [index]、函数 ()）：
 ##     Msg.send_cmd("MapSys.place(Test.a, 5, -10, \"门\", 2, -1, true)")
 ##     Msg.send_cmd("MapSys.place(0, Test.test_func(Test.a, 4), Test.test_int2.value[0], \"门\", 2, -1, true)")
 ## **取值一行**（拿值，不一定调用）：末尾带 () 就"调完拿返回值"，不带 () 就取这个值本身：
 ##     Msg.send_cmd("Test.a")                     读静态变量
-##     Msg.send_cmd("self.control.text")          读实例属性（self 在发送前换成 @ID）
-##     Msg.send_cmd("UiSys.get_ui(\"MiniHUD\").refresh(\"content\")")   取值链末尾带 () = 调用
+##     Msg.send_cmd("@self.control.text")          读实例属性（self 在发送前换成 @ID）
+##     Msg.send_cmd("UISys.get_ui(\"MiniHUD\").refresh(\"content\")")   取值链末尾带 () = 调用
 ## 用实例：把"类名"换成 `@实例ID`，其它一样：
 ##     Msg.send_cmd("@678965479816.hp")
 ## send_cmd 返回的是"每行结果"的数组，取值再按下标：
 ##     Msg.send_cmd("Test.a")[0]                  单行：取该行的结果
 ##     Msg.send_cmd("CharSys.spawn(\"人类\")")[0]  单行：取该行的结果
+##
+## **「任意配置键」约定**（开放式配置的命令怎么收参数）：
+## 方法签名里有**叫 `config` 的参数**时，调用里凡是**没对上任何参数名**的命名参数，都塞进它（键名照抄）：
+##     UIInteract.open(@host, "Editor", @host, host=@host, content_cmd="host.config", size=[310, 210])
+##     #        ↑ 对上签名                ↑ 对上签名                ↑ 不在签名里 ⇒ config["size"]
+## 显式写的 `config={…}` 与这些键**合并**（指令里直接写的覆盖字典里同名的）；位置参数不进 config（照旧按序落槽）。
+## 用途：元素的 config 是**开放集合**（谁都能加键），这样"打开时实时给任意 config 键"不必拼字典。
+## **代价**：没对上的名字不再报"参数名不存在"（`siz=[1,2]` 会静默变成 `config["siz"]`）——
+## 所以**只有确实想要开放式配置的命令才加 `config` 参数**；参数固定的命令别加，保住它的报错能力。
+## 实现：_build_args（"config" 那一段）。默认值 `{}` 用不得（GDScript 里字典默认值是共享的）——
+## 要就写 `config: Variant = null` 再在里面判 `is Dictionary`。
 class_name CmdSys
 extends BaseClass
 ## 指令系统：把字符串指令变成方法调用（解析在 CommandParser，本类负责"找命令 + 组参数 + 调用"）。
@@ -43,12 +54,12 @@ static var _sources_ready := false
 ## 懒注册过的前缀：同一个前缀不重复全扫（一个前缀的所有文件第一次就都收进来了）。
 static var _loaded_prefixes: Dictionary = {}
 
-## 「命令前缀组」约定：类可以写 `const CMD_HOST := "UIInteract"` 声明"我的静态方法挂在哪个前缀下"，
-## 于是**一个命令宿主能按功能拆成多个文件**，对外仍只有一套指令名：
-##   Script/UI/Interact/ 下的 UIInteractBase.gd（基类，声明一次）、UIInteract_OpenClose.gd、
-##   UIInteract_Drag.gd … 全部注册成 `UIInteract.xxx`（前缀写在基类上，子类继承即可）。
-## 没写这个常量的类，前缀就是它自己的类名（默认行为不变）。
-const CMD_HOST_KEY := "CMD_HOST"
+## 「命令前缀组」：**约定常量的名字**（注意：这不是"本类的前缀"——CmdSys 的前缀就是它自己的类名，
+## 它不需要声明这个常量）。谁会用到它：一个命令宿主按功能拆成多个文件时（交互就是这样：名字多、又散），
+## 在基类写一次 `const CMD_HOST := "UIInteract"`，那一组文件就都注册成 `UIInteract.xxx`：
+##   UIInteractBase.gd（声明一次）、UIInteract_OpenClose.gd、UIInteract_Drag.gd …
+## **只做一件事、也不拆文件的系统别写它**：前缀默认就是类名（如 `CmdSys` / `Utils` / `MapSys`）。
+const CMD_HOST_CONST := "CMD_HOST"
 
 
 # 初始化（幂等）：注册命令 + 监听消息总线的 "COMMAND"。
@@ -129,12 +140,12 @@ static func _register_source_methods(src: Dictionary) -> void:
 
 
 # 取某个命令源脚本要注册到哪个前缀下：脚本（或它的基类）写了 `const CMD_HOST := "xxx"` 就用它，
-# 否则用类名自己（见 CMD_HOST_KEY 的说明）。**沿继承链找**，所以前缀可以只在基类声明一次。
+# 否则用类名自己（见 CMD_HOST_CONST 的说明）。**沿继承链找**，所以前缀可以只在基类声明一次。
 # 被谁用：_register_source_methods、_lazy_load（判断某个前缀该收拢哪些文件）。
 static func _cmd_host(script: GDScript, fallback: String) -> String:
 	var s: GDScript = script
 	while s != null:
-		var host: Variant = s.get_script_constant_map().get(CMD_HOST_KEY)
+		var host: Variant = s.get_script_constant_map().get(CMD_HOST_CONST)
 		if host != null and not str(host).is_empty():
 			return str(host)
 		s = s.get_base_script()
@@ -196,7 +207,7 @@ static func clear_cache() -> void:
 
 
 # 懒注册：命令形如 "类名.方法名"，据此在源缓存里找出提供这个前缀的源并注册。
-# 前缀可能由**多个文件**提供（命令前缀组，见 CMD_HOST_KEY）：类名正好等于前缀的（如 UIInteract.gd）、
+# 前缀可能由**多个文件**提供（命令前缀组，见 CMD_HOST_CONST）：类名正好等于前缀的（如 UIInteract.gd）、
 # 以及写了 `const CMD_HOST` 挂到此前缀下的（如 UIInteract_Drag.gd），两类一起收。
 # 同一个前缀只扫一次：第一次就把该前缀的所有文件都收进来了（_loaded_prefixes）。
 # 被谁用：execute（命令表里没有时）。
@@ -236,6 +247,31 @@ static func _build_args(arg_meta: Array, arg_index: Dictionary, args: Array) -> 
 			var v: Variant = (args[i] as Dictionary)["value"] if i < args.size() else meta["def"]
 			quick.append(_coerce(v, meta["type"]))
 		return quick
+	# **任意 config 键**：方法签名里有 `config` 参数时，凡是**没对上任何参数名**的命名参数都塞进它
+	# （键名照抄），于是"打开时实时给这个元素的任意 config 键"能直接写在指令里，不必拼字典：
+	#   UIInteract.open(@host, "Editor", @host, host=@host, content_cmd="host.config", size=[300, 200])
+	# 显式写的 `config={…}` 与这些键**合并**（指令里直接写的那个覆盖字典里同名的）。
+	# 只有"有 config 参数"的方法才有这个口子，别的命令仍按老规矩（名字不存在就警告）。
+	if arg_index.has("config"):
+		var extras: Dictionary = {}
+		var kept: Array = []
+		var explicit_cfg: Variant = null
+		for a_raw in args:
+			var a: Dictionary = a_raw
+			var nm: String = str(a["name"])
+			if nm == "config":
+				explicit_cfg = a["value"]
+			elif nm != "" and not arg_index.has(nm):
+				extras[nm] = a["value"]
+			else:
+				kept.append(a)
+		if not extras.is_empty() or explicit_cfg is Dictionary:
+			var merged: Dictionary = {}
+			if explicit_cfg is Dictionary:
+				merged = (explicit_cfg as Dictionary).duplicate()
+			merged.merge(extras, true)
+			kept.append({ "name": "config", "value": merged })
+		args = kept
 	var slots: Array = []
 	var filled: Array = []
 	for i in arg_meta.size():
