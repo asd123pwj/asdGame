@@ -26,3 +26,25 @@
 - `check_satisfied(name)`：查该状态当前是否满足。
 - `check_exist(name)`：是否已安装。
 - `get_latest_message(name)`：取该状态最近消息。
+
+## 角色状态一览（UI，只读 + 实时）
+- 看的是"**某个角色**现在装了哪些状态、每个状态依赖什么、现在触发成什么样"：
+  `Config/UI/UIPreset_Status.gd`（外壳）+ `Script/UI/UI/UI_Status.gd`（内容元素）。
+- 打开：`UIInteract.open(preset_name="Status")`（默认看 `@Char/SYS`）；
+  换人：`UIInteract.open(preset_name="Status", content_cmd="@Char/人类")` 再点 `[刷新]`（`content_cmd` 优先于 `char`）。
+- 每个状态一段、**默认收起**；标题就写着满足情况（`✔ 满足 / ✘ 未满足` + 依赖条数），
+  展开才建那一行行（折叠交互的 `items` 按需建）：满足 / 最近消息 / `auto_reset·match_any·with_detect` /
+  六组依赖（`属性·Buff·状态·交互·按键·时间`）逐条"声明 → 触发真值"（真标绿、假标灰）/ `with_detect` 那一条外部检测。
+- **为什么必须专门一个元素**：状态是**静态预设**（一个状态全项目一份，`_x_listeners` 是声明、
+  `_x_triggers` / `satisfied` / `latest_message` 是**按角色**存的）⇒ 声明从预设读，现状一律取
+  `…_triggers[角色]` 那一份；只读预设会把所有角色混在一起。
+- **实时**：订阅被看角色每个状态的 `satisfied` / `unsatisfied`（`Msg.listen_status_satisfied/unsatisfied`），
+  收到就**只重铺那一段**（别的段不动、展开态照旧）⇒ 标题的 ✔/✘ 与段里的行跟着变。
+- **监听的生命周期 = 开着就一直听，关掉就全退**（同 `AutoSys.run_until_unsatisfied` 那种"不需要了就自己删登记"的思路）：
+  面板被打开（`UIBase.on_shown`，**新建与复用两条路都通知**）⇒ 订上被看角色的**所有**状态
+  （**不看段展开没展开**——收起的段标题上也写着 ✔/✘，它照样要是实时值）；
+  面板被关掉（`UIBase.on_hidden`）⇒ 全退订。`sync_listening()` 幂等，`[刷新]` / 换角色时也会重算。
+  于是"开着的时候精确、关掉之后干净"。
+- 这两个回调是 **UIBase 新加的一对通用钩子**（`on_shown` / `on_hidden`，由 `UIInteract.open` / `close`
+  经 `UIBase.dispatch_shown / dispatch_hidden` 递归通知整棵子树）——因为"重开一个已存在的 UI"是**复用 + 显示、不发消息**，
+  只靠 `listen_ui_close` 那种消息盖不到这一半。

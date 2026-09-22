@@ -48,9 +48,7 @@ func on_registered() -> void:
 
 ## 重新铺一遍（内容里那行"[重建]"调它）：清掉旧的、按现在的结构再铺。
 func rebuild() -> void:
-	for child in children.duplicate():
-		children.erase(child)
-		_remove_tree(child)
+	clear_children()                 # 摘子树收在 UIBase（别在这儿再写一份，见 UIBase.clear_children）
 	_built = true
 	_fill()
 
@@ -61,7 +59,6 @@ func _fill() -> void:
 		return                      # 这一帧里已经被移除了（重建 / 关掉了），别铺了
 	add_child_element("Where", "UI_Label", {
 		"content": "编辑：%s" % _target_path(),
-		"font_size": 11,
 		"font_color": Color(0.55, 0.60, 0.70),
 	})
 	add_child_element("Rebuild", "UI_Label", {
@@ -110,7 +107,7 @@ func _editor_sections(key: String, value: Variant, conf: Variant) -> Array:
 func _row(key: String, value: Variant, spec: Array) -> Array:
 	var parts: Array = _spec_parts(spec)
 	return [
-		["Key", "UI_Label", {"content": key, "font_size": 12, "font_color": Color(0.62, 0.68, 0.78)}],
+		["Key", "UI_Label", {"content": key, "font_color": Color(0.62, 0.68, 0.78)}],
 		["Value", str(parts[0]), _value_cfg(parts[1], value, key)],
 	]
 
@@ -298,19 +295,6 @@ func _owner_ref() -> String:
 func _owner_name() -> String:
 	var ref: String = _owner_ref()
 	return ref.substr(1) if ref.begins_with("@") else ""
-
-
-## 移除一棵**运行期铺出来**的子树：递归摘注册名 + 释放控件（父级的 children 由调用方摘）。
-func _remove_tree(ui: UIBase) -> void:
-	if ui == null:
-		return
-	for child in ui.children.duplicate():
-		_remove_tree(child)
-	ui.children.clear()
-	RegSys.unregister(ui)
-	if ui.control != null:
-		ui.control.queue_free()
-		ui.control = null
 
 
 ## 值的显示文本：字符串原样（别在框里显示成带引号）、null 空、其余 str()。

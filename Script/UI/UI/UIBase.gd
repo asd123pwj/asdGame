@@ -94,9 +94,45 @@ func on_registered() -> void:
 	pass
 
 
+## 被显示 / 被隐藏回调：**默认什么都不做**，需要"知道自己被开出来 / 被关掉"的元素覆写它。
+## 什么时候被叫：`UIInteract.open` 摆好位、显示之后叫 `on_shown`；`UIInteract.close` 隐藏之后叫 `on_hidden`。
+## **整棵子树都会收到**（先自己后子元素，元素自己铺出来的子孙照样收到）——见 dispatch_shown / dispatch_hidden。
+## 为什么要有它：元素可能需要"随着'看得见没'开关自己的开销"（如 UI_Status 只在这时订阅 / 退订那些状态消息）；
+## 光靠 close 那条消息不够——**重开一个已存在的 UI 是"复用 + 显示"，不发消息**，只有这个回调两条路都盖得到。
+## 谁在用：UI_Status（开着就订状态消息、关掉就退订）。
+func on_shown() -> void:
+	pass
+
+
+func on_hidden() -> void:
+	pass
+
+
+## 通知"某棵 UI 被显示了 / 被隐藏了"：先叫自己，再递归每个子元素（见 on_shown / on_hidden）。
+## 被谁用：UIInteract_OpenClose.open（显示之后）、close（隐藏之后）。
+static func dispatch_shown(ui: UIBase) -> void:
+	_dispatch_life(ui, true)
+
+
+static func dispatch_hidden(ui: UIBase) -> void:
+	_dispatch_life(ui, false)
+
+
+## dispatch_shown / dispatch_hidden 的实现（别在别处再写一份递归）。
+static func _dispatch_life(ui: UIBase, shown: bool) -> void:
+	if ui == null:
+		return
+	if shown:
+		ui.on_shown()
+	else:
+		ui.on_hidden()
+	for child in ui.children:
+		_dispatch_life(child, shown)
+
+
 func _fit_size() -> void:
 	if control == null:
-		return          # 已被移除的动态 UI（见 UI_Editor._remove_tree）：没有控件可摆，晚到的信号直接忽略
+		return          # 已被移除的动态 UI（见 clear_children）：没有控件可摆，晚到的信号直接忽略
 	var want: Vector2 = _config_size()
 	if want.x > 0.0 and want.y > 0.0:
 		control.custom_minimum_size = want
@@ -189,6 +225,66 @@ func show_at(pos: Vector2) -> void:
 	control.show()
 
 
+## 清掉本元素**运行期铺出来**的子元素（整排摘掉，见 remove_child_element）。
+## 给"自己按数据铺内容的元素"重铺时用（见 UI_Status.reload / UI_Editor.rebuild）：
+## 铺出来的子元素都登记过，直接 queue_free 会在登记表里留下指向"已经没了的东西"的名字
+## （见 RegSys.unregister 的说明）。
+## 被谁用：UI_Status.reload、UI_Editor.rebuild。
+func clear_children() -> void:
+	for child in children.duplicate():
+		remove_child_element(child)
+
+
+## 摘掉一个子元素（递归摘注册名 → 释放控件 → 从 children 摘掉）。不在 children 里就什么都不做。
+## 只重铺其中一块时用它（如 UI_Status 收到状态变化，只重铺那一段）。
+func remove_child_element(ui: UIBase) -> void:
+	if ui == null:
+		return
+	children.erase(ui)
+	_remove_subtree(ui)
+
+
+## **原地换掉**一个子元素：摘掉 `old` → 按参数新建一个 → **放回它原来的位置**（children 里与容器里的位次都不变）。
+## 只重铺其中一块时用它（见 UI_Status._rebuild_section）：直接"摘掉再加"会把那块排到**最底下**，
+## 于是"状态一变，那一行就跳到最后"（实测踩过——面板里的次序是用户看着的东西，不能自己动）。
+## `old` 为 null / 不在 children 里 ⇒ 退回"追加到末尾"（新加的块本来就该在后面）。
+## 返回新元素。
+func replace_child_element(old: UIBase, name_: String, ui_class: String, cfg: Dictionary = {}) -> UIBase:
+	var arr_index: int = children.find(old) if old != null else -1
+	var keep: bool = old != null and old.control != null and old.control.get_parent() != null
+	var box_index: int = old.control.get_index() if keep else -1
+	remove_child_element(old)
+	var child: UIBase = add_child_element(name_, ui_class, cfg)
+	if child == null:
+		return null
+	if arr_index >= 0:
+		children.erase(child)
+		children.insert(arr_index, child)
+	if keep and child.control != null:
+		var box: Control = child.control.get_parent() as Control
+		if box != null and box_index < box.get_child_count():
+			box.move_child(child.control, box_index)
+	return child
+
+
+## 递归摘掉一棵子树（clear_children / remove_child_element 的实现，别在别处再写一份）。
+## 控件**立刻**从树上摘下来再 queue_free：只 queue_free 的话本帧它还挂在树上——
+## 位置还占着、还会被画一次（重铺一段就会看着"重复了一份"，原地换的位置计算也会差一位）。
+static func _remove_subtree(ui: UIBase) -> void:
+	if ui == null:
+		return
+	for child in ui.children.duplicate():
+		_remove_subtree(child)
+	ui.children.clear()
+	RegSys.unregister(ui)
+	if ui.control != null:
+		var box: Node = ui.control.get_parent()
+		if box != null:
+			box.remove_child(ui.control)
+		ui.control.queue_free()
+		ui.control = null
+
+
 ## 取一个在本元素下**唯一**的子元素名：本元素这边只负责"哪些名字已经被兄弟占了"，
 ## 去重规则本身在 `RegSys.unique`（名字的事只有那一处；角色走 `RegSys.register` 的 dedup，同一条后缀规则）。
 ## 为什么按"同一挂载点下不重名"判：登记名 = `挂载点登记名/名字`（见 RegSys.join），
@@ -240,8 +336,11 @@ func reapply() -> void:
 	# 字号/字色是通用属性（谁都能配），作用在**本元素的控件**上：
 	# 主题重写只在配它的那个控件上生效，**不会自动传给子控件**——要小字号/深色字请配到真正显示文本的那个元素上。
 	# （不配字色就用主题默认：Godot 默认主题是接近白色的，画在浅色底图上会看不见。）
-	if config.has("font_size"):
-		control.add_theme_font_size_override("font_size", int(config["font_size"]))
+	# **字号有下限**：没配就用默认字号，配了比它小也抬到默认（见 SysCfg.ui_font_size_default）——
+	# "小到看不清"的界面没法用；要更小就改那个全局值（在这里各写各的没用）。
+	var font_size: int = maxi(int(config.get("font_size", SysCfg.ui_font_size_default)),
+		SysCfg.ui_font_size_default)
+	control.add_theme_font_size_override("font_size", font_size)
 	if config.has("font_color"):
 		var font_color: Color = config["font_color"]
 		control.add_theme_color_override("font_color", font_color)

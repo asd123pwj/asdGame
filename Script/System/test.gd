@@ -98,6 +98,11 @@ func ui_test() -> void:
     # （被编辑 UI 的 config 每项一行，子UI每段一行且**默认收起**，展开哪段才铺那段）
     Msg.send_cmd('UIInteract.open(@UI/MiniHUD, "Editor", @UI/MiniHUD, host=@UI/MiniHUD)')
 
+    # 角色状态一览（外壳 Config/UI/UIPreset_Status.gd + 内容元素 Script/UI/UI/UI_Status.gd）：
+    # 独立 UI，看哪个角色由预设里 Body 的 `char` 决定（默认 @Char/SYS）。
+    # 换人：UIInteract.open(preset_name="Status", content_cmd="@Char/人类")。
+    Msg.send_cmd('UIInteract.open(preset_name="Status")')
+
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:
@@ -146,3 +151,7 @@ func delay_loop_test() -> void:
 func when_time_advance(_msg: Variant) -> void:
     print("===================================")
     print(TimeFormat.year + TimeFormat.month + TimeFormat.day + TimeFormat.hour)
+
+
+
+

@@ -38,6 +38,12 @@ extends UIInteractBase
 ## 写进预设的话，每加一层子菜单就得记得抄一遍，漏一处那个 UI 就永远关不掉。
 ## 类型就是 bool，字符串/数字怎么变 bool 由指令系统按签名处理（CmdSys._coerce），这里不再自己认。
 ##
+## **想顺手给这个 UI 改任意一项配置**：直接写键名就行（本函数有 `config` 参数 ⇒ 走 CmdSys 的
+## 「任意配置键」约定：没对上参数名的命名参数都进 config）——不必为了某一项专门加个参数：
+##   UIInteract.open(preset_name="Status", content_cmd="@Char/人类")
+##   UIInteract.open(@host, "Editor", @host, host=@host, content_cmd="host.config", size=[310, 210])
+## （`host` 是个例外：它要落成**注册名**再写进 config，得在这里转一手，所以留着专门参数。）
+##
 ## 指令写法：
 ##   UIInteract.open(@self, "Menu", @self, close_on_blur=true)       面板右键 → 指针处开菜单（点别处关）
 ##   UIInteract.open(preset_name="MiniHUD")                        独立 UI → 开在配置声明的位置
@@ -52,7 +58,7 @@ const UI_ROOT: String = "UI/"
 
 static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase = null,
 		close_on_blur: bool = false, close_on_move: bool = false, host: UIBase = null,
-		content_cmd: String = "", config: Variant = null) -> UIBase:
+		config: Variant = null) -> UIBase:
 	var preset: UIPreset = UIPreset.get_(preset_name)
 	if preset == null or preset.ui_name == "":
 		push_warning("UIInteract.open: 找不到预设「%s」（见 Config/UI/）" % preset_name)
@@ -64,20 +70,18 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 	# 在编辑器里再开编辑器，第二层铺出来却指着最外层那个 UI）。**写注册名**（见 RegSys）。
 	var host_name: String = RegSys.name_of(host) if host != null else ""
 	# 这次打开要带上的一次性配置（**都要在 build 之前写**，理由同上）：
-	#   host        —— 管理对象；
-	#   content_cmd —— 要"监视 / 编辑"的对象（任何 UI 都能带：显示项见 UIBase.refresh，编辑器见 UI_Editor）；
-	#   config      —— **一份 config 片段**：写什么就覆盖预设里同名的那项。
-	#                  两种写法等价、可混用（见 CmdSys 的「任意配置键」约定）：
-	#                    · 直接写键名（推荐）：`content_cmd="host.config", size=[200, 0]`；
-	#                    · 或给一整份字典：`config={...}` / `config=某个静态变量`。
-	#                  直接写的键覆盖字典里同名的；`content_cmd` 是"要看 / 编辑哪个对象"的简写。
+	#   config —— **一份 config 片段**：写什么就覆盖预设里同名的那项。
+	#             两种写法等价、可混用（见 CmdSys 的「任意配置键」约定）：
+	#               · 直接写键名（推荐）：`content_cmd="host.config", size=[200, 0]`；
+	#               · 或给一整份字典：`config={...}` / `config=某个静态变量`。
+	#             直接写的键覆盖字典里同名的。
+	#   注意**没有专门的 `content_cmd` 参数**：它就是一个普通配置键（元素自己从 config 里读它，
+	#   见 UIBase.refresh / UI_Editor._target_path / UI_Status._char_path），照「任意配置键」写就行。
 	var extra: Dictionary = {}
 	if config is Dictionary:
 		extra = (config as Dictionary).duplicate(true)
 	if host_name != "":
 		extra["host"] = host_name
-	if content_cmd != "":
-		extra["content_cmd"] = content_cmd
 	var ui: UIBase = _child_ui(mount, preset_name)
 	if ui == null:
 		ui = _build_open(preset, preset_name, mount, extra)
@@ -92,6 +96,9 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 	# 新开的排到最前（也会顺带把它的窗口提到最前，见 UIInteract_SetTop）
 	UIInteract_SetTop.set_top(ui)
 	_reg_blur(ui)
+	# 告诉整棵子树"你被显示了"（元素据此开关自己的开销，如 UI_Status 订阅状态消息）——
+	# **复用路径也走到这里**，所以"关掉再开"的元素也能收到（这条不发消息，见 UIBase.on_shown）。
+	UIBase.dispatch_shown(ui)
 	return ui
 
 
@@ -118,6 +125,9 @@ static func close(target: UIBase, preset_name: String = "") -> void:
 	if ui.control != null:
 		ui.control.hide()
 	Msg.send_ui_close(ui)
+	# 告诉整棵子树"你被隐藏了"（元素据此停掉自己的开销，见 UIBase.on_hidden）——
+	# 与 open 那边的 dispatch_shown 成对；比"听 close 消息"更全（那样只盖得到被关的那一个）。
+	UIBase.dispatch_hidden(ui)
 	# 从两张失焦候选表里都摘掉（关过再开时 open 会重新登记 ⇒"显示着"与"在表里"始终一致）
 	_blur_uis.erase(ui)
 	_move_blur_uis.erase(ui)
@@ -146,10 +156,13 @@ static func toggle(target: UIBase = null, preset_name: String = "") -> void:
 
 
 ## 按"挂载点 + 预设名"取已登记的 UI —— 开（复用查找）与关（找要关的子 UI）共用的那把钥匙。
-## 登记名就是 `RegSys.join(挂载点, 预设名)`（全项目唯一的一条寻址约定，登记与取件共用），
-## 本函数只是它的取件形式。原来叫 UISys.get_child_ui：只有开/关用得到，就跟着搬到本文件了。
+## 登记名：挂在谁下面就是 `RegSys.join(挂载点, 预设名)`；**没有挂载点（独立 UI）就是 `UI/预设名`**
+## （与 _build_open 登记的写法必须对上，否则"再开一次"会当成没开过、又建一份）。
+## 本函数只是那条寻址约定的取件形式。原来叫 UISys.get_child_ui：只有开/关用得到，就跟着搬到本文件了。
 ## 被谁用：open、close。
 static func _child_ui(mount: UIBase, preset_name: String) -> UIBase:
+	if mount == null:
+		return RegSys.get_(UI_ROOT + preset_name) as UIBase
 	return RegSys.get_(RegSys.join(mount, preset_name)) as UIBase
 
 

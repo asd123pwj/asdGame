@@ -131,3 +131,9 @@ static var rescale_epsilon := 0.001     # 缩放里"上帧距离"作除数时的
 
 # 找"当底的 stylebox 槽"时的顺序：哪个控件有哪个就用哪个（见 UIBase._background_slot）。
 static var ui_background_slots: Array[String] = ["panel", "normal", "background"]
+
+# ---- UI 字号 ----
+# **默认字号，同时也是最小字号**（见 UIBase.reapply）：没配 `font_size` 的元素就用它；
+# 配了比它小的也**抬到它**——"小到看不清"的界面没法用，要更小就改这里，别在配置里各写各的（改了也不生效）。
+# 16 = Godot 默认主题的字号（所以"没配"的元素看起来和以前一样）。
+static var ui_font_size_default := 16

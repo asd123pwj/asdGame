@@ -72,7 +72,9 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - `get_ui(登记名)`：按名取（子元素用全名，如 `MiniHUD/Info`）——就是 `RegSys.get_(名字)` 加一层 UIBase 类型。
 - `find_name(ui)`：反查"这个 UI 叫什么"——`RegSys.name_of` 的 UI 版。
 - `register_child(parent, child)` / `_register_tree(ui, 全名)`：**按 UI 树递归登记**（顺着父元素的 `children` 一层层走，登记名 = `RegSys.join(挂载点, 名字)`）。**"名字怎么拼"不在这里**，在 RegSys（下一节）；这里只管"UI 树怎么递归"。
-- **删掉动态子树**（`remove_tree` 那类）**不在 UISys**：只有 UI 编辑器用得到，就跟它的调用者走（见 `UI_Editor._remove_tree`）——同 UIInteract_OpenClose 收留 `open` 的子方法一个道理。
+- **删掉动态子树**是 `UIBase.clear_children()`（整排）/ `remove_child_element(ui)`（摘一个）/ `replace_child_element(old, 名, 类, 配置)`（**原地换一个**）：
+  递归摘注册名 → 立刻脱离控件树 → 释放控件；**谁动态铺了内容谁自己调**（`UI_Editor.rebuild`、`UI_Status.reload` / 重铺一段），不劳 UISys。
+  **只重铺其中一块要用"原地换"**：摘掉再加会把它排到最底下（`children` 与容器里都到末尾）——"状态一变那行就跳到最后"就是这么来的。
 - **"给某个 UI 加/减东西"= 开/关一个预设 UI**：不再有 `add_close_button` / `remove_close_button` 这类成对的专门函数（那正是"同一需求两套策略"）。关闭按钮就是一个普通预设 `CloseButton`（`Config/UI/UIPreset_Basic.gd`，`open_at = ANCHOR_TOP_RIGHT_IN` 开在锚点内部右上角），加它 = `UIInteract.open(宿主, "CloseButton", 宿主)`，减它 = `UIInteract.close(宿主, "CloseButton")`。
 - **缩放手柄**同样是普通预设 `ResizeButton`（图标 `content` + `open_at = ANCHOR_BOTTOM_RIGHT_IN` 开在锚点内部右下角），**只有一条事件**，而且不直接调缩放函数，而是交给 `AutoSys`：
   ```gdscript
@@ -107,6 +109,12 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 
 ## UIBase.gd（extends BaseClass）
 - `var control: Control`；`build()` = `_create_control()` → `_apply_config()` → `refresh()` → `_build_children()`。
+- **两个生命周期钩子**（默认什么都不做，需要"知道自己被登记好 / 被开出来 / 被关掉"的元素覆写）：
+  - `on_registered()`：登记完名字之后叫（子元素登记要父级名字 ⇒ 元素要等自己有名字才能铺内容，如 `UI_Editor`）；
+  - `on_shown()` / `on_hidden()`：`UIInteract.open` 摆好位显示之后 / `close` 隐藏之后叫，**整棵子树都收到**
+    （`UIBase.dispatch_shown / dispatch_hidden` 递归）。元素据此开关自己的开销（如 `UI_Status` 只在这时
+    订阅 / 退订那些状态消息）。**为什么要有它**：重开一个已存在的 UI 是"复用 + 显示、不发消息"，
+    只靠 `listen_ui_close` 那种消息盖不到这一半。
 - **`config["content"]`（只是一个配置键，没有成员变量）**：显示内容（子类解释：Label=文本、Scroll=多行文本、Image=纹理路径）。子类覆写 `refresh(key)`，在里面读 `config.get("content")` 刷到控件。**不做成属性 set 自动刷**：要拦的会是整张 config（还有 events/size/…），而 config 是 Dictionary、拦不住写入——换成带 `_set/_get` 的对象则读点全要改，不划算。所以统一"**写 config + 紧跟一条 `@self.refresh("content")`**"。
 - **`var parent: UIBase`**（挂载对象）：组装子元素时由父元素注入，是 `@self.parent` 的指向。
 - **`var children: Array[UIBase]`**：按 `config["children"]`（每项 `[child_name, ui_class, child_config]`）组装，挂到 `_content_box()`（容器类覆写返回内部布局节点）。

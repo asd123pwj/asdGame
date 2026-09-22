@@ -65,7 +65,7 @@ static func _claim(base: String) -> String:
 
 
 ## 摘掉一个实例的注册（不在表里就什么都不做）。
-## **动态删掉一个实例之前要先摘**（见 UI_Editor._remove_tree）：表里存着实例本身，
+## **动态删掉一个实例之前要先摘**（见 UIBase.clear_children）：表里存着实例本身，
 ## 摘掉才不会留下一个指向"已经没了的东西"的名字。
 static func unregister(obj: Object) -> void:
 	if obj == null or not is_instance_valid(obj):
