@@ -12,7 +12,7 @@
 | `test.gd` | 启动时的功能自测(Test)。 |
 
 ## BaseClass.gd（extends RefCounted）
-- `var ID: int = get_instance_id()`：每实例唯一 ID。项目绝大多数类继承它。
+- 指令寻址一律用**注册名**（见 RegSystem），基类不再带实例 ID。项目绝大多数类继承它（获得指令化调用能力）。
 
 ## SystemManager.gd（Sys，extends Node）
 - **唯一引擎回调**：`_ready`(初始化并跑 test)、`_input/_process/_physics_process`(转发给各系统，见设计文档 §八)。

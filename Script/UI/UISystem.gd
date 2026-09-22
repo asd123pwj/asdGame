@@ -5,7 +5,7 @@ extends BaseClass
 ## 文件名保持 `XxxSystem.gd`——与 `CharacterSystem.gd`(CharSys)、`InputSystem.gd`(InputSys) 一套约定。
 ##
 ## 职责：**UI 树的登记与取件** + UI 根（`root`）。
-## **"叫什么名字"不在这里**：登记名（`MiniHUD/Menu` 这种）与"实例 ID ↔ 注册名"两张表都在
+## **"叫什么名字"不在这里**：登记名（`MiniHUD/Menu` 这种）与"名字 ↔ 实例"两张表都在
 ## `RegSys`（通用注册名系统，见 Script/System/RegSystem.gd）——本类只负责"按 UI 树递归地调
 ## `RegSys.register`"，以及 UI 侧两个便利入口（`get_ui` / `find_name`）。以后别的系统要名字，
 ## 也走 RegSys 同一处（它当初就是为了"ID 对人不可读"而立的：UI 编辑器显示 config 时靠它认人）。

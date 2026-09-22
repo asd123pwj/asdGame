@@ -20,7 +20,7 @@ extends BaseClass
 ##
 ## 各交互只做"指令参数 → 具体实现"的转发与校验；**共用的校验就是本类的 `_as_ui`**。
 ## target 为目标 UI 实例（指令里的 self/host 由 指令系统（`@self`/`@host`/`@event`） 转成 `@注册名`，链尾的 `.parent` 等由指令系统取值，
-## 指令系统执行时按注册名（或实例 ID，老配置）取出实例，故这里收到的就是 UIBase）。
+## 指令系统执行时按注册名取出实例，故这里收到的就是 UIBase）。
 
 ## 本组所有文件注册到哪个指令前缀下（子类继承；机制见 CmdSys.CMD_HOST_CONST）。
 const CMD_HOST: String = "UIInteract"

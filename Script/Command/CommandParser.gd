@@ -19,7 +19,7 @@ extends BaseClass
 #   Test.test_int.value              读后取字典键 .value
 #   Test.test_int[0].value[0].value  再取列表下标 [n] / 字典 .key（链式）
 #   Test.test_func(Test.int1, -1)    调静态函数，参数逗号分隔，可递归写表达式
-#   @123.config.content              实例成员（@ 后面是实例 ID）
+#   @123.config.content              实例成员（@ 后面是注册名）
 #
 # **一行 = 一个表达式，这就是全部语法**（不再区分"命令"与"取值"两套写法）:
 #   类.静态方法(参数, 名字=值, …)   命令调用：位置参数按签名顺序；`名字=值` 可**跳过**可选参数（用签名的默认值）
@@ -643,7 +643,7 @@ static func _find_top_level_assign(s: String) -> int:
 
 # ---------- $ 表达式的编译 / 执行 ----------
 # 计划用 dict 表示，把"定位"固化下来，运行时只做必需的最后一步取值：
-#   { "kind": "instance", "ref": String, "ops": [...] }          @引用.<ops>（引用 = 实例 ID 或注册名）
+#   { "kind": "instance", "ref": String, "ops": [...] }          @引用.<ops>（引用 = 注册名）
 #   { "kind": "member", "owner": String(类名), "ops": [...] }     $类.<成员链>
 #   { "kind": "func", "callable": Callable, "args": [<plan>...], "ops": [...] } $类.函数(...) 后面接着的成员链
 #   { "kind": "literal", "value": Variant }                      字面量（函数/方法参数）
@@ -656,7 +656,7 @@ static func _find_top_level_assign(s: String) -> int:
 ## 被谁用：_compile_value（值 / 参数 / 整行取值都经它）、_split_path（read / write 的路径）。
 static func _compile_expr(s: String) -> Dictionary:
 	var body := s.substr(1)   # 去掉前导 $
-	# 实例 / 命名对象访问：@引用.成员 或 @引用.方法(...)；引用 = 实例 ID 或**注册名**（见 _chain_ref）
+	# 实例 / 命名对象访问：@引用.成员 或 @引用.方法(...)；引用 = **注册名**（见 _chain_ref）
 	if body.begins_with("@"):
 		if body == "@event":
 			return { "kind": "event" }        # 当前事件名（字符串）；由 UIBase.on_event 设好上下文
@@ -724,10 +724,11 @@ static var event_ui: Object = null
 static var event_name: String = ""
 
 
-## 解析 `@引用` 得到那个实例。引用有四种：
+## 解析 `@引用` 得到那个实例。引用三种，**一律是名字（或名字的替身）**：
 ##   `self` / `host`  —— 当前派发事件的元素 / 它的管理对象（见 event_ui、UIBase._find_host）；
-##   实例 ID（数字，可带负号）—— 没登记名字的对象；判数字看首字符（64 位 ID 用 is_valid_int 会误判）；
-##   注册名           —— 其余一律按注册名查（`UI/MiniHUD/Info` 这种，见 RegSys）。
+##   注册名           —— 其余一律按注册名查（`UI/MiniHUD/Info`、`Char/人类` 这种，见 RegSys）。
+## **不再认实例 ID**：ID 每次运行都变、写进配置就废了；要指哪个东西就给它起名字
+## （UI 由 UISys 登记、角色由 Character._init 登记，都带自己的根前缀）。
 ## 被谁用：_run_expr（instance 分支）。
 static func _instance_of(ref: String) -> Object:
 	if ref.is_empty():
@@ -737,8 +738,6 @@ static func _instance_of(ref: String) -> Object:
 	if ref == "host":
 		var ui: UIBase = event_ui as UIBase
 		return ui._find_host() if ui != null else null
-	if ref[0] == "-" or (ref[0] >= "0" and ref[0] <= "9"):
-		return instance_from_id(int(ref))
 	return RegSys.get_(ref)
 
 
@@ -751,9 +750,9 @@ static func _chain_rest(inst_expr: String) -> String:
 	return inst_expr.substr(i)
 
 ## 取 "@引用.<...>" 里那段引用（第一个 `.` / `[` / `(` 之前的内容），返回 [ok, ref]。
-## **引用可以是实例 ID，也可以是注册名**（如 `@UI/MiniHUD/Menu`，见 RegSys）——交给 _instance_of 去分辨：
-## 数字 = ID，其余 = 注册名（名字里常有 `/`，所以这里只把 `.` `[` `(` 当结束符）。
-## 不能用 0 / 空串当"无效"哨兵（合法 ID 本身就可能为负）⇒ 用 [ok, ref] 返回。
+## **引用就是注册名**（如 `@UI/MiniHUD/Menu`，见 RegSys）——交给 _instance_of 去分辨：
+## 名字里常有 `/`，所以这里只把 `.` `[` `(` 当结束符（见 _instance_of）。
+## 不能用空串当"无效"哨兵（空串是合法的"没有"）⇒ 用 [ok, ref] 返回。
 ## 被谁用：_compile_expr（instance 分支）。
 static func _chain_ref(inst_expr: String) -> Array:
 	var i := 0

@@ -2,7 +2,7 @@ class_name Character
 extends BaseClass
 ## 角色：一个实体的全部逻辑部件（属性/状态/交互/技能/碰撞/背包/快捷）+ 可选的身体节点。
 ## 各部件在 _init_from_archetype 里按 Archetype（原型/种族）配置成套装配，之后互不关心（见 Script/Character/Character.md）。
-## 被谁用：CharSys.spawn / create_char（唯一构造入口）；各处用 Character._we[ID] 或 CharSys.get_identity 取。
+## 被谁用：CharSys.spawn / create_char（唯一构造入口）；各处用 `Character.get_(注册名)` 取（`Char/人类`）。
 
 ## 显示名（不填则用原型名）。被谁用：日志、UI、指令里按名找角色。
 var name: String
@@ -34,26 +34,39 @@ var identity: String = ""
 ## body 是否已尝试生成过（避免重复尝试；原型没配 bodies 时也算"试过"）。
 var _body_created: bool = false
 
-## 全部角色：ID -> 实例。
+## 角色的注册名前缀：**`Char/原型类型`**（和 UI 的 `UI/` 一个规矩，见 RegSys）。
+## 于是"这是角色还是 UI 还是地图"从名字上一眼分得清，子部件照旧 `父名/子名`。
+const CHAR_ROOT: String = "Char/"
+
+## 全部角色：**注册名 -> 实例**（`Char/人类`）。
 ## 被谁用：CharSys._physics_process（逐帧驱动）、Character.get_、PointerDetect._char_at。
-static var _we: Dictionary[int, Character] = {}
+static var _we: Dictionary[String, Character] = {}
 
 
-## 构造：登记自己 → 起名字/身份（非空则绑定 identity）→ 按原型装配各部件 → 完成初始化。
+## 构造：**按原型装配**，顺便给自己登记一个名字（`Char/原型类型`）；`identity` 非空则登记成"身份"。
 ## 被谁用：CharSys.create_char（唯一入口，不要在别处直接 new）。
-func _init(archetype_type: String, identity: String="", name: String="") -> void:
-    _we[ID] = self
-    self.name = name if name != "" else archetype_type
+## 名字怎么来：`Char/` + 原型类型（"人类" ⇒ `Char/人类`）；**同原型的第 2、3 个自动让路加后缀**
+## （`Char/人类_2`，见 RegSys.register 的 dedup）——注册名全项目唯一，不让路的话第二个会顶掉第一个的名字，
+## 而 `_we` 是按注册名索引的（被顶掉的那个就再也驱动不到、也取不到了）。
+## **名字与身份是两回事**（别混）：名字是"这一个实例叫什么"（跟它一辈子、唯一）；
+## 身份是"现在由谁来演这个位子"（`CharSys.identities`，同一个身份换个时候可以指向别的角色——
+## 重生/换身就是改绑身份）。所以状态名可以写 `"状态名@身份"` 定向过去，而指令里按**名字**指到具体实例。
+func _init(archetype_type: String, identity: String = "") -> void:
+    self.name = archetype_type
+    # 登记并**接住真正用上的那个名字**（去重也在注册系统里，一次调用就够）
+    var reg_name: String = RegSys.register(self, CHAR_ROOT + archetype_type, true)
+    _we[reg_name] = self
     self.identity = identity
     if identity != "":
         CharSys.bind_identity(identity, self)
     _init_from_archetype(archetype_type)
     init_done()
 
-## 按 ID 取角色（没有会报错，注意先判断）。
-## 被谁用：指令里的 @ID、需要按 ID 反查的地方。
-static func get_(id: int) -> Character:
-    return _we[id]
+
+## 按**注册名**取角色（`Char/人类`；没有返回 null）。
+## 被谁用：指令里的 `@Char/人类`、需要按名字反查的地方。
+static func get_(reg_name: String) -> Character:
+    return _we.get(reg_name, null)
 
 ## 物理帧：交给技能系统（技能队列 + move_and_slide）。
 ## 被谁用：CharSys._physics_process。

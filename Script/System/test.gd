@@ -104,7 +104,7 @@ func get_char_info(char_: Character) -> void:
     var info: String = char_.name
     # 属性字典：直接用指令取出（send_cmd00 返回 Variant，按 Dictionary 收下再遍历）
     # 不用指令时的等价写法：for attr_type_name in char_.attrs.attributes.keys():
-    var attrs: Dictionary = Msg.send_cmd00("@%s.attrs.attributes" % char_.ID)
+    var attrs: Dictionary = Msg.send_cmd00("@%s.attrs.attributes" % RegSys.name_of(char_))
     for attr_type_name in attrs.keys():
         info += " %s: %d" % [attr_type_name, char_.attrs.get_(attr_type_name)]
     print(info)

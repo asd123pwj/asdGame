@@ -3,9 +3,6 @@ extends BaseClass
 ## 角色系统：角色的生成入口与身份表（见 Script/Character/Character.md）。
 ## 被谁用：Sys.charSys（全局）；Character._init 会回调 bind_identity。
 
-## 角色池（当前未使用，占位）。
-var pool: Array = []
-
 ## 独特角色字典：identity -> Character
 ## 供状态名 "状态名@identity" 定向到某独特角色（如"敌人"、"目标"）
 ## 绑定时机：初始化时（identity 非空），或运行时用 bind_identity 动态指向新角色
@@ -21,16 +18,18 @@ static func _physics_process(delta: float) -> void:
 
 ## 生成一个"有身体"的角色：建角色 → 建身体 → 广播生成消息。
 ## 被谁用：需要可见/可碰撞角色的地方（Test.run、指令）。
-static func spawn(race_name: String, identity: String="", name: String="") -> Character:
-    var char_: Character = create_char(race_name, identity, name)
+## 参数：**原型名**（`Char/原型名` 就是它的注册名，重名自动加后缀，见 Character._init）
+## 与**身份**（可选，如 "player"；非空则绑到本角色，见 bind_identity）。
+static func spawn(race_name: String, identity: String = "") -> Character:
+    var char_: Character = create_char(race_name, identity)
     char_.ensure_body()
     Msg.send_spawn(char_)
     return char_
 
 ## 只建逻辑角色（不建身体，如 SYS 这类纯逻辑角色）。
 ## 被谁用：spawn、Sys._ready（建 SYS 角色）。
-static func create_char(race_name: String, identity: String="", name: String="") -> Character:
-    var char_: Character = Character.new(race_name, identity, name)
+static func create_char(race_name: String, identity: String = "") -> Character:
+    var char_: Character = Character.new(race_name, identity)
     Msg.send_char_create(char_)
     return char_
 

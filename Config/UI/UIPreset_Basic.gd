@@ -12,7 +12,7 @@ config: Dictionary
 占位符只有 self（自身）、host（本条链的**管理对象**）与 event（事件名）；
 取父级/内容一律在它上面接着写取值链：
   @self.parent = 挂载对象（父 UI），self.config.content = 自己的显示内容，
-  host = 管理对象（默认沿 parent 爬到顶那个 UI；也可以在某一层 config["host"] 写**注册名**（实例 ID 也认）指定成别的 UI，
+  host = 管理对象（默认沿 parent 爬到顶那个 UI；也可以在某一层 config["host"] 写**注册名**指定成别的 UI，
          或 open 时给 host=@self）——菜单项/深层子元素用它，不必数 @self.parent 的级数。
 交互指令宿主为 UIInteract（close/open/toggle/drag/rescale/fade_to/begin_edit/end_edit/switch_value/set_top）；
 "写内容 / 对调配置"不需要专门交互：通用指令 Utils.write / Utils.swap + 一条刷新（详见 Script/UI/UI.md）。

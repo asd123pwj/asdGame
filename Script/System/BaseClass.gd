@@ -1,12 +1,11 @@
 class_name BaseClass
 extends RefCounted
 ## 指令化函数基类（设计见 Script/设计文档.md 与下方注释）：
-## 项目里所有"能被指令系统调用"的类都继承它（Sys / 各 System / UI 元素 / 预设 等），
-## 于是继承者带一个实例 ID，指令串里可以用 @ID 指到具体实例。
-
-## 实例 ID（等于引擎的 instance id）。
-## 被谁用：指令系统（`@self`/`@host`/`@event`）（把 self/@self.parent 换成 @ID）、指令系统按 @ID 取回实例。
-var ID: int = get_instance_id()
+## 项目里所有"能被指令系统调用"的类都继承它（Sys / 各 System / UI 元素 / 预设 等）。
+##
+## **这里没有 ID 了**：以前每个继承者带一个实例 ID，指令串里用 `@ID` 指到具体实例；现在**寻址一律用注册名**
+## （`@UI/MiniHUD/Menu`、`@Char/人类`，见 RegSys）——ID 每次运行都变、写进配置就废，人对不上。
+## 需要"指到某个实例"的类自己登记名字（UI 走 UISys 登记整棵树，角色走 Character._init）。
 
 """ ---------- 指令化函数基类 ---------- """
 # 有类MapSys，继承于BaseClass

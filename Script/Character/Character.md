@@ -20,7 +20,11 @@
 - 供外调用：`physics_process`(转发给 skills)、`ensure_body`、`Character.get_(id)`(查角色)。
 
 ### `CharacterSystem.gd`（`CharSys`，角色系统门面/工厂）
-- `static spawn(race_name, name, identity)`：`create_char` 建角色 → `ensure_body()`(配了 bodies 才有) → 广播 `Msg.send_spawn`；`create_char` 只建角色逻辑，不建 body。
+- `static spawn(race_name, identity="")`：`create_char` 建角色 → `ensure_body()`(配了 bodies 才有) → 广播 `Msg.send_spawn`；`create_char` 只建角色逻辑，不建 body。
+  **参数只有原型名 + 身份**（原来的第三个"名称"已去掉：名字由注册名给）。**名字与身份是两回事**：
+  名字 = `Char/原型名`（`Char/人类`，同原型的第 2、3 个自动加后缀 `Char/人类_2`，去重由 `RegSys.register(..., dedup=true)` 办并返回真正用上的名字；
+  `Character.get_("Char/人类")` 按名取，指令里写 `@Char/人类`）；身份 = `CharSys.identities`（`"player"` 这种，
+  非空则由 `_init` 绑上，同一个身份换个时候可以指向别的角色，见 `bind_identity`）。
 - `static identities: Dictionary[String, Character]` + `bind_identity(identity, char_)` / `get_identity(identity)`：**独特角色字典**，把 "敌人"、"目标" 等名字指向具体角色实例。绑定时机：`Character._init` 时 `identity` 非空则自动绑定；也可运行时调 `bind_identity` 动态改指向（如遇见新敌人时把 "敌人" 指向新角色）。
 - `bind_identity` 除写入 `identities` 外，还会调 `MsgBus.rebind_identity(identity, char_)`：把绑定到该 identity 的接收器迁到新角色对应的消息节点。因此"先监听、后出现"与"identity 换角色"两种情况下，监听都不会丢。绑定登记与迁移的具体实现见 `MsgBus._identity_bindings` / `rebind_identity`（`Script/Message/Message.md`）。
 - `_physics_process(delta)`：遍历所有角色驱动 `physics_process`（帧入口，被 `Sys` 调）。

@@ -16,9 +16,9 @@
 ##     Msg.send_cmd("MapSys.place(0, Test.test_func(Test.a, 4), Test.test_int2.value[0], \"门\", 2, -1, true)")
 ## **取值一行**（拿值，不一定调用）：末尾带 () 就"调完拿返回值"，不带 () 就取这个值本身：
 ##     Msg.send_cmd("Test.a")                     读静态变量
-##     Msg.send_cmd("@self.control.text")          读实例属性（self 在发送前换成 @ID）
+##     Msg.send_cmd("@self.control.text")          读实例属性（`@self` 由指令系统解析）
 ##     Msg.send_cmd("UISys.get_ui(\"MiniHUD\").refresh(\"content\")")   取值链末尾带 () = 调用
-## 用实例：把"类名"换成 `@实例ID`，其它一样：
+## 用实例：把"类名"换成 `@注册名`，其它一样：
 ##     Msg.send_cmd("@678965479816.hp")
 ## send_cmd 返回的是"每行结果"的数组，取值再按下标：
 ##     Msg.send_cmd("Test.a")[0]                  单行：取该行的结果

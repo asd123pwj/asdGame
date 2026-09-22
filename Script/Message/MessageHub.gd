@@ -227,13 +227,14 @@ static func _resolve_target(char_: Character, type_name: String) -> Array:
     return [char_, type_name]
 
 static func _format_character(char_: Character, type: String, type_name: String, action: String) -> String:
-    ## 未绑定 identity 的角色用自身 ID 兜底，避免所有匿名角色 id 冲突串消息。
+    ## 角色节点用**注册名**（`Char/人类`）——ID 每次运行都变、人对不上，名字才是"能认的那个"。
+    ## 指向别的角色（"名字@identity"）时，注册名也可能是那个目标的名字：所以直接问 char_ 自己叫什么。
     ## char_ 可为 null：这是"@identity 尚未解析出角色"时的占位（调用方无需自备角色），
     ## 用该 identity 造个临时标签即可——该监听随后会由 bind_identity → rebind_identity
     ## 迁到真实角色的节点上（见 _listen_character）。
     var char_ID: String
     if char_ != null:
-        char_ID = char_.identity if char_.identity != "" else str(char_.ID)
+        char_ID = RegSys.name_of(char_)
     else:
         char_ID = "@" + (type_name.split("@")[1] if "@" in type_name else "?")
     return format_ID(["CHAR", char_ID, type, type_name, action])
@@ -594,7 +595,7 @@ static func listen_shortcut_act(char_: Character, shortcut_name: String, callbac
 """
 """ ---------- Basic ---------- """
 static func _format_ui(ui: UIBase, action: String) -> String:
-    return format_ID(["UI", str(ui.ID), action])
+    return format_ID(["UI", RegSys.name_of(ui), action])     # UI 节点也按注册名（`UI/MiniHUD`）
 
 static func _send_ui(ui: UIBase, action: String, message: Variant = null) -> Array:
     var node_ID: String = _format_ui(ui, action)

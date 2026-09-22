@@ -189,25 +189,18 @@ func show_at(pos: Vector2) -> void:
 	control.show()
 
 
-## 取一个在本元素下**唯一**的子元素名：没重名就原样，重名加后缀 `_2`、`_3`…
+## 取一个在本元素下**唯一**的子元素名：本元素这边只负责"哪些名字已经被兄弟占了"，
+## 去重规则本身在 `RegSys.unique`（名字的事只有那一处；角色走 `RegSys.register` 的 dedup，同一条后缀规则）。
 ## 为什么按"同一挂载点下不重名"判：登记名 = `挂载点登记名/名字`（见 RegSys.join），
 ## 同一挂载点下同名 = 同一个登记名 = 互相覆盖（后建的把先建的挤掉，指针也只命中一个）。
-## 后缀只是"补一个没被占的"，所以没重名时名字保持原样（`Title` 还是 `Title`，不是 `Title_1`）。
 ## 判重看的是**本元素已有的子元素**（配置里的与运行时加的都算），不查登记表：
 ## 建树时父元素自己还没登记，查表反而不准。
-## 名字就是"复制名称"复制出去、用来绑定的那个东西，所以生成规则只此一处。
 ## 被谁用：_build_children、add_child_element。
 func _unique_child_name(want: String) -> String:
-	var base: String = want if want != "" else "Child"
 	var taken: Array[String] = []
 	for child in children:
 		taken.append(child.name)
-	if not taken.has(base):
-		return base
-	var i: int = 2
-	while taken.has(base + "_" + str(i)):
-		i += 1
-	return base + "_" + str(i)
+	return RegSys.unique(want, taken)
 
 
 ## 子元素挂载点（默认直接挂 control；容器类覆写返回内部布局节点）。
@@ -407,7 +400,7 @@ static func _warn_host_once(raw: String) -> void:
 	if _warned_hosts.has(raw):
 		return
 	_warned_hosts[raw] = true
-	push_warning("UIBase: config[\"host\"] = %s 用不了（这里写**注册名**，如 `MiniHUD/Menu`；实例 ID 也认。也可能是那个 UI 已经不在了）—— 当没声明处理" % raw)
+	push_warning("UIBase: config[\"host\"] = %s 用不了（这里写**注册名**，如 `MiniHUD/Menu`。也可能是那个 UI 已经不在了）—— 当没声明处理" % raw)
 
 
 ## 说明：以前这里有一整套"把 `self` / `host` / `event` 三个词扫出来换成 `@注册名`"的助手
