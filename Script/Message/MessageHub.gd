@@ -353,7 +353,8 @@ static func listen_buff_depleted(char_: Character, buff_name: String, callback: 
 ## 状态域：ID = ["CHAR", 角色, "STATUS", 状态名, 动作]；satisfied/unsatisfied 是状态的主输出，
 ## 交互、技能、快捷、UI 都靠它。
 ## 被谁用：StatusPreset.execute（send_status_satisfied / unsatisfied）、Statuses.add/remove_status、
-##          Msg.send_status_detected（外部检测）；listen 侧见 StatusPreset 与 InteractionPreset。
+##          Msg.send_status_detected_transient / detected_manual·undetected_manual（两种外部检测）；
+##          listen 侧见 StatusPreset 与 InteractionPreset。
 """ ---------- Character Statuses Listener ---------- """
 static func send_status_satisfied(char_: Character, status_name: String) -> Array:
     return _send_character(char_, "STATUS", status_name, "satisfied")
@@ -373,12 +374,18 @@ static func send_status_remove(char_: Character, status_name: String) -> Array:
 ## 这样把target和status分开，不然不知道怎么target怎么告诉对应交互
 ##
 ## 现在状态可以监听交互了，我简直天才，当然它还是可以用于发消息
-static func send_status_detected(char_: Character, status_name: String, target: Variant = null) -> Array:
-    return _send_character(char_, "STATUS", status_name, "detected", target)
+## **瞬时**外部检测：收到就"亮一下"，由状态自己复位（`StatusPreset.with_detect_transient`）。
+## 适合"某件事发生了一下"（碰撞进入、受击一次…）。`target` 会记进状态最近消息供交互取用。
+static func send_status_detected_transient(char_: Character, status_name: String, target: Variant = null) -> Array:
+    return _send_character(char_, "STATUS", status_name, "detected_transient", target)
 
-## 我觉得这玩意用不到
-# static func send_status_undetected(char_: Character, status_name: String, target: Variant) -> Array:
-#     return _send_character(char_, "STATUS", status_name, "undetected", target)
+## **保持型**外部检测的"开 / 关"：手动开、手动关，中间一直是 true（`StatusPreset.with_detect_manual`）。
+## 适合"一整段状态"（如"正在编辑输入框"，见 QName.editing 与 UIInteract_Edit 里那两行）。
+static func send_status_detected_manual(char_: Character, status_name: String) -> Array:
+    return _send_character(char_, "STATUS", status_name, "detected_manual")
+
+static func send_status_undetected_manual(char_: Character, status_name: String) -> Array:
+    return _send_character(char_, "STATUS", status_name, "undetected_manual")
 
 static func listen_status_satisfied(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
     return _listen_character(char_, "STATUS", status_name, "satisfied", callback, once)
@@ -389,22 +396,34 @@ static func listen_status_unsatisfied(char_: Character, status_name: String, cal
 static func listen_status_add(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
     return _listen_character(char_, "STATUS", status_name, "add", callback, once)
 
+## **状态内部"某条依赖的触发情况"变了**（satisfied 可能一点没动）。
+## 为什么需要它：satisfied / unsatisfied 只在**汇总结果**变时发，而"只按下 Shift、没按回车"这种变化
+## 不改 Submit 的 satisfied ⇒ 只看前两条的监听根本收不到，"看状态的 UI"里那一段就不会跟着重铺
+## （见 UI_Status / StatusPreset._set_trigger）。payload = [依赖名, 新值]。
+## 节点按**状态名**分（一条状态一个节点）⇒ 订阅一次就能收到它下面任何依赖的变化。
+static func send_status_trigger_changed(char_: Character, status_name: String, dep: Variant, value: bool) -> Array:
+    return _send_character(char_, "STATUS", status_name, "trigger_changed", [dep, value])
+
+static func listen_status_trigger_changed(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "trigger_changed", callback, once)
+
 static func listen_status_remove(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
     return _listen_character(char_, "STATUS", status_name, "remove", callback, once)
 
-static func listen_status_detected(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
-    return _listen_character(char_, "STATUS", status_name, "detected", callback, once)
+static func listen_status_detected_transient(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "detected_transient", callback, once)
 
-## 我觉得这玩意用不到
-# static func listen_status_undetected(char_: Character, status_name: String, callback: Callable) -> String:
-#     return _listen_character(char_, "STATUS", status_name, "undetected", callback)
+static func listen_status_detected_manual(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "detected_manual", callback, once)
 
-static func get_status_detected(char_: Character, status_name: String) -> Variant:
-    return _get_message_character(char_, "STATUS", status_name, "detected")
+static func listen_status_undetected_manual(char_: Character, status_name: String, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "STATUS", status_name, "undetected_manual", callback, once)
 
-## 我觉得这玩意用不到
-static func get_status_undetected(char_: Character, status_name: String) -> Variant:
-    return _get_message_character(char_, "STATUS", status_name, "undetected")
+static func get_status_detected_transient(char_: Character, status_name: String) -> Variant:
+    return _get_message_character(char_, "STATUS", status_name, "detected_transient")
+
+static func get_status_undetected_manual(char_: Character, status_name: String) -> Variant:
+    return _get_message_character(char_, "STATUS", status_name, "undetected_manual")
 
 
 ## 行为域：**当前未启用**（Character.behaviors 已注释，见 Character._init_from_archetype），

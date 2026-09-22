@@ -67,7 +67,7 @@
 - `CollisionPreset`(Preset)：绑定一个碰撞实现 `Collision_Area`。
 - `Collisions`(集合)：`add/remove_collision`。
 - `Collisions/Collision_Area`：`attach()` 有 `me.body` 才建 Area2D 挂到 `me.body`，无 body 则跳过；进出发 `Msg.send_collision_enter/exit`。
-- 衔接：`Msg.send_collision_enter` 被 `StatusPreset.with_detect`/交互等监听；`body_entered` 通过 `body.get_meta("character")` 反查角色。
+- 衔接：`Msg.send_collision_enter` 被 `StatusPreset.with_detect_transient`/交互等监听；`body_entered` 通过 `body.get_meta("character")` 反查角色。
 
 ### `Inventory/`（背包 = 装 Character 实例的容器）
 - `InventoryPreset`(Preset)：绑定一个 `Backpack/DeadDrop` 实现 + 初始物品 config。

@@ -1,8 +1,11 @@
 class_name UI_Input
 extends UIBase
 ## 输入框元素（单行 LineEdit / 多行 TextEdit）：content 是**配置里写的初值**（refresh 时写进框里，
-## 正在编辑时不回写），回车提交 → 派发事件 QName.input_submit（编辑期间由 InputSystem._input 翻译，
-## 单行 / 多行一致）。
+## 正在编辑时不回写）；**回车提交 → 派发事件 QName.input_submit**（编辑中按回车照常进状态链，
+## `QName.submit` = 回车 ∧ 没按 Shift 满足时由状态侧派发，见 `Archetype_System` / `SystemManager`）。
+## 本元素**不碰输入层**：`InputSystem` 拦"归输入框自己的键"（打字键 + 方向键 / 退格 / 删除 / Tab…，
+## 见 `_is_input_only_key`），回车**照常进状态链**、但**提交状态满足时会把那个事件吃掉**（见 `_submit_now`）
+## ⇒ 单回车不会在框里留下换行；按着 Shift 就不吃 ⇒ 多行框插一个换行（"Shift + 回车 = 换行"）。
 ##
 ## **元素自己没有任何特判**：不连引擎信号，也不写死"点我进编辑"——那只是一条普通事件配置，
 ## 用什么事件触发由写配置的人决定：
@@ -28,8 +31,8 @@ extends UIBase
 ##   · **自动换行**（长内容一眼看全，不用横向拖）；
 ##   · 高度按"**换行后的视觉行数**"自动算（见 _content_size），再用 `config["max_height"]` 封顶
 ##     （超了就框内滚动，不会一个内容把界面顶长）；**宽度由容器给**（放在带 scroll 的面板里会撑满视口）；
-##   · **回车仍然是提交**（不是换行）：命令串里要的是 `\v` 分隔、不是 `\n`，所以换行只作为**显示**；
-##     InputSystem 会把编辑中的回车翻成 QName.input_submit **并吃掉事件**，不让 TextEdit 插进换行。
+##   · **回车仍是提交、不会插换行**（Shift+回车才是换行）：输入层判"这次算提交"就把那个事件吃掉
+##     （见 `InputSystem._submit_now`），TextEdit 拿不到它，自然插不进换行。
 ## 高度只在 build / refresh 时算：**不连 text_changed 信号**（全项目不连引擎信号，见 UI.md），
 ## 所以正在打字时框高不动（提交、或重建菜单之后跟上）。
 ##

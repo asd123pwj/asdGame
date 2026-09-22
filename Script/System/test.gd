@@ -103,6 +103,10 @@ func ui_test() -> void:
     # 换人：UIInteract.open(preset_name="Status", content_cmd="@Char/人类")。
     Msg.send_cmd('UIInteract.open(preset_name="Status")')
 
+    # 角色快捷监控（外壳 Config/UI/UIPreset_Shortcut.gd + 内容元素 Script/UI/UI/UI_Shortcut.gd）：
+    # 每条快捷两行：名称 / "依赖状态 → 执行的指令"。同样默认看 @Char/SYS，换人写 content_cmd。
+    Msg.send_cmd('UIInteract.open(preset_name="Shortcut")')
+
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:
@@ -121,7 +125,7 @@ func delay_loop_test() -> void:
     Msg.listen_advance_hour(when_time_advance)
     get_char_info(char_A)
     # get_char_info(char_B)
-    Msg.send_status_detected(char_A, "Detect=>Nourish")
+    Msg.send_status_detected_transient(char_A, "Detect=>Nourish")
 
     await Sys.sys.get_tree().create_timer(1).timeout
     # for i in range(1000):
@@ -136,22 +140,18 @@ func delay_loop_test() -> void:
         # Sys.timeSys.advance()
         # if RandSys.rand.randi_range(0, 1) == 0:
         #     print("A触摸B")
-        Msg.send_status_detected(char_A, "Detect=>Touch", char_B)
-        # Msg.send_status_detected(char_A, "Detect=>Practice", "Strength")
-        # Msg.send_status_detected(char_A, "Detect=>Practice", "Health")
-        # Msg.send_status_detected(char_A, "Detect=>Practice", "Defense")
+        Msg.send_status_detected_transient(char_A, "Detect=>Touch", char_B)
+        # Msg.send_status_detected_transient(char_A, "Detect=>Practice", "Strength")
+        # Msg.send_status_detected_transient(char_A, "Detect=>Practice", "Health")
+        # Msg.send_status_detected_transient(char_A, "Detect=>Practice", "Defense")
 
-            # Msg.send_status_detected(char_B, "Detect=>Edible", char_C)
+            # Msg.send_status_detected_transient(char_B, "Detect=>Edible", char_C)
         # if RandSys.rand.randi_range(0, 3) == 0:
         #     print("B触摸A")
-        #     Msg.send_status_detected(char_B, "Touch", char_A)
+        #     Msg.send_status_detected_transient(char_B, "Touch", char_A)
 
 ## 时间推进回调：打印当前中文时间（演示 TimeSys → TimeFormat 的用法）。
 ## 被谁用：delay_loop_test 里 listen_advance_hour 的回调。
 func when_time_advance(_msg: Variant) -> void:
     print("===================================")
     print(TimeFormat.year + TimeFormat.month + TimeFormat.day + TimeFormat.hour)
-
-
-
-

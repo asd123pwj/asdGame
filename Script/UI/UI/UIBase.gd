@@ -211,6 +211,40 @@ func refresh(key: String = "") -> void:
 			control.position = Vector2(float(p[0]), float(p[1]))
 
 
+## **这个 UI 该看哪个对象**（"查看项"的读取规则；返回路径 / 引用，空串 = 没指定）：
+##   1. `content_cmd`：自己的，再**沿外壳往上**找第一处（`open(..., content_cmd="…")` 通常写在外壳那层，
+##      一次就对整块生效，元素不必知道套了几层）；
+##   2. 自己的 `fallback_key` 配置（如 `char` = "没指定时看谁"；不传就不看这一层）；
+##   3. 都给不出 ⇒ 空串（由调用方铺提示——本函数不猜、也不兜底到别人的东西）。
+## **不认 `content` 字面值**：那多半是"这个 UI 显示的文字"，不是"对象在哪"（`UI_Editor` 有自己的判断，
+## 它还要认 `content` 字面值和 `host.` 相对写法，见它的 _target_path）。
+## 被谁用：UI_Status / UI_Shortcut（"看哪个角色"）。
+func target_path(fallback_key: String = "") -> String:
+	var cmd: String = str(config.get("content_cmd", ""))
+	if cmd == "":
+		var up: UIBase = parent
+		while up != null:
+			var c: String = str(up.config.get("content_cmd", ""))
+			if c != "":
+				cmd = c
+				break
+			up = up.parent
+	if cmd != "":
+		return cmd
+	return str(config.get(fallback_key, "")) if fallback_key != "" else ""
+
+
+## 按 `target_path()` 取那个对象（**只读**，不改任何东西——同 CommandParser.read）。
+## 读不到 / 类型不对都给 null，由调用方铺提示。
+## 被谁用：UI_Status / UI_Shortcut（`target_object("char") as Character`）。
+func target_object(fallback_key: String = "") -> Object:
+	var path: String = target_path(fallback_key)
+	if path == "":
+		return null
+	var got: Array = CommandParser.read(path)
+	return (got[1] as Object) if bool(got[0]) else null
+
+
 ## 摆到指定**屏幕坐标**并显示（按 open_at 策略开的 UI 用，见 UISys._place）。
 ## 位置换算成"挂载点坐标系"的 position：
 ##   - 不用 set_global_position——它按"当前全局变换求逆"算，重复摆会跟旧 position 复合，越摆越偏；
@@ -291,12 +325,14 @@ static func _remove_subtree(ui: UIBase) -> void:
 ## 同一挂载点下同名 = 同一个登记名 = 互相覆盖（后建的把先建的挤掉，指针也只命中一个）。
 ## 判重看的是**本元素已有的子元素**（配置里的与运行时加的都算），不查登记表：
 ## 建树时父元素自己还没登记，查表反而不准。
+## **不给 `from`**（永远从"基名"试起）⇒ 按当下兄弟名判、**可回收**：`replace_child_element`
+## 那种"摘掉旧的、用同一个名字再造一个"才保得住名字（见 RegSys.unique 的说明）。
 ## 被谁用：_build_children、add_child_element。
 func _unique_child_name(want: String) -> String:
 	var taken: Array[String] = []
 	for child in children:
 		taken.append(child.name)
-	return RegSys.unique(want, taken)
+	return RegSys.unique(want, func(n: String) -> bool: return taken.has(n))
 
 
 ## 子元素挂载点（默认直接挂 control；容器类覆写返回内部布局节点）。
@@ -322,7 +358,7 @@ func _apply_config() -> void:
 ## 重新应用"**只有应用时才生效**"的那几项公共属性：size / font_size / font_color / background。
 ## 与 _apply_config 的差别：**不碰 position**——位置会被拖动这类运行期行为偏离，
 ## 改别的键时不该顺手把窗口拽回配置里那个位置（见 UIBase.refresh 关于 position 的说明）。
-## 被谁用：_apply_config（build 时整份应用）、UIInteract.set_config（编辑器改完 config 让界面跟上）。
+## 被谁用：_apply_config（build 时整份应用）、UI_Editor（编辑器改完 config 让界面跟上，见它改完那几步）。
 func reapply() -> void:
 	if control == null:
 		return          # 已被移除的动态 UI：控件没了，没什么可应用

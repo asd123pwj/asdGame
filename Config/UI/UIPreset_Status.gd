@@ -9,7 +9,7 @@ extends ConfigBase
    ▸ Tick（✔ 满足｜依赖 1 条）       每个状态一段，**默认收起**；标题上的 ✔/✘ 是**实时**的
        满足：✔
        最近消息：（无）
-       auto_reset=false   match_any=false   with_detect=false
+       auto_reset=false   match_any=false   外部检测：瞬时=false 保持型=false
        【时间 依赖：1 条】
          Tick  Advance   → ✔ 触发
 

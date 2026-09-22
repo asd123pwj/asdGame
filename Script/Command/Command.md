@@ -48,7 +48,7 @@
   - `_line_cache`：整串指令 → 拆好的非空行（`split_lines`，UI 事件是同一条串反复发）。
 - `_split_call` / `_is_call_name` / `_is_ident`：认"整行就是一个 `类.方法(…)` 调用"（配对括号必须在行尾）。`_find_top_level_assign`：认参数里的 `名字=值`（跳过可选参数用）。`_split_top_level_args`：按顶层逗号切参数。
 - `read(path)` / `write(path, value)`：按路径读/写（`Utils.read`/`Utils.write`/`Utils.swap` 用它）。两者共用 `_split_path`：整条路径编译成一个表达式计划，`write` 把**最后一步**摘出来当赋值目标（前面那段交给 `_run_expr` 走 ⇒ "kind → 宿主"的分派只有一份）；空路径 / 括号不配平 ⇒ `{}`（read 给 null，write 给 false）。
-- `parse_value(text)`：把一段文本当**一个值**求（数字 / `true` / `"字符串"` / `[数组]`，与命令行参数同一套 `_compile_value` + `_run_arg`）；**算不出给 null，不报错也不打印**。给"编辑器"用：`UIInteract.set_config` 把输入框里的字变成配置值（见 `Script/UI/UI.md` 的"UI 编辑器"）。
+- `parse_value(text)`：把一段文本当**一个值**求（数字 / `true` / `"字符串"` / `[数组]`，与命令行参数同一套 `_compile_value` + `_run_arg`）；**算不出给 null，不报错也不打印**。给"编辑器"用：`UI_Editor` 把输入框里的字变成配置值（见 `Script/UI/UI.md` 的"UI 编辑器"）。
 - `_find_class_script` / `_class_scripts`：类名 → 脚本，懒缓存。
 - `clear_cache()`：清空类脚本、两级缓存与两张小表（热重载/调试）。
 - 供谁调用：CmdSys.execute；以及取值行（`self.xxx`、`Test.int1` 这类）被各配置/UI 复用。

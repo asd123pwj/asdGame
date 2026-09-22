@@ -33,3 +33,18 @@
 `PointerDetect` 只保留一个执行函数 `key(status_name)`，**不再自己监听按键**。
 按键 → `StatusPreset_Pointer` 定义的状态（Pointer Press/Hold/Release、Submit）→ `SystemShortcutPreset_Pointer` 声明"状态满足→执行 `PointerDetect.key "状态名"` 指令"。
 链路：`Msg.listen_key_*`(在 StatusPreset 内) → `send_status_satisfied` → `SystemShortcut` → `Msg.send_cmd("PointerDetect.key \"Pointer Press Left\"")` → UI 按同名事件匹配指令。
+
+## 快捷监控（UI，名称只读、状态与指令可改）
+- 看一个角色装了哪些快捷、每条**依赖哪个状态**、**要跑什么指令**，并**就地改后两样**：
+  `Config/UI/UIPreset_Shortcut.gd`（外壳）+ `Script/UI/UI/UI_Shortcut.gd`（内容元素）。
+- 打开：`UIInteract.open(preset_name="Shortcut")`（默认看 `@Char/SYS`）；
+  换人：`UIInteract.open(preset_name="Shortcut", content_cmd="@Char/人类")` 再点 `[刷新]`（`content_cmd` 优先于 `char`）。
+- 每条快捷一块：**名称**（只读，亮）＋ "依赖状态"输入框 ＋ "执行的指令"输入框（点进去改、回车提交）。
+- **改的是预设**（一个快捷名全项目一份，见 `SystemShortcutPreset._we`）⇒ 所有装了这条快捷的角色都受影响。
+- **指令**：改完立刻生效——触发时是**现读** `config`（`listen` 的闭包里读），不用重听。
+  多条命令在预设里用 `\v` 分隔，输入框**显示成换行**、提交时换回 `\v`（编辑期间回车是提交、插不进换行 ⇒ 往返无损）。
+- **依赖状态**：改完**必须重新监听**（`unlisten` + `listen`，见 `UI_Shortcut._relisten`）——旧的那条
+  `listen_status_satisfied` 不换掉，就等于写了个没人看的字段。清空会被拒绝（那会变成一条永不触发的快捷）。
+- **不做实时**：清单是原型里声明的（装到角色身上就固定），而"快捷加 / 减"的消息**按快捷名分节点**
+  （`listen_shortcut_add(角色, 名字)`），没有"任意快捷"这种通配订阅 ⇒ 运行期加删后点 `[刷新]`。
+- **也不重复显示"依赖状态现在满不满足"**：那是状态一览的活儿（见 `Status/Status.md` 的"角色状态一览"）。

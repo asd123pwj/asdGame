@@ -26,7 +26,9 @@ static func begin_edit(target: UIBase) -> void:
 		push_warning("UIInteract.begin_edit: 「%s」的控件不是输入框（%s），没法编辑"
 			% [ui.name, ui.control.get_class()])
 		return
-	InputSys.edit_ui = ui
+	# 置编辑目标 + 发"正在编辑"那条状态消息**在 InputSys 里成对做**（见 InputSys.begin_edit）：
+	# 于是"编辑中要不要屏蔽某个键 / 回车算不算提交"都能写成状态，输入层不必自己特判。
+	InputSys.begin_edit(ui)
 	ui.control.grab_focus()
 	# 进来就全选：直接打就是替换（单行 LineEdit / 多行 TextEdit 都有 select_all）
 	if ui.control is TextEdit:
@@ -44,4 +46,6 @@ static func end_edit(target: UIBase) -> void:
 	if InputSys.edit_ui != null and InputSys.edit_ui != ui:
 		push_warning("UIInteract.end_edit: 正在编辑的是「%s」，不是「%s」（还是要收掉编辑）"
 			% [InputSys.edit_ui.name, ui.name])
+	# 清编辑 + 发"没在编辑了"也成对在 InputSys 里（见 InputSys.end_edit）：
+	# 这样"点别处"那条路收掉编辑时，状态层同样会收到（以前只有这条命令发，于是状态停在"编辑中"）。
 	InputSys.end_edit()

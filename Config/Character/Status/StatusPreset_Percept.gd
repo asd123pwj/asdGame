@@ -5,6 +5,6 @@ var values: Array[Dictionary] = [
     {   
         "name": "Detect=>Touch",
         "auto_reset": true,
-        "with_detect": true,
+        "with_detect_transient": true,
     }, 
 ]

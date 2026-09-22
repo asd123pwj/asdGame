@@ -76,7 +76,7 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 	#               · 或给一整份字典：`config={...}` / `config=某个静态变量`。
 	#             直接写的键覆盖字典里同名的。
 	#   注意**没有专门的 `content_cmd` 参数**：它就是一个普通配置键（元素自己从 config 里读它，
-	#   见 UIBase.refresh / UI_Editor._target_path / UI_Status._char_path），照「任意配置键」写就行。
+	#   见 UIBase.refresh / UIBase.target_path / UI_Editor._target_path），照「任意配置键」写就行。
 	var extra: Dictionary = {}
 	if config is Dictionary:
 		extra = (config as Dictionary).duplicate(true)

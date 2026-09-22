@@ -80,11 +80,14 @@ static func _process(_delta: float) -> void:
 ## （Script/Auto/Auto.md：挂在状态上，状态满足期间每帧执行指令，不满足自动删）——
 ## 所以不需要"把松开事件送到元素手上"这类捕获机制，指针层也不参与收尾。
 ## 被谁用：状态层 shortcuts 里的 `PointerDetect.key "<状态名>"`（见 Config/Character/Archetype）。
-static func key(status_name: String) -> void:
+## `end_edit`：派发前要不要先把编辑收掉（默认收 = "点了别处就退出编辑"）。
+## **键盘状态（如回车提交）要传 false**：那条规则本来就是给"点击"的，回车不该顺手结束编辑；
+## 更要紧的是它会**提前清掉"正在编辑的是谁"**，让"提交派给输入框"那条派发找不到目标（实测踩过）。
+static func key(status_name: String, end_edit: bool = true) -> void:
 	# "点了别处就退出编辑"：任何一次点击派发都先当作"离开输入框"——
 	# 点到别处自然退出（不会卡在编辑模式）；点回输入框的话，下面那次派发会再进编辑
 	# （输入框配置里那条 `mouseLeft → UIInteract.begin_edit`），所以这里不用先判断点的是谁。
-	if InputSys.edit_ui != null:
+	if end_edit and InputSys.edit_ui != null:
 		InputSys.end_edit()
 	if hover_ui != null:
 		hover_ui.on_event(status_name)

@@ -48,19 +48,17 @@ static func register(obj: Object, want: String, dedup: bool = false) -> String:
 	return reg_name
 
 
-## 在 `base` 名下**占一个号**：没人用过就给 `base`，用过就顺号给 `base_2`、`base_3`…
-## 号从 `_used_count` 取（不必去数登记表里有多少个同类名字），登记表只用来兜底：
-## 万一这个名字被别人手写登记过（没走这条路的），接着往后找。
+## 在 `base` 名下**占一个号**（register 的 dedup 走它）：从"上次发到几号 + 1"接着试，试出来再把号记回计数表。
 ## **号只增不减（不回收）**：名字一旦发出去就一直是"那个东西的名字"——回收的话后来者会顶着旧名字，
 ## 而消息节点 ID 是按名字拼的，顶名就等于串消息（见 MessageHub._format_*）。
+## 为什么用计数表而不去数登记表：登记对象只会越来越多，遍历会随游戏时长越来越慢；查表则与登记总量无关。
+## `_to_obj.has` 只是兜底：万一这个名字被别人手写登记过（没走这条路的），接着往后找。
 ## 被谁用：register（dedup = true）。
 static func _claim(base: String) -> String:
-	var n: int = int(_used_count.get(base, 0))
-	var out: String = base if n == 0 else "%s_%d" % [base, n + 1]
-	while _to_obj.has(out):
-		n += 1
-		out = "%s_%d" % [base, n + 1]
-	_used_count[base] = n + 1
+	var taken: Dictionary = _to_obj     # 先取成本地引用：Dictionary 上 `_to_obj.has` 会被当成"取 has 这个键"
+	var out: String = unique(base, func(n: String) -> bool: return taken.has(n),
+		int(_used_count.get(base, 0)) + 1)
+	_used_count[base] = maxi(int(_used_count.get(base, 0)), _index_of(base, out))
 	return out
 
 
@@ -106,20 +104,40 @@ static func names() -> Array:
 	return _to_obj.keys()
 
 
-## **对着一份"已占清单"去重**：`want` 没在里面就原样还它，在就加后缀 `_2`、`_3`…
-## 与 register 的 dedup 是**同一条后缀规则**，区别只在"已占"从哪来：
-##   · 这里由调用方给清单（`taken`）——UI 建树时父元素**自己还没登记**，不能查登记表，
-##     只能按"已有的兄弟名"判（见 UIBase._unique_child_name）；
-##   · register 的 dedup 走 `_claim`：按**计数表**算号，对象可能成千上万也不遍历（角色走那条）。
-## 被谁用：UIBase._unique_child_name。
-static func unique(want: String, taken: Array) -> String:
+## **取一个没被占用的名字**（名字的后缀规则**只有这一处**，`_claim` 也走它）：
+## `want` 没人用就原样还它，被占了加后缀 `_2`、`_3`…（没重名时不加号：`Char/人类` 不是 `Char/人类_1`）。
+## `taken`：判"这个名字被占了吗"——判据由调用方给，两种来源、同一条规则：
+##   · 登记表：`taken.has(名字)`（角色那条路，见 register 的 dedup，经 `_claim`）；
+##   · 兄弟名：UI 建树时父元素**自己还没登记**，不能查登记表，只能按"已有的兄弟名"判
+##     （见 UIBase._unique_child_name）。
+## `from`：从第几号开始试（默认 1 = 先试基名）。角色那条会传"上次发到几号 + 1" ⇒ **号只增不减**；
+##   UI 那条不传（永远从 1 试起）⇒ 按**当下**兄弟名去重、**可回收**——`UI_Status` 重铺一段就是
+##   "摘掉旧的、用**同一个名字**再造一个"（见 UIBase.replace_child_element），
+##   不回收的话名字会一路涨成 `S_Tick_2`、`S_Tick_3`。
+## 被谁用：_claim（register 的 dedup）、UIBase._unique_child_name。
+static func unique(want: String, taken: Callable, from: int = 1) -> String:
 	var base: String = want if want != "" else "Unnamed"
-	if not taken.has(base):
-		return base
-	var i: int = 2
-	while taken.has("%s_%d" % [base, i]):
+	var i: int = maxi(from, 1)
+	var out: String = _numbered(base, i)
+	while taken.call(out):
 		i += 1
-	return "%s_%d" % [base, i]
+		out = _numbered(base, i)
+	return out
+
+
+## 第 `i` 号叫什么：1 = 基名本身，2、3… = `基名_2`、`基名_3`。**名字长什么样只有这一处**。
+static func _numbered(base: String, i: int) -> String:
+	return base if i <= 1 else "%s_%d" % [base, i]
+
+
+## `name_` 是 `base` 的第几号（`base` = 1、`base_3` = 3）；不是它家的给 0。
+## 给 `_claim` 把"发到几号"记回计数表用（免得"怎么从名字里读号"散在别处）。
+static func _index_of(base: String, name_: String) -> int:
+	if name_ == base:
+		return 1
+	if not name_.begins_with(base + "_"):
+		return 0
+	return int(name_.substr(base.length() + 1))
 
 
 ## 清空三张表（热重载 / 调试用；占名计数也一起清，否则名字会从上次的号接着往下发）。

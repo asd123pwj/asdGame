@@ -19,7 +19,8 @@ static var mouse_position: Vector2 = Vector2.ZERO
 static var mouse_delta: Vector2 = Vector2.ZERO
 ## 正在编辑输入的 UI（**开始编辑时登记**，见 UIInteract_Edit.begin_edit）；null = 没在编辑。
 ## 它本身就是"编辑模式"这个开关（不再另设 bool：两处状态没法保证同步）。
-## 被谁用：_input（编辑中按键不进状态层、只把回车翻成提交事件）、UIInteract_Edit（登记 / 结束）、
+## 被谁用：_input（编辑中**只拦住归输入框自己的键**，其余键照旧进状态层）、
+##         UIInteract_Edit（登记 / 结束，"正在编辑"还会发成一条状态，见 QName.editing）、
 ##         PointerDetect.key（点别处时收掉）。
 static var edit_ui: UIBase = null
 ## 当前按住的键（键值，Godot 常量）。按住期间每帧发 HOLD，松开立刻移出。
@@ -35,20 +36,21 @@ func _init() -> void:
 static func _input(event: InputEvent):
     @warning_ignore_start("unsafe_property_access")
     if event is InputEventKey:
-        # 正在用输入框打字（UI_Input 抢了焦点）：这些键只归它，不再翻译成状态，
-        # 否则打字会顺手触发 UI 指令。
-        if edit_ui != null:
-            # 只有回车往外走：翻成项目自己的事件（QName.input_submit）派给正在编辑的那个输入框。
-            # 为什么在这儿翻：这样"回车提交"就走**唯一输入链路**，UI_Input 不必去连引擎的
-            # text_submitted 信号（全项目不连引擎信号，见 Script/UI/UI.md）。
-            # echo = 按住不放的重复触发，不算提交。
-            if event.pressed and not event.echo and event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
-                # 多行输入框（TextEdit）默认会把回车当"插入换行"——这里显式吃掉这个事件，
-                # 让"回车 = 提交"对单行 / 多行一致（多行的换行只是**显示**上自动换行，见 UI_Input）。
-                Sys.sys.get_viewport().set_input_as_handled()
-                edit_ui.on_event(QName.input_submit)
+        # 按下这一刻在不在编辑（取一次，别读两次：下面的派发可能顺手把编辑收掉）。
+        var editing: bool = edit_ui != null
+        # ① 归**输入框自己**的键（会打字的键 + 方向键 / 退格 / 删除 / Tab…，见 _is_input_only_key）
+        #    ⇒ 不进状态层，就地结束（交给控件自己处理）。
+        if editing and _is_input_only_key(event):
             return
+        # ② 其余键一律**照常发进状态层**——修饰键、功能键、回车都是；
+        #    "要不要响应""这么按算不算提交"全由状态说了算，输入层只如实转发。
         _send_key_status(event.keycode, event.pressed)
+        # ③ 回车再多做一件："这么按算不算提交"（问 `QName.submit`）：算 ⇒ **吃掉这个事件**
+        #    （多行框才不会顺手插一个换行；按着 Shift 不算 ⇒ 不吃 ⇒ 让多行框插换行）。
+        #    顺序不能反：得先把回车发进状态层（`_submit_now` 要结算"回车正按着"）。
+        #    提交本身不在这儿做——状态侧派发 `QName.input_submit`（见 SystemManager.when_submit）。
+        if editing and event.pressed and event.keycode in [KEY_ENTER, KEY_KP_ENTER] and _submit_now():
+            Sys.sys.get_viewport().set_input_as_handled()
     elif event is InputEventMouseButton:
         _send_key_status(event.button_index, event.pressed)
     elif event is InputEventMouseMotion:
@@ -68,14 +70,26 @@ static func _process(_delta: float) -> void:
     _clear_mouse_delta.call_deferred()
 
 
-## 结束编辑：清掉编辑目标，顺手把控件焦点也放掉（提交/被关掉那条路走过来时它还持有焦点）。
-## 谁在编辑是 InputSys 的状态（按键翻译的开关就在 _input 里），所以"结束"也归这里——
-## 放在 PointerDetect 里就要伸手改别的系统的状态，反而更绕。
-## 被谁用：PointerDetect.key（点别处，见它开头那两行）、UIInteract_Edit.end_edit（指令）。
+## 开始编辑：置上编辑目标 + 告诉状态层"正在编辑"（`QName.editing` 那条**保持型**外部检测）。
+## **两件事必须成对**（少发那条消息，配置里"编辑中要屏蔽谁""回车算不算提交"就全失效），所以都放这儿，
+## 别在别处自己赋 `edit_ui`。抢焦点 / 全选是 UI 那边的活，由 `UIInteract_Edit.begin_edit` 接着做。
+## 被谁用：UIInteract_Edit.begin_edit。
+static func begin_edit(ui: UIBase) -> void:
+    edit_ui = ui
+    Msg.send_status_detected_manual(Sys.sys_status, QName.editing)
+
+
+## 结束编辑：清掉编辑目标 + 放掉控件焦点 + 告诉状态层"没在编辑了"。
+## **任何路径收编辑都得走这里**：`UIInteract.end_edit` 命令、以及"点别处"（PointerDetect.key 开头那两行）。
+## 以前只有命令那条路发了状态消息 ⇒ "点别处"收掉编辑时状态层还停在"编辑中"（实测踩过）。
+## 被谁用：UIInteract_Edit.end_edit、PointerDetect.key。
 static func end_edit() -> void:
-    if edit_ui != null and edit_ui.control != null:
+    if edit_ui == null:
+        return                      # 本来就没在编辑：什么都不做（别白发一条"没在编辑了"）
+    if edit_ui.control != null:
         edit_ui.control.release_focus()
     edit_ui = null
+    Msg.send_status_undetected_manual(Sys.sys_status, QName.editing)
 
 
 ## 帧末结算：清空本帧累计的指针位移，供下一帧重新累计（指针不动则下一帧即 (0,0)，不会漂）。
@@ -85,6 +99,48 @@ static func end_edit() -> void:
 ## 被谁用：_process（deferred）。
 static func _clear_mouse_delta() -> void:
     mouse_delta = Vector2.ZERO
+
+## 编辑中**只归输入框、不进状态层**的"操作键"：方向键 + 退格 / 删除 / Tab。
+## 方向键要在这儿拦下来，是因为**输入框用的是内置的方向键**（移动光标），不是我们的
+## `QName.left / right / up / down` 方向状态——放过去的话，打字时按方向键会顺手触发走路 / 开菜单。
+## 退格 / 删除 / Tab 同理（"改字"归输入框，"打字"的 `unicode > 0` 已经覆盖了，这三个得显式列）。
+## **不含** Home / End / PageUp / PageDown：那是"跳行首 / 翻屏"这类**浏览用键**，本项目的框又小又短，
+## 用不上；不列在这里 ⇒ 它们照常进状态层（将来想拿它们绑别的状态也不会被输入框抢走）。
+## **回车也不在表里**：它照常进状态层，提交与否由状态说了算（见 _input）。
+## 被谁用：_input（编辑中那一支）。
+const INPUT_ONLY_KEYS: Array[int] = [
+    KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN,
+    KEY_BACKSPACE, KEY_DELETE, KEY_TAB,
+]
+
+
+## 这个键是不是"归输入框自己"（编辑中要拦住、不进状态层）：操作键（上面那张表）+ 会打字的键。
+## 会打字的判据用 `unicode > 0`：字母 / 数字 / 标点 / 空格 / 输入法都自动覆盖；
+## 而修饰键 / 功能键 / 其它系统键的 unicode 是 0 ⇒ 自然放行（它们照旧进状态层）。
+## 被谁用：_input（编辑中那一支）。
+static func _is_input_only_key(event: InputEventKey) -> bool:
+    if event.keycode in INPUT_ONLY_KEYS:
+        return true
+    return event.unicode > 0
+
+
+## 这一次回车**算不算提交**：**问你配的那个状态** `QName.submit`（= 回车 ∧ 没按 Shift，见 Archetype_System）。
+## 为什么要"当场"问：控件是在**事件传播**里就插换行的，而 HOLD 类状态本来是 `Sys._process` 逐帧发的 ⇒
+## 先把当前按住的键补一次 HOLD（把状态**结算到当下**，含刚按下的回车与按着的 Shift），再读结论；
+## 不结算的话"Shift+回车"会被当成普通回车（实测踩过）。
+## 没配这个状态（换一套配置 / SYS 还没建）⇒ 返回 false = **不吃**：回车就是普通回车（多行插换行），
+## 不至于被静默吞掉又什么都不发生。
+## **这里只判"要不要吃掉事件"，不派发提交**——派发在状态侧（`SystemManager.when_submit`），
+## 所以"提交是什么"仍旧只由配置说了算。
+## 被谁用：_input（编辑中按回车那一支）。
+static func _submit_now() -> bool:
+    for key in keys_holding:
+        Msg.send_key_hold(key)
+    var char_: Character = Sys.sys_status
+    if char_ == null or char_.statuses == null or not char_.statuses.check_exist(QName.submit):
+        return false
+    return char_.statuses.check_satisfied(QName.submit)
+
 
 ## 按下 → 记进 keys_holding 并发 PRESS；松开 → 移出并发 RELEASE。
 ## 被谁用：_input。

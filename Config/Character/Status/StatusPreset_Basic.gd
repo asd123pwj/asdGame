@@ -31,8 +31,9 @@ time: Array[Array[ListenType]]=[]
     name: Year, Month, Xun, Day, Hour
     condition: Advance
 
-with_detect: bool=false
-    为true时，需要send_status_detected发送信号来检测，
+with_detect_transient: bool=false
+with_detect_manual: bool=false
+    为 true 时，需要 Msg.send_status_detected_transient / send_status_detected_manual 发消息来检测（瞬时 / 保持型两种），
 """
 
 var values: Array[Dictionary] = [

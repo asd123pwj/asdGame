@@ -29,7 +29,12 @@ var values: Array[Dictionary] = [
             {"name": QName.up, "match_any": true, "keys": [[KEY_UP, Enums.KeyStatus.HOLD], [KEY_W, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.left, "match_any": true, "keys": [[KEY_LEFT, Enums.KeyStatus.HOLD], [KEY_A, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.down, "match_any": true, "keys": [[KEY_DOWN, Enums.KeyStatus.HOLD], [KEY_S, Enums.KeyStatus.HOLD]],},
-            {"name": QName.submit, "match_any": true, "keys": [[KEY_ENTER, Enums.KeyStatus.HOLD], [KEY_KP_ENTER, Enums.KeyStatus.HOLD]],},
+            {"name": QName.submit, "statuses": [[QName.submit_on_what_keys, "Satisfied"], [QName.shift, "Unsatisfied"]],},
+            {"name": QName.submit_on_what_keys, "match_any": true, "keys": [[KEY_ENTER, Enums.KeyStatus.HOLD], [KEY_KP_ENTER, Enums.KeyStatus.HOLD]],},
+            {"name": QName.shift, "keys": [[KEY_SHIFT, Enums.KeyStatus.HOLD]],},
+            # 编辑模式：进 / 出输入框编辑时由 UIInteract_Edit 手动开 / 关（**保持型**外部检测，不会自己复位）。
+            # 于是"编辑中要屏蔽谁 / 回车算不算提交 / 菜单快捷键要不要让路"都能写成状态。
+            {"name": QName.editing, "with_detect_manual": true},
             # 测试用：J / K 开关两个测试 UI（见 Config/UI/UIPreset_Test.gd）
             # 用 PRESS 而不是 HOLD：HOLD 每帧都满足（开关会被按帧反复切），PRESS 只在按下的那一下满足
             {"name": QName.key_j, "keys": [[KEY_J, Enums.KeyStatus.PRESS]],},
@@ -45,7 +50,10 @@ var values: Array[Dictionary] = [
             # ["Pointer Refresh", QName.tick, "PointerDetect._process"],
             # 统一入口 PointerDetect.key("状态名")：状态名 = 上面 statuses 的 name，也是 UI 侧 config["events"] 的事件名。
             # 指令串用 %s 模板拼（别用 + 拼引号，容易把两头的引号写丢）
-            [QName.submit, QName.submit, 'PointerDetect.key("%s")' % QName.submit],
+            # 回车提交这一条**不收编辑**（第二个参数 false）："点别处退出编辑"是给点击的规则，
+            # 回车不该顺手结束编辑（提交链自己会 `UIInteract.end_edit`）；更要紧的是
+            # 提前清掉 edit_ui 会让"提交派给正在编辑的输入框"落空（见 SystemManager.when_submit）。
+            [QName.submit, QName.submit, 'PointerDetect.key("%s", false)' % QName.submit],
             # [QName.mouseLeft_press, QName.mouseLeft_press, 'PointerDetect.key("%s")' % QName.mouseLeft_press],
             [QName.mouseLeft, QName.mouseLeft, 'PointerDetect.key("%s")' % QName.mouseLeft],
             # [QName.mouseLeft_release, QName.mouseLeft_release, 'PointerDetect.key("%s")' % QName.mouseLeft_release],

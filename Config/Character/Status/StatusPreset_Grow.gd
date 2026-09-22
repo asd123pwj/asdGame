@@ -5,16 +5,16 @@ var values: Array[Dictionary] = [
     {
         "name": "Detect=>Practice",
         "auto_reset": true,
-        "with_detect": true,
+        "with_detect_transient": true,
     },
     {
         "name": "Detect=>Grow",
         "auto_reset": true,
-        "with_detect": true,
+        "with_detect_transient": true,
     },
     {
         "name": "Detect=>Nourish",
         "auto_reset": true,
-        "with_detect": true,
+        "with_detect_transient": true,
     }
 ]

@@ -12,12 +12,12 @@ var values: Array[Dictionary] = [
     {
         "name": "Detect=>Healable",
         "auto_reset": true,
-        "with_detect": true,
+        "with_detect_transient": true,
     },
     {   
         "name": "Detect=>CostHeal",
         "auto_reset": true,
-        "with_detect": true,
+        "with_detect_transient": true,
     },
     {
         "name": "Rebirth",

@@ -5,6 +5,6 @@ var values: Array[Dictionary] = [
     {   
         "name": "Detect=>Edible",
         "auto_reset": true,
-        "with_detect": true,
+        "with_detect_transient": true,
     },
 ]

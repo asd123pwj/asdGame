@@ -54,7 +54,7 @@ func listen(char_: Character) -> void:
     var trigger_func = func (_msg) -> void:
         # 之前想着以_msg作为target，结果发现status监听不到target，_msg不可能是target
         # 所以改为了去读取target，
-        # var target = Msg.get_status_detected(char_, dependence_status)
+        # var target = Msg.get_status_detected_transient(char_, dependence_status)
         # 我比天才更天才，谁说status不能监听target了
         var target = char_.statuses.get_latest_message(dependence_status)
         @warning_ignore("unsafe_method_access")

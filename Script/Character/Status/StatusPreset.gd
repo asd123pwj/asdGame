@@ -24,10 +24,18 @@ var _key_listeners: Array[ListenType] = []
 var _key_triggers: Dictionary[Character, Dictionary] = {}
 var _time_listeners: Array[ListenType] = []
 var _time_triggers: Dictionary[Character, Dictionary] = {}
-## 是否额外接受外部检测信号（Msg.send_status_detected）。被谁用：listen（登记）、execute（并入判定）。
-var with_detect: bool
-## 每个角色当前的"外部检测"触发情况。被谁用：listen、execute、unlisten。
-var _detect_triggers: Dictionary[Character, bool] = {}
+## 是否接受**瞬时**外部检测信号（`Msg.send_status_detected_transient`）：收到就"亮一下"再自动灭掉。
+## 适合"某件事发生了一下"（碰撞进入、受击一次、某个检测命中一次…）。
+## 被谁用：listen（登记）、execute（并入判定）。
+var with_detect_transient: bool
+## 每个角色当前的"瞬时外部检测"触发情况（收到 → true → execute → false → execute）。被谁用：listen、execute、unlisten。
+var _detect_transient_triggers: Dictionary[Character, bool] = {}
+## 是否接受**保持型（非瞬时）**外部检测信号：`Msg.send_status_detected_manual` 开 / `..._undetected_manual` 关，
+## **手动开、手动关**，不会自己复位——适合"一段状态"（如"正在编辑输入框"，见 QName.editing）。
+## 被谁用：listen（登记）、execute（并入判定）。
+var with_detect_manual: bool
+## 每个角色当前的"保持型外部检测"触发情况。被谁用：listen、execute、unlisten。
+var _detect_manual_triggers: Dictionary[Character, bool] = {}
 
 ## 上面六组触发器字典的列表（execute 统一遍历，顺序要与上面声明一致）。
 ## 被谁用：execute、unlisten。
@@ -39,7 +47,7 @@ var satisfied: Dictionary[Character, bool] = {}
 ## 触发器触发时，记录触发器收到的消息
 ## 暂时我觉得它仅用于单个监听器的状态，因为多个监听器会相互覆盖消息
 ## 一种用法是AnyChanged记录变化的属性，然后用该状态触发SayChanged，用SayChanged打印被改变的属性
-## 一种用法是with_detect记录碰撞体进入，用该状态触发Touch，然后Attack得知碰撞体消息
+## 一种用法是 `with_detect_transient` 记录碰撞体进入，用该状态触发 Touch，然后 Attack 得知碰撞体消息
 ## 被谁用：Statuses.get_latest_message、InteractionPreset.listen（取交互对象）。
 var latest_message: Dictionary[Character, Variant] = {}
 ## 仅用于unlisten时取消对应消息接收器
@@ -65,7 +73,8 @@ static var _we: Dictionary[String, StatusPreset] = {}
 ##       （指针类事件不进状态层：Pointer Enter / Exit / Move 由 PointerDetect._process 直接派发给 UI）
 ## time: name支持Year, Month, Xun, Aay, Hour, Tick
 ##       condition支持Advance
-## with_detect: 使用外部检测信号，用send_status_detected发送
+## with_detect_transient: 接受**瞬时**外部检测（send_status_detected_transient：亮一下就自动灭）
+## with_detect_manual:    接受**保持型**外部检测（send_status_detected_manual 开 / send_status_undetected_manual 关）
 ## cfgs为嵌套列表[[配置1],[配置2]]
 ## 注册一条状态预设：把配置里各监听段（attrs/buffs/statuses/interactions/keys/time）解析成 ListenType 列表。
 ## 被谁用：PresetRegister 的注册流程、Archetype 内联配置。
@@ -86,8 +95,8 @@ func _init(config: Dictionary) -> void:
         self._key_listeners.append(ListenType.new.callv(cfg))
     for cfg in Utils.find_dict(config, ["time"], []):
         self._time_listeners.append(ListenType.new.callv(cfg))
-    self.with_detect = Utils.find_dict(config, ["with_detect"], false)
-
+    self.with_detect_transient = Utils.find_dict(config, ["with_detect_transient"], false)
+    self.with_detect_manual = Utils.find_dict(config, ["with_detect_manual"], false)
 ## 按名取预设。被谁用：Statuses.add_status、本类"等某状态添加"的监听回调。
 static func get_(name: String) -> StatusPreset:
     return _we[name]
@@ -120,9 +129,9 @@ func listen(char_: Character) -> void:
             trigger_func = func(_msg): 
                 # Changed是瞬时事件，触发后直接重置
                 latest_message[char_] = _msg
-                self._attr_triggers[char_][listener.name] = true
+                _set_trigger(char_, _attr_triggers, listener.name, true)
                 execute(char_)
-                self._attr_triggers[char_][listener.name] = false
+                _set_trigger(char_, _attr_triggers, listener.name, false)
                 execute(char_)
             msg_ID = Msg.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -133,7 +142,7 @@ func listen(char_: Character) -> void:
             # 同样是两个监听器，上面用于监控值变化，下面用于监控type被移除
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
-                self._attr_triggers[char_][listener.name] = char_.attrs.check_limitation(listener.name) == (listener.match_type == "Within Limit")
+                _set_trigger(char_, _attr_triggers, listener.name, char_.attrs.check_limitation(listener.name) == (listener.match_type == "Within Limit"))
                 execute(char_)
             msg_ID = Msg.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -146,7 +155,7 @@ func listen(char_: Character) -> void:
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
                 var level_cur = char_.attrs.get_(listener.name)
-                self._attr_triggers[char_][listener.name] = listener.check(level_cur)
+                _set_trigger(char_, _attr_triggers, listener.name, listener.check(level_cur))
                 execute(char_)
             msg_ID = Msg.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -188,7 +197,7 @@ func listen(char_: Character) -> void:
                 elif listener.match_type.ends_with("/"):
                     b_ /= listener.thres
                 @warning_ignore_restore("unsafe_method_access")
-                self._attr_triggers[char_][listener.name] = listener.check(cur_, b_)
+                _set_trigger(char_, _attr_triggers, listener.name, listener.check(cur_, b_))
                 execute(char_)
             msg_ID = Msg.listen_attr_changed(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -200,9 +209,9 @@ func listen(char_: Character) -> void:
             trigger_func = func(_msg): 
                 # AnyChanged是瞬时事件，触发后直接重置
                 latest_message[char_] = _msg
-                self._attr_triggers[char_][listener.name] = true
+                _set_trigger(char_, _attr_triggers, listener.name, true)
                 execute(char_)
-                self._attr_triggers[char_][listener.name] = false
+                _set_trigger(char_, _attr_triggers, listener.name, false)
                 execute(char_)
             msg_ID = Msg.listen_any_attr_changed(char_, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -221,7 +230,7 @@ func listen(char_: Character) -> void:
             # 两个叠加的监听器用于实时监控。
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
-                self._buff_triggers[char_][listener.name] = isPresent
+                _set_trigger(char_, _buff_triggers, listener.name, isPresent)
                 execute(char_)
             msg_ID = Msg.listen_buff_add(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -229,7 +238,7 @@ func listen(char_: Character) -> void:
 
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
-                self._buff_triggers[char_][listener.name] = !isPresent
+                _set_trigger(char_, _buff_triggers, listener.name, !isPresent)
                 execute(char_)
             msg_ID = Msg.listen_buff_remove(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -258,7 +267,7 @@ func listen(char_: Character) -> void:
             else:
                 trigger_func = func(_msg): 
                     latest_message[char_] = _msg
-                    _status_triggers[char_][listener.name] = (isSatisfied == get_(status_name_).satisfied.get(target, false))
+                    _set_trigger(char_, _status_triggers, listener.name, (isSatisfied == get_(status_name_).satisfied.get(target, false)))
                     execute(char_)
                 msg_ID = Msg.listen_status_add(char_, listener.name, trigger_func)
                 _trigger_funcs[char_][msg_ID] = trigger_func
@@ -266,14 +275,14 @@ func listen(char_: Character) -> void:
             # 两个叠加的监听器用于实时监控。
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
-                self._status_triggers[char_][listener.name] = isSatisfied
+                _set_trigger(char_, _status_triggers, listener.name, isSatisfied)
                 execute(char_)
             msg_ID = Msg.listen_status_satisfied(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
-                self._status_triggers[char_][listener.name] = !isSatisfied
+                _set_trigger(char_, _status_triggers, listener.name, !isSatisfied)
                 execute(char_)
             msg_ID = Msg.listen_status_unsatisfied(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -294,14 +303,14 @@ func listen(char_: Character) -> void:
             # 两个叠加的监听器用于实时监控。
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
-                _interaction_triggers[char_][listener.name] = isPresent
+                _set_trigger(char_, _interaction_triggers, listener.name, isPresent)
                 execute(char_)
             msg_ID = Msg.listen_interaction_add(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
-                _interaction_triggers[char_][listener.name] = !isPresent
+                _set_trigger(char_, _interaction_triggers, listener.name, !isPresent)
                 execute(char_)
             msg_ID = Msg.listen_interaction_remove(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -312,16 +321,16 @@ func listen(char_: Character) -> void:
             trigger_func = func(_msg): 
                 # 瞬时事件触发后重置
                 latest_message[char_] = _msg
-                self._interaction_triggers[char_][listener.name] = true
+                _set_trigger(char_, _interaction_triggers, listener.name, true)
                 execute(char_)
-                self._interaction_triggers[char_][listener.name] = false
+                _set_trigger(char_, _interaction_triggers, listener.name, false)
                 execute(char_)
             msg_ID = Msg.listen_interaction_act(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
 
             trigger_func = func(_msg): 
                 latest_message[char_] = _msg
-                self._interaction_triggers[char_][listener.name] = false;
+                _set_trigger(char_, _interaction_triggers, listener.name, false)
                 execute(char_)
             msg_ID = Msg.listen_interaction_remove(char_, listener.name, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -341,14 +350,14 @@ func listen(char_: Character) -> void:
             # 按键为单帧触发，因此不需要监听当前按键，我猜是这样
             trigger_func = func(_msg):
                 latest_message[char_] = _msg
-                _key_triggers[char_][listener.name] = true
+                _set_trigger(char_, _key_triggers, listener.name, true)
                 execute(char_)
             msg_ID = Msg.listen_key_hold(key_internal, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
             
             trigger_func = func(_msg):
                 latest_message[char_] = _msg
-                _key_triggers[char_][listener.name] = false
+                _set_trigger(char_, _key_triggers, listener.name, false)
                 execute(char_)
             msg_ID = Msg.listen_key_release(key_internal, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -357,9 +366,9 @@ func listen(char_: Character) -> void:
             # first down必然是瞬时事件，所以触发后直接重置
             trigger_func = func(_msg):
                 latest_message[char_] = _msg
-                _key_triggers[char_][listener.name] = true
+                _set_trigger(char_, _key_triggers, listener.name, true)
                 execute(char_)
-                _key_triggers[char_][listener.name] = false
+                _set_trigger(char_, _key_triggers, listener.name, false)
                 execute(char_)
             msg_ID = Msg.listen_key_press(key_internal, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -368,9 +377,9 @@ func listen(char_: Character) -> void:
             # first up必然是瞬时事件，所以触发后直接重置
             trigger_func = func(_msg):
                 latest_message[char_] = _msg
-                _key_triggers[char_][listener.name] = true
+                _set_trigger(char_, _key_triggers, listener.name, true)
                 execute(char_)
-                _key_triggers[char_][listener.name] = false
+                _set_trigger(char_, _key_triggers, listener.name, false)
                 execute(char_)
             msg_ID = Msg.listen_key_release(key_internal, trigger_func)
             _trigger_funcs[char_][msg_ID] = trigger_func
@@ -387,9 +396,9 @@ func listen(char_: Character) -> void:
             trigger_func = func(_msg):
                 # 瞬时事件触发后重置
                 latest_message[char_] = _msg
-                _time_triggers[char_][listener.name] = true
+                _set_trigger(char_, _time_triggers, listener.name, true)
                 execute(char_)
-                _time_triggers[char_][listener.name] = false
+                _set_trigger(char_, _time_triggers, listener.name, false)
                 execute(char_)
             if listener.name == "Year":
                 msg_ID = Msg.listen_advance_year(trigger_func)
@@ -413,24 +422,35 @@ func listen(char_: Character) -> void:
         
 
     # ----- 外部信号记录 -----
-    if with_detect:
-        # 外部检测信号
+    # 瞬时那种：亮一下（true → execute → false → execute），自己复位
+    if with_detect_transient:
         trigger_func = func(_msg): 
-            # 瞬时事件触发后重置
             latest_message[char_] = _msg
-            self._detect_triggers[char_] = true
+            self._detect_transient_triggers[char_] = true
             execute(char_)
-            self._detect_triggers[char_] = false
+            self._detect_transient_triggers[char_] = false
             execute(char_)
-        msg_ID = Msg.listen_status_detected(char_, name, trigger_func)
+        msg_ID = Msg.listen_status_detected_transient(char_, name, trigger_func)
         _trigger_funcs[char_][msg_ID] = trigger_func
-        # 外部检测丢失信号
-        # trigger_func = func(_msg):
-        #     self._detect_triggers[char_] = false
-        #     execute(char_)
-        # msg_ID = Msg.listen_status_undetected(char_, name, trigger_func)
-        # 默认未启用
-        _detect_triggers[char_] = false
+        _detect_transient_triggers[char_] = false
+
+    # 保持型那种：**手动开、手动关**，两条消息各管一头，中间一直是 true
+    # （"正在编辑输入框"这类"一段状态"就靠它；见 UIInteract_Edit 发的那两条）
+    if with_detect_manual:
+        trigger_func = func(_msg):
+            latest_message[char_] = _msg
+            self._detect_manual_triggers[char_] = true
+            execute(char_)
+        msg_ID = Msg.listen_status_detected_manual(char_, name, trigger_func)
+        _trigger_funcs[char_][msg_ID] = trigger_func
+
+        trigger_func = func(_msg):
+            latest_message[char_] = _msg
+            self._detect_manual_triggers[char_] = false
+            execute(char_)
+        msg_ID = Msg.listen_status_undetected_manual(char_, name, trigger_func)
+        _trigger_funcs[char_][msg_ID] = trigger_func
+        _detect_manual_triggers[char_] = false
 
 
 
@@ -453,8 +473,24 @@ func unlisten(char_: Character) -> void:
     latest_message.erase(char_)
     for triggers in _triggers:
         triggers.erase(char_)
+    # 两种外部检测的记录也一起清（它们不在 _triggers 那张表里，见文件头）
+    _detect_transient_triggers.erase(char_)
+    _detect_manual_triggers.erase(char_)
 
-## 重新汇总该角色是否满足并广播：match_any 决定"任一/全部"，with_detect 并入外部检测，
+## 写一条"触发情况"，并在**值真的变了**时广播一条"依赖变化"消息（`Msg.send_status_trigger_changed`）。
+## 为什么不放在 execute 里广播：execute 只知道"满足没满足"，不知道是**哪条依赖**变了；而依赖变了往往
+## **不改 satisfied**（只按 Shift、没按回车 ⇒ Submit 仍不满足）⇒ 只听 satisfied/unsatisfied 的收不到
+## （"看状态的 UI 里 Submit 段不跟着 Shift 变"就是这么来的）。只在变化时发 ⇒ HOLD 每帧写同一值不会刷消息。
+## 被谁用：listen 里各监听回调（写触发值一律走它）。
+## `dep` 用 Variant 不写 String：**按键**那组的"依赖名"是键码（`KEY_SHIFT` 这种 int），不是字符串。
+func _set_trigger(char_: Character, triggers: Dictionary, dep: Variant, value: bool) -> void:
+    if triggers[char_].get(dep, false) == value:
+        return
+    triggers[char_][dep] = value
+    Msg.send_status_trigger_changed(char_, name, dep, value)
+
+
+## 重新汇总该角色是否满足并广播：match_any 决定"任一/全部"，两种外部检测（瞬时 / 保持型）也并入，
 ## force 用于初始化时强制广播（哪怕没变化）。返回汇总后的满足情况。
 ## 被谁用：listen 的各监听回调、char_init_done、需要主动重算时。
 func execute(char_: Character, force: bool = false) -> bool:
@@ -468,9 +504,10 @@ func execute(char_: Character, force: bool = false) -> bool:
             if triggers[char_][key] == match_any:
                 satisfied[char_] = match_any
                 break
-    if with_detect:
-        if _detect_triggers[char_] == match_any:
-            satisfied[char_] = match_any
+    if with_detect_transient and _detect_transient_triggers[char_] == match_any:
+        satisfied[char_] = match_any
+    if with_detect_manual and _detect_manual_triggers[char_] == match_any:
+        satisfied[char_] = match_any
     
     if satisfied[char_] and (not enabled_ori or force):
         Msg.send_status_satisfied(char_, self.name)

@@ -10,7 +10,9 @@ extends BaseClass
 static var pointer_move := "Pointer Move"       # 指针移动（不是状态，由 PointerDetect 直接派发）
 static var pointer_enter := "Pointer Enter"     # hover 进入（同上）
 static var pointer_exit := "Pointer Exit"       # hover 离开（同上）
-static var input_submit := "Input Submit"       # 输入框回车提交（编辑中按回车由 InputSys 派发；框里文字用 @self.control.text 读）
+static var input_submit := "Input Submit"       # 输入框回车提交（编辑中按回车照常进状态链，QName.submit 满足时由状态侧派发；框里文字用 @self.control.text 读）
+static var editing := "Editing"                 # "正在编辑输入框"：由 UIInteract_Edit 手动开 / 关的**保持型**外部检测
+                                                # （状态里配 with_detect_manual，见 StatusPreset 与 UIInteract_Edit）
 static var mouseLeft_press := "Mouse Left | Press"
 static var mouseLeft := "Mouse Left"
 static var mouseLeft_tick := "Mouse Left | Tick"
@@ -20,7 +22,9 @@ static var right := "Right"
 static var up := "Up"
 static var left := "Left"
 static var down := "Down"
+static var shift := "Shift"
 static var submit := "Submit"
+static var submit_on_what_keys := "Submit on What Keys"
 static var key_j := "Key J"                     # 测试用：开关"显示"测试 UI
 static var key_k := "Key K"                     # 测试用：开关"输入"测试 UI
 

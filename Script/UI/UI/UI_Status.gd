@@ -10,13 +10,11 @@ extends UI_Panel
 ##   ⇒ 所以要看到"某个角色的状态"，必须把两半拼起来：**声明从预设读，现状一律按名字取那个角色的那一份**
 ##      （`preset._attr_triggers[char_]` 这种）。只读预设会把所有角色混在一起，只读 `Statuses` 又看不到依赖与触发真值。
 ##
-## **看哪个角色**（按顺序找）：
-##   1. UI 通用的**查看项** `content_cmd`（自己的，或外壳上写的）——于是任何一次 open 都能指定：
-##      `UIInteract.open(preset_name="Status", content_cmd="@Char/人类")`；
-##   2. 本元素 config 的 `char`（预设里写的默认，指令路径/引用如 `"@Char/SYS"`，**要带 `@`**）；
-##   3. 都取不到 ⇒ 铺一行红字说清该写什么（不猜、不默认到某个角色）。
-## `content_cmd` 优先（它是"**这一次**想看谁"，`char` 是"没指定时看谁"）；取角色就是
-## `CommandParser.read(路径)`（只读，不改任何东西）。
+## **看哪个角色**：走 `UIBase.target_path("char")`（这规矩只有那一处实现）——查看项 `content_cmd`
+## （自己的，或外壳上写的，于是任何一次 open 都能指定：
+## `UIInteract.open(preset_name="Status", content_cmd="@Char/人类")`）优先，
+## 其次本元素 config 的 `char`（预设里写的默认，如 `"@Char/SYS"`，**要带 `@`**）；
+## 都给不出 ⇒ `target_object("char")` 得到 null，铺一行红字说清该写什么（不猜、不默认到某个角色）。
 ##
 ## **实时**：订阅被看角色**每个状态**的 `satisfied` / `unsatisfied`（`Msg.listen_status_satisfied/unsatisfied`），
 ## 收到就**只重铺那一段**（其它段不动、收起还是收起）⇒ 标题上的 ✔/✘ 与段里的行当场跟着变。
@@ -86,7 +84,7 @@ func reload() -> void:
 		return                       # 已经被关了 / 被移除了（延迟调用可能晚到）
 	clear_children()
 	_secs.clear()
-	_path_shown = _char_path()
+	_path_shown = target_path("char")
 	_fill()
 
 
@@ -96,7 +94,7 @@ func reload() -> void:
 ## 只 refresh 外壳，不会自动传到 Body 元素上（要传得靠上面那两条路）。
 func refresh(key: String = "") -> void:
 	super.refresh(key)
-	if _built and control != null and _char_path() != _path_shown:
+	if _built and control != null and target_path("char") != _path_shown:
 		reload()
 
 
@@ -106,17 +104,17 @@ func _fill() -> void:
 		return                       # 这一帧里已经被关了 / 被移除了（延迟调用可能晚到）
 	_unlisten_all()                  # 重铺 = 先全退，末尾按"开着没开"再订（见 sync_listening）
 	add_child_element("Where", "UI_Label", {
-		"content": "角色状态：%s" % _char_path(),
+		"content": "角色状态：%s" % target_path("char"),
 		"font_color": Color(0.62, 0.68, 0.78),
 	})
 	add_child_element("Reload", "UI_Label", {
 		"content": "[刷新]（重读 + 重订）",
 		"events": [[QName.mouseLeft, "@self.parent.reload()"]],
 	})
-	var char_: Character = _character()
+	var char_: Character = target_object("char") as Character
 	if char_ == null:
 		add_child_element("None", "UI_Label", {
-			"content": "找不到角色「%s」——写 char=\"@Char/SYS\" 这种注册名（指令路径）" % _char_path(),
+			"content": "找不到角色「%s」——写 char=\"@Char/SYS\" 这种注册名（指令路径）" % target_path("char"),
 			"font_color": Color(0.85, 0.55, 0.55),
 		})
 		return
@@ -144,7 +142,7 @@ func _fill() -> void:
 ## 而"隐藏"与"被关掉"是两回事。
 ## 被谁用：on_shown、on_hidden、_fill 末尾、以及需要重算的地方。
 func sync_listening() -> void:
-	var char_: Character = _character()
+	var char_: Character = target_object("char") as Character
 	if not _shown or char_ == null or char_.statuses == null:
 		_unlisten_all()
 		return
@@ -153,7 +151,12 @@ func sync_listening() -> void:
 		_subscribe(char_, str(status_name))
 
 
-## 订阅一个状态的"满足 / 解除"两条消息（回调里就地重铺那一段）。
+## 订阅一个状态的全部"会变的东西"（回调里就地重铺那一段）。订四~六条：
+##   · `satisfied` / `unsatisfied`：状态**汇总结果**变了（段标题的 ✔/✘ 靠它）；
+##   · `trigger_changed`（`Msg.listen_status_trigger_changed`）：状态**内部某条依赖**的触发情况变了——
+##     **这条不能省**：依赖变了往往不改 satisfied（只按 Shift、没按回车 ⇒ Submit 仍不满足），
+##     只听前两条的话"段里那些依赖行"会一直是旧值（实测就是这个现象）；
+##   · 两种外部检测（按预设声明订）：瞬时 / 保持型的亮灭同样不一定改 satisfied。
 ## 用 lambda 而**不用 `Callable.bind`**：Callable 的 == 不比较绑定参数，退订时摘不掉
 ## （同 AutoSys._index_of 踩的那个坑）；lambda 不带绑定参数 ⇒ 同一个实例传回去就能摘掉（_subs 里存的正是它）。
 func _subscribe(char_: Character, status_name: String) -> void:
@@ -161,6 +164,19 @@ func _subscribe(char_: Character, status_name: String) -> void:
 	_subs.append([Msg.listen_status_satisfied(char_, status_name, on_hit), on_hit])
 	var on_lost: Callable = func(_msg): _on_status_changed(status_name)
 	_subs.append([Msg.listen_status_unsatisfied(char_, status_name, on_lost), on_lost])
+	var on_dep: Callable = func(_msg): _on_status_changed(status_name)
+	_subs.append([Msg.listen_status_trigger_changed(char_, status_name, on_dep), on_dep])
+	var preset: StatusPreset = char_.statuses.statuses.get(status_name)
+	if preset == null:
+		return
+	if preset.with_detect_transient:
+		var on_t: Callable = func(_msg): _on_status_changed(status_name)
+		_subs.append([Msg.listen_status_detected_transient(char_, status_name, on_t), on_t])
+	if preset.with_detect_manual:
+		var on_m: Callable = func(_msg): _on_status_changed(status_name)
+		_subs.append([Msg.listen_status_detected_manual(char_, status_name, on_m), on_m])
+		var on_u: Callable = func(_msg): _on_status_changed(status_name)
+		_subs.append([Msg.listen_status_undetected_manual(char_, status_name, on_u), on_u])
 
 
 ## 退掉所有订阅（幂等；空表也安全）。
@@ -181,7 +197,7 @@ func _on_status_changed(status_name: String) -> void:
 ## 重铺一段：老段（连同它的行）摘掉，按现在的数据**在原地**再造一段；`open_` = 保持它原来展开着。
 ## 被谁用：_on_status_changed。
 func _rebuild_section(status_name: String, open_: bool) -> void:
-	var char_: Character = _character()
+	var char_: Character = target_object("char") as Character
 	if char_ == null or char_.statuses == null:
 		return
 	var preset: StatusPreset = char_.statuses.statuses.get(status_name)
@@ -225,8 +241,8 @@ func _rows(char_: Character, preset: StatusPreset) -> Array:
 		_row("Now", "满足：%s" % ("✔" if sat else "✘"),
 			Color(0.55, 0.80, 0.55) if sat else Color(0.75, 0.55, 0.55)),
 		_row("Msg", "最近消息：%s" % _brief(preset.latest_message.get(char_))),
-		_row("Decl", "auto_reset=%s   match_any=%s   with_detect=%s"
-			% [preset.auto_reset, preset.match_any, preset.with_detect]),
+		_row("Decl", "auto_reset=%s   match_any=%s   外部检测：瞬时=%s 保持型=%s"
+			% [preset.auto_reset, preset.match_any, preset.with_detect_transient, preset.with_detect_manual]),
 	]
 	var total: int = 0
 	for group in GROUPS:
@@ -246,9 +262,14 @@ func _rows(char_: Character, preset: StatusPreset) -> Array:
 				Color(0.55, 0.80, 0.55) if hit else Color(0.75, 0.55, 0.55)))
 			total += 1
 			i += 1
-	if preset.with_detect:
-		var hit: bool = bool(preset._detect_triggers.get(char_, false))
-		out.append(_row("G_detect", "【外部检测】→ %s" % ("✔ 已触发" if hit else "✘ 未触发"),
+	if preset.with_detect_transient:
+		var hit: bool = bool(preset._detect_transient_triggers.get(char_, false))
+		out.append(_row("G_detect_t", "【外部检测（瞬时）】→ %s" % ("✔ 已触发" if hit else "✘ 未触发"),
+			Color(0.55, 0.80, 0.55) if hit else Color(0.75, 0.55, 0.55)))
+		total += 1
+	if preset.with_detect_manual:
+		var hit: bool = bool(preset._detect_manual_triggers.get(char_, false))
+		out.append(_row("G_detect_m", "【外部检测（保持型）】→ %s" % ("✔ 已触发" if hit else "✘ 未触发"),
 			Color(0.55, 0.80, 0.55) if hit else Color(0.75, 0.55, 0.55)))
 		total += 1
 	if total == 0:
@@ -262,9 +283,9 @@ static func _satisfied(preset: StatusPreset, char_: Character) -> bool:
 	return bool(preset.satisfied.get(char_, false))
 
 
-## 依赖条数（六组监听器 + 外部检测），只用于标题那行摘要。
+## 依赖条数（六组监听器 + 两种外部检测），只用于标题那行摘要。
 static func _dep_count(preset: StatusPreset) -> int:
-	var n: int = 1 if preset.with_detect else 0
+	var n: int = (1 if preset.with_detect_transient else 0) + (1 if preset.with_detect_manual else 0)
 	for group in GROUPS:
 		n += (preset.get(str(group[1])) as Array).size()
 	return n
@@ -302,30 +323,6 @@ static func _brief(value: Variant) -> String:
 	return text if text.length() <= 48 else text.substr(0, 48) + "…"
 
 
-## 看的是哪个角色（顺序 = "这一趟想看谁" 优先于 "没指定时看谁"）：
-##   1. `content_cmd`：自己的，再**沿外壳往上**找（`open(..., content_cmd=…)` 写在外壳那层）；
-##   2. 自己的 `char`（预设里写的默认）；
-##   3. 都没有 ⇒ 空串（_fill 铺一行红字告诉用户写什么）。
-## 不认 `content` 字面值：那多半是"这个 UI 显示的文字"，不是"角色在哪"（同 UI_Editor._target_path 的判断）。
-func _char_path() -> String:
-	var cmd: String = str(config.get("content_cmd", ""))
-	if cmd == "":
-		var up: UIBase = parent
-		while up != null:
-			var c: String = str(up.config.get("content_cmd", ""))
-			if c != "":
-				cmd = c
-				break
-			up = up.parent
-	if cmd != "":
-		return cmd
-	return str(config.get("char", ""))
+## 看的是哪个角色 / 按路径取角色：都走 `UIBase.target_path("char")` / `target_object("char")`
+## （与 UI_Shortcut 同一处实现，别在这儿再写一份）。
 
-
-## 按路径取角色（读不到 / 不是角色都给 null，由 _fill 铺一行提示）。
-func _character() -> Character:
-	var path: String = _char_path()
-	if path == "":
-		return null
-	var got: Array = CommandParser.read(path)
-	return (got[1] as Character) if bool(got[0]) else null

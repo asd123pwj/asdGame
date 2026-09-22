@@ -25,4 +25,4 @@
 - **`Collision_Area.gd`**：`attach()` 建 Area2D+CollisionShape(Circle) 挂到 `me.body`；**无 body 时直接跳过**(`_init` 即调一次 attach)。
   - 待 body 生成后由 `Character.ensure_body` → `Collisions.attach_collisions` → `CollisionPreset.attach` 再补挂。
   - `_on_body_entered/exited(body)`：若 `body` 带 `meta("character")` 反查是角色；一律广播 `Msg.send_collision_enter/exit(me, name, body)`。
-  - 该消息被 `StatusPreset.with_detect` 等监听，作为状态触发源。
+  - 该消息被 `StatusPreset.with_detect_transient` 等监听，作为状态触发源。
