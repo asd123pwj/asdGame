@@ -112,6 +112,11 @@ func ui_test() -> void:
     # 换人：UIInteract.open(preset_name="Attr", content_cmd="@Char/兔子")。
     Msg.send_cmd('UIInteract.open(preset_name="Attr")')
 
+    # 角色交互一览（外壳 Config/UI/UIPreset_Interaction.gd + 内容元素 Script/UI/UI/UI_Interaction.gd）：
+    # 每条交互一段：实现类 / 依赖状态（现在满不满足，实时）/ 参数 config（一行一个键）。默认同样看 char_A。
+    # 换人：UIInteract.open(preset_name="Interaction", content_cmd="@Char/兔子")。
+    Msg.send_cmd('UIInteract.open(preset_name="Interaction")')
+
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:

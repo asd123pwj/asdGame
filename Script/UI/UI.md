@@ -198,12 +198,14 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | `UI_Image` | 图片：content = 纹理路径，refresh 时 load；改图 = 写 `config["content"]` + 一条 `self.refresh` | — |
 | `UI_Scroll` | 滚动容器：content 为多行文本，内层 Label autowrap。**ScrollContainer 默认最小尺寸为 0，必须用 `size` 配置可视区大小，否则不可见**。结构与 `UI_Panel` 同一套：`root(Control) → Scroll(ScrollContainer) → Label` + `Overlay(Control)`，**free 子元素挂 Overlay**（不能挂在滚动容器里：会被裁、尺寸被压成 0） | — |
 | `UI_Input` | 输入框（LineEdit）：content 是**配置里写的初值**（`refresh()` 写进框里），回车提交 → 派发 `Input Submit`。**框里正在打的字不同步进 content**：要用就直接读 `@self.control.text`（取值链能读实例成员）——于是提交没有"先收文本"这一步，**元素自己没有提交逻辑**，提交就是配置里的普通命令串（送到哪 + 清空 + 要不要退出编辑 + 刷改过的两个 UI）。**元素里没有任何特判**：点它进编辑也是一条普通配置（`[QName.mouseLeft, 'UIInteract.begin_edit self']`，换成别的事件也行），事件照常走配置 + 冒泡。配 `multiline: true` 时控件换成 TextEdit：**自动换行 + 高度按"折行后的行数"自适应**（`max_height` 封顶，超出框内滚动），**回车仍是提交、不会插换行**（输入层判"这次算提交"就吃掉那个事件；按着 Shift 才留给 TextEdit 插换行） | `[[QName.mouseLeft, 'UIInteract.begin_edit self'], [QName.input_submit, 'Utils.write "@self.config.send_to" @self.control.text\vUtils.write "@self.config.content"\vUIInteract.end_edit self\v@self.refresh("content")\vself.refresh']]` |
-- **一览类元素**（把运行期数据铺出来看）：`UI_Status`（角色状态）、`UI_Shortcut`（角色快捷）、`UI_Attr`（角色属性 / buff）——
-  三者共用底座 **`UI_View`**（"看哪个角色（查看项 `content_cmd` 优先、其次自己的 `char`）/ 推迟一帧铺 /
-  换对象自动重铺 / 开着才订·关掉全退·重开订回"都在它那儿；子类只实现 `_fill` 与 `_listen`）。
-  外壳预设各一份（`UIPreset_Status` / `UIPreset_Shortcut` / `UIPreset_Attr`），打开都是
-  `UIInteract.open(preset_name="…")`，换人写 `content_cmd="@Char/人类"`（再点 `[刷新]`）。
-  为什么内容交给元素而不是写在外壳预设里：一个角色有哪些状态 / 快捷 / 类别，全是**运行期**才知道的。
+- **一览类元素**（把运行期数据铺出来看）：`UI_Status`（角色状态）、`UI_Shortcut`（角色快捷）、
+  `UI_Attr`（角色属性 / buff）、`UI_Interaction`（角色交互）——四者共用底座 **`UI_View`**
+  （"看哪个角色（查看项 `content_cmd` 优先、其次自己的 `char`）/ 推迟一帧铺 / 换对象自动重铺 /
+  开着才订·关掉全退·重开订回 / 抬头两行 / 找不到对象那行 / 只读文字行"都在它那儿；
+  子类只实现 `_fill`（铺什么）与 `_listen`（订什么））。
+  外壳预设各一份（`UIPreset_Status` / `UIPreset_Shortcut` / `UIPreset_Attr` / `UIPreset_Interaction`），
+  打开都是 `UIInteract.open(preset_name="…")`，换人写 `content_cmd="@Char/人类"`（再点 `[刷新]`）。
+  为什么内容交给元素而不是写在外壳预设里：一个角色有哪些状态 / 快捷 / 类别 / 交互，全是**运行期**才知道的。
 - 组合控件（如带背景的按钮）直接用 `children` 配置堆叠（Panel 背景子元素 + Label 文字子元素），不写子类。
 - 元素**不连接任何引擎信号**（含 `Button.pressed`、`LineEdit.text_changed` / `focus_exited` / `text_submitted`）：点击/拖动等全部由 PointerDetect 命中 → 事件 → `on_event` → 指令/消息 派发；引擎控件"自己才知道"的状态（框里的文字、编辑焦点）一律**按需直接读**（取值链读 `@self.control.text`）或走交互层那几个命令（`UIInteract.begin_edit` / `end_edit`；点别处由 `PointerDetect.key` 开头收掉）。输入链路唯一，那条"唯一链路"仍旧管游戏按键（`edit_ui` 期间不翻译按键）。
 

@@ -27,6 +27,15 @@ static func update() -> void:
     hour = _时辰[Sys.timeSys.hour - 1]
 
 
+## 一句话的"现在"：`元年正月初一 子时`。
+## 直接按 TimeSys 当下的数字现算（**不依赖 `update()` 跑没跑过**：开局那几个缓存字符串可能还是空的）。
+## 被谁用：需要把**当下**冻住记下来的地方（如 `Interactions.history`——交互触发只持续一帧，
+## 得把"当时是几时"留住，过后再算只会得到"现在"，不是"那一刻"）。
+static func now_text() -> String:
+    return "%s%s%s %s" % [year_to_chinese(TimeSys.year), _月[TimeSys.month - 1],
+        _日[TimeSys.day - 1], _时辰[TimeSys.hour - 1]]
+
+
 ## 年份数字转中文（如 1→"元"，2→"二"，10→"十"，123→"一百二十三"）
 ## 被谁用：update。
 static func year_to_chinese(num: int) -> String:

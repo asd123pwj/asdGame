@@ -477,17 +477,35 @@ static func get_status_undetected_manual(char_: Character, status_name: String) 
                                                                                                 
 """
 ## 交互域：ID = ["CHAR", 角色, "INTERACTION", 交互名, 动作]。
+## **另有"任意交互"的通配节点**（ID = ["CHAR", 角色, "ANY_INTERACTION", "ANY", "changed"]，
+## 见 send_interaction_any_changed）：下面每个具体的 send_interaction_* 都顺手发一条，
+## 于是"不关心是哪条交互、只关心它变了"的订阅者订一条就够。
 ## 被谁用：Interactions.add/remove_interaction（增删）、InteractionPreset.listen 的触发（send_interaction_act）；
-##          listen 侧是 StatusPreset 的交互监听与 InteractionPreset。
+##          listen 侧是 StatusPreset 的交互监听、InteractionPreset、UI_Interaction（订通配那条）。
 """ ---------- Character InteractionPreset ---------- """
 static func send_interaction_add(char_: Character, interaction_name: String) -> Array:
+    send_interaction_any_changed(char_, interaction_name, "add")
     return _send_character(char_, "INTERACTION", interaction_name, "add")
 
 static func send_interaction_remove(char_: Character, interaction_name: String) -> Array:
+    send_interaction_any_changed(char_, interaction_name, "remove")
     return _send_character(char_, "INTERACTION", interaction_name, "remove")
     
 static func send_interaction_act(char_: Character, interaction_name: String) -> Array:
+    send_interaction_any_changed(char_, interaction_name, "act")
     return _send_character(char_, "INTERACTION", interaction_name, "act")
+
+
+## **任意交互**的通配发送（做法同 `send_any_attr_changed` / `send_buff_any_changed`）：
+## 节点按"任意"分，payload = `[交互名, 动作]`。
+## 为什么要有它：具体消息按 **交互名**分节点（`listen_interaction_add(角色, 名字)`）⇒ 没有通配的话，
+## "看交互的 UI"只能订"当前已知的那些名字"，**运行期新加的交互收不到消息**。
+## 由上面三个具体的 `send_interaction_*` 各发一条——别在别处单独调（不然会漏一份）。
+static func send_interaction_any_changed(char_: Character, interaction_name: String, action: String) -> Array:
+    return _send_character(char_, "ANY_INTERACTION", "ANY", "changed", [interaction_name, action])
+
+static func listen_interaction_any_changed(char_: Character, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "ANY_INTERACTION", "ANY", "changed", callback, once)
     
 static func listen_interaction_add(char_: Character, interaction_name: String, callback: Callable, once: bool = false) -> String:
     return _listen_character(char_, "INTERACTION", interaction_name, "add", callback, once)

@@ -30,6 +30,8 @@ const VALUE_ORDER: Array[int] = [
 
 ## 每个类别那一段：类别 -> 段（UI_Panel）。属性变化时就地重铺其中一段。
 var _secs: Dictionary = {}
+## 整块重铺前记下的"哪几段展开着"：`_fill` 按它一次建对（箭头与 collapsed 同时就位）。
+var _open_names: Dictionary = {}
 
 
 ## 清掉"类别 → 段"的索引（重铺时由 UI_View.reload 调）。
@@ -53,7 +55,7 @@ func _fill() -> void:
 		"font_color": Color(0.55, 0.60, 0.70),
 	})
 	for category in cats:
-		_section(char_, str(category))
+		_section(char_, str(category), null, _open_names.has(str(category)))
 
 
 ## 类别 = 四个字典与 buffs 的键**取并集**（属性是懒算的，"有 buff 还没算出值"的类别也要列）。
@@ -81,17 +83,20 @@ static func _buff_names(char_: Character) -> Array:
 
 ## 一个类别 = 一段：标题是摘要，内容（每一行）写成 `items` ⇒ **展开才建**。
 ## `old` 给了 ⇒ **原地换掉它**（位置不动，见 UIBase.replace_child_element）。
-func _section(char_: Character, category: String, old: UIBase = null) -> void:
+## `open_` = 重铺时这一段原来展开没有（标题箭头与 collapsed 都按它来，再把 `items` 建回来）。
+func _section(char_: Character, category: String, old: UIBase = null, open_: bool = false) -> void:
 	var sec_name: String = "S_" + category
 	var cfg: Dictionary = {
 		"size": [0, 0],
-		"collapsed": true,                       # 默认收起：类别多的时候打开也不卡
+		"collapsed": not open_,                  # 默认收起：类别多的时候打开也不卡
 		"items": _rows(char_, category),
-		"children": [UIInteract_Fold.title_item(_section_title(char_, category), true)],
+		"children": [UIInteract_Fold.title_item(_section_title(char_, category), not open_)],
 	}
 	var sec: UIBase = replace_child_element(old, sec_name, "UI_Panel", cfg) if old != null \
 		else add_child_element(sec_name, "UI_Panel", cfg)
 	_secs[category] = sec
+	if open_:
+		UIInteract_Fold.fold(sec, false)         # 展开态：顺手把 items 建出来
 
 
 ## 段标题：`类别（CUR 2 ｜ buff 2 个 ｜ 改动：Init）`——收起时也能一眼看出这个类别值多少。
@@ -205,6 +210,16 @@ func _on_attr_changed(char_: Character, msg: Variant) -> void:
 		reload()                          # 还没铺过的类别（第一次算出来）⇒ 整块重铺最省事
 		return
 	var sec: UIBase = _secs[category]
-	_section(char_, category, sec)
-	if not bool(sec.config.get("collapsed", true)):
-		UIInteract_Fold.fold(_secs[category], false)   # 原来展开着：建完立刻展回来（同 UI_Status）
+	var open_: bool = not bool(sec.config.get("collapsed", true))
+	_section(char_, category, sec, open_)
+
+
+## 重铺前记下"哪几段展开着"（给 `_fill` 用）——
+## 不然一次整块重铺（buff 增 / 减走的通配）就把用户展开的段全收回去。
+func reload() -> void:
+	_open_names.clear()
+	for key in _secs.keys():
+		var sec: UIBase = _secs[key]
+		if is_instance_valid(sec) and not bool(sec.config.get("collapsed", true)):
+			_open_names[key] = true
+	super.reload()

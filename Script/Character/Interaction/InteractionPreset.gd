@@ -3,6 +3,10 @@ extends PresetRegister
 ## 交互预设：依赖某状态满足 → 执行一次具体的"交互实现"（属性/背包类操作）。
 ## 触发时会把"最近一次依赖状态消息里的 target"交给实现类，所以交互能知道对象是谁。
 ## 被谁用：Interactions.add_interaction（装到角色身上）、Archetype 的 interactions 字段。
+##
+## **想看它长什么样**：角色交互一览（外壳 `Config/UI/UIPreset_Interaction.gd` + 内容元素
+## `Script/UI/UI/UI_Interaction.gd`，打开就是 `UIInteract.open(preset_name="Interaction")`）——
+## 一条交互一段，摊开下面这几个字段（实现类 / 依赖状态 + 现在满不满足 / 参数 config 一行一个键）。
 
 ## 预设名（唯一）。被谁用：Interactions 的字典键、消息与指令。
 var name: String
@@ -59,6 +63,9 @@ func listen(char_: Character) -> void:
         var target = char_.statuses.get_latest_message(dependence_status)
         @warning_ignore("unsafe_method_access")
         interaction.interact(char_, target)
+        # 记一笔流水（**广播前**：接收方要读到刚记下的这一笔才算得对"最后时间"）。
+        # 交互就活这一帧，过去就没影了 —— 记下来才看得出"刚才触发过"。
+        char_.interactions.record(name, "act")
         Msg.send_interaction_act(char_, name)
     var msg_ID = Msg.listen_status_satisfied(char_, dependence_status, trigger_func)
     _trigger_funcs[char_][msg_ID] = trigger_func
