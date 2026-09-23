@@ -1,8 +1,10 @@
 class_name UI_View
 extends UI_Panel
 ## **"看某个对象的一览"这类元素的共同底座**：`UI_Status`（状态）/ `UI_Shortcut`（快捷）/ `UI_Attr`（属性）/
-## `UI_Interaction`（交互）/ `UI_Skill`（技能）都继承它。
-## 各一览本来各写一份的骨架收在这里，**差别只有两件事**：铺什么（`_fill`）、订什么（`_listen`）。
+## `UI_Interaction`（交互）/ `UI_Skill`（技能）/ `UI_Archetype`（原型）都继承它。
+## 各一览本来各写一份的骨架收在这里，**差别只有两件事**：铺什么（`_fill`）、订什么（`_listen`）——
+## **不需要实时就别覆写 `_listen`**（基类空实现 ⇒ 一条消息都不订，`_subs` 一直是空的，如 `UI_Archetype`：
+## 原型只在角色初始化时生效一次，实时没意义）。
 ##
 ##   · **看哪个对象**：走 `UIBase.target_path("char")` / `target_object("char")` 那条通用规则
 ##     （查看项 `content_cmd`——自己的或外壳上写的——优先，其次本元素 config 的 `char`）。

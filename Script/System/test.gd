@@ -122,6 +122,11 @@ func ui_test() -> void:
     # 技能是每物理帧执行的 ⇒ "最近执行"那一行字会一直在跳（关掉队列那段就停）。
     Msg.send_cmd('UIInteract.open(preset_name="Skill")')
 
+    # 角色原型一览（外壳 Config/UI/UIPreset_Archetype.gd + 内容元素 Script/UI/UI/UI_Archetype.gd）：
+    # 一个字段一段（buffs / statuses / interactions / bodies / skills / collisions / inventories /
+    # shortcuts / packages），段里一行一个预设名。**不实时**（原型只在初始化那刻生效一次）。
+    Msg.send_cmd('UIInteract.open(preset_name="Archetype")')
+
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:
