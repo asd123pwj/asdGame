@@ -107,6 +107,11 @@ func ui_test() -> void:
     # 每条快捷两行：名称 / "依赖状态 → 执行的指令"。同样默认看 @Char/SYS，换人写 content_cmd。
     Msg.send_cmd('UIInteract.open(preset_name="Shortcut")')
 
+    # 角色属性 / Buff 一览（外壳 Config/UI/UIPreset_Attr.gd + 内容元素 Script/UI/UI/UI_Attr.gd）：
+    # 每个类别一段（当前值 / 改动前 / 改动来源 / 参与 Buff）。默认看 char_A，也就是上面 spawn("人类","player") 那个。
+    # 换人：UIInteract.open(preset_name="Attr", content_cmd="@Char/兔子")。
+    Msg.send_cmd('UIInteract.open(preset_name="Attr")')
+
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:

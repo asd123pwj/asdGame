@@ -3,6 +3,9 @@ extends PresetRegister
 ## 增益/减益预设：对某个属性的"一层修正"（加/减/乘/除/设为某值），可限次数。
 ## 角色的属性值 = 基础值依次叠过所有 buff（见 Attributes.init_attribute / apply）。
 ## 被谁用：Attributes.add_buff/remove_buff/consume_buffs、Archetype 的 buffs 字段。
+##
+## **想看它长什么样**：角色属性一览里每个类目段的"参与 Buff"（`Script/UI/UI/UI_Attr.gd`）——
+## 一行一个 buff，把下面这几个字段摊开（值域 / name / method+value / max_uses + uses[该角色]）。
 
 """ ---------- individual ---------- """
 """ ----- Config ----- """

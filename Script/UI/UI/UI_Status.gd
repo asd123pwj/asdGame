@@ -1,5 +1,5 @@
 class_name UI_Status
-extends UI_Panel
+extends UI_View
 ## **角色状态一览（只读 + 实时）**：把一个角色**装着的状态**逐个摆出来——每个状态一段，
 ## 段里是"它依赖什么（声明）+ 现在触发成什么样 + 满足没有 + 最近一次收到的消息"。
 ##
@@ -10,21 +10,11 @@ extends UI_Panel
 ##   ⇒ 所以要看到"某个角色的状态"，必须把两半拼起来：**声明从预设读，现状一律按名字取那个角色的那一份**
 ##      （`preset._attr_triggers[char_]` 这种）。只读预设会把所有角色混在一起，只读 `Statuses` 又看不到依赖与触发真值。
 ##
-## **看哪个角色**：走 `UIBase.target_path("char")`（这规矩只有那一处实现）——查看项 `content_cmd`
-## （自己的，或外壳上写的，于是任何一次 open 都能指定：
-## `UIInteract.open(preset_name="Status", content_cmd="@Char/人类")`）优先，
-## 其次本元素 config 的 `char`（预设里写的默认，如 `"@Char/SYS"`，**要带 `@`**）；
-## 都给不出 ⇒ `target_object("char")` 得到 null，铺一行红字说清该写什么（不猜、不默认到某个角色）。
-##
-## **实时**：订阅被看角色**每个状态**的 `satisfied` / `unsatisfied`（`Msg.listen_status_satisfied/unsatisfied`），
-## 收到就**只重铺那一段**（其它段不动、收起还是收起）⇒ 标题上的 ✔/✘ 与段里的行当场跟着变。
-##
-## **监听的生命周期 = "开着就一直听，关掉就全退"**（照 `AutoSys.run_until_unsatisfied` 那种
-## "不需要了就自己删登记"的思路）：
-##   · **不看段展开没展开**——收起的段，标题上也写着 ✔/✘，它照样得是实时值，所以**开着就把所有状态全订上**；
-##   · 面板被关掉（`UIInteract.close`）⇒ 全退订，不留订阅挂在消息系统里；
-##   · **重开**（复用同一份 UI）由 `UIBase.on_shown` 那一声自动重新订上（open 不区分"新建 / 复用"，两条路都会通知）。
-## 于是"开着的时候精确、关掉之后干净"。
+## **看哪个角色 / 铺 / 订的骨架都在 `UI_View`**（"查看项 `content_cmd` 优先，其次 config 的 `char`"、
+## "推迟一帧铺"、"换对象自动重铺"、"开着才听 / 关掉全退 / 重开订回"）。本元素只管两件事：
+##   · **铺什么**（`_fill`）：每个状态一段；
+##   · **订什么**（`_listen`）：每个状态的 `satisfied` / `unsatisfied` + `trigger_changed` + 两种外部检测
+##     （收起的段标题上也写着 ✔/✘ ⇒ **开着就把所有状态全订上**，不看段展开没展开）。
 ##
 ## 一个状态 = **一段可折叠分组**（默认收起）：标题给"满足 ✔/✘ + 依赖条数"一眼看全局；
 ## 展开才建每条依赖的行（`items` 按需建，见 UIInteract_Fold）——状态多的时候打开也不卡。
@@ -40,84 +30,21 @@ const GROUPS: Array[Array] = [
 	["时间", "_time_listeners", "_time_triggers"],
 ]
 
-## 铺过没有（只铺一次；重铺走 reload）。
-var _built: bool = false
-## 上次铺的时候看的是哪个角色：知道"换了对象"就能自动重铺（见 refresh）。
-var _path_shown: String = ""
 ## 每个状态那一段：状态名 -> 段（UI_Panel）。收到状态变化时就地重铺其中一段。
 var _secs: Dictionary = {}
-## 当前订阅的"状态满足 / 解除"：`[[消息 ID, 回调], ...]`（退订两样都要，见 MsgBus.unlisten）。
-var _subs: Array[Array] = []
-## 面板现在是不是"被显示着"（由 on_shown / on_hidden 维护，见 UIBase）。
-## **为什么要这个标记**：判断"该不该听"不能只看控件可见性——整块收起时子元素是隐藏的（可见性为 false），
-## 但面板本身还开着；而且 `_fill` 是**延迟一帧**跑的，可能晚于"被关掉"那一声 ⇒ 只看可见性会误订。
-var _shown: bool = false
 
 
-## 登记完成 ⇒ 铺内容（铺出来的子元素要登记，而登记要拿父级名字，所以得等自己有名字，见 UIBase.on_registered）。
-## **推迟一帧**：`open` 那次临时配置（`content_cmd=…`）是建完之后才 merge 上的，
-## 登记这一刻还读不到，等一帧就齐了（同 UI_Editor）。
-func on_registered() -> void:
-	if _built:
-		return
-	_built = true
-	Callable(self, "reload").call_deferred()
-
-
-## 被显示 ⇒ 订上所有状态消息（open 新建 / 复用两条路都会走到这儿，见 UIBase.on_shown）。
-func on_shown() -> void:
-	_shown = true
-	sync_listening()
-
-
-## 被关掉 ⇒ 全退订：都看不见了，没必要挂在消息系统里（见 UIBase.on_hidden）。
-func on_hidden() -> void:
-	_shown = false
-	_unlisten_all()
-
-
-## 重铺（"[刷新]"那一行、以及"换了看的角色"时调它）：把铺出来的整棵子树丢掉再铺一遍。
-## 为什么整棵丢掉：触发真值、状态集合都可能变了，"就地改行"要写一堆映射，不如重铺干净。
-## 先 clear 再铺 ⇒ 重复调用不会铺出两份（延迟调用可能比"再来一次刷新"晚到）。
-func reload() -> void:
-	if control == null:
-		return                       # 已经被关了 / 被移除了（延迟调用可能晚到）
-	clear_children()
+## 清掉"状态 → 段"的索引（重铺时由 UI_View.reload 调）。
+func _before_fill() -> void:
 	_secs.clear()
-	_path_shown = target_path("char")
-	_fill()
 
 
-## 刷新：**看的角色换了就重铺**（谁把刷新传到本元素上就自愈；`_built` 之前只当普通刷新）。
-## 会走到这儿的路径：`UISys.refresh_all` 那种"挨个刷一遍"、以后谁在外壳上往下刷。
-## 注意**换人最直接的用法是点 `[刷新]`**（那行直接调 reload）：`open` 复用同一份 UI 时
-## 只 refresh 外壳，不会自动传到 Body 元素上（要传得靠上面那两条路）。
-func refresh(key: String = "") -> void:
-	super.refresh(key)
-	if _built and control != null and target_path("char") != _path_shown:
-		reload()
-
-
-## 铺：抬头（看谁 + [刷新]）→ 取不到角色就说清怎么给 → 逐个状态一段 → 订上所有状态消息。
+## 铺：抬头 → 取不到角色就说清怎么给 → 一行总计 → 逐个状态一段。
 func _fill() -> void:
-	if control == null:
-		return                       # 这一帧里已经被关了 / 被移除了（延迟调用可能晚到）
-	_unlisten_all()                  # 重铺 = 先全退，末尾按"开着没开"再订（见 sync_listening）
-	add_child_element("Where", "UI_Label", {
-		"content": "角色状态：%s" % target_path("char"),
-		"font_color": Color(0.62, 0.68, 0.78),
-	})
-	add_child_element("Reload", "UI_Label", {
-		"content": "[刷新]（重读 + 重订）",
-		"events": [[QName.mouseLeft, "@self.parent.reload()"]],
-	})
-	var char_: Character = target_object("char") as Character
-	if char_ == null:
-		add_child_element("None", "UI_Label", {
-			"content": "找不到角色「%s」——写 char=\"@Char/SYS\" 这种注册名（指令路径）" % target_path("char"),
-			"font_color": Color(0.85, 0.55, 0.55),
-		})
+	_fill_head("角色状态")
+	if _fill_missing():
 		return
+	var char_: Character = shown_char()
 	if char_.statuses == null:
 		add_child_element("NoSet", "UI_Label", {"content": "这个角色还没有状态集合"})
 		return
@@ -130,23 +57,14 @@ func _fill() -> void:
 	})
 	for status_name in names_:
 		_section(char_, dict[status_name])
-	sync_listening()
 
 
-## ---------- 实时：订阅 / 退订（开着就全订，关掉就全退）----------
-## 按"现在该不该听"重算订阅（**幂等**，随便调）：
-##   · 面板没被显示（关掉了）/ 没角色 ⇒ 全退订；
-##   · 否则**把被看角色的所有状态都订上**——收起的段标题也写着 ✔/✘，照样要实时值
-##     （整块收起时也不退：那只是"暂时没看"，一展开就该是新的）。
-## 判断"开着没开"看 `_shown`（on_shown / on_hidden 维护），**不看控件可见性**：整块收起时子元素是隐藏的，
-## 而"隐藏"与"被关掉"是两回事。
-## 被谁用：on_shown、on_hidden、_fill 末尾、以及需要重算的地方。
-func sync_listening() -> void:
-	var char_: Character = target_object("char") as Character
-	if not _shown or char_ == null or char_.statuses == null:
-		_unlisten_all()
+## ---------- 实时：订什么（"该不该听"由 UI_View.sync_listening 判，这里只负责订）----------
+## **把被看角色的所有状态都订上**——收起的段标题也写着 ✔/✘，照样要实时值
+## （整块收起时也不退：那只是"暂时没看"，一展开就该是新的）。
+func _listen(char_: Character) -> void:
+	if char_.statuses == null:
 		return
-	_unlisten_all()                  # 先全退再订：订的东西很少，简单可靠（不玩增量）
 	for status_name in char_.statuses.statuses.keys():
 		_subscribe(char_, str(status_name))
 
@@ -197,7 +115,7 @@ func _on_status_changed(status_name: String) -> void:
 ## 重铺一段：老段（连同它的行）摘掉，按现在的数据**在原地**再造一段；`open_` = 保持它原来展开着。
 ## 被谁用：_on_status_changed。
 func _rebuild_section(status_name: String, open_: bool) -> void:
-	var char_: Character = target_object("char") as Character
+	var char_: Character = shown_char()
 	if char_ == null or char_.statuses == null:
 		return
 	var preset: StatusPreset = char_.statuses.statuses.get(status_name)
@@ -309,18 +227,8 @@ static func _match_text(match_type: Variant) -> String:
 	return str(match_type)
 
 
-## 一行 `[名字, 元素类, 配置]`（行都是只读的 UI_Label，只换文字与颜色）。
-## 不写 `font_size`：用全局默认字号（也是最小字号，见 SysCfg.ui_font_size_default）——写小了也会被抬上来。
-static func _row(row_name: String, text: String, color: Color = Color(0.75, 0.78, 0.85)) -> Array:
-	return [row_name, "UI_Label", {"content": text, "font_color": color}]
-
-
-## 值的短文本：null 说"（无）"，太长截断（最近消息里可能挂着一整个角色/字典）。
-static func _brief(value: Variant) -> String:
-	if value == null:
-		return "（无）"
-	var text: String = str(value)
-	return text if text.length() <= 48 else text.substr(0, 48) + "…"
+## （`_row`（只读文字行）与 `_brief`（值的短文本）这两个零件已挪到 `UI_View`：三个一览共用一份。
+##   行不写 `font_size`：用全局默认字号（也是最小字号，见 SysCfg.ui_font_size_default）。）
 
 
 ## 看的是哪个角色 / 按路径取角色：都走 `UIBase.target_path("char")` / `target_object("char")`

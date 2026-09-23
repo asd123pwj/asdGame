@@ -312,20 +312,37 @@ static func listen_any_attr_changed(char_: Character, callback: Callable, once: 
                 ░█████████   ░█████░██    ░██       ░██                                                         
 """
 ## buff 域：ID = ["CHAR", 角色, "BUFF", buff 名, 动作]。
+## **另有"任意 buff"的通配节点**（ID = ["CHAR", 角色, "ANY_BUFF", "ANY", "changed"]，见 send_buff_any_changed）：
+## 下面每个具体的 send_buff_* 都顺手发一条，于是"不关心是哪个 buff、只关心它变了"的订阅者订一条就够。
 ## 被谁用：Attributes.add_buff/remove_buff 与 BuffPreset.consume（send）；
-##          StatusPreset 的 buff 监听（listen_buff_add / listen_buff_remove）。
+##          StatusPreset 的 buff 监听（listen_buff_add / listen_buff_remove）、UI_Attr（订通配那条）。
 """ ---------- BuffPreset ---------- """
 static func send_buff_add(char_: Character, buff_name: String) -> Array:
+    send_buff_any_changed(char_, buff_name, "add")
     return _send_character(char_, "BUFF", buff_name, "add")
 
 static func send_buff_remove(char_: Character, buff_name: String) -> Array:
+    send_buff_any_changed(char_, buff_name, "remove")
     return _send_character(char_, "BUFF", buff_name, "remove")
 
 static func send_buff_consume(char_: Character, buff_name: String) -> Array:
+    send_buff_any_changed(char_, buff_name, "consume")
     return _send_character(char_, "BUFF", buff_name, "consume")
 
 static func send_buff_depleted(char_: Character, buff_name: String) -> Array:
+    send_buff_any_changed(char_, buff_name, "depleted")
     return _send_character(char_, "BUFF", buff_name, "depleted")
+
+
+## **任意 buff** 的通配发送（做法同 `send_any_attr_changed`）：节点按"任意"分，payload = `[buff 名, 动作]`。
+## 为什么要有它：具体消息按 **buff 名**分节点（`listen_buff_add(角色, 名字)`）⇒ 没有通配的话，
+## "看 buff 的 UI"只能订"当前已知的那些名字"，**运行期新加的 buff 收不到消息**（UI_Attr 里那条已知限制）。
+## 由上面四个具体的 `send_buff_*` 各发一条——别在别处单独调（不然会漏一份）。
+static func send_buff_any_changed(char_: Character, buff_name: String, action: String) -> Array:
+    return _send_character(char_, "ANY_BUFF", "ANY", "changed", [buff_name, action])
+
+static func listen_buff_any_changed(char_: Character, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "ANY_BUFF", "ANY", "changed", callback, once)
 
 static func listen_buff_add(char_: Character, buff_name: String, callback: Callable, once: bool = false) -> String:
     return _listen_character(char_, "BUFF", buff_name, "add", callback, once)

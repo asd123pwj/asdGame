@@ -36,6 +36,9 @@ enum ModificationMethod {
     DIVIDE,
     SET
 }
+## ModificationMethod 的显示符号（索引与上面一一对应，同 StrValueType）。
+## 被谁用：UI 展示（属性一览里 buff 的"怎么改"，如 `+10`、`=Health 的当前值`）。
+static var StrModificationMethod = ["+", "-", "×", "÷", "="]
 
 ## 按键/指针状态名（**也是 UI 与快捷指令里的事件名**）。
 ## 被谁用：Archetype_System 的 statuses.keys、SystemShortcut 的 PointerDetect.key、UIBase 的事件匹配。

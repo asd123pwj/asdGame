@@ -125,6 +125,10 @@ static func _resolve_alias(id: String) -> String:
 
 ## 把消息发给该 ID 的所有接收器（普通 → identity → 一次性 → 一次性身份），返回所有返回值（按登记顺序）。
 ## 同时把消息记在节点上（get_message 可取"上一次的消息"）。
+## **遍历一律用快照（`duplicate()`）**：回调里可能**退订 / 重订**——"看某个东西的 UI"收到消息就重铺，
+## 重铺会整批退订再订回来（见 UI_View.sync_listening）。边遍历边删会**跳过**它后面的接收器
+## （实测：属性一览的重铺排在前面时，同一条广播上排在它后面的订阅收不到这一次消息）。
+## 快照语义与下面"一次性接收器"那段一致：**回调里新注册的留到下一次广播**。
 ## 被谁用：MessageHub 的所有 send_*。没有该节点就返回空数组（没人听，不算错误）。
 static func send(id: String, message: Variant) -> Array:
     if not _nodes.has(id):
@@ -132,9 +136,9 @@ static func send(id: String, message: Variant) -> Array:
     var node: MessageNode = _nodes[id]
     node.message = message
     var result := []
-    for receiver in node.receivers:
+    for receiver in node.receivers.duplicate():
         result.append(receiver.call(message))
-    for receiver in node.identity_receivers:
+    for receiver in node.identity_receivers.duplicate():
         result.append(receiver.call(message))
     # 一次性接收器：**先摘下来再调**（回调里再注册同一个监听不会被误删），
     # 回调里新注册的一次性监听留到下一次广播（也就不会自我循环）。

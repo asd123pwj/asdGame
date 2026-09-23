@@ -3,6 +3,10 @@ extends BaseClass
 ## 属性系统：一个角色的所有属性值 + 作用于它们的 buff（见文件末尾的完整设计说明）。
 ## 值域分 BASE(基准)/MIN(下限)/MULTIPLIER(随机权重)/CUR(实际比较值)，CUR 由 BASE 经 MULTIPLIER 随机后再叠 CUR 加成得到。
 ## 被谁用：Character.attrs（角色装配时建）；状态判定、交互结算、指令里的表达式、UI 展示。
+##
+## **想看它长什么样**：角色属性一览（外壳 `Config/UI/UIPreset_Attr.gd` + 内容元素 `Script/UI/UI/UI_Attr.gd`，
+## 打开就是 `UIInteract.open(preset_name="Attr")`）——本类身上那五样（`attributes` / `attributes_before` /
+## `attributes_changed_by_who` / `_how` / `buffs`）它**按类别分组**铺在一段里，并跟着 `AnyChanged` 实时重铺。
 
 
 ## 所属角色。被谁用：各读写（buff 的 per-char 记录、消息广播）。

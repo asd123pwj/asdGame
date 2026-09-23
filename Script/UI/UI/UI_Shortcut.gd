@@ -1,13 +1,11 @@
 class_name UI_Shortcut
-extends UI_Panel
+extends UI_View
 ## **角色快捷监控 / 编辑**：把某个角色装着的**系统快捷**（`Character.shortcuts`）逐条摆出来：
 ## **名称（只读）/ 依赖的状态名（可改）/ 要执行的指令（可改）**——后两样就是快捷预设的字段
 ## （见 SystemShortcutPreset：`dependence_status`、`config`）。
 ##
-## **看哪个角色**：走 `UIBase.target_path("char")`（与 UI_Status 同一条规矩、同一处实现）——
-## 查看项 `content_cmd`（自己的，或外壳上写的：`open(preset_name="Shortcut", content_cmd="@Char/人类")`）
-## 优先，其次本元素 config 的 `char`（预设里的默认，如 `"@Char/SYS"`，**要带 `@`**）；
-## 都给不出 ⇒ `target_object("char")` 得到 null，铺一行红字说清该写什么。
+## **看哪个角色 / 铺的骨架在 `UI_View`**（查看项 `content_cmd` 优先、其次 config 的 `char`；推迟一帧铺、
+## 换对象自动重铺）。本元素只实现 `_fill`（每条快捷一块）——**不做实时**（理由见下）。
 ##
 ## **改了什么、谁跟着变**（这是本元素与"快捷预设"的接口，别绕过它直接改字段）：
 ##   · **指令**：写回预设的 `config`。触发时是**现读**（`SystemShortcutPreset.listen` 的闭包里读 `config`），
@@ -25,38 +23,13 @@ extends UI_Panel
 ## （`listen_shortcut_add(角色, 名字)`），没有"任意快捷"这种通配订阅 ⇒ 加删之后点 `[刷新]`。
 ## **也不显示"依赖状态现在满不满足"**：那是状态一览（UI_Status）的活儿，摆两份就是同一件事两套策略。
 
-## 铺过没有（只铺一次；重铺走 reload）。
-var _built: bool = false
-## 上次铺的时候看的是哪个角色：换了对象就重铺（见 refresh）。
-var _path_shown: String = ""
 ## 每条快捷那一块：快捷名 -> 块（UI_Panel）。改完只重铺这一块（位置不动）。
 var _blocks: Dictionary = {}
 
 
-## 登记完成 ⇒ 铺内容（铺出来的子元素要登记，而登记要拿父级名字，所以得等自己有名字，见 UIBase.on_registered）。
-## **推迟一帧**：`open` 那次临时配置（`content_cmd=…`）是建完之后才 merge 上的，登记这一刻还读不到。
-func on_registered() -> void:
-	if _built:
-		return
-	_built = true
-	Callable(self, "reload").call_deferred()
-
-
-## 重铺（"[刷新]"那一行、以及"换了看的角色"时调它）：清掉铺出来的整棵子树再铺一遍。
-func reload() -> void:
-	if control == null:
-		return                       # 已经被关了 / 被移除了（延迟调用可能晚到）
-	clear_children()
+## 清掉"快捷名 → 块"的索引（重铺时由 UI_View.reload 调）。
+func _before_fill() -> void:
 	_blocks.clear()
-	_path_shown = target_path("char")
-	_fill()
-
-
-## 刷新：看的角色换了就重铺（同 UI_Status：`open(..., content_cmd="…")` 再开一次时能自愈）。
-func refresh(key: String = "") -> void:
-	super.refresh(key)
-	if _built and control != null and target_path("char") != _path_shown:
-		reload()
 
 
 ## ---------- 改：依赖状态 / 指令 ----------
@@ -94,7 +67,7 @@ func write_cmd(shortcut_name: String, text: String) -> void:
 ## 重新监听某个预设（换依赖状态之后）：先退掉旧的，再按新字段听一遍。
 ## 只对"这个角色身上装着它"的情况动手（没装过就什么都不做，避免给无关角色挂监听）。
 func _relisten(preset: SystemShortcutPreset) -> void:
-	var char_: Character = target_object("char") as Character
+	var char_: Character = shown_char()
 	if char_ == null or char_.shortcuts == null or not char_.shortcuts.check_exist(preset.name):
 		return
 	if preset._trigger_funcs.has(char_):
@@ -104,7 +77,7 @@ func _relisten(preset: SystemShortcutPreset) -> void:
 
 ## 重铺一条快捷（老的块原地换掉，位置不动——同 UI_Status：摘掉再加会跳到最底下）。
 func _redo_block(shortcut_name: String) -> void:
-	var char_: Character = target_object("char") as Character
+	var char_: Character = shown_char()
 	if char_ == null or char_.shortcuts == null:
 		return
 	var preset: SystemShortcutPreset = char_.shortcuts.shortcuts.get(shortcut_name)
@@ -115,32 +88,19 @@ func _redo_block(shortcut_name: String) -> void:
 
 ## 这个角色身上装着的那条预设（编辑只动"它身上装的"，没装就返回 null）。
 func _preset(shortcut_name: String) -> SystemShortcutPreset:
-	var char_: Character = target_object("char") as Character
+	var char_: Character = shown_char()
 	if char_ == null or char_.shortcuts == null:
 		return null
 	return char_.shortcuts.shortcuts.get(shortcut_name)
 
 
 ## ---------- 铺 ----------
-## 铺：抬头（看谁 + [刷新]）→ 取不到角色就说清怎么给 → 每条快捷一块（名称常显 + 两个输入框）。
+## 铺：抬头 → 取不到角色就说清怎么给 → 每条快捷一块（名称常显 + 两个输入框）。
 func _fill() -> void:
-	if control == null:
+	_fill_head("系统快捷")
+	if _fill_missing():
 		return
-	add_child_element("Where", "UI_Label", {
-		"content": "系统快捷：%s" % target_path("char"),
-		"font_color": Color(0.62, 0.68, 0.78),
-	})
-	add_child_element("Reload", "UI_Label", {
-		"content": "[刷新]（重读）",
-		"events": [[QName.mouseLeft, "@self.parent.reload()"]],
-	})
-	var char_: Character = target_object("char") as Character
-	if char_ == null:
-		add_child_element("None", "UI_Label", {
-			"content": "找不到角色「%s」——写 char=\"@Char/SYS\" 这种注册名（指令路径）" % target_path("char"),
-			"font_color": Color(0.85, 0.55, 0.55),
-		})
-		return
+	var char_: Character = shown_char()
 	if char_.shortcuts == null:
 		add_child_element("NoSet", "UI_Label", {"content": "这个角色还没有快捷集合"})
 		return
@@ -212,6 +172,6 @@ static func _input_text(cmd: String) -> String:
 	return cmd.replace('\v', "\n")
 
 
-## 看的是哪个角色 / 按路径取角色：都走 `UIBase.target_path("char")` / `target_object("char")`
-## （与 UI_Status 同一处实现，别在这儿再写一份）。
+## 看的是哪个角色 / 按路径取角色：都走 `UI_View`（`shown_path()` / `shown_char()`）——
+## 三个一览共用那一份，别在这儿再写一份。
 
