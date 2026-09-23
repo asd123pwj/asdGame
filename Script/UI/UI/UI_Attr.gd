@@ -90,7 +90,7 @@ func _section(char_: Character, category: String, old: UIBase = null, open_: boo
 		"size": [0, 0],
 		"collapsed": not open_,                  # 默认收起：类别多的时候打开也不卡
 		"items": _rows(char_, category),
-		"children": [UIInteract_Fold.title_item(_section_title(char_, category), not open_)],
+		"children": [UIInteract_Fold.title_item(_section_title(char_, category), not open_, _chars())],
 	}
 	var sec: UIBase = replace_child_element(old, sec_name, "UI_Panel", cfg) if old != null \
 		else add_child_element(sec_name, "UI_Panel", cfg)

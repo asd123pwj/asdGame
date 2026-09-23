@@ -23,6 +23,10 @@ extends UI_Panel
 ##
 ## 子类只需要实现：`_fill()`（铺）、可选 `_before_fill()`（清自己的索引）、可选 `_listen(char_)`（订）。
 
+## `_brief` 的截断阈值（字符）：只防"挂着一整个字典"这种无底洞，别拿它当"显示宽度"用
+## （显示宽度是 `_chars()`，由行自己换行）。
+const BRIEF_CHARS := 160
+
 ## 铺过没有（只铺一次；重铺走 reload）。
 var _built: bool = false
 ## 上次铺的时候看的是哪个角色：换了对象就重铺（见 refresh）。
@@ -105,7 +109,15 @@ func _watch(msg_id: String, callback: Callable) -> void:
 
 
 ## ---------- 铺的公共零件（三个一览抬头那两行、找不到角色那行、一行只读文字）----------
+## 本视图"一行有多宽"（**字符数**，中文算 2）：面板 config 里的 `max_chars`，没写就用全局默认。
+## **行、段标题、输入框都用它**——三者同宽才不会出现"标题把面板撑到内容的两三倍宽、
+## 内容那栏却早早换了行"（实测踩过）。想逐个面板调就在那个预设里写 `max_chars`。
+func _chars() -> int:
+	return int(config.get("max_chars", SysCfg.ui_view_chars))
+
+
 ## 抬头：`<标题>：<看的对象>` + `[刷新]`（点它就是整块重读重铺）。
+## 宽度不用在这儿写：文字行统一由 add_child_element 那个覆写补上 `_chars()`（见它）。
 func _fill_head(title: String) -> void:
 	add_child_element("Where", "UI_Label", {
 		"content": "%s：%s" % [title, shown_path()],
@@ -129,17 +141,36 @@ func _fill_missing() -> bool:
 	return true
 
 
+## 覆写：本视图铺出来的**文字行**统一带上宽度上限（`max_chars` = `_chars()`，行自己写了就不覆盖）。
+## **为什么要覆写而不是逐个补**：漏一处就有一个长标签把整块面板撑开——
+## 实测漏过 `Count`（"共 N 条…"那句）、`Note` 这些**不是通过 `_row` 铺的**行。
+## 只认 `UI_Label`：段/块那种嵌套面板要按自己的内容定宽（它们里面的行有自己的上限，见 `_row` / `title_item`）。
+## 被谁用：各一览的 `_fill`（以及 `_fill_head` / `_fill_missing`）。
+func add_child_element(child_name: String, ui_class: String, child_config: Dictionary = {}) -> UIBase:
+	if ui_class == "UI_Label" and not child_config.has("max_chars"):
+		var chars: int = _chars()
+		if chars > 0:
+			child_config["max_chars"] = chars
+	return super.add_child_element(child_name, ui_class, child_config)
+
+
 ## 一行 `[名字, 元素类, 配置]`（行都是只读文字：要变就重铺那一段，别去改它的 config）。
-static func _row(row_name: String, text: String, color: Color = Color(0.75, 0.78, 0.85)) -> Array:
-	return [row_name, "UI_Label", {"content": text, "font_color": color}]
+## **宽度取本视图的 `_chars()`**（字符数）：文字元素配了上限就自动换行、高度按折行数算，
+## 于是"长行不再把面板撑开"，而是自己折成几行（这就是"标题与内容同宽"的落点）。
+## **不用配高度**：`UI_Label` 的高 = 折行数 × 行高（见它的 `_text_height`）。
+## **是实例方法**（要读本视图的 config）——调它的一定是实例方法（各一览的 `_rows`）。
+func _row(row_name: String, text: String, color: Color = Color(0.75, 0.78, 0.85)) -> Array:
+	return [row_name, "UI_Label", {"content": text, "font_color": color, "max_chars": _chars()}]
 
 
-## 值的短文本：null 说"（无）"，太长截断（可能挂着一整个角色 / 字典）。
+## 值的短文本：null 说"（无）"；**太长只截一刀**（值可能挂着一整个角色 / 字典，那是无底洞）。
+## 截的阈值给得比"一栏宽"（`_chars()`，默认 48 字符）宽得多：**长值该由行自己换行显示**，
+## 不该在这里就被截掉——以前这里截 48，正好等于一栏宽 ⇒ 长值既被截又被折，白丢信息。
 static func _brief(value: Variant) -> String:
 	if value == null:
 		return "（无）"
 	var text: String = str(value)
-	return text if text.length() <= 48 else text.substr(0, 48) + "…"
+	return text if text.length() <= BRIEF_CHARS else text.substr(0, BRIEF_CHARS) + "…"
 
 
 ## 依赖声明（可写 `状态名@identity`）→ `[解析到的角色, 纯状态名]`。
@@ -172,7 +203,8 @@ static func _resolve_note(char_: Character, dependence_status: String) -> String
 ## 参数 `config` 那几行：字典一行一个键；其它类型（如技能那种数组）一行说清；null 说"（无）"。
 ## 键名与值都用 `_brief` 截断（参数里可能挂着字典 / 数组 / 角色）。
 ## 被谁用：UI_Interaction（字典参数）/ UI_Skill（数组参数）。
-static func _config_rows(cfg: Variant) -> Array:
+## **是实例方法**：只是因为它调的 `_row` 要读本视图的宽度（见 `_row` / `_chars`）。
+func _config_rows(cfg: Variant) -> Array:
 	if cfg == null:
 		return [_row("Cfg", "参数：（无）", Color(0.45, 0.48, 0.55))]
 	if not (cfg is Dictionary):

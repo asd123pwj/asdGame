@@ -118,6 +118,8 @@ func _fill() -> void:
 ## 一条快捷 = 一块（一个 UI_Panel，含 5 个子元素）：名称 / "依赖状态"标签 + 输入框 / "执行的指令"标签 + 输入框。
 ## 包成一块是为了**能原地换**（改完只重铺这一块，见 _redo_block）；输入框的提交指令从自己往上数两级到本元素
 ## （输入框 → 块 → 本元素），所以写回方法挂在本元素上。
+## **标签与输入框同宽**（都取本视图的 `_chars()`）：输入框原来写死 340px，而标签没有上限 ⇒
+## 文字标签比输入框宽出一截、看着像"框太窄、换行换得莫名其妙"（实测踩过）。现在都按字符数走。
 ## `old` 给了 ⇒ 原地换掉它（位置不动）；否则追加。
 func _block(shortcut: SystemShortcutPreset, old: UIBase = null) -> void:
 	var key: String = str(shortcut.name)
@@ -131,14 +133,16 @@ func _block(shortcut: SystemShortcutPreset, old: UIBase = null) -> void:
 			["SL_" + key, "UI_Label", {
 				"content": "    依赖状态（回车提交；改了会重新监听）",
 				"font_color": Color(0.62, 0.68, 0.78),
+				"max_chars": _chars(),
 			}],
-			["SI_" + key, "UI_Input", _input_cfg(key, "status", shortcut.dependence_status, 70,
+			["SI_" + key, "UI_Input", _input_cfg(key, "status", shortcut.dependence_status, 2, _chars(),
 				"@self.parent.parent.write_status(@self.config.scut, @self.control.text)")],
 			["CL_" + key, "UI_Label", {
 				"content": "    执行的指令（多条命令在预设里用 \\v 分隔，这里显示成换行）",
 				"font_color": Color(0.62, 0.68, 0.78),
+				"max_chars": _chars(),
 			}],
-			["CI_" + key, "UI_Input", _input_cfg(key, "cmd", _input_text(shortcut.config), 130,
+			["CI_" + key, "UI_Input", _input_cfg(key, "cmd", _input_text(shortcut.config), 4, _chars(),
 				"@self.parent.parent.write_cmd(@self.config.scut, @self.control.text)")],
 		],
 	}
@@ -151,11 +155,16 @@ func _block(shortcut: SystemShortcutPreset, old: UIBase = null) -> void:
 ## 输入框的配置：值放 `content`，`scut` 记"是哪条快捷"（提交指令用它），
 ## 事件两条：点进编辑 + 回车提交（**先退出编辑再写**——写会重铺这一块、把输入框换掉，
 ## 不然 `InputSys.edit_ui` 会指着已经没了的框）。
-static func _input_cfg(shortcut_name: String, which: String, text: String, max_h: int, submit: String) -> Dictionary:
+## `rows` 是**最多显示几行**（`max_lines`）：框高 = 行数 × 行高 + 上下内边距，而**行高是量出来的**
+## （见 UIBase._row_height）⇒ 换字体、换字号都不用来改这里的数。少了行就会冒竖滚动条，看着像"卡住了"。
+## `chars` 是**宽度**（`max_chars`，字符数）——**不写像素宽**：换了字体，字符宽自己跟着变；
+## 更要紧的是与本块的标签同宽（见 _block 的说明）。
+static func _input_cfg(shortcut_name: String, which: String, text: String, rows: int, chars: int,
+		submit: String) -> Dictionary:
 	return {
-		"multiline": true,                 # 命令可能长；多行 + 自动换行 + 高度上限（见 UI_Input）
-		"max_height": max_h,
-		"size": [340, 0],
+		"multiline": true,                 # 命令可能长；多行 + 自动换行 + 最多显示行数（见 UI_Input）
+		"max_lines": rows,
+		"max_chars": chars,                # 宽度按字符数；高那维不写 = 随内容（上限是 max_lines）
 		"content": text,
 		"scut": shortcut_name,
 		"which": which,

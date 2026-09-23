@@ -128,6 +128,11 @@ static func _hit_in(node: Node, pos: Vector2) -> UIBase:
 		var c: Control = child
 		if not c.is_visible_in_tree():
 			continue
+		# **显式裁剪当边界**：滚动容器（clip_contents）把滚出视野的内容裁掉了——那些子控件还在树里、
+		# 矩形也还成立，但用户看不见 ⇒ 不该命中（实测：点在面板下面，命中了滚出视野的行）。
+		# 只认这种**声明过的**裁剪，不做"祖先矩形剪枝"（自由定位元素本来就画在父矩形之外，见下）。
+		if c.clip_contents and not c.get_global_rect().has_point(pos):
+			continue
 		var deeper: UIBase = _hit_in(c, pos)            # 孩子画在父之上，先问孩子
 		if deeper != null:
 			return deeper

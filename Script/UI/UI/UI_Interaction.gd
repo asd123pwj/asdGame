@@ -63,7 +63,7 @@ func _section(char_: Character, preset: InteractionPreset, old: UIBase = null, o
 		"size": [0, 0],
 		"collapsed": not open_,                  # 默认收起：交互多的时候打开也不卡
 		"items": _rows(char_, preset),
-		"children": [UIInteract_Fold.title_item(_section_title(char_, preset), not open_)],
+		"children": [UIInteract_Fold.title_item(_section_title(char_, preset), not open_, _chars())],
 	}
 	var sec: UIBase = replace_child_element(old, sec_name, "UI_Panel", cfg) if old != null \
 		else add_child_element(sec_name, "UI_Panel", cfg)

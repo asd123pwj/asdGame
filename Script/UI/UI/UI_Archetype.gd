@@ -60,7 +60,7 @@ func _section(field: String, value: Variant) -> void:
 		"size": [0, 0],
 		"collapsed": not open_,
 		"items": rows,
-		"children": [UIInteract_Fold.title_item("%s（%d 项）" % [field, list.size()], not open_)],
+		"children": [UIInteract_Fold.title_item("%s（%d 项）" % [field, list.size()], not open_, _chars())],
 	})
 	if open_:
 		UIInteract_Fold.fold(sec, false)         # 摊开：顺手把 items 建出来（fold 里做的就是这个）

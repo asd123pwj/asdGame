@@ -28,17 +28,17 @@ extends ConfigBase
 
 
 ## 独立 UI（不挂别的 UI 下面）：`open(preset_name="Shortcut")` 就开在配置声明的这个位置。
-## `scroll` = [上限宽, 上限高]：宽定死 440（两个输入框各 340 + 边距），高最多 520——内容再多也只在框内滚动。
+## `scroll` = [上限宽, 上限高]：宽写 0 = 跟着内容（写死宽会把长文案裁掉），高最多 520——再多只在框内滚动。
 var values: Array[Array] = [
     ["Shortcut", "UI_Panel", {
         "position": [430, 40],                       # 摆在状态一览旁边（那个是 [40, 40]）
-        "size": [440, 0],                            # 宽固定、高随内容（上限由 scroll 收口）
-        "scroll": [440, 520],
+        # **不写 size**：宽度跟着内容走
+        "scroll": [0, 520],                          # 宽不限（0 = 跟着内容）、高到 520 就进滚动
         "free": true,                                # 自由定位：位置不被父级布局改
         "events": [QName.UI_event_mouseLeft_drag],
         "children": [
             # 头部 = 可折叠标题（点它整块收起 / 展开；标题自己标了"收起时留着我"，收起来还点得回来）
-            UIInteract_Fold.title_item("系统快捷"),
+            UIInteract_Fold.title_item("系统快捷", false, SysCfg.ui_view_chars),
             ["Close", "UI_Label", {
                 "content": "[关闭]",
                 "events": [[QName.mouseLeft, "UIInteract.close(@self.parent)"]],

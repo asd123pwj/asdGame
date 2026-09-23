@@ -139,8 +139,32 @@ static var rescale_epsilon := 0.001     # 缩放里"上帧距离"作除数时的
 # 找"当底的 stylebox 槽"时的顺序：哪个控件有哪个就用哪个（见 UIBase._background_slot）。
 static var ui_background_slots: Array[String] = ["panel", "normal", "background"]
 
+# ---- UI 字体 ----
+# **默认字体**：按名字找**系统里装的字体**（在 `OS.get_system_fonts()` 里比对，取第一个有的），
+# 找到就设成全局默认（`ThemeDB.fallback_font`，见 UISystem.apply_default_font）；
+# 一个都没装就**什么都不换**（保持引擎默认主题字体）并在控制台提醒一次——不报错、不中断启动。
+#
+# 用的是「霞鹜文楷等宽」（LXGW WenKai Mono）——**等宽**字体：**中文 = 数字/英文的两倍宽**
+# ⇒ "多宽"可以按**字符数**说（见 UI_Input 的 `max_chars`：一个中文算 2 个字符）。
+# 名字可以写多个候选、按顺序取第一个装了的（中文名 / 英文名都写上，免得装的版本只认一种）。
+static var ui_font_names: Array[String] = ["霞鹜文楷等宽", "LXGW WenKai Mono", "LXGW WenKai"]
+
 # ---- UI 字号 ----
 # **默认字号，同时也是最小字号**（见 UIBase.reapply）：没配 `font_size` 的元素就用它；
 # 配了比它小的也**抬到它**——"小到看不清"的界面没法用，要更小就改这里，别在配置里各写各的（改了也不生效）。
-# 16 = Godot 默认主题的字号（所以"没配"的元素看起来和以前一样）。
-static var ui_font_size_default := 16
+# **行高这里一个数都不写**：一行多高 = 字体自己的 ascent+descent + 主题的行距，运行时**量**出来的
+# （见 UI_Input._row_height）⇒ 换字体 / 换字号之后，框高、折行数都自己跟着变，不需要回来改数字。
+# （以前这里写过"一行 28px / 两行 59px"那种数，换字体就是错的——所以现在只留"去哪量"。）
+static var ui_font_size_default := 20
+
+# ---- 一览这类"一栏文字"的宽度 ----
+# 一栏有多宽（**字符数**，中文算 2；见 UI_Label / UI_Input 的 `max_chars`）。
+# 一览里"段标题、只读行、输入框"**都用它**——三者同宽才不会出现"标题把面板撑到内容的两三倍宽、
+# 内容那栏却早早换了行"（实测：段标题是一行很长的小结，它没有上限，就把整块面板撑开了）。
+# 想逐个面板调：在那个面板的 config 里写 `max_chars`（覆盖这个默认值）。
+static var ui_view_chars := 48
+
+# ---- 别再引入"尺寸网格" ----
+# 试过"尺寸吸 32 的倍数、间距吸 8 的倍数"（写给九宫格切图用），**撤了**：
+# 它和"文字刚好一行""长文案要看得全"这两件事直接冲突（见 UI.md 的"面板宽度"）。
+# 现在一行多高、一栏多宽都是**量出来的**（见 UIBase._row_height / _max_width_px）。

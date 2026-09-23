@@ -141,6 +141,17 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 
       控件一个槽都没有时警告一次、不画——要"带底"就换有槽的元素（文字带底 = `UI_Panel` 里放 `UI_Label`，键盘的键就是这么做的）。**整块底图走它，不要放 Image 元素当背景**——Image 属于内容，摆在叠加层上会盖住别的子元素。
     - 九宫格边距 = `background_slice`（**每张底图各自给**，跟着图的圆角走；不写 = 0 = 整张拉伸）。
+  - **面板宽度**：**别写死宽度**（`size[0]` / `scroll[0]` 写 0），宽度跟着内容走 —— 写死的话
+    "里面比外面宽"的部分会被 `clip_contents` 裁掉（长文案显示到一半就没了，实测踩过）。
+    要限制高度就写 `scroll: [0, 上限高]`（宽不限、高到上限就进滚动）。
+  - **一栏的宽度按字符数说**（`max_chars`，中文算 2；`max_width` 是像素写法，两个都写取小的）：
+    文字元素（`UI_Label`）与输入框都用它，**配了上限就"宽 = 上限 + 换行"**（短内容也不缩——同一栏要对齐），
+    高度按折行数算。**一览里三者必须同宽**（段标题、只读行、输入框）：不然标题那行会是一段很长的小结，
+    它没上限就把整块面板撑到内容那栏的**两三倍宽**，而内容那栏有上限、早早换了行（实测踩过）——
+    所以 `UI_View` 有 `_chars()`（面板 config 的 `max_chars`，默认 `SysCfg.ui_view_chars`），
+    行/段标题/输入框都取它；想整体调宽窄就改 `SysCfg.ui_view_chars`（或某个面板自己写 `max_chars`）。
+  - **没有"尺寸网格"约束**（试过"尺寸吸 32、间距吸 8"，已撤：它和"文字刚好一行""长文案看得全"冲突）
+    —— **别再引入**。内容盒的 `separation` 仍是 **0**（行高里已含行距，再叠容器间隔就松）。
   - `size` 里为 **0 的那一维按"内容最小尺寸"补足**（`_fit_size()`；"内容要多大"由可覆写的 `_content_size()` 给出）：`[150, 0]` = 宽固定、高随内容；`[0, 0]` = 完全由内容决定。**必须补**——控件尺寸为 0 时 `get_global_rect()` 是退化矩形，PointerDetect 永远命中不到它（菜单"一打开就没了"就是这么来的：矩形高度 0 → 失焦判定以为指针在菜单外 → 同一帧里就把它关了）。
     - **补完还会把结果发布成控件的最小尺寸**（`custom_minimum_size`）：本元素的根控件是普通 `Control`，它自己不汇总内容最小尺寸，而"面板套面板"（容器里的 `UI_Panel`，如可折叠分组）要靠这个最小尺寸才能往外撑——不发布的话内层面板在父容器眼里高度永远是 0，整棵子树都长不出来（做"可收回分组"时实测踩到：嵌套分组的高度一直停在标题那一点）。所以 `_fit_size()` 读"配置想要多大"要读 `config["size"]`（`_config_size()`），不能读 `custom_minimum_size`（那个值已被覆盖成"内容实际多大"）。
   - **`UI_Panel` 的 `_content_size()` 必须问内部的 `PanelContainer`，不能问根控件**：根是普通 `Control`，**不会汇总子元素的最小尺寸**，问它只会得到 `custom_minimum_size`（`[150, 0]` → 高度就是 0）。而且建时还没进树、字体主题都问不出来，所以要挂在 `_panel.minimum_size_changed` 上再补一次。
@@ -194,10 +205,10 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | 类 | 职责 | 事件配置示例 |
 |---|---|---|
 | `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑。`background` 可给整块面板铺一张九宫格底图。配 `scroll: [上限宽, 上限高]`（0 = 该维不限制）时内容装进滚动容器：面板按"内容需要 ↔ 上限"取小，长出来的部分进去滚动（见"长内容"一节的"面板滚动"） | — |
-| `UI_Label` | 文本：content 即文本；**绑 `"Mouse Left"`（按住）即"按钮"/"拖动手柄"**（配 `UIInteract.drag @self.parent event` 就是后者），要"按下那一下"就用 `"Mouse Left | Press"`（无需单独 Button 类） | `["Mouse Left", "UIInteract.close @self.parent"]` |
+| `UI_Label` | 文本：content 即文本；**绑 `"Mouse Left"`（按住）即"按钮"/"拖动手柄"**（配 `UIInteract.drag @self.parent event` 就是后者），要"按下那一下"就用 `"Mouse Left | Press"`（无需单独 Button 类）。**给一栏文字定宽**：`max_chars`（字符数，中文算 2）/ `max_width`（像素）——配了就**自动换行 + 宽度等于上限**（短内容也不缩，同栏对齐），高度按折行数自适应（优先用引擎按当前宽度报的最小高）；不配就是"宽 = 文字本身"（长行会把面板撑开，见"面板宽度"） | `["Mouse Left", "UIInteract.close @self.parent"]` |
 | `UI_Image` | 图片：content = 纹理路径，refresh 时 load；改图 = 写 `config["content"]` + 一条 `self.refresh` | — |
 | `UI_Scroll` | 滚动容器：content 为多行文本，内层 Label autowrap。**ScrollContainer 默认最小尺寸为 0，必须用 `size` 配置可视区大小，否则不可见**。结构与 `UI_Panel` 同一套：`root(Control) → Scroll(ScrollContainer) → Label` + `Overlay(Control)`，**free 子元素挂 Overlay**（不能挂在滚动容器里：会被裁、尺寸被压成 0） | — |
-| `UI_Input` | 输入框（LineEdit）：content 是**配置里写的初值**（`refresh()` 写进框里），回车提交 → 派发 `Input Submit`。**框里正在打的字不同步进 content**：要用就直接读 `@self.control.text`（取值链能读实例成员）——于是提交没有"先收文本"这一步，**元素自己没有提交逻辑**，提交就是配置里的普通命令串（送到哪 + 清空 + 要不要退出编辑 + 刷改过的两个 UI）。**元素里没有任何特判**：点它进编辑也是一条普通配置（`[QName.mouseLeft, 'UIInteract.begin_edit self']`，换成别的事件也行），事件照常走配置 + 冒泡。配 `multiline: true` 时控件换成 TextEdit：**自动换行 + 高度按"折行后的行数"自适应**（`max_height` 封顶，超出框内滚动），**回车仍是提交、不会插换行**（输入层判"这次算提交"就吃掉那个事件；按着 Shift 才留给 TextEdit 插换行） | `[[QName.mouseLeft, 'UIInteract.begin_edit self'], [QName.input_submit, 'Utils.write "@self.config.send_to" @self.control.text\vUtils.write "@self.config.content"\vUIInteract.end_edit self\v@self.refresh("content")\vself.refresh']]` |
+| `UI_Input` | 输入框（LineEdit）：content 是**配置里写的初值**（`refresh()` 写进框里），回车提交 → 派发 `Input Submit`。**框里正在打的字不同步进 content**：要用就直接读 `@self.control.text`（取值链能读实例成员）——于是提交没有"先收文本"这一步，**元素自己没有提交逻辑**，提交就是配置里的普通命令串（送到哪 + 清空 + 要不要退出编辑 + 刷改过的两个 UI）。**元素里没有任何特判**：点它进编辑也是一条普通配置（`[QName.mouseLeft, 'UIInteract.begin_edit self']`，换成别的事件也行），事件照常走配置 + 冒泡。宽度上限两种说法：`max_width`（像素）/ `max_chars`（**字符数**，中文算 2——等宽字体里中文正好两个半角宽），超了多行框换行、单行框横向滚，且**是硬上限**（连 `size` 也压）；配 `multiline: true` 时控件换成 TextEdit：**自动换行 + 高度按"折行后的行数"自适应**（行高 = 字高 + 主题行距，运行时量出来，换字体自动变；`max_lines` = 最多显示几行，超出框内滚动），**回车仍是提交、不会插换行**（输入层判"这次算提交"就吃掉那个事件；按着 Shift 才留给 TextEdit 插换行） | `[[QName.mouseLeft, 'UIInteract.begin_edit self'], [QName.input_submit, 'Utils.write "@self.config.send_to" @self.control.text\vUtils.write "@self.config.content"\vUIInteract.end_edit self\v@self.refresh("content")\vself.refresh']]` |
 - **一览类元素**（把运行期数据铺出来看）：`UI_Status`（角色状态）、`UI_Shortcut`（角色快捷）、
   `UI_Attr`（角色属性 / buff）、`UI_Interaction`（角色交互）、`UI_Skill`（角色技能）、
   `UI_Archetype`（角色原型——**唯一不实时的**：原型只在角色初始化时生效一次，所以它不覆写 `_listen`）——六者共用底座 **`UI_View`**
@@ -279,7 +290,7 @@ var values: Array[Array] = [
   - 父元素上 `collapsed`：收起态（默认 false = 展开）；
   - **子元素自己**标 `collapse_keep = true`：表示"收起时留着我"（默认不标 = 跟着收起）⇒ "谁留下"写在自己身上，**父元素不用维护名字清单**（子元素改名、加删，都不用回头改父级配置）。
 - **为什么收起后就不占屏幕了**：不可见的子元素**不参与容器布局** ⇒ 容器按内容收缩 ⇒ `size` 里为 0 的那一维（"宽固定、高随内容"，菜单/面板都这么配）自己就变短了。
-- **一行搞定："可折叠标题"片段**（推荐用法）——`UIInteract_Fold.title_item("标题")` 返回一条普通 `UI_Label` 配置：它自己**既是标题也是收回按键**（显示 `▾ 标题` / `▸ 标题`，点它收起/展开它所在的分组，自带 `collapse_keep: true`）。给一段内容加"收 / 展"就是**加这一行**：
+- **一行搞定："可折叠标题"片段**（推荐用法）——`UIInteract_Fold.title_item("标题")` 返回一条普通 `UI_Label` 配置：它自己**既是标题也是收回按键**（显示 `▾ 标题` / `▸ 标题`，点它收起/展开它所在的分组，自带 `collapse_keep: true`）。第三个参数 `chars`（>0）给标题**限宽**（`max_chars`，字符数）：标题常是"一行小结"，不限宽会把整块面板撑开（见"面板宽度"）。给一段内容加"收 / 展"就是**加这一行**：
   ```gdscript
   static func title_item(what: String) -> Array:
       return ["Title", "UI_Label", {
@@ -351,7 +362,7 @@ var values: Array[Array] = [
 - **配置值就用注册名**：`host` 这类键填的就是 `MiniHUD/Menu` 这种名字（`_find_host` 与 `@注册名` 都认），
   写进去就是它——不用对着数字猜"这是谁"，也不怕重开一次就对不上。
 - **长度问题两手一起上**：容器 `scroll: [340, 460]`（`UI_Panel` 的滚动，内容再多也只在框内滚）+
-  每行的值用**多行输入框**（`UI_Input` 的 `multiline`：自动换行、高度按折行数自适应、`max_height` 封顶）。
+  每行的值用**多行输入框**（`UI_Input` 的 `multiline`：自动换行、高度按折行数自适应、`max_lines` = 最多显示几行）。
 - **在编辑器里右键 ⇒ 右键菜单管的是它自己**（`UIEditor` 预设里配了 `QName.UI_event_mouseRight_menu`，
   `self` 就是它）——所以"启用拖拽"拖的是编辑器，不会去动它挂在的那个父 UI。**必须配这条**：
   不配的话右键事件会冒泡到父 UI（编辑器本身不消费），那里配的绑定就把 `host` 解成父 UI 了。

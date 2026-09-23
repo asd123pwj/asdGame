@@ -10,7 +10,9 @@ extends UIBase
 ##   不再顶着屏幕往下长（UI 编辑器那种"内容长短不定"的就是它）。见 UI.md 的"面板滚动"。
 
 ## 面板边距（_create_control 给 MarginContainer 的那四个常量；算"内容需要多大"时要加上）。
-const MARGIN_SIZE := Vector2(16, 12)
+## 16 ⇒ 四边各 8。别调太大：面板总高 = 内容 + 它，段与段之间就靠它留白，
+## 一大就"两块东西隔老远"（实测踩过）。
+const MARGIN_SIZE := Vector2(16, 16)
 
 ## 内层面板（真正的容器：含边距 + 内容）。
 ## 被谁用：_create_control（建）、_content_size（问内容多大）。
@@ -32,6 +34,10 @@ var _scroll: ScrollContainer
 func _create_control() -> Control:
 	var root: Control = Control.new()
 	root.name = name
+	# **把画面裁在面板矩形内**：面板里子元素的最小尺寸可能把内层容器顶得比根控件大
+	# （如长文案的 Label）⇒ 不裁的话"画出来的"比"命中矩形"大，点在面板外面也能点到里面的东西。
+	# 裁剪只影响绘制；命中那边由 `PointerDetect._hit_in` 认 `clip_contents` 自行跳过（两处配套）。
+	root.clip_contents = true
 
 	_panel = PanelContainer.new()
 	_panel.name = "Panel"
@@ -60,6 +66,9 @@ func _create_control() -> Control:
 
 	_box = VBoxContainer.new()
 	_box.name = "Box"
+	# **行间距归零**：竖排默认 separation = 4 ⇒ "两行"会变成 32+32+4 = 68（超过网格的 64）。
+	# 行自己的高度里已经有富余（32 装 28 的字 ⇒ 上下各 2px），不靠容器的间隔留白。
+	_box.add_theme_constant_override("separation", 0)
 	# 子元素最小尺寸一变就重算面板尺寸：滚动模式下"内容需要多大"只能问内容盒
 	# （有 ScrollContainer 时 _panel 报的是滚动容器的最小尺寸，跟内容无关，见 _content_size）。
 	_box.minimum_size_changed.connect(_fit_size)
@@ -105,6 +114,8 @@ func _content_size() -> Vector2:
 
 
 ## config["scroll"] 的上限（[宽, 高]，0 = 该维不限制）。没配 / 写得不全 = (0, 0) = 不限制。
+## **宽度写 0 就是"宽跟着内容走"**（长文案才不会被裁，见 UI.md 的"面板宽度"）；
+## 高度写个数就是"最多长这么高，再多进去滚动"。
 ## 被谁用：_content_size。
 func _scroll_cap() -> Vector2:
 	var s: Variant = config.get("scroll")

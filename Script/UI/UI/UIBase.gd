@@ -167,6 +167,45 @@ func _content_size() -> Vector2:
 	return control.get_combined_minimum_size()
 
 
+## 宽度上限（**像素**）：`config["max_width"]`（像素）与 `config["max_chars"]`（**字符数**）取小的那个；
+## 都没写 = 0 = 不限。
+## **为什么能按字符数说**：默认字体是「霞鹜文楷等宽」这类**等宽**字体，**中文 = 数字/英文的两倍宽**
+## （宽窄是向字体量的，见 `_half_width`）⇒ 一个"字符" = 半个中文宽。比例字体里这个关系不成立
+## （那时按字符数配宽度会不准），所以是"量出来再乘"，不是假设。
+## 被谁用：UI_Label / UI_Input（"这一栏有多宽"的唯一定义处，别在子类里各写一份）。
+func _max_width_px(ctrl: Control) -> float:
+	if ctrl == null:
+		return 0.0
+	var px: float = float(config.get("max_width", 0))
+	var chars: int = int(config.get("max_chars", 0))
+	if chars > 0:
+		var by_chars: float = float(chars) * _half_width(ctrl)
+		px = by_chars if px <= 0.0 else minf(px, by_chars)
+	return px
+
+
+## 一个"半角字符"按多宽算：**半角（"0"）与 全角÷2 取大的那个**——都向字体量，不猜。
+## 为什么取大的：中文按 2 个字符算，而"2 个半角"与"1 个全角"在不同字体里**不一定一样宽**
+## ——实测「霞鹜文楷等宽」20 号下是 半角 10px / 全角 20px（正好 2:1）；换成比例字体就可能不是，
+## 那时取大的那个才不会把字挤掉。
+## 被谁用：_max_width_px。
+static func _half_width(ctrl: Control) -> float:
+	var font: Font = ctrl.get_theme_font("font")
+	var fs: int = ctrl.get_theme_font_size("font_size")
+	var half: float = font.get_string_size("0", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var full: float = font.get_string_size("中", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	return maxf(half, full / 2.0)
+
+
+## 一行有多高：**字体的字高 + 主题的行距**——都是问出来的，不写死数字
+## （换字体 / 换字号 / 换主题之后它自己就变了）。TextEdit 与 Label 的行高规则一致
+## （实测：字高 24 + 行距 4 = 28，与引擎给两行文字排出来的高一致）。
+## 被谁用：UI_Input._text_height / UI_Label._text_height。
+static func _row_height(ctrl: Control) -> float:
+	return ctrl.get_theme_font("font").get_height(ctrl.get_theme_font_size("font_size")) \
+		+ float(ctrl.get_theme_constant("line_spacing"))
+
+
 ## 虚接口：子类生成自身外观控件。
 ## 被谁用：build()。实现者：UI_Panel / UI_Label / UI_Scroll / UI_Image。
 func _create_control() -> Control:
@@ -377,6 +416,12 @@ func reapply() -> void:
 	var font_size: int = maxi(int(config.get("font_size", SysCfg.ui_font_size_default)),
 		SysCfg.ui_font_size_default)
 	control.add_theme_font_size_override("font_size", font_size)
+	# **字体也在这一处**（全局默认字体，从系统里找的等宽文楷，见 UISystem.apply_default_font）：
+	# 走**控件级覆盖**——主题链上引擎默认主题对每种类型都自带字体，只有控件自己的覆盖一定盖得住
+	# （实测：只设根窗口主题的 default_font，TextEdit 拿到的还是 Open Sans）。
+	# 字号与字体是一个入口：想换字体改 SysCfg.ui_font_names，别在各个配置里各写各的。
+	if UISys.ui_font != null:
+		control.add_theme_font_override("font", UISys.ui_font)
 	if config.has("font_color"):
 		var font_color: Color = config["font_color"]
 		control.add_theme_color_override("font_color", font_color)

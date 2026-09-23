@@ -78,17 +78,23 @@ static func toggle_fold(target: UIBase) -> void:
 ## **为什么放这儿而不是预设里**：它是"折叠"这个交互的一部分（收起时留我 / 箭头对调 / 点完刷新
 ## 都跟 fold 是一件事），放交互里谁都能用；预设只负责构造**自己**的 widgets，不该给别处提供零件。
 ## 想换样子（标题带底、或者另放一个 `[+]`/`[-]` 按钮）照抄这段改 `content` / `events` 即可。
-static func title_item(title: String, collapsed: bool = false) -> Array:
+## `chars` 给了（>0）就给标题**限宽**（`max_chars`，字符数）：标题常是"一行小结"，不限宽的话
+## 它会把整块面板撑到内容那栏的两三倍宽（实测踩过）——限宽之后它自己折行，宽度和内容对齐。
+## 被谁用：各一览（传自己的 `_chars()`，见 UI_View）、各预设（传 `SysCfg.ui_view_chars`）。
+static func title_item(title: String, collapsed: bool = false, chars: int = 0) -> Array:
 	var texts: Array = title_texts(title, collapsed)
-	return ["Title", "UI_Label", {
+	var cfg: Dictionary = {
 		"content": texts[0],
 		"content_2": texts[1],
-		"collapse_keep": true,
+		"collapse_keep": true,                       # 收起时留着我——**别删**，不标的话收起来就再也点不回来了
 		"events": [[QName.mouseLeft,
 			"UIInteract.toggle_fold(@self.parent)"
 			+ '\vUtils.swap("@self.config.content", "@self.config.content_2")'
 			+ '\v@self.refresh("content")']],
-	}]
+	}
+	if chars > 0:
+		cfg["max_chars"] = chars
+	return ["Title", "UI_Label", cfg]
 
 
 ## 标题的两套文字（`[现在显示的, 对调后的]`）：收起 = `▸ …`、展开 = `▾ …`。

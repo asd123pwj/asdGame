@@ -135,7 +135,7 @@ func _section(char_: Character, preset: StatusPreset, open_: bool = false, old: 
 		"size": [0, 0],
 		"collapsed": not open_,
 		"items": _rows(char_, preset),
-		"children": [UIInteract_Fold.title_item(_section_title(preset, char_), not open_)],
+		"children": [UIInteract_Fold.title_item(_section_title(preset, char_), not open_, _chars())],
 	}
 	var sec: UIBase = replace_child_element(old, sec_name, "UI_Panel", cfg) if old != null \
 		else add_child_element(sec_name, "UI_Panel", cfg)

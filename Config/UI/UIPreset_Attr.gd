@@ -35,13 +35,13 @@ extends ConfigBase
 var values: Array[Array] = [
     ["Attr", "UI_Panel", {
         "position": [420, 40],
-        "size": [360, 0],                            # 宽固定、高随内容（上限由 scroll 收口）
-        "scroll": [360, 460],
+        # **不写 size**：宽度跟着内容走（写死宽会裁掉长文案）
+        "scroll": [0, 460],                          # 宽不限（0 = 跟着内容）、高到 460 就进滚动
         "free": true,                                # 自由定位：位置不被父级布局改
         "events": [QName.UI_event_mouseLeft_drag],
         "children": [
             # 头部 = 可折叠标题（点它整块收起 / 展开；标题自己标了"收起时留着我"，收起来还点得回来）
-            UIInteract_Fold.title_item("角色属性"),
+            UIInteract_Fold.title_item("角色属性", false, SysCfg.ui_view_chars),
             ["Close", "UI_Label", {
                 "content": "[关闭]",
                 "events": [[QName.mouseLeft, "UIInteract.close(@self.parent)"]],
