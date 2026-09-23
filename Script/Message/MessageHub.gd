@@ -528,16 +528,24 @@ static func listen_interaction_act(char_: Character, interaction_name: String, c
                                                           
                                                           
 """
-## 技能域：ID = ["CHAR", 角色, "SKILL", 技能名, 动作]。
-## 被谁用：Skills.add/remove_skill（增删）、SkillBase.act（send_skill_act，每帧生效时）。
+## 技能域：ID = ["CHAR", 角色, "SKILL", 预设名, 动作]（三个动作用的都是**预设名**，见 SkillBase.act）。
+## **另有"任意技能"的通配节点**（ID = ["CHAR", 角色, "ANY_SKILL", "ANY", "changed"]，
+## 见 send_skill_any_changed）：下面每个具体的 send_skill_* 都顺手发一条，
+## 于是"不关心是哪条技能、只关心它变了"的订阅者订一条就够。
+## 被谁用：Skills.add/remove_skill（增删）、SkillBase.act（send_skill_act，成功执行时——
+##          技能每物理帧都在执行，所以订阅方要自己扛住这个频率，如 UI_Skill 只就地换标题那一行）；
+##          listen 侧是 SkillPreset、UI_Skill（订通配那条）。
 """ ---------- Character Skills ---------- """
 static func send_skill_add(char_: Character, skill_name: String) -> Array:
+    send_skill_any_changed(char_, skill_name, "add")
     return _send_character(char_, "SKILL", skill_name, "add")
 
 static func send_skill_remove(char_: Character, skill_name: String) -> Array:
+    send_skill_any_changed(char_, skill_name, "remove")
     return _send_character(char_, "SKILL", skill_name, "remove")
 
 static func send_skill_act(char_: Character, skill_name: String) -> Array:
+    send_skill_any_changed(char_, skill_name, "act")
     return _send_character(char_, "SKILL", skill_name, "act")
 
 static func listen_skill_add(char_: Character, skill_name: String, callback: Callable, once: bool = false) -> String:
@@ -548,6 +556,20 @@ static func listen_skill_remove(char_: Character, skill_name: String, callback: 
 
 static func listen_skill_act(char_: Character, skill_name: String, callback: Callable, once: bool = false) -> String:
     return _listen_character(char_, "SKILL", skill_name, "act", callback, once)
+
+
+## **任意技能**的通配发送（做法同 `send_any_attr_changed` / `send_buff_any_changed` / `send_interaction_any_changed`）：
+## 节点按"任意"分，payload = `[预设名, 动作]`（动作 = `add` / `remove` / `act`）。
+## 为什么要有它：具体消息按**预设名**分节点（`listen_skill_add(角色, 名字)`）⇒ 没有通配的话，
+## "看技能的 UI"只能订"当前已知的那些名字"，**运行期新加的技能收不到消息**。
+## 由上面三个具体的 `send_skill_*` 各发一条——别在别处单独调（不然会漏一份）。
+## 注意 `act` 是**每物理帧**都发的（技能逐帧执行）：限流只做在流水那边（`ActionHistory`），
+## 消息不省 ⇒ 订它的一方要自己扛住这个频率。
+static func send_skill_any_changed(char_: Character, skill_name: String, action: String) -> Array:
+    return _send_character(char_, "ANY_SKILL", "ANY", "changed", [skill_name, action])
+
+static func listen_skill_any_changed(char_: Character, callback: Callable, once: bool = false) -> String:
+    return _listen_character(char_, "ANY_SKILL", "ANY", "changed", callback, once)
 
 
 """

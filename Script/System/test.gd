@@ -117,6 +117,11 @@ func ui_test() -> void:
     # 换人：UIInteract.open(preset_name="Interaction", content_cmd="@Char/兔子")。
     Msg.send_cmd('UIInteract.open(preset_name="Interaction")')
 
+    # 角色技能一览（外壳 Config/UI/UIPreset_Skill.gd + 内容元素 Script/UI/UI/UI_Skill.gd）：
+    # 每条技能一段：实现类 / 依赖状态 / **现在在不在执行队列里** / 流水（加装 / 移除 / 执行了多少帧）。
+    # 技能是每物理帧执行的 ⇒ "最近执行"那一行字会一直在跳（关掉队列那段就停）。
+    Msg.send_cmd('UIInteract.open(preset_name="Skill")')
+
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:

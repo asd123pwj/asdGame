@@ -1,7 +1,8 @@
 class_name UI_View
 extends UI_Panel
-## **"看某个对象的一览"这类元素的共同底座**：`UI_Status`（状态）/ `UI_Shortcut`（快捷）/ `UI_Attr`（属性）都继承它。
-## 三处本来各写一份的骨架收在这里，**差别只有两件事**：铺什么（`_fill`）、订什么（`_listen`）。
+## **"看某个对象的一览"这类元素的共同底座**：`UI_Status`（状态）/ `UI_Shortcut`（快捷）/ `UI_Attr`（属性）/
+## `UI_Interaction`（交互）/ `UI_Skill`（技能）都继承它。
+## 各一览本来各写一份的骨架收在这里，**差别只有两件事**：铺什么（`_fill`）、订什么（`_listen`）。
 ##
 ##   · **看哪个对象**：走 `UIBase.target_path("char")` / `target_object("char")` 那条通用规则
 ##     （查看项 `content_cmd`——自己的或外壳上写的——优先，其次本元素 config 的 `char`）。
@@ -137,6 +138,60 @@ static func _brief(value: Variant) -> String:
 		return "（无）"
 	var text: String = str(value)
 	return text if text.length() <= 48 else text.substr(0, 48) + "…"
+
+
+## 依赖声明（可写 `状态名@identity`）→ `[解析到的角色, 纯状态名]`。
+## 与各预设注册监听时用的是**同一套解析**（`Msg._resolve_target`）⇒ "一览里看到的 ✔/✘"就是"真的触发 / 进出队时看的那个"。
+## 被谁用：UI_Interaction / UI_Skill（依赖那一行与标题上的 ✔/✘）。
+static func _dep_of(char_: Character, dependence_status: String) -> Array:
+	return Msg._resolve_target(char_, dependence_status)
+
+
+## 这条依赖现在满足吗（按**解析到的那个角色**算；没装过 / 没算出都算未满足）。
+## 被谁用：同上。
+static func _dep_hit(char_: Character, dependence_status: String) -> bool:
+	var resolved: Array = _dep_of(char_, dependence_status)
+	var target: Character = resolved[0]
+	if target == null or target.statuses == null or not target.statuses.check_exist(str(resolved[1])):
+		return false
+	return target.statuses.check_satisfied(str(resolved[1]))
+
+
+## 依赖里写了 `@identity` 时，把"解析到了谁"写出来（没写就没这段）。被谁用：同上。
+static func _resolve_note(char_: Character, dependence_status: String) -> String:
+	var raw: String = str(dependence_status)
+	if not raw.contains("@"):
+		return ""
+	var resolved: Array = _dep_of(char_, dependence_status)
+	return "　（%s@%s → %s）" % [str(resolved[1]), raw.split("@")[1],
+		_brief(RegSys.name_of(resolved[0]))]
+
+
+## 参数 `config` 那几行：字典一行一个键；其它类型（如技能那种数组）一行说清；null 说"（无）"。
+## 键名与值都用 `_brief` 截断（参数里可能挂着字典 / 数组 / 角色）。
+## 被谁用：UI_Interaction（字典参数）/ UI_Skill（数组参数）。
+static func _config_rows(cfg: Variant) -> Array:
+	if cfg == null:
+		return [_row("Cfg", "参数：（无）", Color(0.45, 0.48, 0.55))]
+	if not (cfg is Dictionary):
+		return [_row("Cfg", "参数：%s" % _brief(cfg), Color(0.62, 0.68, 0.78))]
+	var out: Array = [_row("Cfg", "参数（%d 项）" % (cfg as Dictionary).size(),
+		Color(0.62, 0.68, 0.78))]
+	var i: int = 0
+	for key in (cfg as Dictionary).keys():
+		out.append(_row("Cfg_%d" % i, "　%s = %s" % [str(key), _brief(cfg[key])]))
+		i += 1
+	return out
+
+
+## 一笔流水 -> 给人看的文本：`14:03:21（元年正月初一 子时）`；没记过 -> `（还没）`。
+## 前面是**现实墙上时钟**（"具体时间"，到秒——流水按"n 秒内超过 m 次就每秒只记第一次"限流，
+## 最快也是每秒一笔，再细没意义），括号里是**游戏时间**。
+## 被谁用：UI_Interaction / UI_Skill 的流水三行（数据来自 `ActionHistory`）。
+static func _stamp(entry: Variant) -> String:
+	if not (entry is Dictionary):
+		return "（还没）"
+	return "%s（%s）" % [str(entry.get("clock", "")), str(entry.get("text", ""))]
 
 
 ## ---------- 子类钩子 ----------

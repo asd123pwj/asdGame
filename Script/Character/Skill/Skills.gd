@@ -13,6 +13,13 @@ var skills: Dictionary[String, SkillPreset] = {}
 ## 被谁用：physics_process、SkillBase.in_queue/out_queue。
 var skill_queue: Dictionary[SkillBase, Array] = {}
 
+## 动作流水（加装 / 移除 / **执行**）：键是**预设名**，实现见 `ActionHistory`（交互那边共用同一份）。
+## "执行"那一笔由 `SkillBase.act` 记；技能每物理帧都在执行 ⇒ 由 `ActionHistory` 按
+## "n 秒内超过 m 次就每秒只记第一次"限流（参数在 `SysCfg.history_window` / `history_window_max`）。
+## **为什么要记**：不看流水只能看到"现在在不在跑"，看不到"最后一次跑是什么时候"。
+## 被谁用：add_skill / remove_skill（自己记）、SkillBase.act（记 act）、UI_Skill（读它显示）。
+var history: ActionHistory = ActionHistory.new()
+
 ## 装配：记下所属角色并装入原型声明的技能。
 ## 被谁用：Character._init_from_archetype。
 func _init(me: Character, skill_name: Array[String]) -> void:
@@ -47,6 +54,7 @@ func add_skill(skill_name: String) -> Enums.Code:
     var skill = SkillPreset.get_(skill_name)
     skills[skill_name] = skill
     skill.listen(me)
+    history.record(skill_name, "add")
     Msg.send_skill_add(me, skill_name)
     return Enums.Code.OK
 
@@ -64,6 +72,8 @@ func remove_skill(skill_name: String) -> Enums.Code:
         return Enums.Code.NOT_MODIFIED
     skills[skill_name].unlisten(me)
     skills.erase(skill_name)
+    # 增 / 删是**结构变化**：流水照记，广播也照发（限流只挡"高频"那类，见 ActionHistory）
+    history.record(skill_name, "remove")
     Msg.send_skill_remove(me, skill_name)
     return Enums.Code.OK
 

@@ -63,9 +63,10 @@ func listen(char_: Character) -> void:
         var target = char_.statuses.get_latest_message(dependence_status)
         @warning_ignore("unsafe_method_access")
         interaction.interact(char_, target)
-        # 记一笔流水（**广播前**：接收方要读到刚记下的这一笔才算得对"最后时间"）。
+        # 记一笔流水（**广播前**：接收方要读到刚记下的这一笔才算得对"最后时间"）；
+        # **记不上也照样广播**（限流只管流水那一处，见 ActionHistory，别拿"要不要发消息"当限流）。
         # 交互就活这一帧，过去就没影了 —— 记下来才看得出"刚才触发过"。
-        char_.interactions.record(name, "act")
+        char_.interactions.history.record(name, "act")
         Msg.send_interaction_act(char_, name)
     var msg_ID = Msg.listen_status_satisfied(char_, dependence_status, trigger_func)
     _trigger_funcs[char_][msg_ID] = trigger_func

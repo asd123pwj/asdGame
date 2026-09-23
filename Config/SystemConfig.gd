@@ -113,6 +113,13 @@ var cache_command_max := 1024
 # 游戏时间周期：每经过 hour_period 秒，TimeSys 推进一个时辰
 var hour_period := 2.0
 
+# ---- 动作流水（ActionHistory）的限流：某个动作在 history_window 秒内超过 history_window_max 次之后，
+#      **每秒只记第一次**（一直这么算，直到它安静 history_window 秒才复位计数）。
+#      n / m 两个参数就这两个；再改就改这儿，别在调用方各写一遍。
+#      为什么要它：技能是每物理帧都在执行的，不限流的话流水会被写爆、界面也会一秒跳 60 次。
+var history_window := 5.0
+var history_window_max := 10
+
 
 
 

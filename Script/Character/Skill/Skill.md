@@ -3,6 +3,10 @@
 ## 定位
 "技能系统"：一种**每物理帧被驱动**的角色行为(改 body.velocity 等)。由某"依赖状态"满足才进入行为队列。
 
+**想看它长什么样**：角色技能一览（外壳 `Config/UI/UIPreset_Skill.gd` + 内容元素 `Script/UI/UI/UI_Skill.gd`，
+打开就是 `UIInteract.open(preset_name="Skill")`）——一条技能一段，摊开实现类 / 依赖状态 + 现在满不满足 /
+**在不在执行队列** / 流水（加装 / 移除 / 执行了多少帧）/ 参数。
+
 ## 文件
 | 文件 | 作用 |
 |---|---|
@@ -16,18 +20,25 @@
 
 ## SkillPreset.gd 说明（Preset）
 - 一条技能 = `name/skill_name(实现类 class_name)/dependence_status(依赖状态)/config(给实现的参数)`。
-- `_init` 里 `_get_skill_by_name()`：按 `skill_name` 从全局类表 new 出对应 `Skill_xxx` 实例。
+- `_init` 里 `_get_skill_by_name()`：按 `skill_name` 从全局类表 new 出对应 `Skill_xxx` 实例，并把**预设名写给它**
+  （`skill.preset_name = name`——队列的键是实现类实例，认不出预设名，而记流水 / 广播 / 一览都要预设名）。
 - `static get_(name)`：查注册表。
 - `listen(char_)`：监听 `dependence_status` 的 **satisfied→`skill.in_queue`**、**unsatisfied→`skill.out_queue`**。
 - `unlisten(char_)`：取消注册的监听。
 
 ## Skills.gd 说明（集合/队列）
 - `_init(me, skill_names[])`：`add_skill` 把技能装给角色。
-- `add/remove_skill`：装/卸(内部 preset.listen/unlisten)。
+- `add/remove_skill`：装/卸(内部 preset.listen/unlisten)，各记一笔流水。
 - `skill_queue`(SkillBase→config)：待驱动队列。
-- `physics_process(delta)`：先 `me.ensure_body()`(body 延后生成)，对队列每个 `skill.act(me, delta, config)`，最后 `if me.body: me.body.move_and_slide()`(body 可为空)。被 `Character.physics_process` 转发。
+- `history`（`ActionHistory`）：**动作流水**（加装 / 移除 / 执行，都到秒），键是预设名；"执行"那笔由 `SkillBase.act` 记。
+  技能每物理帧都会来 ⇒ 由 `ActionHistory` 限流："n 秒内超过 m 次就每秒只记第一次"
+  （参数 `SysCfg.history_window` / `history_window_max`）。**消息照发、每帧都发**（限流只在流水这一处，
+  界面靠"文本没变就不刷"省绘制）。实现与交互那边**共用同一份**（`Script/Character/ActionHistory.gd`）。
+- `physics_process(delta)`：没身体直接返回(`if me.body == null: return`)；否则对队列每个 `skill.act(me, delta, config)`，
+  最后 `me.body.move_and_slide()`。被 `Character.physics_process` 转发。
 - `check_skill`：查是否已装。
 
 ## Skills/ 子目录（Base + 实现）
-- `SkillBase.gd`：`in_queue/out_queue`(登记进 `char.skills.skill_queue`)；`act` 调虚方法 `_act` 成功后广播 `Msg.send_skill_act`。
+- `SkillBase.gd`：`in_queue/out_queue`(登记进 `char.skills.skill_queue`)；`act` 调虚方法 `_act`，成功后
+  **先记流水再广播** `Msg.send_skill_act`（广播用的是**预设名** `preset_name`，不是类名：域里 add/remove/act 的"技能名"都指预设名）。
 - 各 `Skill_xxx`：覆写 `_act(me, delta, config) -> bool`，直接改 `me.body.velocity`；`config` 为预设传来的参数数组(如走速、阻尼系数)。

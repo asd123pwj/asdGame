@@ -37,6 +37,8 @@ func _get_skill_by_name() -> void:
         if cls["class"] == skill_name:
             @warning_ignore("unsafe_method_access")
             skill = load(cls["path"]).new()
+            # 把预设名写给实现类：它每帧执行时要拿它记流水、广播（队列的键是实现类实例，认不出预设名）。
+            skill.preset_name = name
             return
     push_error("找不到Skill: ", skill_name)
     skill = null

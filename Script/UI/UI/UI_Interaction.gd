@@ -9,9 +9,9 @@ extends UI_View
 ##     它就是"这条交互会不会被触发"的开关；带 `@identity` 时把"解析到了哪个角色"也写出来
 ##     （用 `Msg._resolve_target`，和 `InteractionPreset.listen` 那边同一套解析）；
 ##   · **参数**（`config`，注册时直接交给实现类的那个）：字典就一行一个键，其它类型一行说清；
-##   · **流水**（`Interactions.history`）：加装 / 移除 / 触发各一笔（现实时间 + 游戏时间 + 触发次数）——
+##   · **流水**（`Interactions.history`）：加装 / 移除 / 触发各一笔（现实时间 + 游戏时间，都到秒）——
 ##     交互是"一帧事件"，跑过去就没了，摆出来才看得出**刚才到底触发没触发**。
-## 段标题是摘要：`名字（实现类 ｜ 依赖：状态名 ✔ ｜ 最近执行 14:03:21.437 ×3）`——收起时也看得出"刚跑过没"。
+## 段标题是摘要：`名字（实现类 ｜ 依赖：状态名 ✔ ｜ 最近执行 14:03:21）`——收起时也看得出"刚跑过没"。
 ##
 ## **实时**：订两样——
 ##   · 每条交互**依赖的那个状态**（`listen_status_satisfied / unsatisfied`，用的就是
@@ -72,16 +72,15 @@ func _section(char_: Character, preset: InteractionPreset, old: UIBase = null, o
 		UIInteract_Fold.fold(sec, false)         # 展开态：顺手把 items 建出来（fold 里做的就是这个）
 
 
-## 段标题：`名字（实现类 ｜ 依赖：状态名 ✔ ｜ 最近执行 14:03:21.437 ×3）`。
+## 段标题：`名字（实现类 ｜ 依赖：状态名 ✔ ｜ 最近执行 14:03:21）`。
 ## 最后那段只在**触发过**时才出现（没跑过的交互不印一串没意义的字）。
 static func _section_title(char_: Character, preset: InteractionPreset) -> String:
 	var extra: String = ""
-	var rec: Dictionary = char_.interactions.history.get(str(preset.name), {})
+	var rec: Dictionary = char_.interactions.history.get_rec(str(preset.name))
 	if rec.has("act"):
-		extra = " ｜ 最近执行 %s ×%d" % [str((rec["act"] as Dictionary).get("clock", "")),
-			int(rec.get("act_count", 0))]
+		extra = " ｜ 最近执行 %s" % str((rec["act"] as Dictionary).get("clock", ""))
 	return "%s（%s ｜ 依赖：%s %s%s）" % [str(preset.name), str(preset.interaction_name),
-		str(preset.dependence_status), "✔" if _dep_hit(char_, preset) else "✘", extra]
+		str(preset.dependence_status), "✔" if _dep_hit(char_, preset.dependence_status) else "✘", extra]
 
 
 ## 段里的行：实现类 / 依赖状态（+ 解析到谁）/ 流水（最后时间）/ 参数。
@@ -92,73 +91,27 @@ func _rows(char_: Character, preset: InteractionPreset) -> Array:
 			"" if built else "　（**没建出来**：类名写错了吗？）"],
 			Color(0.75, 0.78, 0.85) if built else Color(0.85, 0.55, 0.55)),
 		_row("Dep", "依赖状态：%s　→　%s%s" % [str(preset.dependence_status),
-			"✔ 满足" if _dep_hit(char_, preset) else "✘ 未满足", _resolve_note(char_, preset)]),
+			"✔ 满足" if _dep_hit(char_, preset.dependence_status) else "✘ 未满足",
+			_resolve_note(char_, preset.dependence_status)]),
 	]
 	out.append_array(_history_rows(char_, preset))
-	out.append_array(_config_rows(preset))
+	out.append_array(_config_rows(preset.config))
 	return out
 
 
-## 流水那三行：加装 / 移除 / 执行（时间 + 次数）。
+## 流水那三行：加装 / 移除 / 执行（各是"最后一次"的时间）。
 ## 摆出来的理由：交互触发只持续一帧，不留痕就"看不出刚才发生过"。
 func _history_rows(char_: Character, preset: InteractionPreset) -> Array:
-	var rec: Dictionary = char_.interactions.history.get(str(preset.name), {})
+	var rec: Dictionary = char_.interactions.history.get_rec(str(preset.name))
 	return [
 		_row("Hist_add", "加装：%s" % _stamp(rec.get("add", null)), Color(0.62, 0.68, 0.78)),
 		_row("Hist_remove", "移除：%s" % _stamp(rec.get("remove", null)), Color(0.62, 0.68, 0.78)),
-		_row("Hist_act", "执行：%s　共 %d 次" % [_stamp(rec.get("act", null)),
-			int(rec.get("act_count", 0))], Color(0.70, 0.75, 0.62)),
+		_row("Hist_act", "执行：%s" % _stamp(rec.get("act", null)), Color(0.70, 0.75, 0.62)),
 	]
 
 
-## 一笔流水 -> 给人看的文本：`14:03:21.437（元年正月初一 子时）`；没记过 -> `（还没）`。
-## 前面是**现实墙上时钟**（"具体时间"，毫秒级：连续触发也分得开先后），括号里是**游戏时间**。
-static func _stamp(entry: Variant) -> String:
-	if not (entry is Dictionary):
-		return "（还没）"
-	return "%s（%s）" % [str(entry.get("clock", "")), str(entry.get("text", ""))]
-
-
-## 依赖解析：`[目标角色, 纯状态名]`（`状态名@identity` 时目标是 identity 指向的那个角色）。
-## 与 `InteractionPreset.listen` / `StatusPreset` 用的是同一个解析（`Msg._resolve_target`）。
-static func _dep_of(char_: Character, preset: InteractionPreset) -> Array:
-	return Msg._resolve_target(char_, preset.dependence_status)
-
-
-## 依赖状态现在满足吗（解析到的那个角色 + 纯状态名；没装过/没算出就算未满足）。
-static func _dep_hit(char_: Character, preset: InteractionPreset) -> bool:
-	var resolved: Array = _dep_of(char_, preset)
-	var target: Character = resolved[0]
-	var status_name: String = str(resolved[1])
-	if target == null or target.statuses == null or not target.statuses.check_exist(status_name):
-		return false
-	return target.statuses.check_satisfied(status_name)
-
-
-## 依赖里写了 `@identity` 时，把"解析到了谁"写出来（没写就没这段）。
-static func _resolve_note(char_: Character, preset: InteractionPreset) -> String:
-	var raw: String = str(preset.dependence_status)
-	if not raw.contains("@"):
-		return ""
-	var resolved: Array = _dep_of(char_, preset)
-	return "　（%s@%s → %s）" % [str(resolved[1]), raw.split("@")[1],
-		_brief(RegSys.name_of(resolved[0]))]
-
-
-## 参数 `config`：字典一行一个键；其它类型一行说清；null 说"（无）"。
-## 键名与值都用 `_brief` 截断（参数里可能挂着字典 / 数组 / 角色）。
-static func _config_rows(preset: InteractionPreset) -> Array:
-	if preset.config == null:
-		return [_row("Cfg", "参数：（无）", Color(0.45, 0.48, 0.55))]
-	if not (preset.config is Dictionary):
-		return [_row("Cfg", "参数：%s" % _brief(preset.config), Color(0.62, 0.68, 0.78))]
-	var out: Array = [_row("Cfg", "参数（%d 项）" % (preset.config as Dictionary).size(),
-		Color(0.62, 0.68, 0.78))]
-	var i: int = 0
-	for key in (preset.config as Dictionary).keys():
-		out.append(_row("Cfg_%d" % i, "　%s = %s" % [str(key), _brief(preset.config[key])]))
-		i += 1
-	return out
+## （`_stamp`（流水一笔）、`_dep_of` / `_dep_hit` / `_resolve_note`（依赖解析与满不满足）、
+##   `_config_rows`（参数）这几个零件已挪到 `UI_View`：技能一览与这边**逐字相同**，共用一份。）
 
 
 ## ---------- 实时：订"每条交互依赖的状态" + "任意交互"通配（骨架见 UI_View）----------

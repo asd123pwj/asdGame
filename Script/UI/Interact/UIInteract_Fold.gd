@@ -79,17 +79,26 @@ static func toggle_fold(target: UIBase) -> void:
 ## 都跟 fold 是一件事），放交互里谁都能用；预设只负责构造**自己**的 widgets，不该给别处提供零件。
 ## 想换样子（标题带底、或者另放一个 `[+]`/`[-]` 按钮）照抄这段改 `content` / `events` 即可。
 static func title_item(title: String, collapsed: bool = false) -> Array:
-	var shut: String = "▸ %s" % title
-	var open_: String = "▾ %s" % title
+	var texts: Array = title_texts(title, collapsed)
 	return ["Title", "UI_Label", {
-		"content": shut if collapsed else open_,
-		"content_2": open_ if collapsed else shut,
+		"content": texts[0],
+		"content_2": texts[1],
 		"collapse_keep": true,
 		"events": [[QName.mouseLeft,
 			"UIInteract.toggle_fold(@self.parent)"
 			+ '\vUtils.swap("@self.config.content", "@self.config.content_2")'
 			+ '\v@self.refresh("content")']],
 	}]
+
+
+## 标题的两套文字（`[现在显示的, 对调后的]`）：收起 = `▸ …`、展开 = `▾ …`。
+## 被谁用：`title_item`（建的时候）、以及"**就地改标题文字**"的调用方——
+## 技能一览每物理帧都要把"最近执行"换一遍（重铺整段扛不住那个频率），改的时候**两套要一起改**
+## （config 里的 `content` / `content_2`），不然下一次点收起 / 展开对调时会换出旧文字。
+static func title_texts(title: String, collapsed: bool = false) -> Array:
+	var shut: String = "▸ %s" % title
+	var open_: String = "▾ %s" % title
+	return [shut, open_] if collapsed else [open_, shut]
 
 
 ## 按收起态设置子元素可见性：

@@ -47,7 +47,7 @@
 
 ### `Skill/`（技能 = 每物理帧被驱动的行为）
 - `SkillPreset`(Preset)：绑定一个 `Skill_xxx` 实现 + config + 依赖状态。监听该状态 satisfied→`skill.in_queue`，unsatisfied→`out_queue`。
-- `Skills`(集合)：持 `skill_queue`，`physics_process` 先 `ensure_body()`，对队列里每个 skill 调 `act`，最后 `if body: body.move_and_slide()`(body 可空)。
+- `Skills`(集合)：持 `skill_queue` 与 `history`（动作流水）；`physics_process` **没 body 直接返回**，否则对队列里每个 skill 调 `act`，最后 `body.move_and_slide()`。
 - `Skills/SkillBase`：`act` 包装 `_act` 并广播；`_act` 由 `Skill_Walk/Gravity/Jump/Damping` 覆写（改 `body.velocity`）。
 - 衔接：被 `Character.physics_process` 转发驱动；依赖 `body`、`Statuses`(触发源)、`SysCfg`(阻尼阈值等)。
 
