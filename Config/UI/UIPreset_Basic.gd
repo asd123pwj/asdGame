@@ -26,29 +26,37 @@ config: Dictionary
 开关式按钮（可选框）也不用专门元素：同一个元素上写两套配置（events/content 与 events_2/content_2），
 点击时用 Utils.swap 对调、再 @self.refresh("content") 即可——见 Config/UI/UIPreset_Menu.gd 的 CloseToggle。
 
-预设也是"普通 UI"，所以重复出现的东西（关闭按钮 CloseButton、缩放手柄 ResizeButton）都做成预设、
-用 UIInteract.open / close 开与关，不写专门函数。**悬停说明**（关闭 / 缩放按钮"移上去说一句"）用下面的
+预设也是"普通 UI"，所以重复出现的东西（关闭按钮 CloseButton、缩放手柄 ResizeButton、改尺寸手柄 SizeGrip）
+都做成预设、用 UIInteract.open / close 开与关，不写专门函数。**悬停说明**（这几个按钮"移上去说一句"）用下面的
 "Tip" 预设 + `tip_events(文字)`：内容由开它的那一句带进去，所以一份预设够全项目用。
+**同一个角的多个图标会自动排成一行**（见 UI_Panel._corner_box）：先加的那个贴在角上，后加的往左依次排。
 
 注意：ScrollContainer 默认最小尺寸为 0，UI_Scroll 必须用 size 配置可视区大小，否则不可见。
 """
-## 关闭按钮那张图（CloseButton 预设与各窗口右上角的那个都用它，换图只改这一处）。
+## 图标（换图只改这两处：关闭按钮、两个手柄）。
 const CLOSE_ICON := "res://Material/Texture/UI/CloseButtom_16.png"
+const RESIZE_ICON := "res://Material/Texture/UI/ResizeButtom_16.png"
 
 
-## 各窗口右上角那个**图标式关闭按钮**（一条 children 就够）：
-##   `UIPreset_Basic.close_item(),`
-## 内容就是上面那张图（`UI_Image` 的 content 即纹理），`free` + `open_at = ANCHOR_TOP_RIGHT_IN`
+## 右上角那个**图标式关闭按钮的配置**——只写一份，两个用法：
+##   · 当 `children` 里的一项：`UIPreset_Basic.close_item(),`（窗口自带，如一览 / 编辑器 / MiniHUD）
+##   · 当独立预设：`UIInteract.open(宿主, "CloseButton", 宿主)`（运行时加/减，如键盘 UI）
+## 图 = `CLOSE_ICON`（`UI_Image` 的 content 即纹理），`free` + `open_at = ANCHOR_TOP_RIGHT_IN`
 ## ⇒ 钉在**本窗口**右上角（落点见 UIBase._anchor_free_child：用锚点，窗口宽高随内容变也跟得上），
 ## 点它关掉所在的窗口（`@host`，见 QName.UI_event_pointer1_close_host）。
-static func close_item() -> Array:
-    return ["Close", "UI_Image", {
+static func close_cfg() -> Dictionary:
+    return {
         "content": CLOSE_ICON,
         "size": [16 * 2, 16 * 2],
         "free": true,                                  # 自由定位：挂到窗口叠加层，位置不被竖排布局改
         "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,   # 贴在本窗口内部的右上角
         "events": [QName.UI_event_pointer1_close_host] + tip_events("关闭"),
-    }]
+    }
+
+
+## 把 `close_cfg()` 包成"`children` 里的一项"（`[名字, 类, 配置]`，见 UIBase._build_children）。
+static func close_item() -> Array:
+    return ["Close", "UI_Image", close_cfg()]
 
 
 ## "悬停弹说明"那两条事件：指针移上去开、移开收，开的就是下面的 "Tip" 预设（内容由这里给）。
@@ -61,22 +69,44 @@ static func tip_events(text_: String) -> Array:
     ]
 
 
-var values: Array[Array] = [
-    # 悬停说明的小浮窗（关闭 / 缩放按钮用；可折叠标题的箭头也开它，见 UIInteract_Fold._sym_meta）。
-    # **内容由开它的那一句带进来**（`content="…"` 合并到外壳 config 上；正文用 content_cmd 读它），
-    # 所以一份预设能说明任何东西，不必一个说明建一个预设。
-    ["Tip", "UI_Panel", {
+## 右下角那两个手柄的配置——**只有"按住后登记哪个交互"和说明文字不同，其余一样**，所以合一：
+##   · `QName.UI_event_pointer1_rescale_host`：等比缩放（整块放大，字也变大）= "看得更大"；
+##   · `QName.UI_event_pointer1_resize_host`：改宽高（内容照新宽度折行）= "看更多字"。
+## 两个在同一个角上会**自动排成一行、后加的排左边**（见 UI_Panel._corner_box）。
+## 元素侧只有"按住"这一条：登记后由 AutoSys 每帧调（松开时状态不满足，AutoSys 自己删登记 ⇒
+## 不用写"松开"，也不存任何跨帧状态）。用 Hold 不用 Press：它只在"开始按住"那一下触发。
+static func handle_cfg(hold_bind: Array, tip: String) -> Dictionary:
+    return {
+        "content": RESIZE_ICON,                        # 两个手柄同一张图（要分开换图就再加个参数）
+        "size": [16 * 2, 16 * 2],
+        "free": true,                                  # 自由定位：挂到宿主叠加层，位置不被父级布局覆盖
+        "open_at": Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN,   # 开在锚点（宿主自己）内部的右下角
+        "events": [hold_bind] + tip_events(tip),
+    }
+
+
+## "悬停说明"浮窗的配置（`Tip` 预设与服务多扇窗的测试都用它）：正文读**外壳的** content
+## （`open(..., content="…")` 合并进来的就是它；`content_cmd` 里的 `@self` = 写这条指令的元素，
+## 见 UIBase.refresh）⇒ **一份预设能说明任何东西**，不必一个说明建一个预设。
+static func tip_cfg(fallback: String) -> Dictionary:
+    return {
         "size": [0, 0],
         "free": true,
         "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT,      # 开在锚点右上角外（不压住被说明的那个东西）
         "children": [
             ["Text", "UI_Label", {
-                "content": "（说明）",                      # 字面值 = 没带内容进来时的兜底
+                "content": fallback,                    # 字面值 = 没带内容进来时的兜底
                 "content_cmd": "@self.parent.config.content",
                 "max_chars": SysCfg.ui_view_chars,
             }],
         ],
-    }],
+    }
+
+
+var values: Array[Array] = [
+    # 悬停说明的小浮窗（关闭 / 缩放按钮、可折叠标题的箭头都用它，见 UIInteract_Fold._sym_meta）：
+    # 配置来自 `tip_cfg()`，**内容由开它的那一句带进来**（`open(..., content="…")`）⇒ 一份预设够全项目用。
+    ["Tip", "UI_Panel", tip_cfg("（说明）")],
     ["MiniHUD", "UI_Panel", {
         # 高度写 0 = **随内容**：以前写死 220，而里面只有"标题 + 滚动区"两行 ⇒ 底下剩一大段空白；
         # 以后往里加内容它自己长，不用回来改这个数（宽仍定死 320，横向不要跟着文字跳）。
@@ -106,28 +136,13 @@ var values: Array[Array] = [
             # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],
         ],
     }],
-    # 关闭按钮：贴到"锚点 UI"的右上角，点它关掉自己挂着的那个 UI。
-    # **它就是普通 UI 预设**，所以"给某个 UI 加/减关闭按钮"不需要专门函数，直接开/关这个预设即可：
+    # 关闭按钮：**就是上面 close_cfg() 那份配置**，当独立预设开出来（元素侧没有任何专门逻辑）：
     #   UIInteract.open(宿主, "CloseButton", 宿主)   ← 挂到宿主下、开在宿主内部右上角
     #   UIInteract.close(宿主, "CloseButton")        ← 移除（隐藏；重开仍走 open）
-    # 图标 = content（UI_Image 的 content 就是那张图，换图 = 写它的 config["content"] + 刷新）；尺寸照 Unity 的 16*2。
-    ["CloseButton", "UI_Image", {
-        "content": CLOSE_ICON,
-        "size": [16 * 2, 16 * 2],
-        "free": true,                                  # 自由定位：挂到宿主叠加层，位置不被父级布局覆盖
-        "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,   # 开在锚点（宿主自己）内部的右上角
-        # 点它关掉它所在的窗口（host = 沿 parent 爬到顶那个 UI ⇒ 挂到谁身上都指得对）
-        "events": [QName.UI_event_pointer1_close_host],
-    }],
-    # 缩放按钮：贴到"锚点 UI"的右下角，按住拖动等比缩放它挂着的那个 UI（像 Windows 拖窗口角，但是等比）。
-    # 元素侧只有这一条"按住"：rescale 登记后由 AutoSys 每帧调 rescaling 缩放它挂着的 UI；
-    # 不满足（松手）时 AutoSys 自己把这条登记删掉，所以不用写"松开"，也不用存任何跨帧状态。
-    # 用 Hold 而不是 Press：它只在"开始按住"那一下触发（不是每帧）。
-    ["ResizeButton", "UI_Image", {
-        "content": "res://Material/Texture/UI/ResizeButtom_16.png",
-        "size": [16 * 2, 16 * 2],
-        "free": true,
-        "open_at": Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN,   # 开在锚点（宿主自己）内部的右下角
-        "events": [QName.UI_event_pointer1_rescale_host] + tip_events("缩放"),
-    }],
+    ["CloseButton", "UI_Image", close_cfg()],
+    # 两个手柄：等比缩放（整块放大，字也变大）/ 改宽高（内容跟着折行，见 UIInteract_Resize）。
+    # 同一个角上 ⇒ 自动排成一行，**后加的在左边**（见 UI_Panel._corner_box）⇒
+    # "先开 ResizeButton、再开 SizeGrip" = 等比缩放在右、改尺寸在左。
+    ["ResizeButton", "UI_Image", handle_cfg(QName.UI_event_pointer1_rescale_host, "等比缩放")],
+    ["SizeGrip", "UI_Image", handle_cfg(QName.UI_event_pointer1_resize_host, "改尺寸")],
 ]

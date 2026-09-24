@@ -135,6 +135,9 @@ var history_window_max := 10
 static var resize_min_scale := 0.2      # 等比缩放的下限（拖再狠也不会缩成 0）
 static var resize_max_scale := 5.0      # 等比缩放的上限（拖再狠也不会涨到天上去）
 static var rescale_epsilon := 0.001     # 缩放里"上帧距离"作除数时的保护下限
+# 拖右下角"改尺寸"的下限（拖再狠也不会被拖没）。**默认 96×64**：右下角那两个 32px 图标
+# ＋ 间隔就要约 68px 宽，再小它们会排到面板外面去（实测）。
+static var resize_min_size := Vector2(96, 64)
 
 # 找"当底的 stylebox 槽"时的顺序：哪个控件有哪个就用哪个（见 UIBase._background_slot）。
 static var ui_background_slots: Array[String] = ["panel", "normal", "background"]

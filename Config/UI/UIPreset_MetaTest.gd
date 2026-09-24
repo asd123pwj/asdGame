@@ -56,19 +56,7 @@ var values: Array[Array] = [
     }],
     # 第二扇浮窗（"浮窗二"开它）：用来测"换一扇时上一扇会不会自动关"。
     # **第一扇不在这里**——那是通用的 "Tip" 预设（见 UIPreset_Basic，关闭/缩放按钮也用它）；
-    # 这里只留一个同形状的第二扇，好让"两扇不同的窗"这个场景测得到。
-    ["Tip2", "UI_Panel", {
-        "size": [0, 0],
-        "free": true,
-        "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT,  # 开在锚点（文字元素）右上角外
-        "children": [
-            # 正文读**外壳的** content（`open(..., content="…")` 合并进来的就是它）：
-            # content_cmd 里的 `@self` = 写这条指令的元素（这里就是本元素），见 UIBase.refresh。
-            ["Text", "UI_Label", {
-                "content": "（提示二）",                 # 字面值 = 没带内容进来时的兜底
-                "content_cmd": "@self.parent.config.content",
-                "max_chars": 40,
-            }],
-        ],
-    }],
+    # 这里只留一个同形状的第二扇（配置同样出自 `UIPreset_Basic.tip_cfg()`，只换名字与兜底文字），
+    # 好让"两扇不同的窗"这个场景测得到。
+    ["Tip2", "UI_Panel", UIPreset_Basic.tip_cfg("（提示二）")],
 ]

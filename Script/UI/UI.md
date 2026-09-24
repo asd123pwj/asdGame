@@ -16,8 +16,9 @@ Script/UI/
 ├─ Interact/             # 交互指令宿主：UIInteractBase 是基类（指令前缀 + 共用校验），一个交互一个文件
 │  ├─ UIInteractBase.gd         # 基类：CMD_HOST（指令前缀，声明一次）+ _as_ui（组内共用校验）
 │  ├─ UIInteract_OpenClose.gd   # open / close（含 _build_open / _place / _child_ui 与失焦关闭）
-│  ├─ UIInteract_Drag.gd        # drag + 每帧 dragging
-│  ├─ UIInteract_Rescale.gd     # rescale + 每帧 rescaling
+│  ├─ UIInteract_Drag.gd        # drag + 每帧 dragging（拖位置）
+│  ├─ UIInteract_Rescale.gd     # rescale + 每帧 rescaling（等比缩放：整块 + 字一起大）
+│  ├─ UIInteract_Resize.gd      # resize + 每帧 resizing（拖右下角改宽高：内容跟着折行）
 │  ├─ UIInteract_Fade.gd        # fade_to
 │  ├─ UIInteract_Edit.gd        # begin_edit / end_edit
 │  ├─ UIInteract_Fold.gd        # fold / unfold / toggle_fold（收起 / 展开，见"长内容"一节）
@@ -40,7 +41,7 @@ Script/UI/
 |---|---|
 | `UIPreset.gd` | UI 预设：一条 UI 配置；`create_element(ui_name, name, config)` 为根 UI 与子元素共用的实例化工厂。 |
 | `UISystem.gd` | UI 系统 `UISys`：**登记**整棵 UI 树（子元素一并登记；**开启**见 `UIInteract_OpenClose.open`），成员全静态，日常直接 `UISys.xxx`。 |
-| `Interact/UIInteractBase.gd` | **交互组基类**：指令前缀（`const CMD_HOST := "UIInteract"`）+ 组内共用校验 `_as_ui`。交互按"一个交互一个文件"拆在 `Interact/` 下（`UIInteract_OpenClose.gd`、`UIInteract_Drag.gd`、`UIInteract_Rescale.gd`、`UIInteract_Fade.gd`、`UIInteract_Edit.gd`、`UIInteract_Fold.gd`、`UIInteract_SwitchValue.gd`、`UIInteract_SetTop.gd`，都 `extends UIInteractBase`），所以**对外只有一套指令名** `UIInteract.open/close/drag/rescale/fade_to/begin_edit/end_edit/fold/unfold/toggle_fold/switch_value/set_top`。元素自己的普通方法不必包成交互——指令系统能直接调：整行写 `@self.refresh("content")`（见下）。加一个交互 = 加一个 `UIInteract_Xxx.gd` + 静态方法，指令名自动是 `UIInteract.xxx`（机制见 `CmdSys` 的命令前缀组）。**开启（open + 摆位 + 子方法 + 失焦关闭）也在这个组里**（`UIInteract_OpenClose.gd`）。 |
+| `Interact/UIInteractBase.gd` | **交互组基类**：指令前缀（`const CMD_HOST := "UIInteract"`）+ 组内共用校验 `_as_ui`。交互按"一个交互一个文件"拆在 `Interact/` 下（`UIInteract_OpenClose.gd`、`UIInteract_Drag.gd`、`UIInteract_Rescale.gd`、`UIInteract_Fade.gd`、`UIInteract_Edit.gd`、`UIInteract_Fold.gd`、`UIInteract_SwitchValue.gd`、`UIInteract_SetTop.gd`，都 `extends UIInteractBase`），所以**对外只有一套指令名** `UIInteract.open/close/drag/rescale/resize/fade_to/begin_edit/end_edit/fold/unfold/toggle_fold/switch_value/set_top`。元素自己的普通方法不必包成交互——指令系统能直接调：整行写 `@self.refresh("content")`（见下）。加一个交互 = 加一个 `UIInteract_Xxx.gd` + 静态方法，指令名自动是 `UIInteract.xxx`（机制见 `CmdSys` 的命令前缀组）。**开启（open + 摆位 + 子方法 + 失焦关闭）也在这个组里**（`UIInteract_OpenClose.gd`）。 |
 | `../Auto/AutoSystem.gd` | `AutoSys`：**状态驱动执行器**（状态满足期间每帧执行一条指令，不满足自动删）。按住类交互（等比缩放）靠它，见 `Script/Auto/Auto.md`。 |
 | `UIBase.gd` | 元素基类：`build()` 生成控件并组装子元素；持 `config`/`children`/`parent`；指针事件→指令。 |
 | `UI/UI_*.gd` | 原子元素实现（容器/文本/图片/滚动）。 |
@@ -141,9 +142,18 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 
       控件一个槽都没有时警告一次、不画——要"带底"就换有槽的元素（文字带底 = `UI_Panel` 里放 `UI_Label`，键盘的键就是这么做的）。**整块底图走它，不要放 Image 元素当背景**——Image 属于内容，摆在叠加层上会盖住别的子元素。
     - 九宫格边距 = `background_slice`（**每张底图各自给**，跟着图的圆角走；不写 = 0 = 整张拉伸）。
-  - **面板宽度**：**别写死宽度**（`size[0]` / `scroll[0]` 写 0），宽度跟着内容走 —— 写死的话
-    "里面比外面宽"的部分会被 `clip_contents` 裁掉（长文案显示到一半就没了，实测踩过）。
-    要限制高度就写 `scroll: [0, 上限高]`（宽不限、高到上限就进滚动）。
+  - **面板宽度**：默认**跟着内容走**（`size[0]` / `scroll[0]` 写 0 = 该维不限）；要限制高度就写
+    `scroll: [0, 上限高]`（宽不限、高到上限就进滚动）。写死宽 / 高之后，**装不下的内容不会画到面板外**：
+    竖向进去滚动（自动出滚动条），横向不滚（子元素按视口宽排 ⇒ 长文本自己在框里换行）。
+  - **反过来：以面板为准**（`fit_content: false`）——面板**尺寸定死**（写在 `size` 里），里面的文本改成
+    "**照面板给的宽折行**"（`UI_Label` 的宽交给容器，见 `UIBase._width_from_parent`：它此时不报宽，
+    只报"折行后该多高"）⇒ 面板缩放 / 改 `size`，内容自己跟着变。例：
+    `{"fit_content": false, "size": [300, 0], "margin": 12}` = 宽定死 300、高随内容、四边各 12 的内边距。
+    **自由定位的子元素（浮窗 / 菜单 / 角落图标）不被这条管**：它自成一体（见 `UIBase._in_fixed_panel`）——
+    否则宿主面板一进这一档，浮窗里的文字也去"听容器"，而浮窗自己又是内容为准 ⇒ 文字被压成一列
+    （实测：说明浮窗变成 17×112 的一条）。浮窗要固定尺寸就自己写 `fit_content: false`。
+  - **内边距**（`UI_Panel` 的 `margin`）：一个数（四边都是它）或 `[横向, 纵向]`；不写 = 四边各 8。
+    它归布局，运行时改完要 `@self.reapply()` 才生效（见 `UI_Panel.reapply`）。
   - **一栏的宽度按字符数说**（`max_chars`，中文算 2；`max_width` 是像素写法，两个都写取小的）：
     文字元素（`UI_Label`）与输入框都用它，**配了上限就"宽 = 上限 + 换行"**（短内容也不缩——同一栏要对齐），
     高度按折行数算。**一览里三者必须同宽**（段标题、只读行、输入框）：不然标题那行会是一段很长的小结，
@@ -180,11 +190,12 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | `UIInteract.open([挂载点], 预设名, [锚点], close_on_blur=?, close_on_move=?, host=?)` | 开启/重开一个 UI（显示 + 按 `open_at` 摆位；不重建控件）。**锚点同时是挂载点**（子菜单挂到触发它的菜单项下）；挂载点与锚点都不给 = 独立 UI（`UIInteract.open(preset_name="MiniHUD")`）。`close_on_move=true` = 指针挪开就收（hover 展开的子菜单）、`close_on_blur=true` = 有按键派发时不在它上面就关（右键菜单）——**要哪种就在开的这一句写出来**，预设里不声明它（"在哪开、为什么开"只有这一句知道）。`host` = 这次开的 UI **要管理的对象**（见 `host` 占位符那行）：不给就沿链回退；**它不是挂载点**，挂哪/摆哪仍由前三个参数 + `open_at` 决定。复用路径也会更新这些指向 | 面板右键开菜单：`UIInteract.open(@self, "Menu", @self, close_on_blur=true)`；改管某个子 UI：`open(@self, "Menu", @self, host=UISys.get_ui("UI/MiniHUD/Info"))` |
 | `UIInteract.drag(@host, @event)` | **按住拖动**（登记入口）：把"每帧拖 host（那个窗口）"挂到这个按住状态上，松手自动停 | MiniHUD 标题栏、整块键盘面板 |
 | `UIInteract.rescale(@host, @event)` | **等比缩放**（登记入口）：每帧 `scale *= |指针 - 面板左上角| / |上帧指针 - 面板左上角|`（增量式，以左上角为中心，上下限取 `SysCfg.resize_min_scale / resize_max_scale`） | 缩放手柄 `ResizeButton` |
+| `UIInteract.resize(@host, @event)` | **拖右下角改尺寸**（登记入口）：每帧把指针位移当宽高增量加到 `config["size"]`（下限 `SysCfg.resize_min_size`），并把这块切成 `fit_content = false` ⇒ 里面的文本照新宽度折行（"拖大看得更多"）。与 `rescale` 的区别：这个改宽高、那个整块按比例放大（字也变大） | 改尺寸手柄 `SizeGrip` |
 | `host` | 占位符，由**指令系统**换成**本条链的管理对象**的 `@注册名`："最近一个在 config 里写了 `host`（**注册名**）的元素"说了算，谁都没写就回退到**最外层 UI**（窗口）⇒ 管理对象可以是**任意一层 UI**（不必顶层），指令里也不必数 `@self.parent` 级数；路径字符串里也能用（`"@host.config.content_cmd"`）。写法：`UIInteract.open(..., host=@self)`（开的时候给）或 `Utils.write("<某个UI>.config.host", "UI/MiniHUD/Menu")`（运行中改，以声明处为界），也可以在UI 编辑器里直接把那一行改成 `MiniHUD/Menu`。**两种都用不了**（UI 已释放 / 名字没登记 / 写的不是个名字）⇒ 当没声明处理 + 提醒一次 | `UIInteract.close(@host)`、`Utils.copy(@host.config.reg_name)` |
 | `event` | 占位符，由**指令系统**换成**带引号的触发事件名**（= 状态名 = Key 名），所以配置不必再抄一遍状态名 | 上面两条都在用 |
 
-> 按住类交互在代码里成对写：`drag`/`rescale` 是**登记入口**（配置里写它们），
-> `dragging`/`rescaling` 是**每帧执行**（不写配置，只由 `AutoSys` 调）。见 `Script/Auto/Auto.md`。
+> 按住类交互在代码里成对写：`drag`/`rescale`/`resize` 是**登记入口**（配置里写它们），
+> `dragging`/`rescaling`/`resizing` 是**每帧执行**（不写配置，只由 `AutoSys` 调）。见 `Script/Auto/Auto.md`。
 | `UIInteract.fade_to @self.parent 0.0 0.5` | 透明度渐隐/渐显（alpha, duration；**指令调用须写全参数**） | 提示淡出 |
 | `Utils.write("<路径>", <值>)` | **通用的"按路径写值"**（`Utils.gd`，两个参数：路径里已带宿主）：路径语法与取值式**完全一致**（`self.config.content`、`@host.config.content_cmd`、`@注册名.config.content`、`Test.int1`、`a.b[0].c`、`UISys.get_ui(名字).config.content`——多层、列表下标、函数头都行），走的就是指令解析器（`CommandParser.write`）。**路径要写成字符串参数**（`"@self.config.content"`：引号里的内容不会被当成取值式）。**只写数据、不刷新界面** ⇒ 改完接一条 `@self.refresh("content")` | `Editor（内容对象）` 回车：`Utils.write("@host.config.content_cmd", @self.control.text)` |
 | `Utils.swap("<路径A>", "<路径B>")` | 通用的"两项对调"（字典键 / 实例成员 / 类脚本静态都行），开关式按钮的底座；**界面刷新不在这里** ⇒ 改完接一条 `@self.refresh("content")` | 菜单 CloseToggle：`Utils.swap("@self.config.events", "@self.config.events_2")` |
@@ -204,7 +215,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 ## 原子元素（Script/UI/UI/）
 | 类 | 职责 | 事件配置示例 |
 |---|---|---|
-| `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑。`background` 可给整块面板铺一张九宫格底图。配 `scroll: [上限宽, 上限高]`（0 = 该维不限制）时内容装进滚动容器：面板按"内容需要 ↔ 上限"取小，长出来的部分进去滚动（见"长内容"一节的"面板滚动"） | — |
+| `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑。`background` 可给整块面板铺一张九宫格底图。**内容外面总有一层滚动容器**（横向关掉）：面板尺寸**由内容定**（`size` 那一维写 0）⇒ 长到刚好装下、不出滚动条；**由面板定**（写了数 / 拖手柄改小过）⇒ 内容超出就**在框内滚动**（竖向滚动条自动出）；`scroll: [上限宽, 上限高]`（0 = 该维不限制）是"**面板最多长到这儿**"——长出来的进去滚动（见"长内容"一节的"面板滚动"） | — |
 | `UI_Label` | 文本，**内核是 RichTextLabel**：content 按 **BBCode** 解析（`[b]` / `[color]` / `[url=meta]文字[/url]`）——"段落里哪几个字可点 / 可悬浮"是引擎原生能力，meta 的用法见 `UIInteract_Meta`；悬停在链接上指针自动变手型。**绑 `"Pointer 1 Hold"`（按住）即"按钮"/"拖动手柄"**（无需单独 Button 类）。**给一栏文字定宽**：`max_chars`（字符数，中文算 2）/ `max_width`（像素）——配了就 `宽 = min(内容自然宽, 上限)`（短内容不撑满、超了才折行），不配交给容器。**`size` 高度写 0 = 高随内容；写了数 = 显示区定死，内容多了框内滚动**（"三行只显示两行"的测法） | `["Pointer 1 Hold", "UIInteract.close @self.parent"]` |
 | `UI_Image` | 图片：content = 纹理路径，refresh 时 load；改图 = 写 `config["content"]` + 一条 `self.refresh` | — |
 | `UI_Scroll` | 滚动容器：content 为多行文本，内层 Label autowrap。**ScrollContainer 默认最小尺寸为 0，必须用 `size` 配置可视区大小，否则不可见**。结构与 `UI_Panel` 同一套：`root(Control) → Scroll(ScrollContainer) → Label` + `Overlay(Control)`，**free 子元素挂 Overlay**（不能挂在滚动容器里：会被裁、尺寸被压成 0） | — |
@@ -260,7 +271,7 @@ var values: Array[Array] = [
 - **开启 = 开一个 UI（唯一入口 `UIInteract_OpenClose.open`，指令形式 `UIInteract.open`）**：整个开启逻辑（复用查找 `_child_ui` → 现建 `_build_open` → 摆位 `_place`）都在这个文件里，`UISys` 只提供登记表与登记名规则。**挂哪由 anchor/host 决定**（见上面的挂载规则），摆在哪由**被开启 UI 自己配置里的 `open_at`** 声明：
   - `host` 为空 → 独立 UI 挂 UI 根，指令写成 `UIInteract.open(preset_name="MiniHUD")`（命名参数跳过 target）。
   - 有 `anchor`（多级菜单：触发它的那个菜单项）→ **挂在 anchor 下**，子菜单成为该菜单项的后代；只给 `host` → 挂在 host 下。
-  - `Enums.OpenAt.CONFIG`（不写 `open_at` 时的默认）：摆回配置里的 `position`；`POINTER`：开在指针处（右键菜单——**仍然要传 anchor**，因为它决定挂在谁下面）；`ANCHOR_TOP_RIGHT`：开在 `anchor` 的右上角顶点（多级菜单把触发它的那个菜单项传进来）；`ANCHOR_TOP_RIGHT_IN` / `ANCHOR_BOTTOM_RIGHT_IN`：开在 `anchor` **内部**的右上角 / 右下角（按自己宽高内缩，关闭按钮与缩放手柄用的就是这两个）。
+  - `Enums.OpenAt.CONFIG`（不写 `open_at` 时的默认）：摆回配置里的 `position`；`POINTER`：开在指针处（右键菜单——**仍然要传 anchor**，因为它决定挂在谁下面）；`ANCHOR_TOP_RIGHT`：开在 `anchor` 的右上角顶点（多级菜单把触发它的那个菜单项传进来）；`ANCHOR_TOP_RIGHT_IN` / `ANCHOR_BOTTOM_RIGHT_IN`：开在 `anchor` **内部**的右上角 / 右下角（关闭按钮与两个手柄用的就是这两个）。**同一个角上的多个图标会自动排成一行**（`UI_Panel._corner_box`）：先加的贴着角、后加的往左依次排，所以"等比缩放在右、改尺寸在左"就是先开缩放再开改尺寸。
   - 位置换算（屏幕坐标 → 挂载点坐标系的 `position`）在 `UIBase.show_at`：**别用 `set_global_position`**（按当前全局变换求逆，重复摆会跟旧 position 复合、越摆越偏），**也别设 `Control.top_level`**（会失去父级可见性继承，宿主关掉后它还留在屏幕上、还能被命中）。
 - **菜单链是一棵子树**：`Menu` 挂在宿主下、子菜单挂在"触发它的菜单项"下（`MiniHUD → Menu → Edit → MenuEdit`）。菜单项的功能都作用在宿主上（"关闭"关宿主、"添加关闭按钮"给宿主加 X、"启用拖拽"拖宿主），菜单只是快捷方式——像右键窗口标题栏点"关闭"，关掉的是窗口。宿主一 `hide()`，整条链随之不可见、也不再被指针命中（可见性照常继承）。
   - **菜单项里管理宿主一律写 `host`**（不要数 `@self.parent` 的级数）：链里层级深浅不一（`Menu` 的项 vs `MenuEdit` 的项差着好几层），但 `host` 无论深浅都指向同一个对象；给菜单项再套一层可折叠分组也不会指歪。`self` 留给"我自己的挂载点/锚点"（`UIInteract.open(@self, "MenuEdit", @self)` 用它）。
@@ -312,9 +323,14 @@ var values: Array[Array] = [
   收起 / 展开是"我知道哪段可以收"，适合结构固定的菜单；scroll 是"内容长短不定也不怕"，适合
   **同一个界面里值的长度差很多**的场合（UI 编辑器：`size` 就几个字符、`events` 可能几百字）。
   两者能叠：滚动面板里照样放可折叠段（收起后内容变短，面板跟着变矮）。
-  实现：面板中间多一层 ScrollContainer（**横向关掉**——长文本自己在框里换行，不用横向拖），
-  面板尺寸 = min(内容需要, 上限)（`UI_Panel._content_size`），子元素最小尺寸一变就重算
-  （`_box.minimum_size_changed` → `_fit_size`）。
+  实现：面板中间**总有一层** ScrollContainer（**横向关掉**——长文本自己在框里换行，不用横向拖；
+  内容盒横向 `EXPAND_FILL` 撑满视口，否则折行文本的最小宽度是 0/1px、会被压成一列），
+  面板尺寸 = min(内容需要, 上限)（`UI_Panel._content_size`；内容多大要问**内容盒**，
+  滚动容器的最小尺寸恒为 0），子元素最小尺寸一变就重算（`_box.minimum_size_changed` → `_fit_size`）。
+  **"装不下"永远是滚动条而不是溢出**：面板尺寸定死、或者被"改尺寸"手柄拖小到装不下内容时，
+  超出的部分进去滚动（竖向滚动条由 ScrollContainer 自动出，不用配）。
+  滚动条**不算 UI 命中**（`PointerDetect` 里那条规则）：所以面板同时配了"按住可拖"时，
+  拖滚动条不会连带拖面板（拖滚动条归引擎自己处理，本项目不消费鼠标事件）。
 - **注意**：**可折叠标题要标 `collapse_keep: true`**（`title_item` 已经带了），否则收起来就再也没有东西能点开它；收起期间**运行时新加的子元素**不会自动跟着藏（加完再调一次 `fold`）。
 - 例子见 `Config/UI/UIPreset_Fold.gd`（`FoldDemo`：整块可收 + 三段各自可收，`Test.ui_test` 里默认开出来）。
 
@@ -381,7 +397,9 @@ var values: Array[Array] = [
 - **流程**：右键目标 → "复制名称"（`Utils.copy(@host.config.reg_name)`，复制的是**登记名**，如 `UI/TestShow`、`UI/MiniHUD/Title`，带后缀的真名）
   → 右键要收信息的 UI → 用编辑器把它那一行改成那条路径（写进 `content_cmd`）→ 之后发信息就走这条路径。
 - **对象路径直接写在 `content_cmd` 上**（`"host.config"` 这种相对写法也行）：不再有"沿 parent 找 bind 名"这一层转手。
-- 例子见 `Config/UI/UIPreset_Test.gd`（`TestShow` 显示 / `TestInput` 输入，J / K 键开关）。
+- 例子见 `Config/UI/UIPreset_Test.gd`（`TestShow` 显示 / `TestInput` 输入，J / K 键开关；
+  另有 `SizeTest`：**以面板为准**的小窗 + 右下角"改尺寸 / 等比缩放"两个手柄，用来测 `UIInteract_Resize`
+  与同角自动排位——由 `Test.ui_test` 连同两个手柄一起开出来）。
 
 ## 键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）
 

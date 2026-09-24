@@ -93,11 +93,21 @@ func reapply() -> void:
 ## 报出 1×N 行的最小尺寸，而 `_fit_size` 会把它固定成元素尺寸 ⇒ **一行文字变成一列高塔**
 ## （实测：快捷名 "Key J" 变 1×120，五个元素之间因此空出一大段）。
 ## 被谁用：UIBase._fit_size。
+## 宽度听容器的两种情况（见 `_in_fixed_panel` 与 `wrap`）：见 `_content_size` / UIBase._fit_size。
+func _width_from_parent() -> bool:
+	return bool(config.get("wrap", false)) or _in_fixed_panel()
+
+
 func _content_size() -> Vector2:
 	# **读控件"自身"的最小尺寸（get_minimum_size），不读 combined**：combined 会把我们上一轮写进
 	# custom_minimum_size 的旧值也算进来 ⇒ 一旦某帧因为"宽还没定"报高了，这个高就永远粘住
 	# （实测：快捷名 "Key J" 卡在 1×120 五行高，怎么刷新都不掉）。
 	var need: Vector2 = control.get_minimum_size()
+	# **宽度听容器**（见 `_width_from_parent`）⇒ 报 0：不去撑容器，宽度由容器给；
+	# 高度按**给到的那点宽**折行算（宽一变 resized → _refit 再算）。
+	# 这是"面板尺寸定、内容跟着面板走"的那一半；反过来（内容为准）走下面的分支。
+	if _width_from_parent():
+		return Vector2(0.0, need.y)
 	var cap: float = _max_width_px(control)
 	if cap > 0.0:
 		return Vector2(minf(_plain_width(control), cap), need.y)

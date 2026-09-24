@@ -140,8 +140,23 @@ func _fit_size() -> void:
 		return
 	var need: Vector2 = _content_size()
 	var out: Vector2 = Vector2(want.x if want.x > 0.0 else need.x, want.y if want.y > 0.0 else need.y)
+	# **宽度由容器给**的元素（见 `_width_from_parent`）：只报高度，**一点不碰宽**——
+	# 报了宽（哪怕报 0）都会把控件钉在那个宽度上，容器再排也拉不开
+	# （实测：文本被压成 1px、折了 61 行）。宽度由容器在它自己排版时赋给。
+	if _width_from_parent() and want.x <= 0.0:
+		control.custom_minimum_size = Vector2(0.0, out.y)
+		control.size.y = out.y
+		return
 	control.custom_minimum_size = out
 	control.size = out
+
+
+## 本元素的**宽度由容器给**吗（自己不报宽、也不设 `size.x`，由容器排版时赋）？
+## 默认 false = 宽度按"配置想要 / 内容需要"自己定（绝大多数元素）。
+## 覆写者：UI_Label（在"以面板为准"的环境里，或自己配了 `wrap: true`）——那时宽度归面板，
+## 文本只负责"照给到的宽折行、算出该多高"。见 `_fit_size` 里那一支。
+func _width_from_parent() -> bool:
+	return false
 
 
 ## config["size"] 里写的尺寸（没写 / 不足两项 = 0，即"由内容决定"）。
@@ -404,6 +419,26 @@ func _own_free_layer() -> Control:
 	return null
 
 
+## 本元素是不是在"**以面板为准**"的环境里（自己或任一祖先面板写了 `fit_content: false`）？
+## 那种面板的尺寸是**定死的**（见 UI_Panel），里面内容得**照给到的宽折行**，不能反过来把面板撑开：
+##   · `UI_Label` 据此改成"宽度听容器"（不按内容报宽，见它的 `_content_size`）。
+## 默认情况（不写那个键）= 内容为准，一路为 false，行为与以前完全一样。
+## **自由定位的元素（浮窗 / 菜单 / 角落图标）自成一体**：走到它就停下，以它自己的声明为准——
+## 不再往它挂着的那个宿主面板看。否则"面板一进以面板为准，浮窗里的文字也去听容器"，
+## 而浮窗自己又是内容为准 ⇒ 文字报 0 宽、拿到 1px ⇒ **折成一列**（实测：关闭/缩放按钮的说明浮窗
+## 变成 17×112 的一条）。浮窗要固定尺寸就自己写 `fit_content: false`，那一路照常生效。
+## 被谁用：UI_Label._content_size。
+func _in_fixed_panel() -> bool:
+	var ui: UIBase = self
+	while ui != null:
+		if ui.config.get("fit_content", true) == false:
+			return true
+		if bool(ui.config.get("free", false)):
+			break                  # 自由定位的元素自成一体（见上）：不再往它挂着的宿主面板看
+		ui = ui.parent
+	return false
+
+
 ## 自由定位子元素（`free: true`，如浮窗 / 子菜单 / 关闭按钮）的挂载点：**从本元素往上找最近一个有
 ## 叠加层的祖先**，都没有才退回自己的内容盒。
 ## 为什么不直接挂自己的 control：**叶子元素（文本 / 菜单项）与滚动容器都会把"画到自己矩形外"的子元素
@@ -421,6 +456,33 @@ func _free_box() -> Control:
 			return layer
 		ui = ui.parent
 	return _content_box()
+
+
+## 自由定位子元素"贴角"时使用的**角落容器**：同一个角上放多个（关闭 / 缩放 / 改尺寸…）时，
+## 它们在里面自动排成一行——**角上那个永远是最先加的那个，新加的排在离角远的一端**。
+## 默认 null = 没有角落容器，自己按锚点钉（见 `_anchor_free_child`，只有一个图标时够了）。
+## 覆写者：UI_Panel（四角各一个 HBox，按需建）。
+## 被谁用：_attach_child_control。
+func _corner_box(_at: int) -> Control:
+	return null
+
+
+## 把子元素的控件**挂到该去的地方**，并做收尾定位——挂载规则只有这一份
+## （普通子 → 内容盒；free 子 → 叠加层，贴角的进角落容器）。
+## 被谁用：_build_children（配置里的子元素）、add_child_element（运行时追加）。
+func _attach_child_control(child: UIBase, child_config: Dictionary) -> void:
+	var loose: bool = bool(child_config.get("free", false))
+	var corner: Control = _corner_box(int(child_config.get("open_at", Enums.OpenAt.CONFIG))) if loose else null
+	var box: Control = corner if corner != null else (_free_box() if loose else _content_box())
+	box.add_child(child.control)
+	if corner == null:
+		_anchor_free_child(child)
+		return
+	# 角落容器里"新加的排在离角远的那一端"（右角的往左排）：
+	# 于是**先加的那个一直贴在角上**（关闭按钮就是最先加的那个），后加的依次往外排。
+	var row: BoxContainer = corner as BoxContainer
+	if row != null and row.alignment == BoxContainer.ALIGNMENT_END:
+		row.move_child(child.control, 0)
 
 
 ## 自由定位子元素可以"**贴父级某个角**"（config["open_at"] 写 `ANCHOR_*_IN` 那两个，
@@ -559,10 +621,9 @@ func _build_children() -> void:
 		child.name = _unique_child_name(child.name)     # 重名自动加后缀（同一挂载点下不重名）
 		child.build()
 		children.append(child)
-		# free 的挂到叠加层（非容器，位置/尺寸保持配置值），否则进内容盒（竖排布局）
-		var box: Control = _free_box() if bool(child_config.get("free", false)) else _content_box()
-		box.add_child(child.control)
-		_anchor_free_child(child)          # 配了 open_at 的角就钉到那个角上（见它）
+		# free 的挂到叠加层（非容器，位置/尺寸保持配置值），贴角的进"角落容器"自动排队；
+		# 其余进内容盒（竖排布局）。挂到哪、怎么定位只有一份实现（见 _attach_child_control）。
+		_attach_child_control(child, child_config)
 
 
 ## 唯一事件入口（PointerDetect 派发）：参数是事件名——状态驱动的事件就是配置里的状态名
@@ -676,8 +737,6 @@ func add_child_element(child_name: String, ui_class: String, child_config: Dicti
 	# 配置里声明 free 的当"自由定位"元素：挂到叠加层，位置才不会被父级容器布局覆盖。
 	# 注意不要给它设 Control.top_level——那样它就不再继承父级可见性，宿主关了它还会留在屏幕上；
 	# 摆放时把屏幕坐标换算成挂载点坐标系的 position 即可（见 UISys._place）。
-	var box: Control = _free_box() if bool(child_config.get("free", false)) else _content_box()
-	box.add_child(child.control)
-	_anchor_free_child(child)              # 配了 open_at 的角就钉到那个角上（见它）
+	_attach_child_control(child, child_config)
 	UISys.register_child(self, child)
 	return child

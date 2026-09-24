@@ -71,4 +71,9 @@
   - 命中 UI 时调 `ui.on_event(状态名)`，UI 侧按状态名等值匹配 `config["events"]` 里的指令。
   - **"按住期间每帧要做的事"不走这里**：走 `AutoSys`（`Script/Auto/Auto.md`：挂在状态上、每帧执行指令、状态不满足自动删）——指针层不参与，也就不需要捕获机制。
 - 命中判定：UI 按**控件树倒序**（同级后画的在上，沿控件树先问孩子）取最上层、`control.get_global_rect()` 矩形命中；角色按身体 `CollisionShape2D` 矩形；地图按世界坐标 / `TileSpritePreset.tileset.tile_size` 换算（y 取反）。
+  - 两条"**不算命中**"的例外：**显式裁剪**（`clip_contents`，如滚动容器把滚出视野的内容裁掉了）之外的点不命中；
+    **滚动条上什么都不命中**——滚动条归**引擎自己**处理（本项目不消费鼠标事件、不 `set_input_as_handled`），
+    面板"按住可拖"与滚动条并存时，拖滚动条才不会连带拖面板。滚动条是 ScrollContainer 的**内部子节点**
+    （`get_child_count()` 默认数不到），所以按它的矩形判（`_on_scroll_bar`），并且一旦落在它上面就
+    **整次查询作废**（`_blocked_by_scroll_bar`）——只让那一层不命中还不够，外层元素（面板自己）还会被命中。
 - 驱动链路：`StatusPreset_Pointer` 定义按键状态（Pointer Press/Hold/Release、Submit）→ `SystemShortcutPreset_Pointer` 声明"状态满足→`PointerDetect.key` 指令"→ 满足时 `Msg.send_cmd`。输入全部来自 `InputSys` 的 `Msg` 消息，不用引擎 `gui_input`。

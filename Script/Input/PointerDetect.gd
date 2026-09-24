@@ -101,6 +101,12 @@ static func key(status_name: String, end_edit: bool = true) -> void:
 	_blur_pending = true
 
 
+## 本次命中查询是不是"被滚动条挡住了"（见 _hit_in）。
+## 挡住了就**整次查询的结果都是"没有 UI 目标"**——不能只让那一层返回 null：外层元素（面板自己）
+## 还会接着被命中（它的根 Control 就在那层上面）⇒ 拖滚动条时面板照样收到按下。
+## 单线程、一帧只查一次（_process 里那次），静态变量够用；_ui_at 每次开头清掉。
+static var _blocked_by_scroll_bar: bool = false
+
 ## 指针命中的 UI —— **沿 Godot 的控件树走**（不再遍历登记表）：
 ##   从 UI 根的孩子（窗口）**倒序**开始，每一层也都倒序（同级里后画的在上面）；
 ##   进到一个 Control 里**先问它的孩子**（孩子画在父之上），孩子都不命中才算它自己。
@@ -115,7 +121,9 @@ static func key(status_name: String, end_edit: bool = true) -> void:
 ## 注意 Rect2 退化（宽或高为 0）时永远命不中——UI 的 size 必须补足（见 UIBase._fit_size）。
 ## 被谁用：_process。
 static func _ui_at(pos: Vector2) -> UIBase:
-	return _hit_in(UISys.root, pos)
+	_blocked_by_scroll_bar = false
+	var ui: UIBase = _hit_in(UISys.root, pos)
+	return null if _blocked_by_scroll_bar else ui
 
 
 ## 在 node 的孩子里倒着找命中的控件，命中则返回它对应的 UIBase（都没命中返回 null）。
@@ -133,6 +141,15 @@ static func _hit_in(node: Node, pos: Vector2) -> UIBase:
 		# 只认这种**声明过的**裁剪，不做"祖先矩形剪枝"（自由定位元素本来就画在父矩形之外，见下）。
 		if c.clip_contents and not c.get_global_rect().has_point(pos):
 			continue
+		# **点在滚动条上 ⇒ 整次查询作废**（见 _blocked_by_scroll_bar）：面板常常"按住可拖"与滚动条
+		# 并存，而滚动条归**引擎自己**处理（本项目不消费鼠标事件、不 set_input_as_handled，所以它照常能拖）；
+		# 不挡的话命中会沿控件树沿用外层元素（= 面板）⇒ 拖滚动条的同时面板也在被拖（实测踩过）。
+		# **注意滚动条是 ScrollContainer 的"内部子节点"**（`get_child_count()` 默认数不到它），
+		# 所以只能按它的矩形判，而不是在下面的循环里跳过某个 child。
+		# 顺序上安全：同一个父级下"画在上面的"先被问到（倒序），所以叠在滚动区上的菜单/图标照样先命中。
+		if c is ScrollContainer and _on_scroll_bar(c as ScrollContainer, pos):
+			_blocked_by_scroll_bar = true
+			return null
 		var deeper: UIBase = _hit_in(c, pos)            # 孩子画在父之上，先问孩子
 		if deeper != null:
 			return deeper
@@ -148,8 +165,14 @@ static func _hit_in(node: Node, pos: Vector2) -> UIBase:
 	return null
 
 
-## 我没说要实现这个，但它先帮我实现了，那就先占位用
-## 指针命中的角色（按身体矩形判定）。
+## 点是不是落在滚动容器的**滚动条**上（竖 / 横各判一次；没显示的那条 visible=false ⇒ 直接不算）。
+## 滚动条是 ScrollContainer 的内部子节点，遍历孩子时看不到它，只能按矩形问（见 _hit_in）。
+## 被谁用：_hit_in。
+static func _on_scroll_bar(sc: ScrollContainer, pos: Vector2) -> bool:
+	for bar: ScrollBar in [sc.get_v_scroll_bar(), sc.get_h_scroll_bar()]:
+		if bar.visible and bar.get_global_rect().has_point(pos):
+			return true
+	return false
 static func _char_at() -> Character:
 	for char_: Character in Character._we.values():
 		if char_.body == null:

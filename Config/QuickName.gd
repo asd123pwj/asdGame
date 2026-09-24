@@ -50,6 +50,7 @@ static var UI_event_pointer2_menu := [QName.pointer2_hold, 'UIInteract.open(@sel
 static var UI_event_pointer1_close_host := [QName.pointer1_hold, "UIInteract.close(@host)"]
 static var UI_event_pointer1_close_parent := [QName.pointer1_hold, "UIInteract.close(@self.parent)"]
 static var UI_event_pointer1_rescale_host := [QName.pointer1_hold, "UIInteract.rescale(@host, @event)"]
+static var UI_event_pointer1_resize_host := [QName.pointer1_hold, "UIInteract.resize(@host, @event)"]
 static var UI_event_pointer1_fold_parent := [
 	QName.pointer1_hold,
 	'UIInteract.toggle_fold(@self.parent)'
