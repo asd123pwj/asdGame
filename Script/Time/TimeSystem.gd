@@ -1,7 +1,7 @@
 class_name TimeSys
 extends BaseClass
 ## 时间系统：按真实时间推进"时辰"，并广播时间消息（见 Script/Time/Time.md）。
-## 每次推进都会 send_tick()，所以"逐帧状态"（如 "Mouse Left | Tick" 拖动）实际是**帧**驱动，
+## 每次推进都会 send_tick()，所以"逐帧状态"（如 "Right | Tick" 拖动）实际是**帧**驱动，
 ## 时钟推进是**秒**驱动——两者都在本类的 _process 里发。
 ## 被谁用：Sys._process（唯一驱动）；状态层的 time 监听与各 Msg.send_advance_* 的接收方。
 

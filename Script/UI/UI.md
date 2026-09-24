@@ -4,7 +4,7 @@
 UI 系统遵循项目统一范式（见 `设计文档.md` §二/§三/§十）：**UIPreset**（配置）→ **UISys**（管理脚本，文件 `UISystem.gd`）→ **UIBase**（元素基类）→ `Config/UI/` 配置类。
 - `UIBase extends BaseClass`，**不直接继承 Control**：内部用变量持有 `control: Control`（真正的引擎节点），不用自定义 signal。
 - **一个 UI = 多个基本元素的组装**：根元素（如 `UI_Panel`）由 config["children"] 声明子元素（都是 UIBase 子类），build 时递归组装。
-- **交互 = 指令**：元素不再用 `draggable/closeable/...` 开关，而是"事件→指令"——`config["events"]` 是 `[事件名, 指令串]` 的列表，事件发生即发送对应指令；**事件名就是状态名**（统一来自 `QName`，如 `QName.mouseLeft`；UI 不感知键位，键位只在状态层配），hover 变化用 `QName.pointer_enter` / `QName.pointer_exit`；指令里 `@self.parent`(挂载对象)/`self`(自身) 在发送前替换为实例（`@注册名` 形式）。想要什么行为就配什么指令（拖动手柄配 drag 指令、关闭按钮配 close 指令）。**配置里指令串外层一律用单引号**（Godot 与 Python 一样两种引号都行）：里面要写双引号（路径/字符串参数）时就不必转义成 `\"`，写出来就是指令本身的样子。
+- **交互 = 指令**：元素不再用 `draggable/closeable/...` 开关，而是"事件→指令"——`config["events"]` 是 `[事件名, 指令串]` 的列表，事件发生即发送对应指令；**事件名就是状态名**（统一来自 `QName`，如 `QName.pointer1_hold`；UI 不感知键位，键位只在状态层配），hover 变化用 `QName.pointer_enter` / `QName.pointer_exit`；指令里 `@self.parent`(挂载对象)/`self`(自身) 在发送前替换为实例（`@注册名` 形式）。想要什么行为就配什么指令（拖动手柄配 drag 指令、关闭按钮配 close 指令）。**配置里指令串外层一律用单引号**（Godot 与 Python 一样两种引号都行）：里面要写双引号（路径/字符串参数）时就不必转义成 `\"`，写出来就是指令本身的样子。
 - **显示内容统一是 `config["content"]`**（**没有同名成员变量**）：元素展示什么由它决定，改内容 = 写 `config["content"]`（`Utils.write("@self.config.content", 值)`）再在**下一条**接 `@self.refresh("content")`（只改了它这一项），不必重建控件。**路径参数写成带引号的字符串**：引号里的内容不再被当成取值式，路径原样传进函数。
 
 ## 目录与命名约定
@@ -27,7 +27,7 @@ Script/UI/
 ├─ UIBase.gd             # 元素基类（extends BaseClass，持有 control: Control）
 └─ UI/                   # 原子元素（每个都是 UIBase 子类，配置里 ui_name = 类名）
    ├─ UI_Panel.gd        # 面板容器：竖排布局，组装子元素
-   ├─ UI_Label.gd        # 文本：content 即文本（配左键 PRESS 指令即"按钮"，配左键 HOLD 即"拖动手柄"）
+   ├─ UI_Label.gd        # 文本（**内核 RichTextLabel**，BBCode + [url] 链接）：配左键 PRESS 指令即"按钮"，配左键 HOLD 即"拖动手柄"
    ├─ UI_Image.gd        # 图片：content = 纹理路径（改图 = 写 config["content"] + refresh("content")）
    └─ UI_Scroll.gd       # 滚动容器：content 为多行文本
 ```
@@ -78,7 +78,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - **"给某个 UI 加/减东西"= 开/关一个预设 UI**：不再有 `add_close_button` / `remove_close_button` 这类成对的专门函数（那正是"同一需求两套策略"）。关闭按钮就是一个普通预设 `CloseButton`（`Config/UI/UIPreset_Basic.gd`，`open_at = ANCHOR_TOP_RIGHT_IN` 开在锚点内部右上角），加它 = `UIInteract.open(宿主, "CloseButton", 宿主)`，减它 = `UIInteract.close(宿主, "CloseButton")`。
 - **缩放手柄**同样是普通预设 `ResizeButton`（图标 `content` + `open_at = ANCHOR_BOTTOM_RIGHT_IN` 开在锚点内部右下角），**只有一条事件**，而且不直接调缩放函数，而是交给 `AutoSys`：
   ```gdscript
-  "events": [["Mouse Left", "UIInteract.rescale @self.parent event"]],
+  "events": [["Pointer 1 Hold", "UIInteract.rescale @self.parent event"]],
   ```
   读作：按住时调 `rescale` 登记（`event` = 触发它的事件名 = 状态名）；之后每帧由 AutoSys 调 `rescaling <手柄挂着的那个 UI>`；松手（状态不满足）时 AutoSys 自己把这条登记删掉——**所以不用写"松开"**。两者都声明了 `free`（否则会被宿主的竖排布局排走）。
   - 用 `Hold` 而不是 `Press`：**状态层只在"满足状态变化"时广播**，所以 Hold 只在"开始按住"那一下触发一次——正好用来做"登记"；之后的每帧由 AutoSys 驱动，不需要带 `| Tick` 的状态。
@@ -135,7 +135,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
       | 元素 | 内部控件 | 可用的槽 |
       |---|---|---|
       | `UI_Panel` | PanelContainer | `panel`（它覆写 `_apply_background`，套在内层 `_panel` 上） |
-      | `UI_Label` | Label | `normal` |
+      | `UI_Label` | **RichTextLabel**（内核，见元素表） | `normal` |
       | `UI_Scroll` | ScrollContainer | `panel` |
       | `UI_Image` | TextureRect | **无**（TextureRect 本身不画 StyleBox，配了只警告一次、不画） |
 
@@ -155,7 +155,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
   - `size` 里为 **0 的那一维按"内容最小尺寸"补足**（`_fit_size()`；"内容要多大"由可覆写的 `_content_size()` 给出）：`[150, 0]` = 宽固定、高随内容；`[0, 0]` = 完全由内容决定。**必须补**——控件尺寸为 0 时 `get_global_rect()` 是退化矩形，PointerDetect 永远命中不到它（菜单"一打开就没了"就是这么来的：矩形高度 0 → 失焦判定以为指针在菜单外 → 同一帧里就把它关了）。
     - **补完还会把结果发布成控件的最小尺寸**（`custom_minimum_size`）：本元素的根控件是普通 `Control`，它自己不汇总内容最小尺寸，而"面板套面板"（容器里的 `UI_Panel`，如可折叠分组）要靠这个最小尺寸才能往外撑——不发布的话内层面板在父容器眼里高度永远是 0，整棵子树都长不出来（做"可收回分组"时实测踩到：嵌套分组的高度一直停在标题那一点）。所以 `_fit_size()` 读"配置想要多大"要读 `config["size"]`（`_config_size()`），不能读 `custom_minimum_size`（那个值已被覆盖成"内容实际多大"）。
   - **`UI_Panel` 的 `_content_size()` 必须问内部的 `PanelContainer`，不能问根控件**：根是普通 `Control`，**不会汇总子元素的最小尺寸**，问它只会得到 `custom_minimum_size`（`[150, 0]` → 高度就是 0）。而且建时还没进树、字体主题都问不出来，所以要挂在 `_panel.minimum_size_changed` 上再补一次。
-  - 指令串参数：**只有中间带空格时才需要引号**（如 `"Mouse Left | Tick"`），其余直接写名字（如 `open_menu self Menu`）。
+  - 指令串参数：**只有中间带空格时才需要引号**（如 `"Right | Tick"`），其余直接写名字（如 `open_menu self Menu`）。
   - **自由定位元素不要设 `Control.top_level`**：那会让它不再继承父级可见性（宿主 `hide()` 后它还留在屏幕上、也还能被命中）。摆放时把屏幕坐标换算成**宿主坐标系的 `position`**（挂载点原点即宿主原点）；也不要用 `set_global_position`——它按"当前全局变换求逆"算，重复摆会跟旧 position 复合，越摆越偏。
 - **只存"何时发什么指令"**：无 `close()/fade_to()` 等交互实现（都在 `UIInteract`），无 `draggable/closeable/...` 开关。
 
@@ -193,7 +193,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | `UIInteract.begin_edit @self.parent` | 让目标开始编辑（`UI_Input`：抢焦点 + 置 `InputSys.edit_ui`）——"打开后直接就能打字"用它 | `open … \v begin_edit …` |
 | `UIInteract.end_edit(target)` | 让目标结束编辑（清 `InputSys.edit_ui` + 放焦点）。**"提交后要不要退出编辑"由配置决定**：要退出就写它；搜索框那种"提交完继续打字"就别写 | `Utils.write(…)\vUIInteract.end_edit(@self)\v…refresh("content")` |
 | ~~`UIInteract.swap_config`~~（已退役） | 对调两项改用 `Utils.swap`：两条路径直接写出来，后面接一条刷新（换的是自己那两项就 `self`）——**开关式按钮就靠它 + 多命令实现** | `Utils.swap "@self.config.content" "@self.config.content_2"\v@self.refresh("content")` |
-| `UIInteract.switch_value(target, 键, 值)` | 在 `config[键]` 列表里开关一个值：**已有（按内容比）就删、没有就追加**；`值` 可以是变量（如 `QName.UI_event_mouseLeft_drag`）。`events` 这类列表在派发时才读，所以改完立刻生效 | 菜单"启用拖拽"：往宿主 `events` 里加/减一条拖动绑定 |
+| `UIInteract.switch_value(target, 键, 值)` | 在 `config[键]` 列表里开关一个值：**已有（按内容比）就删、没有就追加**；`值` 可以是变量（如 `QName.UI_event_pointer1_drag`）。`events` 这类列表在派发时才读，所以改完立刻生效 | 菜单"启用拖拽"：往宿主 `events` 里加/减一条拖动绑定 |
 | `UIInteract.set_top @self.parent` | 把 target 所在的**窗口**（沿 `parent` 爬到最外层那个 UI）提到最前：只需一句 `control.move_to_front()`——命中已与绘制同序（见下），不用再维护登记顺序。**一般不用写**：`PointerDetect.key` 里"点它"就会自动调（`open` 也会调，新开的排最前） | 点一下谁谁在最上面 |
 | `UIInteract.close([宿主], [预设名])` | 关闭（隐藏）：**不写预设名 = 关 target 自己**；写了 = 关"挂在 target 下的那个预设 UI"（按"挂载点 + 预设名"查，没开过就什么都不做）。与 `open` 成对：给某个 UI 加/减东西 = 开/关一个预设 | 关闭"按钮"、开关式按钮的"移除"一侧：`UIInteract.close(宿主, "CloseButton")` |
 | `UIInteract.toggle([目标], [预设名])` | **开关**：现在显示着就关、否则开（开/关都走本文件那两条，复用与摆位照旧）。键状态只在"满足变化"时给一次，写两条指令做不到判断该开还是该关，所以要有它 | `J → UIInteract.toggle(preset_name="TestShow")` |
@@ -205,10 +205,10 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | 类 | 职责 | 事件配置示例 |
 |---|---|---|
 | `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑。`background` 可给整块面板铺一张九宫格底图。配 `scroll: [上限宽, 上限高]`（0 = 该维不限制）时内容装进滚动容器：面板按"内容需要 ↔ 上限"取小，长出来的部分进去滚动（见"长内容"一节的"面板滚动"） | — |
-| `UI_Label` | 文本：content 即文本；**绑 `"Mouse Left"`（按住）即"按钮"/"拖动手柄"**（配 `UIInteract.drag @self.parent event` 就是后者），要"按下那一下"就用 `"Mouse Left | Press"`（无需单独 Button 类）。**给一栏文字定宽**：`max_chars`（字符数，中文算 2）/ `max_width`（像素）——配了就**自动换行 + 宽度等于上限**（短内容也不缩，同栏对齐），高度按折行数自适应（优先用引擎按当前宽度报的最小高）；不配就是"宽 = 文字本身"（长行会把面板撑开，见"面板宽度"） | `["Mouse Left", "UIInteract.close @self.parent"]` |
+| `UI_Label` | 文本，**内核是 RichTextLabel**：content 按 **BBCode** 解析（`[b]` / `[color]` / `[url=meta]文字[/url]`）——"段落里哪几个字可点 / 可悬浮"是引擎原生能力，meta 的用法见 `UIInteract_Meta`；悬停在链接上指针自动变手型。**绑 `"Pointer 1 Hold"`（按住）即"按钮"/"拖动手柄"**（无需单独 Button 类）。**给一栏文字定宽**：`max_chars`（字符数，中文算 2）/ `max_width`（像素）——配了就 `宽 = min(内容自然宽, 上限)`（短内容不撑满、超了才折行），不配交给容器。**`size` 高度写 0 = 高随内容；写了数 = 显示区定死，内容多了框内滚动**（"三行只显示两行"的测法） | `["Pointer 1 Hold", "UIInteract.close @self.parent"]` |
 | `UI_Image` | 图片：content = 纹理路径，refresh 时 load；改图 = 写 `config["content"]` + 一条 `self.refresh` | — |
 | `UI_Scroll` | 滚动容器：content 为多行文本，内层 Label autowrap。**ScrollContainer 默认最小尺寸为 0，必须用 `size` 配置可视区大小，否则不可见**。结构与 `UI_Panel` 同一套：`root(Control) → Scroll(ScrollContainer) → Label` + `Overlay(Control)`，**free 子元素挂 Overlay**（不能挂在滚动容器里：会被裁、尺寸被压成 0） | — |
-| `UI_Input` | 输入框（LineEdit）：content 是**配置里写的初值**（`refresh()` 写进框里），回车提交 → 派发 `Input Submit`。**框里正在打的字不同步进 content**：要用就直接读 `@self.control.text`（取值链能读实例成员）——于是提交没有"先收文本"这一步，**元素自己没有提交逻辑**，提交就是配置里的普通命令串（送到哪 + 清空 + 要不要退出编辑 + 刷改过的两个 UI）。**元素里没有任何特判**：点它进编辑也是一条普通配置（`[QName.mouseLeft, 'UIInteract.begin_edit self']`，换成别的事件也行），事件照常走配置 + 冒泡。宽度上限两种说法：`max_width`（像素）/ `max_chars`（**字符数**，中文算 2——等宽字体里中文正好两个半角宽），超了多行框换行、单行框横向滚，且**是硬上限**（连 `size` 也压）；配 `multiline: true` 时控件换成 TextEdit：**自动换行 + 高度按"折行后的行数"自适应**（行高 = 字高 + 主题行距，运行时量出来，换字体自动变；`max_lines` = 最多显示几行，超出框内滚动），**回车仍是提交、不会插换行**（输入层判"这次算提交"就吃掉那个事件；按着 Shift 才留给 TextEdit 插换行） | `[[QName.mouseLeft, 'UIInteract.begin_edit self'], [QName.input_submit, 'Utils.write "@self.config.send_to" @self.control.text\vUtils.write "@self.config.content"\vUIInteract.end_edit self\v@self.refresh("content")\vself.refresh']]` |
+| `UI_Input` | 输入框（LineEdit）：content 是**配置里写的初值**（`refresh()` 写进框里），回车提交 → 派发 `Input Submit`。**框里正在打的字不同步进 content**：要用就直接读 `@self.control.text`（取值链能读实例成员）——于是提交没有"先收文本"这一步，**元素自己没有提交逻辑**，提交就是配置里的普通命令串（送到哪 + 清空 + 要不要退出编辑 + 刷改过的两个 UI）。**元素里没有任何特判**：点它进编辑也是一条普通配置（`[QName.pointer1_hold, 'UIInteract.begin_edit self']`，换成别的事件也行），事件照常走配置 + 冒泡。宽度上限两种说法：`max_width`（像素）/ `max_chars`（**字符数**，中文算 2——等宽字体里中文正好两个半角宽），超了多行框换行、单行框横向滚，且**是硬上限**（连 `size` 也压）；配 `multiline: true` 时控件换成 TextEdit：**自动换行 + 高度按"折行后的行数"自适应**（行高 = 字高 + 主题行距，运行时量出来，换字体自动变；`max_lines` = 最多显示几行，超出框内滚动），**回车仍是提交、不会插换行**（输入层判"这次算提交"就吃掉那个事件；按着 Shift 才留给 TextEdit 插换行） | `[[QName.pointer1_hold, 'UIInteract.begin_edit self'], [QName.input_submit, 'Utils.write "@self.config.send_to" @self.control.text\vUtils.write "@self.config.content"\vUIInteract.end_edit self\v@self.refresh("content")\vself.refresh']]` |
 - **一览类元素**（把运行期数据铺出来看）：`UI_Status`（角色状态）、`UI_Shortcut`（角色快捷）、
   `UI_Attr`（角色属性 / buff）、`UI_Interaction`（角色交互）、`UI_Skill`（角色技能）、
   `UI_Archetype`（角色原型——**唯一不实时的**：原型只在角色初始化时生效一次，所以它不覆写 `_listen`）——六者共用底座 **`UI_View`**
@@ -240,12 +240,12 @@ var values: Array[Array] = [
         "children": [
             ["Title", "UI_Label", {
                 "content": "MiniHUD（按住拖动）",
-                "events": [["Mouse Left", "UIInteract.drag @self.parent event"]],
+                "events": [["Pointer 1 Hold", "UIInteract.drag @self.parent event"]],
             }],
-            # "按钮" = 文本元素 + "Mouse Left" 指令，无需 Button 子类
+            # "按钮" = 文本元素 + "Pointer 1 Hold" 指令，无需 Button 子类
             ["Close", "UI_Label", {
                 "content": "[关闭]",
-                "events": [["Mouse Left", "UIInteract.close @self.parent"]],
+                "events": [["Pointer 1 Hold", "UIInteract.close @self.parent"]],
             }],
             ["Info", "UI_Scroll", { "content": "初始内容" }],
             # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],
@@ -267,9 +267,9 @@ var values: Array[Array] = [
   - **管理对象不一定是"最顶层那个窗口"**：只认"最近一处声明"——`UIInteract.open(..., host=@self)` 或 `Utils.write("<某UI>.config.host", "UI/MiniHUD/Menu")` 写在谁身上，就以谁为界（它下面的整棵子树都跟它，更近的声明还能再覆盖，所以可以给不同子菜单挂不同的管理对象）。没写 `host` 的链才回退到最外层窗口。**写的是注册名**（字符串：可读、能进 json / 能深拷贝，见 RegSys），所以"哪一层管谁"是可以存盘的配置。
   - - 菜单编辑 ▸ 的"内容对象 ▸"**不写专门面板**：它就是通用 `Editor` + `content_cmd="@host.config.content_cmd"`（编辑单个字符串值 ⇒ 自适应出一个文本框、回车写回并刷宿主）。"对象路径"就是 `content_cmd` 本身，显示 / 编辑都按它取，没有"拿名字再查一次"那层转手。
 - **失焦判定也因此变简单**：`UIInteract_OpenClose.close_blur_ui` 判"指针是否在我要的链上"，鼠标在子菜单上时沿 parent 链能走回父菜单，所以父菜单不会被误关。
-- **触发**：宿主配置里写 `"events": [[QName.mouseRight, 'UIInteract.open(@self, "Menu", @self, close_on_blur=true)']]`（= `QName.UI_event_mouseRight_menu`）；状态层只需 `Mouse Right → PointerDetect.key "Mouse Right"` 把事件派发给 hover 的 UI，**不需要系统级快捷**。
+- **触发**：宿主配置里写 `"events": [[QName.pointer2_hold, 'UIInteract.open(@self, "Menu", @self, close_on_blur=true)']]`（= `QName.UI_event_pointer2_menu`）；状态层只需 `Pointer 2 Hold → PointerDetect.key "Pointer 2 Hold"` 把事件派发给 hover 的 UI，**不需要系统级快捷**。
 - **多级菜单 = 菜单开菜单**：菜单项的 `Pointer Enter` → `UIInteract.open self MenuEdit self`（第一个参数是挂载点，第二个是位置锚点，菜单项里都传 `self`），层数不写死。
-- **菜单项里的"开关"**（如 `MenuEdit/CloseToggle`）：普通 `UI_Label` 上写两套配置，`"Mouse Left"` 一条串里做三件事——`UIInteract.open(宿主, "CloseButton", 宿主)`（另一套里是 `UIInteract.close(宿主, "CloseButton")`）\v `Utils.swap "@self.config.events" "@self.config.events_2"` \v `Utils.swap "@self.config.content" "@self.config.content_2"` \v `@self.refresh("content")`，于是点第一次开关闭按钮、点第二次关它，文字也跟着换。关闭按钮就是 `Config/UI/UIPreset_Basic.gd` 里的普通预设（`open_at = Enums.OpenAt.ANCHOR_TOP_RIGHT_IN`：开在锚点**内部**右上角，按自己宽度内缩）。
+- **菜单项里的"开关"**（如 `MenuEdit/CloseToggle`）：普通 `UI_Label` 上写两套配置，`"Pointer 1 Hold"` 一条串里做三件事——`UIInteract.open(宿主, "CloseButton", 宿主)`（另一套里是 `UIInteract.close(宿主, "CloseButton")`）\v `Utils.swap "@self.config.events" "@self.config.events_2"` \v `Utils.swap "@self.config.content" "@self.config.content_2"` \v `@self.refresh("content")`，于是点第一次开关闭按钮、点第二次关它，文字也跟着换。关闭按钮就是 `Config/UI/UIPreset_Basic.gd` 里的普通预设（`open_at = Enums.OpenAt.ANCHOR_TOP_RIGHT_IN`：开在锚点**内部**右上角，按自己宽度内缩）。
 - **关掉 = 隐藏（实例复用）**：关闭统一走 `UIInteract.close`（`hide()` + 广播）；**父 UI 一 hide，挂在它下面的子 UI 随可见性继承一起不可见**，所以不需要"关父菜单时连子菜单一起关"这种递归。`open` 按登记名查——有就"显示 + 重新摆位"，没有才现场创建；同一登记名只有一份，隐藏的实例不参与指针命中、也不算"开着"。
 - **隐藏后怎么回来**：`close` 只是 `hide()`，实例还在 `uis` 里，所以重开不用重建——重开统一走 `UIInteract_OpenClose.open`（显示 + 按 `open_at` 摆位，不重建控件；指令形式就是 `UIInteract.open`）。**注意 `PointerDetect` 用 `is_visible_in_tree()` 判命中，隐藏的 UI 再也收不到任何事件**，所以重开的触发不能写在它自己身上（"再点一下"是点不到的），必须来自它仍可见的父级、或系统级的状态/快捷指令。
 - **失焦关闭（两套，与"是不是菜单"无关）**：都由 open 登记候选、close 摘掉（只有"开出来的"才可能失焦，配置里的子元素不会单独关；关过再开自动回来）。
@@ -290,15 +290,19 @@ var values: Array[Array] = [
   - 父元素上 `collapsed`：收起态（默认 false = 展开）；
   - **子元素自己**标 `collapse_keep = true`：表示"收起时留着我"（默认不标 = 跟着收起）⇒ "谁留下"写在自己身上，**父元素不用维护名字清单**（子元素改名、加删，都不用回头改父级配置）。
 - **为什么收起后就不占屏幕了**：不可见的子元素**不参与容器布局** ⇒ 容器按内容收缩 ⇒ `size` 里为 0 的那一维（"宽固定、高随内容"，菜单/面板都这么配）自己就变短了。
-- **一行搞定："可折叠标题"片段**（推荐用法）——`UIInteract_Fold.title_item("标题")` 返回一条普通 `UI_Label` 配置：它自己**既是标题也是收回按键**（显示 `▾ 标题` / `▸ 标题`，点它收起/展开它所在的分组，自带 `collapse_keep: true`）。第三个参数 `chars`（>0）给标题**限宽**（`max_chars`，字符数）：标题常是"一行小结"，不限宽会把整块面板撑开（见"面板宽度"）。给一段内容加"收 / 展"就是**加这一行**：
+- **一行搞定："可折叠标题"片段**（推荐用法）——`UIInteract_Fold.title_item("标题")` 返回一条普通 `UI_Label` 配置：它自己**既是标题也是收回按键**（显示 `▾ 标题` / `▸ 标题`）；箭头是一段 `[url]` 链接（meta = 折叠那串指令，见 `UIInteract_Fold.LINK_FOLD`），标题上同时绑着拖动——**两条独立绑定、都挂在"按下"这一个事件上，都会执行**（见 `UIBase.on_event` 的"一个事件可以绑多条"），没有一个"又折叠又拖动"的合成函数；自带 `collapse_keep: true`。第三个参数 `chars`（>0）给标题**限宽**（`max_chars`，字符数）：标题常是"一行小结"，不限宽会把整块面板撑开（见"面板宽度"）。给一段内容加"收 / 展"就是**加这一行**：
   ```gdscript
   static func title_item(what: String) -> Array:
       return ["Title", "UI_Label", {
-          "content": "▾ %s" % what, "content_2": "▸ %s" % what,   # 两套文字对调换箭头（见"开关式按钮"）
+          # 两套文字对调换箭头（见"开关式按钮"）：箭头那段链接的 meta 就是折叠指令
+          "content": "[url=%s]▾[/url] %s" % [UIInteract_Fold.LINK_FOLD, what],
+          "content_2": "[url=%s]▸[/url] %s" % [UIInteract_Fold.LINK_FOLD, what],
           "collapse_keep": true,                                   # 它自己声明"收起时留我"
-          "events": [[QName.mouseLeft, 'UIInteract.toggle_fold(@self.parent)'
-              + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
-              + '\v@self.refresh("content")']],
+          # 两条绑定都执行：① 按住就拖窗口；② 指针若停在箭头那段链接上，再跑那段链接的 meta（折叠）
+          "events": [
+              [QName.pointer1_hold, 'UIInteract.drag(@host, @event)'],
+              [QName.pointer1_hold, 'UIInteract.meta_event(@self)'],
+          ],
       }]
   ```
   别的预设直接 `children.append(UIInteract_Fold.title_item("一段很长的配置"))`；想换样子（标题带底、或者另放一个 `[+]` / `[-]` 按钮）照抄这段改 `content` / `events` 即可。
@@ -363,7 +367,7 @@ var values: Array[Array] = [
   写进去就是它——不用对着数字猜"这是谁"，也不怕重开一次就对不上。
 - **长度问题两手一起上**：容器 `scroll: [340, 460]`（`UI_Panel` 的滚动，内容再多也只在框内滚）+
   每行的值用**多行输入框**（`UI_Input` 的 `multiline`：自动换行、高度按折行数自适应、`max_lines` = 最多显示几行）。
-- **在编辑器里右键 ⇒ 右键菜单管的是它自己**（`UIEditor` 预设里配了 `QName.UI_event_mouseRight_menu`，
+- **在编辑器里右键 ⇒ 右键菜单管的是它自己**（`UIEditor` 预设里配了 `QName.UI_event_pointer2_menu`，
   `self` 就是它）——所以"启用拖拽"拖的是编辑器，不会去动它挂在的那个父 UI。**必须配这条**：
   不配的话右键事件会冒泡到父 UI（编辑器本身不消费），那里配的绑定就把 `host` 解成父 UI 了。
 - 想加新的编辑动作（删键、加子UI、改名字…）：往 `UIPreset_Editor` 加配置片段 + 在 `UI_Editor` 里加一条（写回走 `Utils.write`，或元素自己的方法）。

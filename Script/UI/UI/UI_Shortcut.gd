@@ -169,7 +169,7 @@ static func _input_cfg(shortcut_name: String, which: String, text: String, rows:
 		"scut": shortcut_name,
 		"which": which,
 		"events": [
-			QName.UI_event_mouseLeft_edit,
+			QName.UI_event_pointer1_edit,
 			[QName.input_submit, "UIInteract.end_edit(@self)" + '\v' + submit],
 		],
 	}

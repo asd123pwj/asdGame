@@ -1,89 +1,138 @@
 class_name UI_Label
 extends UIBase
-## 文本元素：content 即显示文本。
-## 可兼任"按钮"或"拖动手柄"——配置事件→指令（如 UIInteract.close @self.parent / drag @self.parent）即可，
-## 显示与交互解耦，无需单独的 Button 类。
+## 文本元素（**内核是 RichTextLabel**；元素名保留 UI_Label，既有配置一字不改）：
+## content 即文本，**按 BBCode 解析** ⇒ `[b]` / `[color]` / `[url=…]` 都能用。
+## "段落里哪几个字可以点 / 可以悬浮"由此变成引擎原生能力：`[url=meta]文字[/url]`——
+## meta 怎么写见 `UIInteract_Meta`（形状是 `事件名:指令`，如 `Pointer 1 Hold:UIInteract.drag(@host, @event)`）；
+## 本元素只负责把引擎"指针在哪段链接上"的信号记进 `meta_hover`（**点击也读它**：点在链接上时它就是那段）。
+## **链接不画下划线**（`underline_alpha` 置 0，见 reapply）；悬停在 [url] 上指针自动变手型。
+## （以前这里是普通 Label，"段落里的可点词"只能手搓逐字命中，已删——引擎有现成的，别再造。）
 ##
-## **给"一栏文字"定宽**（`max_width` 像素 / `max_chars` 字符数，与 UI_Input 同一套语义）：
-##   配了就**自动开自动换行**（除非显式写了 `autowrap`），宽度**就等于上限**（短内容也不缩——同一栏要对齐），
-##   高度按**折行后的实际行数**算。
-##   **为什么"上限"必须连着"换行"**：Label 裁不了自己（没有 clip），不换行的长文字会直接溢出框、
-##   比面板还宽——一览的段标题就是一行很长的小结，它没有上限，于是把面板撑到内容那栏的**两三倍宽**，
-##   而内容那栏有上限、早早换了行，两边对不上（实测踩过）。所以在本元素里"上限"与"换行"是同一件事。
-## **不配上限**：宽度 = 文字本身、高度 = 文字本身的高度（一行多高是量出来的，见 `_row_height`）。
+## **尺寸**：
+##   · `size` 高度写 0 ⇒ `fit_content`（高随内容、不出滚动条）；
+##   · 高度写了数 ⇒ 显示区**定死**（fit_content 关），内容多了**框内滚动**——
+##     "三行文本只显示两行"就是这么配的（测滚动条）。
+##   · `max_chars` / `max_width` 是宽度上限 ⇒ **宽 = min(内容自然宽, 上限)**：短内容不撑满、
+##     超了才折行（见 `_content_size`；RichTextLabel 本来就自动换行，**折行后的 meta 命中依旧跟手**）；
+##     不配就交给容器。
+## 字体走 `normal_font` / `normal_font_size` / `default_color`（RichTextLabel 的主题项名与 Label 不同，
+## 见 reapply）。
 
-## 内层文本控件（本元素的 control）。
-## 被谁用：refresh（刷文本）、_reheight。
-var label: Label
+## 内层文本控件（本元素的 control；**RichTextLabel**）。
+## 被谁用：refresh（刷文本）、_refit。
+var label: RichTextLabel
+
+## **正在悬停的那段 `[url]` 的 meta**（没有 = null）：由引擎信号维护（见 _create_control）。
+## 点击时读它就是"点到了哪个链接"——**链接之外它一定是 null** ⇒ 不会把上一次的交互"粘"到空文本上
+## （用 `meta_clicked` 就会：它只在点到链接时更新，点空白文本不刷新，实测就出了这个 bug）。
+## 被谁用：UIInteract_Meta（meta_event）、UIInteract_Fold（折叠箭头那段链接的 meta）。
+var meta_hover: Variant = null
 
 
-## 建控件：本元素的外观就是一个 Label。
-## **文字竖直居中**：行高是"文字高度"（见 `_content_size`），配了更高的 `size` 时不居中会贴着上边；
-## 对"高度 = 文字高"的元素这是空转。
-## **自动换行**：配了宽度上限就自动开（见类说明）；要"没上限也要换行"就显式写 `"autowrap": true`，
-## 那时宽度得由外面给（`size` 或容器）——不然它的最小宽只剩一个字，内容盒会缩成一条、
-## 每个字独占一行（实测踩过，很难看）。
+## 建控件：BBCode 开着；默认"高随内容、无滚动条"，`size` 高度写死才切成"定高 + 框内滚动"。
 ## 被谁用：UIBase.build()。
 func _create_control() -> Control:
-	label = Label.new()
+	label = RichTextLabel.new()
 	label.name = name
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	# **此刻 `control` 还没赋值**（build 里是 `control = _create_control()`）⇒ 上限要问**刚建的这个 label**，
-	# 不能问 `self.control`——那是 null，会被判成"没配上限定"，于是既不换行也不改尺寸（实测踩过）。
-	if _wrap_enabled(label):
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		# **别被容器拉满**：竖排容器默认"撑满"，拉满就比上限宽了（上限也就白配了）。
-		label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		# 折了几行要等控件拿到宽度、字体主题就绪才准 ⇒ 等布局给宽再重算一次高度
-		# （同 UI_Input._reheight 的理由；`resized` 只在尺寸真变了才发 ⇒ 收敛后不再抖）。
-		label.resized.connect(_reheight)
+	label.bbcode_enabled = true
+	label.fit_content = true
+	label.scroll_active = false
+	if _config_size().y > 0.0:                     # 高度写死 = 显示区定死：内容多了框内滚动
+		label.fit_content = false
+		label.scroll_active = true
+	# 内容高度取决于它拿到的宽（自动换行）⇒ 宽变了把元素尺寸重算一遍
+	# （连几帧等它排完版，同 UI_Input._reheight 的理由；它自己会发 minimum_size_changed，这里只是跟）。
+	label.resized.connect(_refit)
+	# meta 的命中**只有控件自己知道**（这个版本的 RichTextLabel 没有"查指针下 meta"的方法，
+	# 只有两个 hover 信号）⇒ 按"不得已才连引擎信号"的既有先例接进来（同 minimum_size_changed / resized）：
+	# 记进 meta_hover 供指令读。**点击不另接信号**：点的时候"指针正悬停的那段"就是被点的那段。
+	label.meta_hover_started.connect(_on_meta_hover)
+	label.meta_hover_ended.connect(_on_meta_hover_end)
 	return label
 
 
-## 要不要自动换行：显式配了 `autowrap` 听它的；否则**配了宽度上限就自动换**（见类说明）。
-## `ctrl` 给了就用它（`_create_control` 里得这么调，那时 `control` 还是 null，见上）；
-## 没给就用本元素的 `control`（refresh 那条路）。
-func _wrap_enabled(ctrl: Control = null) -> bool:
-	if config.has("autowrap"):
-		return bool(config["autowrap"])
-	return _max_width_px(ctrl if ctrl != null else control) > 0.0
+func _on_meta_hover(meta: Variant) -> void:
+	meta_hover = meta
 
 
-## 内容尺寸：**有上限** ⇒ 宽 = 上限、高 = 折行数 × 行高（见 `_text_height`）；
-## **没上限** ⇒ 控件自己要多大就多大（宽按文字、高按文字本身）。
+func _on_meta_hover_end(_meta: Variant) -> void:
+	meta_hover = null
+
+
+## 字体 / 字号 / 字色：RichTextLabel 的主题项名与 Label 不同，基类写的那几条它读不到 ⇒ 这里补正确的。
+## （同样只有一个入口：字体来自 SysCfg.ui_font_file，见 UISystem.apply_default_font。）
+## 被谁用：UIBase.reapply（build 与"改完配置让界面跟上"都走它）。
+func reapply() -> void:
+	super.reapply()
+	if not (control is RichTextLabel):
+		return
+	var rtl: RichTextLabel = control
+	if UISys.ui_font != null:
+		# normal 之外，[b] / [i] / [code] 各有自己的槽：同族没有 Bold ⇒ 都指到同一个字体文件
+		for item in ["normal_font", "bold_font", "italics_font", "mono_font"]:
+			rtl.add_theme_font_override(item, UISys.ui_font)
+	var font_size: int = maxi(int(config.get("font_size", SysCfg.ui_font_size_default)),
+		SysCfg.ui_font_size_default)
+	for item in ["normal_font_size", "bold_font_size", "italics_font_size", "mono_font_size"]:
+		rtl.add_theme_font_size_override(item, font_size)
+	if config.has("font_color"):
+		rtl.add_theme_color_override("default_color", config["font_color"])
+	# **链接不画下划线**：`[url]` 默认带一条下划线（标题里的 ▾ 箭头、拖动文字上都不好看）。
+	# 这个版本里链接没有单独的"链接色"主题项（颜色项只有 default_color / selection 那几个），
+	# 下划线是**常量 `underline_alpha`** 管的 ⇒ 0 = 看不见（`[u]` 也一并没了；本项目不用 `[u]`）。
+	# 想留一点就配 `"underline_alpha"`（主题常量是整数，按引擎的量纲给）。
+	rtl.add_theme_constant_override("underline_alpha", int(config.get("underline_alpha", 0)))
+
+
+## 内容尺寸。**宽度是这三档**（高度都是"引擎按这个宽报的内容高"）：
+##   · 配了上限（`max_chars` / `max_width`）⇒ **宽 = min(内容自然宽, 上限)**：
+##     短内容就按内容那么宽（"关闭"两个字的说明不该撑出一大段空白），长了才到上限并折行；
+##   · 没配、但容器已经给了宽 ⇒ 就用这个宽（别自己另报一个）；
+##   · 没配、宽还没定（刚建出来）⇒ **先按一行报**，等容器给宽后 `resized` → `_refit` 再算。
+## 为什么后两档不能照抄引擎报的尺寸：那时控件宽是 1px（还没排），RichTextLabel 会按"一个字一行"
+## 报出 1×N 行的最小尺寸，而 `_fit_size` 会把它固定成元素尺寸 ⇒ **一行文字变成一列高塔**
+## （实测：快捷名 "Key J" 变 1×120，五个元素之间因此空出一大段）。
 ## 被谁用：UIBase._fit_size。
 func _content_size() -> Vector2:
+	# **读控件"自身"的最小尺寸（get_minimum_size），不读 combined**：combined 会把我们上一轮写进
+	# custom_minimum_size 的旧值也算进来 ⇒ 一旦某帧因为"宽还没定"报高了，这个高就永远粘住
+	# （实测：快捷名 "Key J" 卡在 1×120 五行高，怎么刷新都不掉）。
+	var need: Vector2 = control.get_minimum_size()
 	var cap: float = _max_width_px(control)
-	if cap <= 0.0:
-		return super._content_size()
-	return Vector2(cap, _text_height(maxi(label.get_line_count(), 1)))
+	if cap > 0.0:
+		return Vector2(minf(_plain_width(control), cap), need.y)
+	if control.size.x > 0.0:
+		return Vector2(control.size.x, need.y)
+	return Vector2(need.x, _row_height(control))
 
 
-## 折行后"刚好装下 `rows` 行"的高度：**优先用引擎自己报的**（`get_minimum_size().y`）——
-## 它按**当前宽度**折出来的行数算，含它自己的取整（实测 1/2/3 行 = 28/55/82，而
-## `行数 × (字高 + 行距)` 给 27/54/81，差的就是那点取整）⇒ 用它的绝不会"比引擎要的少"。
-## 引擎报 0（还没排版）或比公式还小才退回公式（那时 `get_line_count()` 也还不准，见 `_reheight`）。
-## 被谁用：_content_size。
-func _text_height(rows: int) -> float:
-	var by_rows: float = float(maxi(rows, 1)) * _row_height(control)
-	var engine: float = label.get_minimum_size().y
-	return engine if engine >= by_rows else by_rows
+## 这段文字**不折行**时的自然宽度（像素）：去掉 BBCode 后按行量，取最宽的那行（再留 1px 余量）。
+## **为什么要自己量**：RichTextLabel 报的"内容宽"是**按它当前宽度折行后**最宽那一行的宽——
+## 宽还没定、或已经折行了，都问不出"本来有多宽"，于是"短内容也撑满上限"或"被压成一列"。
+## 只算普通字宽（不区分 `[b]` 等），对本项目的文案足够。
+## 被谁用：_content_size（有宽度上限那一档）。
+func _plain_width(ctrl: Control) -> float:
+	var rtl: RichTextLabel = ctrl
+	var font: Font = rtl.get_theme_font("normal_font")
+	var fs: int = rtl.get_theme_font_size("normal_font_size")
+	var best: float = 0.0
+	for line in rtl.get_parsed_text().split("\n"):
+		best = maxf(best, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+	var sb: StyleBox = rtl.get_theme_stylebox("normal")
+	return best + sb.content_margin_left + sb.content_margin_right + 1.0
 
 
-## 重算尺寸（折行数变了才会变）：**连着几帧各算一次**（默认 2 次，有界）。
-## 为什么要连算几帧：`get_line_count()` 要等控件拿到宽度、主题字体就绪并重排完才准
-## （建的那一帧读到的还是旧值）；`resized` 会再触发一次，收敛之后自己就停了。
-## 被谁用：Label 的 resized 信号、refresh（内容换了）。
-func _reheight(round_: int = 2) -> void:
-	if control == null or label == null:
+## 元素尺寸跟着内容高重算（宽变 ⇒ 折行变 ⇒ 高变）：连几帧等排版稳定（有界，见 _create_control）。
+## 被谁用：RichTextLabel 的 resized 信号。
+func _refit(round_: int = 2) -> void:
+	if control == null:
 		return
 	_fit_size()
 	if round_ > 0:
-		Callable(self, "_reheight").bind(round_ - 1).call_deferred()
+		Callable(self, "_refit").bind(round_ - 1).call_deferred()
 
 
-## 把 config["content"] 刷成文本；没写 / 为 null 则显示空串。
-## 内容换了 ⇒ 折行数可能跟着变 ⇒ 尺寸重算（见 _reheight）。
+## 把 config["content"] 刷成文本（BBCode 原样进 RichTextLabel.text）。
 ## 被谁用：UIBase.build() 末尾、配置里改完 content 紧跟的 `@self.refresh("content")`。
 func refresh(key: String = "") -> void:
 	super.refresh(key)
@@ -91,5 +140,3 @@ func refresh(key: String = "") -> void:
 		return                      # 只认自己这一项，别的键交给 super / 别的子类
 	var v: Variant = config.get("content")
 	label.text = str(v) if v != null else ""
-	if _wrap_enabled():
-		_reheight()

@@ -3,7 +3,7 @@ extends ConfigBase
 
 """ ---------- 角色原型一览 ----------
  ▾ 角色原型                          ← 头部（可折叠标题：点它整块收起 / 展开）
- [关闭]                              ← 一条普通事件指令（UIInteract.close）
+ ✕                              ← 右上角图标关闭（UIPreset_Basic.close_item）
  Body(UI_Archetype)                  ← **内容是一个"原型一览"元素**（Script/UI/UI/UI_Archetype.gd）
    角色原型：@Char/人类  [刷新]       ← 元素铺的抬头（看的是哪个角色）
    原型：人类（只在角色**初始化时**装配一次；下面是合并 packages 之后的清单）
@@ -34,14 +34,11 @@ var values: Array[Array] = [
         # **不写 size**：宽度跟着内容走（写死宽会裁掉长文案）
         "scroll": [0, 520],                          # 宽不限（0 = 跟着内容）、高到 520 就进滚动
         "free": true,                                # 自由定位：位置不被父级布局改
-        "events": [QName.UI_event_mouseLeft_drag],
+        "events": [QName.UI_event_pointer1_drag],
         "children": [
             # 头部 = 可折叠标题（点它整块收起 / 展开；标题自己标了"收起时留着我"，收起来还点得回来）
             UIInteract_Fold.title_item("角色原型", false, SysCfg.ui_view_chars),
-            ["Close", "UI_Label", {
-                "content": "[关闭]",
-                "events": [[QName.mouseLeft, "UIInteract.close(@self.parent)"]],
-            }],
+            UIPreset_Basic.close_item(),   # 图标式关闭（右上角）：和 CloseButton 预设同一张图 / 同一套指令
             # 内容：原型一览元素。`char` = 看哪个角色（指令路径/引用，要带 `@`）；
             # 不写就用 UI 通用的查看项 `content_cmd`（open 的时候能临时指定）。
             ["Body", "UI_Archetype", {

@@ -60,7 +60,7 @@ static func _input(event: InputEvent):
         # print(mouse_position)
     @warning_ignore_restore("unsafe_property_access")
 
-## 每帧给所有按住的键发一次 HOLD（逐帧状态就是靠它驱动的，如 "Mouse Left | Tick" 拖动）。
+## 每帧给所有按住的键发一次 HOLD（逐帧状态就是靠它驱动的，如 "Right | Tick" 拖动）。
 ## 顺带把"清空本帧指针位移"排到帧末（见 _clear_mouse_delta）：所以 Sys._process 那边不用再收尾。
 ## 被谁用：Sys._process。
 static func _process(_delta: float) -> void:

@@ -738,6 +738,10 @@ static func listen_ui_submit(ui: UIBase, callback: Callable, once: bool = false)
 static func listen_ui_close(ui: UIBase, callback: Callable, once: bool = false) -> String:
     return _listen_ui(ui, "CLOSE", callback, once)
 
+## ---------- 富文本链接 ----------
+## `[url]` 的 meta **不进消息系统**：读它就一条路——`UI_Label.meta_hover`（见 UIInteract_Meta）。
+## （曾有过 send/listen_ui_meta_* 一组桥，全项目没有任何接收方，已删；真需要时再加。）
+
 static func listen_ui_scale(ui: UIBase, callback: Callable, once: bool = false) -> String:
     return _listen_ui(ui, "SCALE", callback, once)
 

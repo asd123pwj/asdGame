@@ -209,7 +209,7 @@ static func _dep_count(preset: StatusPreset) -> int:
 	return n
 
 
-## 一条依赖的显示文本：`名字  条件 [阈值]`（如 `Health  > 50`、`Tick  Advance`、`Mouse Left  HOLD`）。
+## 一条依赖的显示文本：`名字  条件 [阈值]`（如 `Health  > 50`、`Tick  Advance`、`Pointer 1 Hold  HOLD`）。
 ## 阈值没给（INT64_MIN 是 ListenType 的"未给"哨兵）就不显示，别印一串没意义的数字。
 static func _dep_text(lt: ListenType) -> String:
 	var out: String = "%s  %s" % [str(lt.name), _match_text(lt.match_type)]

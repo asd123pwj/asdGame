@@ -19,7 +19,7 @@ var values: Array[Array] = [
     ["TestShow", "UI_Scroll", {
         "position": [380, 30], "size": [260, 140],
         "content": "（还没收到东西）",
-        "events": [QName.UI_event_mouseRight_menu],
+        "events": [QName.UI_event_pointer2_menu],
     }],
     # 输入用：标题 + 输入框 + 一句提示；回车提交 → 发给绑定的那个 UI
     ["TestInput", "UI_Panel", {
@@ -27,7 +27,7 @@ var values: Array[Array] = [
         # 想发给别的 UI 就改这儿（或右键目标 → 菜单编辑 ▸ → 复制名称 → 填成一整条路径）。
         "content_cmd": "@UI/TestShow.config.content",   # 提交后写到哪儿：就一条路径（标准项，见 UIBase.refresh / UI_Editor）
         "position": [380, 190], "size": [260, 0],
-        "events": [QName.UI_event_mouseRight_menu],
+        "events": [QName.UI_event_pointer2_menu],
         "children": [
             ["Title", "UI_Label", {"content": "TestInput（打字后回车）"}],
             ["Name", "UI_Input", {
@@ -35,7 +35,7 @@ var values: Array[Array] = [
                 # 输入框自己**没有任何特判**：点它进编辑、回车提交，都是这里配的事件→指令。
                 "events": [
                     # 点它进编辑（元素不写死"鼠标左键"：换成别的事件照样能用）
-                    QName.UI_event_mouseLeft_edit,
+                    QName.UI_event_pointer1_edit,
                     [QName.input_submit,
                         # 提交 = 全是普通命令：送到绑定名指的那个 UI + 清空自己 + 退出编辑 + **改了什么就刷什么**。
                         # 路径写成**带引号的字符串**：引号里的内容不再被当成取值式，路径原样传给函数。

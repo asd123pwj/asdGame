@@ -63,49 +63,68 @@ const FONT_TYPES: Array[String] = ["Label", "LineEdit", "TextEdit", "Button", "P
 	"PopupMenu", "RichTextLabel", "ItemList", "Tree", "CheckButton", "CheckBox", "OptionButton",
 	"MenuButton", "TabBar", "TabContainer", "ProgressBar", "SpinBox"]
 
-## 当前全局字体（从系统里找到的那个；没装 = null = 用引擎默认）。
+## 当前全局字体（`SysCfg.ui_font_file` 加载出来的那个；加载不了 = null = 用引擎默认）。
 ## 给"要往控件上写主题覆盖"的地方用：`UIBase.reapply` 会给每个元素的控件打上 `add_theme_font_override`
 ## ——控件自己的覆盖优先级最高，是**一定盖得住**的那一手（主题那份是兜底）。
 static var ui_font: Font = null
 
 
-## 把 `SysCfg.ui_font_names` 里第一个"系统里装了"的字体设成**全局默认字体**。
-## 为什么要跑这一趟：项目里没有任何字体资源，一直用引擎默认主题字体；而"等宽中文字体"有两件事要用它：
-##   ① 界面观感；② **宽度能按字符数算**（中文 = 2 个半角宽，见 UI_Input.max_chars）。
+## 把 `SysCfg.ui_font_file` 那个字体设成**全局默认字体**（全项目唯一的字体设置入口）。
+## 为什么要跑这一趟：项目里没有任何主题资源，默认是引擎自带字体；而"等宽中文字体"有两件事要用它：
+##   ① 界面观感；② **宽度能按字符数算**（中文 = 2 个半角宽，见 UI_Label / UI_Input 的 max_chars）。
 ## 挂两处（都是必需的）：**根窗口的主题**（沿控件树继承，管住没被别的主题接管的控件）
 ## ＋ `ui_font`（供 `UIBase.reapply` 打控件级覆盖，见上面 FONT_TYPES 的说明）。
-## 一个都没装 ⇒ **什么都不换**（保持引擎默认）+ 提醒一次：不报错、不中断启动（界面照旧能跑）。
-## **行高/字宽都不用来这里同步**：那些是运行时向字体问的（见 UI_Input._row_height / _half_width），
+## 加载不了 ⇒ **什么都不换**（保持引擎默认）+ 提醒一次：不报错、不中断启动（界面照旧能跑）。
+## **行高/字宽都不用来这里同步**：那些是运行时向字体问的（见 UIBase._row_height / _half_width），
 ## 换了字体它们自己就变了——这里只负责"把字体换上"这一件事。
 ## 被谁用：UISys._init（也就是 `Sys.init_sub_system` 里 `UISys.new()` 那一步；此时 SysCfg 已建好）。
 static func apply_default_font() -> void:
-	for name_ in _available_font_names():
-		var font: SystemFont = SystemFont.new()
-		font.font_names = PackedStringArray([name_])
-		font.allow_system_fallback = true
-		ui_font = font
-		var win: Window = Sys.sys.get_tree().root
-		var theme: Theme = win.theme
-		if theme == null:                    # 已有主题就用它（别把别人设的顶掉），没有才新建一个
-			theme = Theme.new()
-			win.theme = theme
-		theme.default_font = font
-		for type_ in FONT_TYPES:
-			theme.set_font("font", type_, font)
+	var font: Font = _make_font()
+	if font == null:
+		push_warning("UISystem: 字体加载不了（%s）——保持引擎默认主题字体（界面照旧能用，只是观感与字符宽度按默认字体算）"
+			% SysCfg.ui_font_file)
 		return
-	push_warning("UISystem: 系统里没装 %s 这几个字体，保持引擎默认字体（界面照旧能用，只是观感与字符宽度按默认字体算）"
-		% str(SysCfg.ui_font_names))
+	ui_font = font
+	var win: Window = Sys.sys.get_tree().root
+	var theme: Theme = win.theme
+	if theme == null:                    # 已有主题就用它（别把别人设的顶掉），没有才新建一个
+		theme = Theme.new()
+		win.theme = theme
+	theme.default_font = font
+	for type_ in FONT_TYPES:
+		if type_ == "RichTextLabel":
+			# 富文本的主题项名不同（normal / bold / italics / mono 各一份）——设 "font" 它读不到
+			for item in ["normal_font", "bold_font", "italics_font", "mono_font"]:
+				theme.set_font(item, type_, font)
+			continue
+		theme.set_font("font", type_, font)
 
 
-## `SysCfg.ui_font_names` 里**系统真的装了**的那些名字（按配置顺序；一个都没有 = 空）。
+## 全局字体 = `SysCfg.ui_font_file` 那个 ttf（**全项目唯一的字体来源**），按 `ui_font_embolden` 决定
+## 要不要再套一层几何加粗。加载不了给 null（调用方保持引擎默认）。
+##   · 项目文件：`load()` 直接拿 `FontFile`（**编辑器导入过才在**，见 `_load_font_file`）；
+##   · 几何加粗：`FontVariation.variation_embolden`（这一族没有 Bold，"再粗一点"就靠它）。
 ## 被谁用：apply_default_font。
-static func _available_font_names() -> Array:
-	var available: PackedStringArray = OS.get_system_fonts()
-	var hit: Array = []
-	for name_ in SysCfg.ui_font_names:
-		if available.has(name_):
-			hit.append(name_)
-	return hit
+static func _make_font() -> Font:
+	var base: Font = _load_font_file()
+	if base == null:
+		return null
+	if SysCfg.ui_font_embolden <= 0.0:
+		return base
+	var emboldened: FontVariation = FontVariation.new()
+	emboldened.base_font = base
+	emboldened.variation_embolden = SysCfg.ui_font_embolden
+	return emboldened
+
+
+## 项目里的字体文件（`SysCfg.ui_font_file`）：路径空 / 文件不在 / 加载失败 / 不是字体 ⇒ null。
+## 先用 `ResourceLoader.exists` 问一声：**没被编辑器导入过的 ttf 在这里就是"不存在"**
+## （直接 load 会刷一串警告，而且每帧都可能再试一次）。
+static func _load_font_file() -> Font:
+	var path: String = SysCfg.ui_font_file
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	return load(path) as Font
 
 
 ## 取一个已登记的 UI（用登记名，如 "MiniHUD"、"UI/MiniHUD/Menu"、"UI/MiniHUD/Menu/Close"）。

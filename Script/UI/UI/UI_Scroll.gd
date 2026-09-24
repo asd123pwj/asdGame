@@ -69,6 +69,11 @@ func _free_box() -> Control:
 	return _overlay
 
 
+## 叠加层公布给"往上找挂载点"的子孙元素（见 UIBase._free_box）。
+func _own_free_layer() -> Control:
+	return _overlay
+
+
 ## 内容最小尺寸要问滚动容器：根是普通 Control，不会汇总子元素的最小尺寸，
 ## 直接问它只会得到配置里写的那点值（理由同 UI_Panel._content_size）。
 ## 被谁用：UIBase._fit_size。

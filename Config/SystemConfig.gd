@@ -140,14 +140,21 @@ static var rescale_epsilon := 0.001     # 缩放里"上帧距离"作除数时的
 static var ui_background_slots: Array[String] = ["panel", "normal", "background"]
 
 # ---- UI 字体 ----
-# **默认字体**：按名字找**系统里装的字体**（在 `OS.get_system_fonts()` 里比对，取第一个有的），
-# 找到就设成全局默认（`ThemeDB.fallback_font`，见 UISystem.apply_default_font）；
-# 一个都没装就**什么都不换**（保持引擎默认主题字体）并在控制台提醒一次——不报错、不中断启动。
+# **全项目就这一个字体**：项目里的 ttf 文件（`Material/Fonts/` 下那三个就是同一族的三档字重）。
+# 加载不了（路径写错 / 没被编辑器导入过）就**保持引擎默认主题字体**＋控制台提醒一次，
+# 不报错、不中断启动（见 UISystem.apply_default_font）。
 #
-# 用的是「霞鹜文楷等宽」（LXGW WenKai Mono）——**等宽**字体：**中文 = 数字/英文的两倍宽**
-# ⇒ "多宽"可以按**字符数**说（见 UI_Input 的 `max_chars`：一个中文算 2 个字符）。
-# 名字可以写多个候选、按顺序取第一个装了的（中文名 / 英文名都写上，免得装的版本只认一种）。
-static var ui_font_names: Array[String] = ["霞鹜文楷等宽", "LXGW WenKai Mono", "LXGW WenKai"]
+# 用的是「霞鹜文楷等宽 GB」（LXGW WenKai Mono GB）——**等宽**字体：**中文 = 数字/英文的两倍宽**
+# ⇒ "多宽"可以按**字符数**说（见 UI_Label / UI_Input 的 `max_chars`：一个中文算 2 个字符）。
+# `GB` = 大陆字形（繁体那版叫 TC）；**同族三档字重**，项目里都放着：
+#   `…-Light`（细）/ `…-Regular`（常规）/ `…-Medium`（**最粗，当前用的这个**）。
+# 想换档就改这一行；想换别的字体就把它指到那个文件（**不用**改任何别的地方）。
+static var ui_font_file := "res://Material/Fonts/LXGWWenKaiMonoGB-Medium.ttf"
+
+# **几何加粗**（伪粗体，`FontVariation.variation_embolden`）：>0 时把字体再套一层加粗。
+# 霞鹜文楷这一族**没有 Bold** ⇒ 这就是"Ctrl+B 那种加粗"的替代：0.2~0.4 已经看得出来，
+# 太大（>0.8）笔画会糊在一起。**现在是 0**（已经用 Medium 打底了）——觉得还想再粗就调到 0.3 左右。
+static var ui_font_embolden := 0.0
 
 # ---- UI 字号 ----
 # **默认字号，同时也是最小字号**（见 UIBase.reapply）：没配 `font_size` 的元素就用它；

@@ -20,9 +20,9 @@ var values: Array[Dictionary] = [
         "statuses": [
             # 指针移动不在状态层：它和 Pointer Enter / Pointer Exit 一样，由 PointerDetect._process 直接派发
             # 一个鼠标键三个状态：按下 / 按住 / 松开
+            {"name": QName.pointer1_hold, "statuses": [[QName.mouseLeft, "Satisfied"]],},
+            {"name": QName.pointer2_hold, "statuses": [[QName.mouseRight, "Satisfied"]],},
             {"name": QName.mouseLeft, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.HOLD]],},
-            # {"name": QName.mouseLeft_press, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.PRESS]],},
-            # {"name": QName.mouseLeft_release, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.RELEASE]],},
             {"name": QName.mouseRight, "keys": [[MOUSE_BUTTON_RIGHT, Enums.KeyStatus.HOLD]],},
             
             {"name": QName.right, "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.HOLD], [KEY_D, Enums.KeyStatus.HOLD]],}, 
@@ -54,10 +54,8 @@ var values: Array[Dictionary] = [
             # 回车不该顺手结束编辑（提交链自己会 `UIInteract.end_edit`）；更要紧的是
             # 提前清掉 edit_ui 会让"提交派给正在编辑的输入框"落空（见 SystemManager.when_submit）。
             [QName.submit, QName.submit, 'PointerDetect.key("%s", false)' % QName.submit],
-            # [QName.mouseLeft_press, QName.mouseLeft_press, 'PointerDetect.key("%s")' % QName.mouseLeft_press],
-            [QName.mouseLeft, QName.mouseLeft, 'PointerDetect.key("%s")' % QName.mouseLeft],
-            # [QName.mouseLeft_release, QName.mouseLeft_release, 'PointerDetect.key("%s")' % QName.mouseLeft_release],
-            [QName.mouseRight, QName.mouseRight, 'PointerDetect.key("%s")' % QName.mouseRight],
+            [QName.pointer1_hold, QName.pointer1_hold, 'PointerDetect.key("%s")' % QName.pointer1_hold],
+            [QName.pointer2_hold, QName.pointer2_hold, 'PointerDetect.key("%s")' % QName.pointer2_hold],
             # 测试用：J / K 开关两个测试 UI（独立 UI，只给预设名；toggle = 显示着就关、否则开）
             [QName.key_j, QName.key_j, 'UIInteract.toggle(preset_name="TestShow")'],
             [QName.key_k, QName.key_k, 'UIInteract.toggle(preset_name="TestInput")'],

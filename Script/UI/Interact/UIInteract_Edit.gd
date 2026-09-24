@@ -7,7 +7,7 @@ extends UIInteractBase
 ## 抢焦点、置编辑状态、退出编辑都在这里 —— 它们是"UI 交互"这一层的活，不是元素自身的数据。
 ##
 ## 为什么要是命令：编辑的**时机**是用法，而且一律由配置写，元素里没有任何特判：
-##   · "点输入框就进编辑"就是一条普通事件：`[QName.mouseLeft, 'UIInteract.begin_edit self']`
+##   · "点输入框就进编辑"就是一条普通事件：`[QName.pointer1_hold, 'UIInteract.begin_edit self']`
 ##     （换成别的事件触发也行——元素不认键位）；
 ##   · "开某个菜单后直接开始打字""提交之后要不要退出编辑"同样写在配置里：
 ##       'UIInteract.open(@self, "Editor（内容对象）", @self, close_on_move=true)\vUIInteract.begin_edit(输入框)'

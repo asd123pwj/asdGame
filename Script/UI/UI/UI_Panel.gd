@@ -34,10 +34,12 @@ var _scroll: ScrollContainer
 func _create_control() -> Control:
 	var root: Control = Control.new()
 	root.name = name
-	# **把画面裁在面板矩形内**：面板里子元素的最小尺寸可能把内层容器顶得比根控件大
-	# （如长文案的 Label）⇒ 不裁的话"画出来的"比"命中矩形"大，点在面板外面也能点到里面的东西。
-	# 裁剪只影响绘制；命中那边由 `PointerDetect._hit_in` 认 `clip_contents` 自行跳过（两处配套）。
-	root.clip_contents = true
+	# **不裁画面**（root.clip_contents 保持 false）：浮窗、子菜单这类"挂在面板里、却要画到面板外"的
+	# UI 全靠越出面板矩形——裁了它们就整个被裁没（实测：浮窗只露出约 24px 的一条边，看着就是
+	# "开不出来"，指针事件其实都好好走着）。当初加裁剪防的是"固定宽面板装不下长文案、画出去的
+	# 部分点在面板外也命中"——那个前提已经没了：现在面板宽随内容走（见 UI.md 的"面板宽度"），
+	# 画出去的东西不存在；滚动内容由滚动容器自己裁，不靠这里。
+	# （`PointerDetect._hit_in` 认 `clip_contents` 跳过的逻辑仍在：滚动容器那类显式裁剪照常生效。）
 
 	_panel = PanelContainer.new()
 	_panel.name = "Panel"
@@ -92,6 +94,12 @@ func _content_box() -> Control:
 ## 自由定位的子元素挂到叠加层（见 UIBase.add_child_element 与 _build_children 的 free 分支）。
 ## 被谁用：UIBase.add_child_element、UIBase._build_children。
 func _free_box() -> Control:
+	return _overlay
+
+
+## 叠加层公布给"往上找挂载点"的子孙元素（如挂在文本上的浮窗：文本自己有裁剪、滚动区也裁，
+## 只有挂到这一层才画得出去，见 UIBase._free_box）。
+func _own_free_layer() -> Control:
 	return _overlay
 
 

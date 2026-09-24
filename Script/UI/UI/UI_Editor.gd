@@ -63,7 +63,7 @@ func _fill() -> void:
 	})
 	add_child_element("Rebuild", "UI_Label", {
 		"content": "[重建：重读]",
-		"events": [[QName.mouseLeft, "@self.parent.rebuild()"]],     # 整行一条方法调用（父级 = 本元素）
+		"events": [[QName.pointer1_hold, "@self.parent.rebuild()"]],     # 整行一条方法调用（父级 = 本元素）
 	})
 	var data: Variant = CommandParser.read(_target_path())[1]
 	if not (data is Dictionary):
@@ -119,7 +119,7 @@ func _value_cfg(conf: Dictionary, value: Variant, key: String = "") -> Dictionar
 	cfg["source"] = _target_path() if key == "" else "%s.%s" % [_target_path(), key]
 	cfg["target"] = _owner_name()
 	if not cfg.has("events"):
-		cfg["events"] = [QName.UI_event_mouseLeft_edit, [QName.input_submit, _write_cmd(key)]]
+		cfg["events"] = [QName.UI_event_pointer1_edit, [QName.input_submit, _write_cmd(key)]]
 	return cfg
 
 

@@ -8,7 +8,7 @@ extends BaseClass
 ## **事件派发分两类**（都不碰键位：键位只存在于状态层 statuses 的 keys，增删/改绑只改配置）：
 ##   ① 指针自己的三件事——`Pointer Enter` / `Pointer Exit`（hover 变化时）与 `Pointer Move`
 ##      （本帧位移不为 0 时）——由本文件的 `_process` **直接派发**，不占状态、也不占快捷指令；
-##   ② 状态类事件（按键的 press/hold/release，如 "Mouse Left"）：由状态层 → 快捷指令
+##   ② 状态类事件（按键的 press/hold/release，如 "Pointer 1 Hold"）：由状态层 → 快捷指令
 ##      `PointerDetect.key "<状态名>"` 调进来，这里把它当事件名派发给当前 hover 的 UI。
 ## 指针移动**不锁定目标**：每次移动都派发给当前 hover 的 UI，由它 config 里配的指令决定做什么。
 

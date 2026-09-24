@@ -88,6 +88,12 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 	if ui == null:
 		return null
 	ui.config.merge(extra, true)             # 复用路径也写一次（"重开一次换个对象 / 换个管理对象"要改得动）
+	# 合并来的配置要**让界面跟上**：写进 config 只是数据，子元素得重读一遍。
+	# 典型场合：`UIInteract.open(@self, "Tip", @self, content="说明")` 的浮窗正文
+	# ——预设里那个文字元素用 `content_cmd` 读外壳的 content，不刷就还是上一次那段。
+	# extra 为空说明没改任何东西，不必白跑一趟。
+	if not extra.is_empty():
+		ui.refresh_tree()
 	# 关闭行为：**总是按参数写**（默认 false = 不启用）。要哪种就在开的这一句写出来，
 	# 预设里不再声明它——"在哪开、为什么开"只有开的那一句知道。
 	ui.config["close_on_blur"] = close_on_blur
@@ -253,9 +259,9 @@ static func _close_outside(uis_list: Array[UIBase], hover_ui: UIBase, with_mount
 		var rect: Rect2 = ui.control.get_global_rect()
 		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 			continue
-		if _is_inside(ui, hover_ui):
+		if _in_subtree(ui, hover_ui):
 			continue
-		if with_mount and _is_inside(ui.parent, hover_ui):
+		if with_mount and _in_subtree(ui.parent, hover_ui):
 			continue
 		closing.append(ui)
 	for ui: UIBase in closing:
@@ -272,13 +278,5 @@ static func _reg_blur(ui: UIBase) -> void:
 		_move_blur_uis.append(ui)
 
 
-## 指针是否在这个 UI 上：hover 沿 parent 链向上能找到 ui 即为"内"（所以它的子元素也算）。
-## ui 传 null 时恒为 false（"没有挂载点"就是判断为不在）。
-## 被谁用：_close_outside。
-static func _is_inside(ui: UIBase, hover_ui: UIBase) -> bool:
-	var cur: UIBase = hover_ui
-	while cur != null:
-		if cur == ui:
-			return true
-		cur = cur.parent
-	return false
+## "指针在不在这个 UI 上"由基类的 `UIInteractBase._in_subtree` 提供（与浮窗那套是同一条判据，
+## 所以只留一份：一样的代码写两遍，改一处忘一处早晚出事）。

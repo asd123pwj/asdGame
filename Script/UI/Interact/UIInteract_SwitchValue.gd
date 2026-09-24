@@ -11,8 +11,8 @@ extends UIInteractBase
 ##                不必为此在宿主预设里预先摆两套 events 并手工保持同步。
 ## 为什么改完就生效：config 是"数据"，`events` 这类列表在派发时（UIBase.on_event）才读；
 ## 但 content 这种要刷到控件上的键不在本函数职责内（改完在配置里接一条 `@self.refresh("content")`）。
-## 值怎么给：指令里可以直接引变量，如 `QName.UI_event_mouseLeft_drag`
-##   （见 Config/QuickName.gd：`[QName.mouseLeft, "UIInteract.drag self event"]`）——
+## 值怎么给：指令里可以直接引变量，如 `QName.UI_event_pointer1_drag`
+##   （见 Config/QuickName.gd：`[QName.pointer1_hold, "UIInteract.drag self event"]`）——
 ##   常用的那条绑定只写一处，配置里填空即可。
 ## 被谁用：Config/UI/UIPreset_Menu.gd 的 EnableDrag（给宿主加/减"按住拖动"）。
 static func switch_value(target: UIBase, key: String, value: Variant) -> void:

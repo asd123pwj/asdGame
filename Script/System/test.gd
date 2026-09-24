@@ -127,6 +127,10 @@ func ui_test() -> void:
     # shortcuts / packages），段里一行一个预设名。**不实时**（原型只在初始化那刻生效一次）。
     Msg.send_cmd('UIInteract.open(preset_name="Archetype")')
 
+    # 富文本链接测试（Config/UI/UIPreset_MetaTest.gd）：三行只显示两行（滚动条）+ 文字里的
+    # 拖动 / 关闭 / 折叠 / 悬浮提示——都是 [url=meta] + 一条通用指令（见 UIInteract_Meta）。
+    Msg.send_cmd('UIInteract.open(preset_name="MetaTest")')
+
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。
 func get_char_info(char_: Character) -> void:

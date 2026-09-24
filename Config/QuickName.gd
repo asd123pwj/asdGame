@@ -7,16 +7,18 @@ extends BaseClass
 ## UI 配置里的事件名 / `PointerDetect.key "<状态名>"` 里那个字符串——所以都用这里，改一处即可。
 
 # ---- 输入监控（指针 / 键）----
+static var pointer1_hold := "Pointer 1 Hold"
+static var pointer2_hold := "Pointer 2 Hold"
 static var pointer_move := "Pointer Move"       # 指针移动（不是状态，由 PointerDetect 直接派发）
 static var pointer_enter := "Pointer Enter"     # hover 进入（同上）
 static var pointer_exit := "Pointer Exit"       # hover 离开（同上）
 static var input_submit := "Input Submit"       # 输入框回车提交（编辑中按回车照常进状态链，QName.submit 满足时由状态侧派发；框里文字用 @self.control.text 读）
 static var editing := "Editing"                 # "正在编辑输入框"：由 UIInteract_Edit 手动开 / 关的**保持型**外部检测
                                                 # （状态里配 with_detect_manual，见 StatusPreset 与 UIInteract_Edit）
-static var mouseLeft_press := "Mouse Left | Press"
+
+# 物理层（**只有这两个**；按下/松开/逐帧那些曾经有，没人用已删）：
+# 鼠标键按住 = 一个状态，逻辑层的 pointer1_hold / pointer2_hold 依赖它（见 Archetype_System）。
 static var mouseLeft := "Mouse Left"
-static var mouseLeft_tick := "Mouse Left | Tick"
-static var mouseLeft_release := "Mouse Left | Release"
 static var mouseRight := "Mouse Right"
 static var right := "Right"
 static var up := "Up"
@@ -37,14 +39,19 @@ static var month_advance := "Month Advance"
 static var year_advance := "Year Advance"
 
 # ---- UI 事件（config["events"] 列表里的一项 = [事件名, 指令串]）----
-## 常用的整体绑定放这儿：配置里**直接填这个变量**（如 `"events": [QName.UI_event_mouseLeft_drag]`），
+## 常用的整体绑定放这儿：配置里**直接填这个变量**（如 `"events": [QName.UI_event_pointer1_drag]`），
 ## 于是同一条绑定只有一处写法（见 UIPreset_Menu 的 EnableDrag：往宿主 events 里开关它）。
 ## 带 `_host` 的那几条作用于**本条链的窗口**（`host`，见 指令系统（`@self`/`@host`/`@event`）），
 ## 所以它们挂在谁身上都行——不会因为多包一层分组就指错对象。
-static var UI_event_mouseLeft_drag := [QName.mouseLeft, "UIInteract.drag(@self, @event)"]
-static var UI_event_mouseLeft_drag_host := [QName.mouseLeft, "UIInteract.drag(@host, @event)"]
-static var UI_event_mouseLeft_edit := [QName.mouseLeft, 'UIInteract.begin_edit(@self)']
-static var UI_event_mouseRight_menu := [QName.mouseRight, 'UIInteract.open(@self, "Menu", @self, close_on_blur=true, host=@self)']
-static var UI_event_mouseLeft_close_host := [QName.mouseLeft, "UIInteract.close(@host)"]
-static var UI_event_mouseLeft_close_parent := [QName.mouseLeft, "UIInteract.close(@self.parent)"]
-static var UI_event_mouseLeft_rescale_host := [QName.mouseLeft, "UIInteract.rescale(@host, @event)"]
+static var UI_event_pointer1_drag := [QName.pointer1_hold, "UIInteract.drag(@self, @event)"]
+static var UI_event_pointer1_drag_host := [QName.pointer1_hold, "UIInteract.drag(@host, @event)"]
+static var UI_event_pointer1_edit := [QName.pointer1_hold, 'UIInteract.begin_edit(@self)']
+static var UI_event_pointer2_menu := [QName.pointer2_hold, 'UIInteract.open(@self, "Menu", @self, close_on_blur=true, host=@self)']
+static var UI_event_pointer1_close_host := [QName.pointer1_hold, "UIInteract.close(@host)"]
+static var UI_event_pointer1_close_parent := [QName.pointer1_hold, "UIInteract.close(@self.parent)"]
+static var UI_event_pointer1_rescale_host := [QName.pointer1_hold, "UIInteract.rescale(@host, @event)"]
+static var UI_event_pointer1_fold_parent := [
+	QName.pointer1_hold,
+	'UIInteract.toggle_fold(@self.parent)'
+	+ '\vUtils.swap("@self.config.content", "@self.config.content_2")'
+	+ '\v@self.refresh("content")']

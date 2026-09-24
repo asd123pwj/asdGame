@@ -40,3 +40,17 @@ static func _as_ui(target: UIBase, cmd_name: String) -> UIBase:
 	if target.control == null:
 		return null
 	return target
+
+
+## 组内共用：指针是不是落在 ui（或它的**子孙元素**）上 —— 从 hover 沿 parent 链上溯，能找到 ui 就算。
+## 两个地方用的是同一条判据："子菜单 / 浮窗算不算还在我这条链上"（开出来的窗是"挂在锚点下的一扇独立子窗"，
+## 指针从锚点移到窗上时 hover 就换人了；不判这一下，窗会被自己关掉——两处都实测踩过）。
+## hover 传 null（指针不悬在任何 UI 上）时恒为 false。
+## 被谁用：UIInteract_OpenClose._close_outside、UIInteract_Meta._hover_in_tips。
+static func _in_subtree(ui: UIBase, hover: UIBase) -> bool:
+	var cur: UIBase = hover
+	while cur != null:
+		if cur == ui:
+			return true
+		cur = cur.parent
+	return false

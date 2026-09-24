@@ -244,7 +244,7 @@ var values: Array[Array] = [
         "background": PANEL_BG, "background_slice": PANEL_BG_SLICE,
         # 整块面板按住拖动（子元素没配这个事件时会冒泡到这里）；和 MiniHUD 标题栏是同一套。
         # 这条绑定也随时能被菜单项"启用/移除拖拽"加删（switch_value 直接开关这个列表，见 UIPreset_Menu）。
-        "events": [QName.UI_event_mouseLeft_drag],
+        "events": [QName.UI_event_pointer1_drag],
         "children": _layout["children"],
     }],
 ]

@@ -73,7 +73,7 @@ func _input(event: InputEvent) -> void:
 ## 被谁用：引擎。
 func _process(delta: float) -> void:
     InputSys._process(delta)
-    TimeSys._process(delta)   # 末尾 send_tick()，逐帧状态（如 "Mouse Left | Tick"）在这里满足
+    TimeSys._process(delta)   # 末尾 send_tick()，逐帧状态（如 "Right | Tick"）在这里满足
     AutoSys._process(delta)
     # 指针位移的清零不在这儿：InputSys._process 末尾用 deferred 排到"帧末"自己清（见 InputSystem）
 

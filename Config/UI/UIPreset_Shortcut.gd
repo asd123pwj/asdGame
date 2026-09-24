@@ -3,7 +3,7 @@ extends ConfigBase
 
 """ ---------- 角色快捷监控（名称只读 / 状态与指令可改） ----------
  ▾ 系统快捷                          ← 头部（可折叠标题：点它整块收起 / 展开）
- [关闭]                              ← 一条普通事件指令（UIInteract.close）
+ ✕                              ← 右上角图标关闭（UIPreset_Basic.close_item）
  Body(UI_Shortcut)                   ← **内容是一个"快捷监控"元素**（Script/UI/UI/UI_Shortcut.gd）
    系统快捷：@Char/SYS  [刷新]（重读）   ← 元素铺的抬头（看的是哪个角色）
    共 5 条快捷（名称只读；状态 / 指令改完回车提交…）
@@ -35,14 +35,11 @@ var values: Array[Array] = [
         # **不写 size**：宽度跟着内容走
         "scroll": [0, 520],                          # 宽不限（0 = 跟着内容）、高到 520 就进滚动
         "free": true,                                # 自由定位：位置不被父级布局改
-        "events": [QName.UI_event_mouseLeft_drag],
+        "events": [QName.UI_event_pointer1_drag],
         "children": [
             # 头部 = 可折叠标题（点它整块收起 / 展开；标题自己标了"收起时留着我"，收起来还点得回来）
             UIInteract_Fold.title_item("系统快捷", false, SysCfg.ui_view_chars),
-            ["Close", "UI_Label", {
-                "content": "[关闭]",
-                "events": [[QName.mouseLeft, "UIInteract.close(@self.parent)"]],
-            }],
+            UIPreset_Basic.close_item(),   # 图标式关闭（右上角）：和 CloseButton 预设同一张图 / 同一套指令
             # 内容：快捷监控元素。`char` = 看哪个角色（指令路径/引用，要带 `@`）；
             # 不写就用 UI 通用的查看项 `content_cmd`（open 的时候能临时指定）。
             ["Body", "UI_Shortcut", {

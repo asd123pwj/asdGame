@@ -24,7 +24,7 @@ extends ConfigBase
             │                                       + Utils.swap("@self.config.content", "@self.config.content_2")
             │                                       + @self.refresh("content")
             │                            events_2 : 同样几条，第一条换成 UIInteract.close(@host, "CloseButton")
-            ├─ EnableDrag     → UIInteract.switch_value(@host, "events", QName.UI_event_mouseLeft_drag)
+            ├─ EnableDrag     → UIInteract.switch_value(@host, "events", QName.UI_event_pointer1_drag)
             └─ Advanced       → UIInteract.open(...)   (UI 编辑器：通用 open 开出来；内容由元素自己按配置铺)
 `self` 与 `host` 的分工：`self` = 配了这条指令的元素本身（当挂载点/锚点用它），
 `host` = 它所在的那个窗口（"管理宿主"用它）。另见 UI.md 的"占位符只有三个词"。
@@ -40,10 +40,10 @@ extends ConfigBase
 开启位置由各自的 open_at 声明（Enums.OpenAt）：右键菜单开在指针处，多级菜单开在触发项右上角。
 
 由宿主 UI 的配置决定何时开哪个，例如：
-  "events": [["Mouse Right", "UIInteract.open self Menu self"]]
+  "events": [["Pointer 2 Hold", "UIInteract.open self Menu self"]]
 （第三个参数 = 位置锚点，同时也是**挂载点**：子菜单因此挂在触发它的那个菜单项下；
  POINTER 策略下开在指针处，但仍然用它决定挂在谁下面，所以菜单项里通常传 self。
- 指令串的参数只有中间带空格时才需要引号，如 "Mouse Left"；其余直接写名字。）
+ 指令串的参数只有中间带空格时才需要引号，如 "Pointer 1 Hold"；其余直接写名字。）
 """
 
 var values: Array[Array] = [
@@ -53,10 +53,12 @@ var values: Array[Array] = [
         "free": true,                              # 自由定位：挂到宿主叠加层，位置不被父级布局覆盖
         "open_at": Enums.OpenAt.POINTER,           # 开在指针处（右键菜单）
         "children": [
-            # 关闭 = 关掉宿主 UI（不是关菜单）
+            # 关闭 = 关掉宿主 UI（不是关菜单）。
+            # **这里保持文字项**：它是菜单里的一行（关的是宿主，不是这个弹窗）；窗口角上的那个图标式关闭
+            # 是 `UIPreset_Basic.close_item()`（一览 / 编辑器 / MiniHUD 用的就是它）。
             ["Close", "UI_Label", {
                 "content": "关闭",
-                "events": [[QName.mouseLeft, "UIInteract.close(@host)"]],
+                "events": [[QName.pointer1_hold, "UIInteract.close(@host)"]],
             }],
             # （原来的"绑定 ▸"挪进了"菜单编辑 ▸"里，且改成写 `content_cmd`——
             #   "这个 UI 显示/编辑哪个对象"现在是通用配置项，不再需要 config["bind"] 那层转手。）
@@ -83,7 +85,7 @@ var values: Array[Array] = [
             # host = 宿主（沿 parent 爬到顶那个 UI）——不用数级数，本项套多深都指它
             ["CopyName", "UI_Label", {
                 "content": "复制名称",
-                "events": [[QName.mouseLeft,
+                "events": [[QName.pointer1_hold,
                     "Utils.copy(@host.config.reg_name)"]],
             }],
             # 内容对象：**就是开那个通用编辑器**（`Editor`），让它编辑宿主的 `content_cmd` 这一项。
@@ -108,13 +110,13 @@ var values: Array[Array] = [
                 # **指令串外层一律用单引号**（Godot 和 Python 一样两种引号都行）：
                 # 里面要写双引号（路径/字符串参数）时就不用转义成 `\"`，看起来就是指令本身的样子。
                 "events": [
-                    [QName.mouseLeft, 'UIInteract.open(@host, "CloseButton", @host)'
+                    [QName.pointer1_hold, 'UIInteract.open(@host, "CloseButton", @host)'
                         + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
                         + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
                         + '\v@self.refresh("content")'],       # 只刷 content（events 不显示，刷它没意义）
                 ],
                 "events_2": [
-                    [QName.mouseLeft, 'UIInteract.close(@host, "CloseButton")'
+                    [QName.pointer1_hold, 'UIInteract.close(@host, "CloseButton")'
                         + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
                         + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
                         + '\v@self.refresh("content")'],       # 只刷 content（events 不显示，刷它没意义）
@@ -124,14 +126,14 @@ var values: Array[Array] = [
             # （和 CloseToggle 一个路子：同一个元素上写两套配置，点一下换一套）。
             # 所以宿主 UI 的预设里要同时给 events / events_2（一套含拖动绑定、一套不含）。
             # 给宿主 UI 加/减"按住拖动"：**不写专门函数**——直接开关宿主 events 列表里的那一条绑定
-            # （switch_value：有就删、没有就加；"那一条"就是 QName 里的 UI_event_mouseLeft_drag，
+            # （switch_value：有就删、没有就加；"那一条"就是 QName 里的 UI_event_pointer1_drag，
             #  所以指令串只有一处、不必在宿主预设里预摆两套 events 手工同步）。
             ["EnableDrag", "UI_Label", {
                 "content": "启用拖拽",
                 "content_2": "移除拖拽",
                 # events 那条是裸数据（不用刷）；只有换过的 content 要刷
-                "events": [[QName.mouseLeft,
-                    'UIInteract.switch_value(@host, "events", QName.UI_event_mouseLeft_drag)'
+                "events": [[QName.pointer1_hold,
+                    'UIInteract.switch_value(@host, "events", QName.UI_event_pointer1_drag)'
                     + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
                     + '\v@self.refresh("content")']],
             }],
@@ -141,7 +143,7 @@ var values: Array[Array] = [
             ["Advanced", "UI_Label", {
                 "content": "编辑",
                 # 编辑目标写明白：`content_cmd="host.config"` = 编辑**这个 UI 自己**（相对写法，见 UI_Editor）。
-                "events": [[QName.mouseLeft,
+                "events": [[QName.pointer1_hold,
                     'UIInteract.open(@host, "Editor", @host, host=@host, content_cmd="host.config")']],
             }],
         ],

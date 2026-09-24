@@ -5,7 +5,7 @@ extends ConfigBase
 一个"能编辑某个 UI 全部内容"的菜单。**这里只有外壳**：
 
   高级管理：MiniHUD          ← Head：开的时候由编辑器元素写"正在编辑谁"
-  [关闭]  [重建：重读子UI]    ← 两条普通事件指令
+  ✕  [重建：重读子UI]    ← 两条普通事件指令
   Body(UI_Editor)            ← **内容是一个字典型编辑器元素**（Script/UI/UI/UI_Editor.gd）
     ▾ Config（5 项）            每项一行：小字键名 + 值输入框（回车提交）
         position   [30, 30]
@@ -34,16 +34,13 @@ var values: Array[Array] = [
         "scroll": [340, 460],
         "free": true,                              # 自由定位：挂到被编辑 UI 的叠加层，位置不被布局改
         "open_at": Enums.OpenAt.POINTER,           # 开在指针处（右键 → UI 编辑器）
-        "events": [QName.UI_event_mouseLeft_drag,
-                   QName.UI_event_mouseRight_menu],
+        "events": [QName.UI_event_pointer1_drag,
+                   QName.UI_event_pointer2_menu],
         "children": [
             # 头部 = **可折叠标题**（点它整块收起 / 展开；标题自己标了"收起时留着我"，收起来还点得回来）。
             # 用的是折叠交互那套片段，所以标题长得和其它可折叠分组一样。
             UIInteract_Fold.title_item("编辑器"),
-            ["Close", "UI_Label", {
-                "content": "[关闭]",
-                "events": [[QName.mouseLeft, "UIInteract.close(@self.parent)"]],
-            }],
+            UIPreset_Basic.close_item(),   # 图标式关闭（右上角）：和 CloseButton 预设同一张图 / 同一套指令
             # 内容：字典型编辑器元素。铺什么、怎么处理都在它的配置里——
             # source 不写 = 用 host 的 config；special 给个别键单独指定模板。
             ["Body", "UI_Editor", {

@@ -5,7 +5,7 @@ extends BaseClass
 ## 指针输入由 PointerDetect 用 InputSys 检测命中后回调本对象（不用引擎 gui_input）。
 ## 交互**不用开关**（draggable/closeable 等已移除），而是"事件→指令"：
 ## config["events"] 是 [事件名, 指令串] 的列表，事件发生即发送对应指令。
-## 事件名就是**状态名**（如 "Mouse Left"）：UI 不关心键位，键位只在状态层（statuses 的 keys）配置；
+## 事件名就是**状态名**（如 "Pointer 1 Hold"）：UI 不关心键位，键位只在状态层（statuses 的 keys）配置；
 ## hover 变化不对应任何状态，用 QName.pointer_enter / QName.pointer_exit。
 ## 占位符解析与交互实现都在 UIInteract（UIBase 只存"何时发什么指令"）；
 ## 登记与寻址在 UISys（登记表 + 登记名规则）；**开启**在 UIInteract_OpenClose.open
@@ -41,7 +41,7 @@ var control: Control
 
 ## 挂载对象（父 UI）：组装子元素时由父元素注入，即指令里 `@self.parent` 的指向。
 ## 被谁用：_build_children / add_child_element（注入）、指令系统（`@self` 链上的 .parent）、
-##         on_event（事件冒泡）、UIInteract_OpenClose._is_inside（判"指针是否在这个 UI 上"）。
+##         on_event（事件冒泡）、UIInteractBase._in_subtree（判"指针是否在这个 UI 的子树里"）。
 var parent: UIBase = null
 
 ## 挂在 control 上的 meta 键：控件 → UIBase 反查（指针命中沿控件树走，见 PointerDetect._ui_at）。
@@ -232,7 +232,13 @@ func refresh(key: String = "") -> void:
 	if key == "" or key == "content":
 		var cmd: String = str(config.get("content_cmd", ""))
 		if cmd != "":
+			# **`@self` = 写这条 content_cmd 的元素**：refresh 多数不在事件派发里跑（不像配置 events），
+			# 那时指令系统记的"当前元素"是上一次派发留下的（甚至没有）⇒ 这里临时指成自己，
+			# 让 content_cmd 里 `@self.parent.config.content` 这种路径稳定可算（用完还原，不污染别处）。
+			var prev_ui: Object = CommandParser.event_ui
+			CommandParser.event_ui = self
 			var got: Array = CommandParser.read(cmd)
+			CommandParser.event_ui = prev_ui
 			if bool(got[0]):
 				if not config.has(CONTENT_LITERAL_KEY):
 					# 第一次盖掉字面值前先把它存起来（`_` 开头 = 内部影子键，编辑器不显示它）：
@@ -248,6 +254,17 @@ func refresh(key: String = "") -> void:
 		var p: Array = config["position"]
 		if p.size() >= 2:
 			control.position = Vector2(float(p[0]), float(p[1]))
+
+
+## 刷新**本元素与整棵子树**：外壳的 config 被外部改过之后让界面跟上。
+## 与 refresh 的分工：refresh 管"自己这一项那项怎么刷"（配置里的常规用法，一项一项刷）；
+## 这里是"刚合并了一整份配置"的收尾——子元素可能读外壳的配置（如浮窗正文写
+## `content_cmd = "@self.parent.config.content"`），不往下刷它还停在上一次的内容。
+## 被谁用：UIInteract_OpenClose.open（临时配置合并完）。
+func refresh_tree() -> void:
+	refresh()
+	for child in children:
+		child.refresh_tree()
 
 
 ## **这个 UI 该看哪个对象**（"查看项"的读取规则；返回路径 / 引用，空串 = 没指定）：
@@ -380,11 +397,57 @@ func _content_box() -> Control:
 	return control
 
 
-## 自由定位子元素的挂载点（默认与 _content_box 相同；容器类应覆写成"非容器的叠加层"，
-## 否则 position 会被父级布局覆盖）。
-## 被谁用：add_child_element（配置里声明 free 的子元素，如菜单）。覆写者：UI_Panel。
+## 本元素自己的"叠加层"（非容器、画在内容之外、不被滚动裁）：面板 / 滚动区各有一份，其余元素没有。
+## 默认 null；覆写者：UI_Panel、UI_Scroll。
+## 被谁用：_free_box（往上找最近的一个）。
+func _own_free_layer() -> Control:
+	return null
+
+
+## 自由定位子元素（`free: true`，如浮窗 / 子菜单 / 关闭按钮）的挂载点：**从本元素往上找最近一个有
+## 叠加层的祖先**，都没有才退回自己的内容盒。
+## 为什么不直接挂自己的 control：**叶子元素（文本 / 菜单项）与滚动容器都会把"画到自己矩形外"的子元素
+## 裁掉**——文本的内核 RichTextLabel 自带 `clip_contents`，滚动容器也要裁（不然滚动露馅）；
+## 而浮窗、子菜单正是要画到外面去（实测：浮窗只剩约一条边，看着就是"开不出来"）。
+## **元素层的父子关系不变**：`child.parent` 仍是本元素（登记名、失焦判定的挂载点、`@self.parent` 链
+## 全都照旧），变的只是 Control 挂在谁下面 ⇒ `show_at` 按"实际父控件"换算坐标，位置照样准。
+## 被谁用：_build_children、add_child_element（两条加子元素的路的 free 分支）。
+## 覆写者：UI_Panel / UI_Scroll（它们自己就有叠加层，直接返回，不必爬）。
 func _free_box() -> Control:
+	var ui: UIBase = self
+	while ui != null:
+		var layer: Control = ui._own_free_layer()
+		if layer != null:
+			return layer
+		ui = ui.parent
 	return _content_box()
+
+
+## 自由定位子元素可以"**贴父级某个角**"（config["open_at"] 写 `ANCHOR_*_IN` 那两个，
+## 如右上角的关闭按钮、右下角的缩放按钮）：用**控件锚点**钉上去，而不是算一次坐标——
+## 父级常是"宽高随内容"的（一览收 / 展一次尺寸就变），只算一次就飞了；
+## 锚点由引擎维护，父级尺寸一变位置自己跟上，不用我们去连信号追。
+## **只认"内部右上 / 内部右下"**：其余 open_at 策略是"开在屏幕某处"，那是 open 的事（见 UISys._place）。
+## 被谁用：_build_children / add_child_element（两条加子元素的路都要过这一道）。
+static func _anchor_free_child(ui: UIBase) -> void:
+	if not bool(ui.config.get("free", false)):
+		return
+	var c: Control = ui.control
+	var at: int = int(ui.config.get("open_at", Enums.OpenAt.CONFIG))
+	var top_right: bool = at == Enums.OpenAt.ANCHOR_TOP_RIGHT_IN
+	var bottom_right: bool = at == Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN
+	if c == null or not (top_right or bottom_right):
+		return
+	var w: float = c.size.x if c.size.x > 0.0 else c.custom_minimum_size.x
+	var h: float = c.size.y if c.size.y > 0.0 else c.custom_minimum_size.y
+	c.anchor_left = 1.0                     # 右边缘：钉在父级右边
+	c.anchor_right = 1.0
+	c.anchor_top = 0.0                      # 上边缘：钉在父级上边（右下那个用负偏移往下挂）
+	c.anchor_bottom = 0.0
+	c.offset_left = -w
+	c.offset_right = 0.0
+	c.offset_top = 0.0 if top_right else -h
+	c.offset_bottom = h if top_right else 0.0
 
 
 ## 应用 config 里的公共属性：position / size / content / visible / font_size / font_color / background。
@@ -416,10 +479,10 @@ func reapply() -> void:
 	var font_size: int = maxi(int(config.get("font_size", SysCfg.ui_font_size_default)),
 		SysCfg.ui_font_size_default)
 	control.add_theme_font_size_override("font_size", font_size)
-	# **字体也在这一处**（全局默认字体，从系统里找的等宽文楷，见 UISystem.apply_default_font）：
+	# **字体也在这一处**（全局默认字体，见 UISystem.apply_default_font）：
 	# 走**控件级覆盖**——主题链上引擎默认主题对每种类型都自带字体，只有控件自己的覆盖一定盖得住
 	# （实测：只设根窗口主题的 default_font，TextEdit 拿到的还是 Open Sans）。
-	# 字号与字体是一个入口：想换字体改 SysCfg.ui_font_names，别在各个配置里各写各的。
+	# 字号与字体是一个入口：想换字体改 `SysCfg.ui_font_file`，别在各个配置里各写各的。
 	if UISys.ui_font != null:
 		control.add_theme_font_override("font", UISys.ui_font)
 	if config.has("font_color"):
@@ -499,14 +562,18 @@ func _build_children() -> void:
 		# free 的挂到叠加层（非容器，位置/尺寸保持配置值），否则进内容盒（竖排布局）
 		var box: Control = _free_box() if bool(child_config.get("free", false)) else _content_box()
 		box.add_child(child.control)
+		_anchor_free_child(child)          # 配了 open_at 的角就钉到那个角上（见它）
 
 
 ## 唯一事件入口（PointerDetect 派发）：参数是事件名——状态驱动的事件就是配置里的状态名
-## （如 "Mouse Left"、"Mouse Left | Tick"；UI 不感知按键，键位只在状态层出现），
+## （如 "Pointer 1 Hold"、"Right | Tick"；UI 不感知按键，键位只在状态层出现），
 ## hover 变化用 QName.pointer_enter / QName.pointer_exit。
-## 事件→指令：在 config["events"]（[事件名, 指令串] 列表）里按等值取指令串，取到才发送。
-## 自己没配的事件**冒泡给父级**：于是"整块面板的行为"在它的子元素上同样生效
-## （如菜单面板启用拖拽后，按住菜单项也能拖；self 与它上面的取值链都以配了指令的那个元素为基准）。
+## 事件→指令：在 config["events"]（`[事件名, 指令串]` 列表）里取出**所有**同名项，**逐条发送**。
+## **同一个事件可以绑多条**（按配置顺序都执行）——"按住既要能拖、又要按点了哪段链接做事"就是两条：
+##   [QName.pointer1_hold, 'UIInteract.drag(@host, @event)'],      ← 按住就拖
+##   [QName.pointer1_hold, 'UIInteract.meta_event(@self)'],       ← 再看"指针下那段链接"，跑它自己的指令
+## 一条都没匹配上才**冒泡给父级**：于是"整块面板的行为"在它的子元素上同样生效
+## （如菜单面板启用拖拽后，按住菜单项也能拖；`@self` 与它上面的取值链都以配了指令的那个元素为基准）。
 ## 冒泡到根仍没有配置就什么都不做（元素没有隐式行为）。
 ## 用列表而不是字典键：与 config 里的属性分开（属性名与事件名不会互相撞车），
 ## 且要加新事件只需往列表里加一项。
@@ -514,23 +581,27 @@ func _build_children() -> void:
 ## 本类只负责派发前把"当前元素 + 事件名"告诉它），所以这里不再扫字符串、也没有占位符替换那一套。
 ## 被谁用：PointerDetect.key（状态事件）、PointerDetect._process（enter/exit）、本函数自身（冒泡）。
 func on_event(event_name: Variant) -> void:
+	var hit: bool = false
 	for entry in config.get("events", []):
 		if not (entry is Array):
 			push_warning("UIBase「%s」: config[\"events\"] 的项应为 [事件名, 指令串]，收到 %s" % [name, type_string(typeof(entry))])
 			continue
 		var pair: Array = entry
-		if pair.size() >= 2 and pair[0] == event_name:
-			# 派发前把"当前元素 + 事件名"告诉指令系统（`@self` / `@host` / `@event` 认它们），
-			# 发完**还原**：嵌套派发（事件里又开 UI 又触发事件）时才不会被里层盖掉，
-			# 也不会留下"上一次的 @self"让事件之外发的指令指错东西。
-			var prev_ui: Object = CommandParser.event_ui
-			var prev_name: String = CommandParser.event_name
-			CommandParser.event_ui = self
-			CommandParser.event_name = str(event_name)
-			Msg.send_cmd(pair[1])
-			CommandParser.event_ui = prev_ui
-			CommandParser.event_name = prev_name
-			return
+		if pair.size() < 2 or pair[0] != event_name:
+			continue
+		hit = true
+		# 派发前把"当前元素 + 事件名"告诉指令系统（`@self` / `@host` / `@event` 认它们），
+		# 发完**还原**：嵌套派发（事件里又开 UI 又触发事件）时才不会被里层盖掉，
+		# 也不会留下"上一次的 @self"让事件之外发的指令指错东西。
+		var prev_ui: Object = CommandParser.event_ui
+		var prev_name: String = CommandParser.event_name
+		CommandParser.event_ui = self
+		CommandParser.event_name = str(event_name)
+		Msg.send_cmd(pair[1])
+		CommandParser.event_ui = prev_ui
+		CommandParser.event_name = prev_name
+	if hit:
+		return                      # 命中过（哪怕只一条）就不再往上冒泡：这一层认领了这个事件
 	if parent != null:
 		parent.on_event(event_name)
 
@@ -607,5 +678,6 @@ func add_child_element(child_name: String, ui_class: String, child_config: Dicti
 	# 摆放时把屏幕坐标换算成挂载点坐标系的 position 即可（见 UISys._place）。
 	var box: Control = _free_box() if bool(child_config.get("free", false)) else _content_box()
 	box.add_child(child.control)
+	_anchor_free_child(child)              # 配了 open_at 的角就钉到那个角上（见它）
 	UISys.register_child(self, child)
 	return child

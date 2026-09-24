@@ -125,7 +125,7 @@ func _fill_head(title: String) -> void:
 	})
 	add_child_element("Reload", "UI_Label", {
 		"content": "[刷新]",
-		"events": [[QName.mouseLeft, "@self.parent.reload()"]],
+		"events": [[QName.pointer1_hold, "@self.parent.reload()"]],
 	})
 
 

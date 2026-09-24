@@ -7,7 +7,7 @@ ui_name: String
 config: Dictionary
 
 交互不是开关，而是"事件→指令"：config["events"] 是 [事件名, 指令串] 的列表，事件发生即发指令。
-事件名就是状态名（见 Archetype_System 的 statuses，如 "Mouse Left"）——UI 不关心键位，
+事件名就是状态名（见 Archetype_System 的 statuses，如 "Pointer 1 Hold"）——UI 不关心键位，
 键位只在状态层配置；hover 变化用 QName.pointer_enter / QName.pointer_exit。
 占位符只有 self（自身）、host（本条链的**管理对象**）与 event（事件名）；
 取父级/内容一律在它上面接着写取值链：
@@ -27,31 +27,75 @@ config: Dictionary
 点击时用 Utils.swap 对调、再 @self.refresh("content") 即可——见 Config/UI/UIPreset_Menu.gd 的 CloseToggle。
 
 预设也是"普通 UI"，所以重复出现的东西（关闭按钮 CloseButton、缩放手柄 ResizeButton）都做成预设、
-用 UIInteract.open / close 开与关，不写专门函数。
+用 UIInteract.open / close 开与关，不写专门函数。**悬停说明**（关闭 / 缩放按钮"移上去说一句"）用下面的
+"Tip" 预设 + `tip_events(文字)`：内容由开它的那一句带进去，所以一份预设够全项目用。
 
 注意：ScrollContainer 默认最小尺寸为 0，UI_Scroll 必须用 size 配置可视区大小，否则不可见。
 """
+## 关闭按钮那张图（CloseButton 预设与各窗口右上角的那个都用它，换图只改这一处）。
+const CLOSE_ICON := "res://Material/Texture/UI/CloseButtom_16.png"
+
+
+## 各窗口右上角那个**图标式关闭按钮**（一条 children 就够）：
+##   `UIPreset_Basic.close_item(),`
+## 内容就是上面那张图（`UI_Image` 的 content 即纹理），`free` + `open_at = ANCHOR_TOP_RIGHT_IN`
+## ⇒ 钉在**本窗口**右上角（落点见 UIBase._anchor_free_child：用锚点，窗口宽高随内容变也跟得上），
+## 点它关掉所在的窗口（`@host`，见 QName.UI_event_pointer1_close_host）。
+static func close_item() -> Array:
+    return ["Close", "UI_Image", {
+        "content": CLOSE_ICON,
+        "size": [16 * 2, 16 * 2],
+        "free": true,                                  # 自由定位：挂到窗口叠加层，位置不被竖排布局改
+        "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,   # 贴在本窗口内部的右上角
+        "events": [QName.UI_event_pointer1_close_host] + tip_events("关闭"),
+    }]
+
+
+## "悬停弹说明"那两条事件：指针移上去开、移开收，开的就是下面的 "Tip" 预设（内容由这里给）。
+## **给按钮这种"整块都算说明"的元素**用；文本里的链接不用它——那种走链接的 meta
+## （见 UIInteract_Meta），因为"这一行里哪几个字有说明"只有链接自己知道。
+static func tip_events(text_: String) -> Array:
+    return [
+        [QName.pointer_move, 'UIInteract.open(@self, "Tip", @self, content="%s")' % text_],
+        [QName.pointer_exit, 'UIInteract.close(@self, "Tip")'],
+    ]
+
+
 var values: Array[Array] = [
+    # 悬停说明的小浮窗（关闭 / 缩放按钮用；可折叠标题的箭头也开它，见 UIInteract_Fold._sym_meta）。
+    # **内容由开它的那一句带进来**（`content="…"` 合并到外壳 config 上；正文用 content_cmd 读它），
+    # 所以一份预设能说明任何东西，不必一个说明建一个预设。
+    ["Tip", "UI_Panel", {
+        "size": [0, 0],
+        "free": true,
+        "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT,      # 开在锚点右上角外（不压住被说明的那个东西）
+        "children": [
+            ["Text", "UI_Label", {
+                "content": "（说明）",                      # 字面值 = 没带内容进来时的兜底
+                "content_cmd": "@self.parent.config.content",
+                "max_chars": SysCfg.ui_view_chars,
+            }],
+        ],
+    }],
     ["MiniHUD", "UI_Panel", {
-        "position": [30, 30], "size": [320, 220],
+        # 高度写 0 = **随内容**：以前写死 220，而里面只有"标题 + 滚动区"两行 ⇒ 底下剩一大段空白；
+        # 以后往里加内容它自己长，不用回来改这个数（宽仍定死 320，横向不要跟着文字跳）。
+        "position": [30, 30], "size": [320, 0],
         # 右键这块 UI → 开"Menu"（菜单挂在这个面板下，菜单项里用 host 就指回它——不必数级数）
         # 第一/第三个参数都传 self：第一个没有 anchor 时才用来当挂载点，第三个既是位置锚点
         # 又是挂载点（菜单链因此是一棵子树）；摆在哪由 Menu 自己的 open_at 声明（POINTER = 指针处）
         # 整块面板的"按住可拖"不写死在这儿：菜单项"启用拖拽"用 switch_value 往这个列表里加/减
-        # QName.UI_event_mouseLeft_drag（默认没有 ⇒ 面板体不可拖；标题栏用的是 _host 版那两条）。
-        "events": [QName.UI_event_mouseRight_menu],
+        # QName.UI_event_pointer1_drag（默认没有 ⇒ 面板体不可拖；标题栏用的是 _host 版那两条）。
+        "events": [QName.UI_event_pointer2_menu],
         "children": [
             # 标题栏：只显示文本；按住 → drag 登记后由 AutoSys 每帧拖这个窗口（host）
             # （event = 事件名 = 状态名 = Key 名，由 指令系统（`@self`/`@host`/`@event`） 补成带引号的参数；松手 AutoSys 自动停）
             ["Title", "UI_Label", {
                 "content": "MiniHUD（按住拖动）",
-                "events": [QName.UI_event_mouseLeft_drag_host],
+                "events": [QName.UI_event_pointer1_drag_host],
             }],
-            # 关闭"按钮"：就是文本元素 + "Mouse Left"(左键按住) 指令（点它关掉这个窗口）
-            ["Close", "UI_Label", {
-                "content": "[关闭]",
-                "events": [QName.UI_event_mouseLeft_close_host],
-            }],
+            # 关闭"按钮"：图标式（和 CloseButton 预设同一套），贴在窗口右上角
+            UIPreset_Basic.close_item(),   # 图标式关闭（右上角）：和 CloseButton 预设同一张图 / 同一套指令
             # 滚动内容：展示本元素 config["content"]（改内容 = 写它 + @self.refresh("content")）
             # ScrollContainer 最小尺寸为 0，必须给 size 配置可视高度
             ["Info", "UI_Scroll", {
@@ -68,12 +112,12 @@ var values: Array[Array] = [
     #   UIInteract.close(宿主, "CloseButton")        ← 移除（隐藏；重开仍走 open）
     # 图标 = content（UI_Image 的 content 就是那张图，换图 = 写它的 config["content"] + 刷新）；尺寸照 Unity 的 16*2。
     ["CloseButton", "UI_Image", {
-        "content": "res://Material/Texture/UI/CloseButtom_16.png",
+        "content": CLOSE_ICON,
         "size": [16 * 2, 16 * 2],
         "free": true,                                  # 自由定位：挂到宿主叠加层，位置不被父级布局覆盖
         "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,   # 开在锚点（宿主自己）内部的右上角
         # 点它关掉它所在的窗口（host = 沿 parent 爬到顶那个 UI ⇒ 挂到谁身上都指得对）
-        "events": [QName.UI_event_mouseLeft_close_host],
+        "events": [QName.UI_event_pointer1_close_host],
     }],
     # 缩放按钮：贴到"锚点 UI"的右下角，按住拖动等比缩放它挂着的那个 UI（像 Windows 拖窗口角，但是等比）。
     # 元素侧只有这一条"按住"：rescale 登记后由 AutoSys 每帧调 rescaling 缩放它挂着的 UI；
@@ -84,6 +128,6 @@ var values: Array[Array] = [
         "size": [16 * 2, 16 * 2],
         "free": true,
         "open_at": Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN,   # 开在锚点（宿主自己）内部的右下角
-        "events": [QName.UI_event_mouseLeft_rescale_host],
+        "events": [QName.UI_event_pointer1_rescale_host] + tip_events("缩放"),
     }],
 ]

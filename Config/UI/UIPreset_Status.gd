@@ -3,7 +3,7 @@ extends ConfigBase
 
 """ ---------- 角色状态一览 ----------
  ▾ 角色状态                          ← 头部（可折叠标题：点它整块收起 / 展开）
- [关闭]                              ← 一条普通事件指令（UIInteract.close）
+ ✕                              ← 右上角图标关闭（UIPreset_Basic.close_item）
  Body(UI_Status)                     ← **内容是一个"状态一览"元素**（Script/UI/UI/UI_Status.gd）
    角色状态：@Char/SYS  [刷新]（重读 + 重订）   ← 元素铺的抬头（看的是哪个角色）
    ▸ Tick（✔ 满足｜依赖 1 条）       每个状态一段，**默认收起**；标题上的 ✔/✘ 是**实时**的
@@ -40,14 +40,11 @@ var values: Array[Array] = [
         # **不写 size**：宽度跟着内容走 —— 写死宽的话，"里面比外面宽"的部分会被裁掉（长文案显示到一半就没了）
         "scroll": [0, 460],                          # 宽不限（0 = 跟着内容）、高到 460 就进滚动
         "free": true,                                # 自由定位：位置不被父级布局改
-        "events": [QName.UI_event_mouseLeft_drag],
+        "events": [QName.UI_event_pointer1_drag],
         "children": [
             # 头部 = 可折叠标题（点它整块收起 / 展开；标题自己标了"收起时留着我"，收起来还点得回来）
             UIInteract_Fold.title_item("角色状态", false, SysCfg.ui_view_chars),
-            ["Close", "UI_Label", {
-                "content": "[关闭]",
-                "events": [[QName.mouseLeft, "UIInteract.close(@self.parent)"]],
-            }],
+            UIPreset_Basic.close_item(),   # 图标式关闭（右上角）：和 CloseButton 预设同一张图 / 同一套指令
             # 内容：状态一览元素。`char` = 看哪个角色（指令路径/引用，要带 `@`）；
             # 不写就用 UI 通用的查看项 `content_cmd`（open 的时候能临时指定）。
             ["Body", "UI_Status", {
