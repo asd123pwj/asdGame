@@ -1,10 +1,10 @@
 class_name UIPreset_Test
 extends ConfigBase
 
-""" ---------- 测试用 UI（两个）----------
+""" ---------- 测试用 UI ----------
 "一个 UI 的信息提交给另一个 UI"的最小例子（按名称绑定，见 Script/UI/Interact/UIInteract_Bind.gd）：
 
-  TestShow   显示文本（整块就是个 UI_Scroll）。它也是"复制名称"的来源：
+  TestShow   显示文本（整块就是"一块会滚的文本"：UI_Panel + 正文子元素）。它也是"复制名称"的来源：
                右键 TestShow → 复制名称 → 再右键 TestInput → 绑定 ▸ → 回车
   TestInput  输入文本（UI_Panel + UI_Input）：在输入框里打字回车 → 把文本发给 config["content_cmd"] 指的路径（如 "@UI/TestShow.config.content"）。
 
@@ -18,6 +18,10 @@ extends ConfigBase
               跨几格 / 跨几行；想进网格的子元素写一个 `grid: 编号`，面板负责按矩阵把它们的
               position/size 算好（几何函数 `UI_Panel.grid_rect`）——**拖"改尺寸"手柄，
               格子按比例跟着缩放**。跨格 / 跨行天然支持，不用容器、不用嵌套。
+
+  BagTest     等大网格（背包那种）：每个格子一样大（面板 config 的 `cell` = [宽, 高]），
+              **列数随内容区宽度变**——拖宽一点，东西就往上走一行；多出来不够一格的空位
+              **摊进间距**（撑到能多塞一列就换行）；排不下时面板出滚动条（见 UI_Panel._layout_uniform）。
 """
 ## 矩阵网格的演示格子：一个带底图的标签，`grid` 序号对应矩阵里的编号
 ## （面板会按矩阵把它的 position/size 算好；拖"改尺寸"手柄时跟着缩放）。
@@ -30,12 +34,28 @@ static func _gcell(id: int, text_: String) -> Array:
     }]
 
 
+## 等大网格的演示格子（背包那种）：n 个一样大的格子，内容 = 序号。
+## **顺序就是 children 的顺序**（等大网格按声明顺序铺，不看 `grid`）。
+static func _bag_cells(n: int) -> Array:
+    var out: Array = []
+    for i in n:
+        out.append(["Cell%d" % i, "UI_Panel", {
+            "margin": 0,
+            "background": UIPreset_Keyboard.KEY_BG, "background_slice": UIPreset_Keyboard.KEY_BG_SLICE,
+            "children": [["Text", "UI_Label", {
+                "content": str(i + 1), "font_color": UIPreset_Keyboard.FONT_COLOR,
+            }]],
+        }])
+    return out
+
+
 var values: Array[Array] = [
-    # 显示用：整块就是一个滚动文本，收到什么显示什么（提交链就是写它的 config["content"] 再刷新）
-    ["TestShow", "UI_Scroll", {
+    # 显示用：一块"会滚的文本"（面板 + 正文子元素，见 UIPreset_Basic.text_item），收到什么显示什么
+    # 提交链写的是**外壳**的 config["content"]，之后刷整棵（正文是子元素）——TestInput 的 content_cmd 指着它
+    ["TestShow", "UI_Panel", {
         "position": [380, 30], "size": [260, 140],
-        "content": "（还没收到东西）",
         "events": [QName.UI_event_pointer2_menu],
+        "children": [UIPreset_Basic.text_item("（还没收到东西）")],
     }],
     # 拖右下角改尺寸 / 同角多图标自动排位——两件事一起测（实现见 UIInteract_Resize 与 UI_Panel._corner_box）：
     #   · **以面板为准**（`fit_content = false`，尺寸定死）⇒ 拖大拖小时**里面的文字跟着折行**；
@@ -88,6 +108,19 @@ var values: Array[Array] = [
             _gcell(5, "第三行·中"), _gcell(6, "第三行·右"),
             _gcell(7, "第四行·中"), _gcell(8, "第四行·右"),
         ],
+    }],
+    # 等大网格（背包）：每个格子一样大（`cell`），**列数随宽度变**——拖宽了东西就往上走一行；
+    # 多出来不够一格的空位**摊进间距**（间距变宽，直到够塞下一列，那时列数 +1、间距回到最小）；
+    # 排不下（行数 × 格子 + 间距 > 内容区高）⇒ 面板的滚动条出现。
+    # 12 个格子：起始 260 宽 ⇒ 3 列 4 行；拖到 340 宽 ⇒ 4 列 3 行。
+    ["BagTest", "UI_Panel", {
+        "position": [560, 400],
+        "size": [260, 320],
+        "margin": 8,
+        "gap": 6,                                      # 最小间距（余量不足一格时它会被撑大）
+        "cell": [64, 64],                              # 等大格子（方形；长方形写 [宽, 高]）
+        "events": [QName.UI_event_pointer1_drag, QName.UI_event_pointer2_menu],
+        "children": _bag_cells(12),
     }],
     # 输入用：标题 + 输入框 + 一句提示；回车提交 → 发给绑定的那个 UI
     ["TestInput", "UI_Panel", {

@@ -18,10 +18,10 @@ config: Dictionary
 "写内容 / 对调配置"不需要专门交互：通用指令 Utils.write / Utils.swap + 一条刷新（详见 Script/UI/UI.md）。
 
 原子元素（显示/交互有明显差异的才做子类）：
-  UI_Panel  面板容器（竖排布局，用于堆叠子元素）
+  UI_Panel  面板容器（竖排布局，用于堆叠子元素；内容装不下就在框内滚动）
   UI_Label  文本（兼作"按钮"：配置 press 指令即可，无需单独 Button 类）
   UI_Image  图片（content = 纹理路径；改图 = 写 config["content"] + refresh("content")）
-  UI_Scroll 滚动文本（content = 多行文本；写 config["content"] + refresh("content") 即改展示）
+"**会滚的多行文本**"不再有专门元素：一个 `UI_Panel` + 下面 `text_item()` 的正文子元素就是它。
 组合按钮 = Panel(背景) + Label(文字) 直接用配置堆叠，不写子类。
 开关式按钮（可选框）也不用专门元素：同一个元素上写两套配置（events/content 与 events_2/content_2），
 点击时用 Utils.swap 对调、再 @self.refresh("content") 即可——见 Config/UI/UIPreset_Menu.gd 的 CloseToggle。
@@ -31,7 +31,8 @@ config: Dictionary
 "Tip" 预设 + `tip_events(文字)`：内容由开它的那一句带进去，所以一份预设够全项目用。
 **同一个角的多个图标会自动排成一行**（见 UI_Panel._corner_box）：先加的那个贴在角上，后加的往左依次排。
 
-注意：ScrollContainer 默认最小尺寸为 0，UI_Scroll 必须用 size 配置可视区大小，否则不可见。
+要"**定死可视区、内容多了在里面滚**"就把面板的 `size` 两维都写数（那是要不要出滚动条的判据）；
+写 0 / 不写的那一维随内容走，长到刚好装下、不出滚动条。
 """
 ## 图标（换图只改这两处：关闭按钮、两个手柄）。
 const CLOSE_ICON := "res://Material/Texture/UI/CloseButtom_16.png"
@@ -103,6 +104,24 @@ static func tip_cfg(fallback: String) -> Dictionary:
     }
 
 
+## 一块"**会滚的文本**"的正文子元素——原来 `UI_Scroll` 干的活，现在就是"普通 `UI_Panel` + 这一项"：
+## 外壳（面板）的 `config["content"]` 是显示内容，这里读出来铺到一块**撑满宽、自动换行**的文本上。
+## `wrap: true` = 宽度交给容器（见 `UI_Label._width_from_parent`）⇒ 文字照面板给到的宽折行、只报该多高。
+## 面板 `size` **两维都写数**（或配 `scroll` 上限）时，超出可视区的部分在框内滚动
+## ——面板内容盒外面本来就有滚动容器，竖向滚动条自动出（见 UI_Panel 文件头）。
+## 用法：
+##   ["Show", "UI_Panel", {"size": [260, 140], "children": [UIPreset_Basic.text_item("（空）")]}]
+## **改内容写的是外壳的 `config["content"]`**，之后要刷**整棵**（`refresh_tree()`）——
+## 正文是子元素，只刷外壳那一层它不会跟着变（`UISys.refresh_all()` 也行）。
+## 被谁用：MiniHUD 的 `Info`（本文件）、UIPreset_Test 的 `TestShow`。
+static func text_item(fallback: String = "") -> Array:
+    return ["Text", "UI_Label", {
+        "content": fallback,                        # 字面值 = 还没人写内容时的兜底
+        "content_cmd": "@self.parent.config.content",
+        "wrap": true,
+    }]
+
+
 var values: Array[Array] = [
     # 悬停说明的小浮窗（关闭 / 缩放按钮、可折叠标题的箭头都用它，见 UIInteract_Fold._sym_meta）：
     # 配置来自 `tip_cfg()`，**内容由开它的那一句带进来**（`open(..., content="…")`）⇒ 一份预设够全项目用。
@@ -126,11 +145,11 @@ var values: Array[Array] = [
             }],
             # 关闭"按钮"：图标式（和 CloseButton 预设同一套），贴在窗口右上角
             UIPreset_Basic.close_item(),   # 图标式关闭（右上角）：和 CloseButton 预设同一张图 / 同一套指令
-            # 滚动内容：展示本元素 config["content"]（改内容 = 写它 + @self.refresh("content")）
-            # ScrollContainer 最小尺寸为 0，必须给 size 配置可视高度
-            ["Info", "UI_Scroll", {
-                "content": "初始内容",
+            # 滚动内容：展示本元素 config["content"]（改内容 = 写它 + 刷整棵，见 UIPreset_Basic.text_item）
+            # 尺寸写死 = 定死的可视区，内容多了在框内滚（面板的滚动容器自动出竖向滚动条）
+            ["Info", "UI_Panel", {
                 "size": [280, 120],
+                "children": [text_item("初始内容")],
             }],
             # 图片示例：content 填纹理路径即可显示；改图 = 写它的 config["content"] + 一条刷新
             # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],

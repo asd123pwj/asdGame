@@ -221,6 +221,8 @@ func write(path: String, text: String) -> void:
 
 
 ## 写完后刷新"路径指着的那个 UI"：`…/Info.config.xxx` ⇒ 刷 `…/Info`（改了 host 自己身上的东西就刷 host）。
+## 刷的是**整棵**（refresh_tree）：改的多半是外壳的配置，而读它的常常是子元素
+## （如正文写 `content_cmd = "@self.parent.config.content"`）——只刷外壳那一层，它们还停在上一次的内容。
 ## 被谁用：write。
 func _refresh_owner(path: String) -> void:
 	var at: int = path.find(".config")
@@ -237,7 +239,7 @@ func _refresh_owner(path: String) -> void:
 	if ui == null:
 		return
 	ui.reapply()
-	ui.refresh()
+	ui.refresh_tree()               # 整棵（见上：读这个配置的可能是子元素）
 
 
 ## **编辑 / 监视的对象**在哪（跟着 UI 通用的"查看项"走，所以任何 open 都能指定）。按顺序找：

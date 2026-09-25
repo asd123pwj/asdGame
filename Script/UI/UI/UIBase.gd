@@ -222,7 +222,7 @@ static func _row_height(ctrl: Control) -> float:
 
 
 ## 虚接口：子类生成自身外观控件。
-## 被谁用：build()。实现者：UI_Panel / UI_Label / UI_Scroll / UI_Image。
+## 被谁用：build()。实现者：UI_Panel / UI_Label / UI_Image / UI_Input。
 func _create_control() -> Control:
 	return Control.new()
 
@@ -235,7 +235,7 @@ func _create_control() -> Control:
 ## 拖动/摆位是运行时的临时偏离，不该被一次普通刷新拽回 config 里那个位置。
 ## **只改了一项就传那一项**（`@self.refresh("content")`）——跟"改了什么刷什么"对上，也省掉别的项的无谓同步；
 ## 不传 key 的"全刷"留着给"一次改了好几项 / 不确定"的场合。
-## 实现者：UI_Label / UI_Scroll / UI_Image / UI_Input（各自的键见它们的 refresh）。
+## 实现者：UI_Label / UI_Image / UI_Input（各自的键见它们的 refresh）。
 ## 被谁用：build()（全部）、配置里改完 config 后紧跟的 `@self.refresh("content")`、
 ##         UIInteract_OpenClose._place（position）。
 func refresh(key: String = "") -> void:
@@ -412,8 +412,8 @@ func _content_box() -> Control:
 	return control
 
 
-## 本元素自己的"叠加层"（非容器、画在内容之外、不被滚动裁）：面板 / 滚动区各有一份，其余元素没有。
-## 默认 null；覆写者：UI_Panel、UI_Scroll。
+## 本元素自己的"叠加层"（非容器、画在内容之外、不被滚动裁）：面板（`UI_Panel`）有一份，其余元素没有。
+## 默认 null；覆写者：UI_Panel。
 ## 被谁用：_free_box（往上找最近的一个）。
 func _own_free_layer() -> Control:
 	return null
@@ -447,7 +447,7 @@ func _in_fixed_panel() -> bool:
 ## **元素层的父子关系不变**：`child.parent` 仍是本元素（登记名、失焦判定的挂载点、`@self.parent` 链
 ## 全都照旧），变的只是 Control 挂在谁下面 ⇒ `show_at` 按"实际父控件"换算坐标，位置照样准。
 ## 被谁用：_build_children、add_child_element（两条加子元素的路的 free 分支）。
-## 覆写者：UI_Panel / UI_Scroll（它们自己就有叠加层，直接返回，不必爬）。
+## 覆写者：UI_Panel（它自己就有叠加层，直接返回，不必爬）。
 func _free_box() -> Control:
 	var ui: UIBase = self
 	while ui != null:
@@ -513,7 +513,7 @@ static func _anchor_free_child(ui: UIBase) -> void:
 
 
 ## 应用 config 里的公共属性：position / size / content / visible / font_size / font_color / background。
-## 被谁用：build()。子类覆写时必须先 super()（如 UI_Scroll 之后再调内层 label 的宽度）。
+## 被谁用：build()。子类覆写时必须先 super()（先让基类定好控件尺寸，再按自己的控件补一道）。
 func _apply_config() -> void:
 	refresh("position")
 	reapply()
@@ -555,7 +555,7 @@ func reapply() -> void:
 
 ## 虚接口 + 通用实现：给本元素铺一张背景图（config["background"] = 纹理路径）。
 ## 做法 = 给它**主题里那个"当底"的 stylebox 槽**套上九宫格图（槽名见 _background_slot）：
-##   UI_Panel→panel（内层 PanelContainer）、UI_Label→normal、UI_Scroll→panel……
+##   UI_Panel→panel（内层 PanelContainer）、UI_Label→normal……
 ## 控件一个槽都没有（TextureRect / 纯 Control，本身不画 StyleBox）就画不出来：警告一次、不画。
 ## 那种元素要"带底"请换有槽的元素（文字带底 = UI_Panel 里放 UI_Label，键盘的键就是这么做的）。
 ## 被谁用：_apply_config。覆写者：UI_Panel（它要套在内层 _panel 上，不是根 Control）。

@@ -29,12 +29,11 @@ Script/UI/
 └─ UI/                   # 原子元素（每个都是 UIBase 子类，配置里 ui_name = 类名）
    ├─ UI_Panel.gd        # 面板容器：竖排布局，组装子元素
    ├─ UI_Label.gd        # 文本（**内核 RichTextLabel**，BBCode + [url] 链接）：配左键 PRESS 指令即"按钮"，配左键 HOLD 即"拖动手柄"
-   ├─ UI_Image.gd        # 图片：content = 纹理路径（改图 = 写 config["content"] + refresh("content")）
-   └─ UI_Scroll.gd       # 滚动容器：content 为多行文本
+   └─ UI_Image.gd        # 图片：content = 纹理路径（改图 = 写 config["content"] + refresh("content")）
 ```
 - 元素类 `class_name UI_XXX extends UIBase`，统一放 `Script/UI/UI/`。
 - 配置类 `class_name UIPreset_XXX extends ConfigBase`，放 `Config/UI/`，`values: Array[Array]`（每条 = `UIPreset._init` 的位置参数）。
-- **原子元素尽量少**：显示/交互有明显差异才做子类（文本/图片/滚动/容器）；"按钮"= 文本元素 + press 指令，组合控件直接用 `children` 配置堆叠，不写子类。
+- **原子元素尽量少**：显示/交互有明显差异才做子类（文本 / 图片 / 容器）；"按钮"= 文本元素 + press 指令，组合控件直接用 `children` 配置堆叠，不写子类。**"会滚的多行文本"不再有专门元素**（原来的 `UI_Scroll` 已撤）：一个 `UI_Panel` + 一个正文子元素（`UIPreset_Basic.text_item()`）就是它——面板本来就有滚动容器。
 
 ## 文件
 | 文件 | 作用 |
@@ -116,7 +115,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
     （`UIBase.dispatch_shown / dispatch_hidden` 递归）。元素据此开关自己的开销（如 `UI_Status` 只在这时
     订阅 / 退订那些状态消息）。**为什么要有它**：重开一个已存在的 UI 是"复用 + 显示、不发消息"，
     只靠 `listen_ui_close` 那种消息盖不到这一半。
-- **`config["content"]`（只是一个配置键，没有成员变量）**：显示内容（子类解释：Label=文本、Scroll=多行文本、Image=纹理路径）。子类覆写 `refresh(key)`，在里面读 `config.get("content")` 刷到控件。**不做成属性 set 自动刷**：要拦的会是整张 config（还有 events/size/…），而 config 是 Dictionary、拦不住写入——换成带 `_set/_get` 的对象则读点全要改，不划算。所以统一"**写 config + 紧跟一条 `@self.refresh("content")`**"。
+- **`config["content"]`（只是一个配置键，没有成员变量）**：显示内容（子类解释：Label=文本、Image=纹理路径；**"会滚的多行文本"没有专门元素**——外壳（面板）持 `content`，正文子元素用 `content_cmd = "@self.parent.config.content"` 读它，见 `UIPreset_Basic.text_item`）。子类覆写 `refresh(key)`，在里面读 `config.get("content")` 刷到控件。**不做成属性 set 自动刷**：要拦的会是整张 config（还有 events/size/…），而 config 是 Dictionary、拦不住写入——换成带 `_set/_get` 的对象则读点全要改，不划算。所以统一"**写 config + 紧跟一条 `@self.refresh("content")`**"。
 - **`var parent: UIBase`**（挂载对象）：组装子元素时由父元素注入，是 `@self.parent` 的指向。
 - **`var children: Array[UIBase]`**：按 `config["children"]`（每项 `[child_name, ui_class, child_config]`）组装，挂到 `_content_box()`（容器类覆写返回内部布局节点）。
 - **事件→指令**：唯一入口 `on_event(事件名)`（由 PointerDetect 派发）：
@@ -137,7 +136,6 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
       |---|---|---|
       | `UI_Panel` | PanelContainer | `panel`（它覆写 `_apply_background`，套在内层 `_panel` 上） |
       | `UI_Label` | **RichTextLabel**（内核，见元素表） | `normal` |
-      | `UI_Scroll` | ScrollContainer | `panel` |
       | `UI_Image` | TextureRect | **无**（TextureRect 本身不画 StyleBox，配了只警告一次、不画） |
 
       控件一个槽都没有时警告一次、不画——要"带底"就换有槽的元素（文字带底 = `UI_Panel` 里放 `UI_Label`，键盘的键就是这么做的）。**整块底图走它，不要放 Image 元素当背景**——Image 属于内容，摆在叠加层上会盖住别的子元素。
@@ -218,7 +216,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑。`background` 可给整块面板铺一张九宫格底图。**内容外面总有一层滚动容器**（横向关掉）：面板尺寸**由内容定**（`size` 那一维写 0）⇒ 长到刚好装下、不出滚动条；**由面板定**（写了数 / 拖手柄改小过）⇒ 内容超出就**在框内滚动**（竖向滚动条自动出）；`scroll: [上限宽, 上限高]`（0 = 该维不限制）是"**面板最多长到这儿**"——长出来的进去滚动（见"长内容"一节的"面板滚动"） | — |
 | `UI_Label` | 文本，**内核是 RichTextLabel**：content 按 **BBCode** 解析（`[b]` / `[color]` / `[url=meta]文字[/url]`）——"段落里哪几个字可点 / 可悬浮"是引擎原生能力，meta 的用法见 `UIInteract_Meta`；悬停在链接上指针自动变手型。**绑 `"Pointer 1 Hold"`（按住）即"按钮"/"拖动手柄"**（无需单独 Button 类）。**给一栏文字定宽**：`max_chars`（字符数，中文算 2）/ `max_width`（像素）——配了就 `宽 = min(内容自然宽, 上限)`（短内容不撑满、超了才折行），不配交给容器。**`size` 高度写 0 = 高随内容；写了数 = 显示区定死，内容多了框内滚动**（"三行只显示两行"的测法） | `["Pointer 1 Hold", "UIInteract.close @self.parent"]` |
 | `UI_Image` | 图片：content = 纹理路径，refresh 时 load；改图 = 写 `config["content"]` + 一条 `self.refresh` | — |
-| `UI_Scroll` | 滚动容器：content 为多行文本，内层 Label autowrap。**ScrollContainer 默认最小尺寸为 0，必须用 `size` 配置可视区大小，否则不可见**。结构与 `UI_Panel` 同一套：`root(Control) → Scroll(ScrollContainer) → Label` + `Overlay(Control)`，**free 子元素挂 Overlay**（不能挂在滚动容器里：会被裁、尺寸被压成 0） | — |
+| ~~`UI_Scroll`~~（已撤） | 原来的滚动文本元素。**已并入 `UI_Panel`**：内容盒外面本来就有一层滚动容器，文字由子元素显示——一块"会滚的文本" = `["Show", "UI_Panel", {"size": [260, 140], "children": [UIPreset_Basic.text_item("…")]}]`（`size` 两维写数 = 定死的可视区，内容多了在框内滚）。**"外壳持 `content`、子元素用 `content_cmd` 读它"**是全项目通行的写法（浮窗 `Tip` 也是），不必再有一个元素类 | — |
 | `UI_Input` | 输入框（LineEdit）：content 是**配置里写的初值**（`refresh()` 写进框里），回车提交 → 派发 `Input Submit`。**框里正在打的字不同步进 content**：要用就直接读 `@self.control.text`（取值链能读实例成员）——于是提交没有"先收文本"这一步，**元素自己没有提交逻辑**，提交就是配置里的普通命令串（送到哪 + 清空 + 要不要退出编辑 + 刷改过的两个 UI）。**元素里没有任何特判**：点它进编辑也是一条普通配置（`[QName.pointer1_hold, 'UIInteract.begin_edit self']`，换成别的事件也行），事件照常走配置 + 冒泡。宽度上限两种说法：`max_width`（像素）/ `max_chars`（**字符数**，中文算 2——等宽字体里中文正好两个半角宽），超了多行框换行、单行框横向滚，且**是硬上限**（连 `size` 也压）；配 `multiline: true` 时控件换成 TextEdit：**自动换行 + 高度按"折行后的行数"自适应**（行高 = 字高 + 主题行距，运行时量出来，换字体自动变；`max_lines` = 最多显示几行，超出框内滚动），**回车仍是提交、不会插换行**（输入层判"这次算提交"就吃掉那个事件；按着 Shift 才留给 TextEdit 插换行） | `[[QName.pointer1_hold, 'UIInteract.begin_edit self'], [QName.input_submit, 'Utils.write "@self.config.send_to" @self.control.text\vUtils.write "@self.config.content"\vUIInteract.end_edit self\v@self.refresh("content")\vself.refresh']]` |
 - **一览类元素**（把运行期数据铺出来看）：`UI_Status`（角色状态）、`UI_Shortcut`（角色快捷）、
   `UI_Attr`（角色属性 / buff）、`UI_Interaction`（角色交互）、`UI_Skill`（角色技能）、
@@ -258,13 +256,16 @@ var values: Array[Array] = [
                 "content": "[关闭]",
                 "events": [["Pointer 1 Hold", "UIInteract.close @self.parent"]],
             }],
-            ["Info", "UI_Scroll", { "content": "初始内容" }],
+            ["Info", "UI_Panel", {
+                "size": [280, 120],                     # 定死的可视区：内容多了在框内滚
+                "children": [UIPreset_Basic.text_item("初始内容")],
+            }],
             # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],
         ],
     }],
 ]
 ```
-- 组装读法：根 `UI_Panel` 含三个子元素——标题栏按住拖动父 UI、文本"按钮"关闭父 UI、滚动区展示内容；改展示内容只需写 `get_ui("UI/MiniHUD/Info").config["content"]` 再 `refresh("content")`（见 Test.ui_test），或发 `Utils.write "@self.config.content" 值\v@self.refresh("content")` 指令。
+- 组装读法：根 `UI_Panel` 含三个子元素——标题栏按住拖动父 UI、文本"按钮"关闭父 UI、一块会滚的文本（面板 + 正文子元素）展示内容；改展示内容只需写 `get_ui("UI/MiniHUD/Info").config["content"]` 再 **`refresh_tree()`**（外壳改了，读它的正文子元素要一起刷；见 Test.ui_test），或发 `Utils.write …\vUISys.refresh_all()` 指令。
 
 ## 右键菜单（Config/UI/UIPreset_Menu.gd 的配置 + 通用 UI 机制）
 - **菜单没有专属类**：就是普通 `UI_Panel` + 三条配置（`open_at` / `close_on_blur` / `free`）——开启与失焦关闭都读配置统一处理（`UIInteract_OpenClose`：`_place` 管"开在哪"、`_blur_uis` 候选 + `close_blur_ui` 管"失焦关闭"），所以"换一套配置"就等于换一种菜单。菜单项就是它 `config["children"]` 里的普通子 UI，行为由子 UI 的事件绑定给出。
@@ -290,7 +291,7 @@ var values: Array[Array] = [
   - **在哪写**：可以写进预设 config，但**推荐开的时候传参**（`close_on_move=true`）——关闭行为只取决于"在哪开、为什么开"，写进预设等于每加一层子菜单都得记得抄一遍，漏一处那个 UI 就永远关不掉。
   - 点关的判定时机：`key()` 派发时只置标记（`PointerDetect._blur_pending`），判定放在**下一次命中刷新**的尾巴上。两个理由：① 判定的那一刻，菜单往往正在被这次派发 open 出来（右键开菜单），拿"上次刷新的 hover"判会把它当成"指针在外面"当场关掉（表现为"关过一次之后就再也开不出来"）；② 命中检测一帧只该有一次（`InputSys._process` 里那次，早于派发），派发完再刷一遍既白跑、又会让 enter/exit 在同帧里派发两次。移开关则挂在 `PointerDetect._process` 的"本帧位移不为 0"分支里（没动就不必重复判）。
   - **尺寸为 0 的先不判**（`get_global_rect()` 是退化矩形 ⇒ 会被误判成"指针在外面"）：布局还没跑时先当它"还在指针下"（多级菜单"一开就没"就是这么来的）。
-    - 反过来说：**尺寸被谁压成 0 的 UI 会永远跳过判定 ⇒ 永远关不掉**。踩过这个坑：菜单（free 子元素）被挂进了 `ScrollContainer`（滚动容器会按视口改子节点尺寸），于是它高度 0、菜单既显示不全又关不掉。⇒ 自由定位的子元素必须挂"非容器"的叠加层（`UI_Panel` / `UI_Scroll` 都各有一个 `Overlay`）。
+    - 反过来说：**尺寸被谁压成 0 的 UI 会永远跳过判定 ⇒ 永远关不掉**。踩过这个坑：菜单（free 子元素）被挂进了 `ScrollContainer`（滚动容器会按视口改子节点尺寸），于是它高度 0、菜单既显示不全又关不掉。⇒ 自由定位的子元素必须挂"非容器"的叠加层（`UI_Panel` 有一个 `Overlay`）。
 
 ## 长内容与"收回 / 展开"（UIInteract.fold，实现 Interact/UIInteract_Fold.gd）
 

@@ -67,18 +67,19 @@ func ui_test() -> void:
     Msg.listen_ui_close(ui, func(_m): print("UI close"))
     Msg.listen_ui_submit(ui, func(_m): print("UI submit"))
     Msg.listen_ui_fade(ui, func(m): print("UI fade -> ", m))
-    # 展示 content/refresh 流程：修改内容属性即可更新滚动条 UI（不必重建控件）
+    # 展示 content/refresh 流程：修改内容属性即可更新那块会滚的文本（不必重建控件）
     var info: UIBase = UISys.get_ui("UI/MiniHUD/Info")
     if info != null:
         var lines: PackedStringArray = PackedStringArray()
         for i in range(40):
             lines.append("第 %d 行：滚动查看内容。" % i)
         info.config["content"] = "\n".join(lines)
-        info.refresh("content")     # 只改了 content 就只刷它（不传 key = 全刷）
+        info.refresh_tree()     # 正文是子元素（读外壳的 content）⇒ 刷整棵；只刷外壳它不会跟着变
 
-    # 三个"带手柄的窗口"：键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）、
+    # 四个"带手柄的窗口"：键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）、
     # 改尺寸测试窗（Config/UI/UIPreset_Test.gd 的 SizeTest：**以面板为准**，拖手柄时里面的文字跟着折行）、
-    # 矩阵网格测试窗（同文件的 MatrixTest：版式 = 面板 config 里的二维矩阵，拖手柄时格子按比例跟着缩放）。
+    # 矩阵网格测试窗（同文件的 MatrixTest：版式 = 面板 config 里的二维矩阵，拖手柄时格子按比例跟着缩放）、
+    # 等大网格测试窗（同文件的 BagTest：格子等大，拖手柄时**列数随宽度变**，余量摊进间距）。
     # "给窗口加个按钮"就是**开一个普通预设**（CloseButton / ResizeButton / SizeGrip），不写专门函数；
     # **顺序决定同一角上的左右**：先开的贴角、后开的排它左边（见 UI_Panel._corner_box）。
     # 指令里引用实例写 **`@注册名`**（配置里写的是 `@self` / `@host` / `@event`，由指令系统在派发时解析；
@@ -86,7 +87,8 @@ func ui_test() -> void:
     Msg.send_cmd("UIInteract.open(preset_name=\"Keyboard\")")
     Msg.send_cmd("UIInteract.open(preset_name=\"SizeTest\")")
     Msg.send_cmd("UIInteract.open(preset_name=\"MatrixTest\")")
-    for w in ["Keyboard", "SizeTest", "MatrixTest"]:
+    Msg.send_cmd("UIInteract.open(preset_name=\"BagTest\")")
+    for w in ["Keyboard", "SizeTest", "MatrixTest", "BagTest"]:
         for preset in ["CloseButton", "ResizeButton", "SizeGrip"]:
             Msg.send_cmd('UIInteract.open(@UI/%s, "%s", @UI/%s)' % [w, preset, w])
 

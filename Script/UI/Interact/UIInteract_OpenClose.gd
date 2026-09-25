@@ -255,7 +255,7 @@ static func _close_outside(uis_list: Array[UIBase], hover_ui: UIBase, with_mount
 	for ui: UIBase in uis_list:
 		# 尺寸还没算出来的先当它"还在指针下"：布局没跑时 get_global_rect() 是退化矩形，
 		# 会被误判成"指针在外面"当场关掉（多级菜单"一开就没"就是这么来的）。
-		# 反过来说：**尺寸被谁压成 0 的 UI 会永远跳过判定 ⇒ 永远关不掉**（free 子元素别挂进滚动容器，见 UI_Scroll）。
+		# 反过来说：**尺寸被谁压成 0 的 UI 会永远跳过判定 ⇒ 永远关不掉**（free 子元素别挂进滚动容器，见 UI_Panel）。
 		var rect: Rect2 = ui.control.get_global_rect()
 		if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 			continue
