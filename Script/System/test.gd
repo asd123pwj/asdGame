@@ -76,15 +76,17 @@ func ui_test() -> void:
         info.config["content"] = "\n".join(lines)
         info.refresh("content")     # 只改了 content 就只刷它（不传 key = 全刷）
 
-    # 两个"带手柄的窗口"：键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）与
-    # 改尺寸测试窗（Config/UI/UIPreset_Test.gd 的 SizeTest：**以面板为准**，拖手柄时里面的文字跟着折行）。
+    # 三个"带手柄的窗口"：键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）、
+    # 改尺寸测试窗（Config/UI/UIPreset_Test.gd 的 SizeTest：**以面板为准**，拖手柄时里面的文字跟着折行）、
+    # 矩阵网格测试窗（同文件的 MatrixTest：版式 = 面板 config 里的二维矩阵，拖手柄时格子按比例跟着缩放）。
     # "给窗口加个按钮"就是**开一个普通预设**（CloseButton / ResizeButton / SizeGrip），不写专门函数；
     # **顺序决定同一角上的左右**：先开的贴角、后开的排它左边（见 UI_Panel._corner_box）。
     # 指令里引用实例写 **`@注册名`**（配置里写的是 `@self` / `@host` / `@event`，由指令系统在派发时解析；
     # 这里是"事件之外"发的指令，没有 `@self` 可解析，所以手写完整注册名——UI 的登记名都带 `UI/` 前缀）。
     Msg.send_cmd("UIInteract.open(preset_name=\"Keyboard\")")
     Msg.send_cmd("UIInteract.open(preset_name=\"SizeTest\")")
-    for w in ["Keyboard", "SizeTest"]:
+    Msg.send_cmd("UIInteract.open(preset_name=\"MatrixTest\")")
+    for w in ["Keyboard", "SizeTest", "MatrixTest"]:
         for preset in ["CloseButton", "ResizeButton", "SizeGrip"]:
             Msg.send_cmd('UIInteract.open(@UI/%s, "%s", @UI/%s)' % [w, preset, w])
 

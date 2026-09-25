@@ -20,9 +20,10 @@ const MARGIN_SIZE := Vector2(16, 16)
 ## 内层面板（真正的容器：含边距 + 内容）。
 ## 被谁用：_create_control（建）、_content_size（问内容多大）。
 var _panel: PanelContainer
-## 子元素的挂载点（竖排布局）。
-## 被谁用：_create_control（建）、_content_box。
-var _box: VBoxContainer
+## 子元素的挂载点：默认 VBoxContainer（竖排）；配了 `config["matrix"]` 时是**普通 Control**
+## （矩阵模式：子元素的 position/size 由 `_layout_matrix` 按矩阵算，容器不做任何布局）。
+## 被谁用：_create_control（建）、_content_box、_layout_matrix。
+var _box: Control
 ## free 子元素的挂载点（非容器，position 不会被布局覆盖）。
 ## 被谁用：_create_control（建）、_free_box。
 var _overlay: Control
@@ -72,19 +73,26 @@ func _create_control() -> Control:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	margin.add_child(scroll)
 
-	_box = VBoxContainer.new()
+	if config.has("matrix"):
+		# **矩阵模式**：内容盒换成普通 Control（不做任何布局）——子元素的 position/size 由
+		# `_layout_matrix` 按矩阵算。两轴都撑满视口：矩阵按"内容区现在多大"算，面板变大变小
+		# 格子都跟着重算（排版不变、按比例缩放），所以不会出滚动条。
+		_box = Control.new()
+		_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_box.resized.connect(_layout_matrix)       # 视口一变就重摆（含第一次排完版那一帧）
+	else:
+		_box = VBoxContainer.new()
+		# **行间距归零**：竖排默认 separation = 4 ⇒ "两行"会变成 32+32+4 = 68（超过网格的 64）。
+		# 行自己的高度里已经有富余（32 装 28 的字 ⇒ 上下各 2px），不靠容器的间隔留白。
+		_box.add_theme_constant_override("separation", 0)
+		# 子元素最小尺寸一变就重算面板尺寸：内容多大只能问内容盒
+		# （滚动容器的最小尺寸恒为 0，隔着它问 _panel 问不出内容多大，见 _content_size）。
+		_box.minimum_size_changed.connect(_fit_size)
 	_box.name = "Box"
 	# **横向撑满视口**：ScrollContainer 只把子节点排到"它自己的最小尺寸"，不负责拉宽——不写这一句，
 	# Box 就停在最小宽度，而折行文本的最小宽度是 0/1px ⇒ **里面的文字被压成一列**
-	# （实测：320 宽的面板里正文只有 1px 宽、折成 74 行）。竖向**不写**：高度要按内容来，
-	# 高于视口时才由滚动容器出滚动条。
+	# （实测：320 宽的面板里正文只有 1px 宽、折成 74 行）。
 	_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# **行间距归零**：竖排默认 separation = 4 ⇒ "两行"会变成 32+32+4 = 68（超过网格的 64）。
-	# 行自己的高度里已经有富余（32 装 28 的字 ⇒ 上下各 2px），不靠容器的间隔留白。
-	_box.add_theme_constant_override("separation", 0)
-	# 子元素最小尺寸一变就重算面板尺寸：内容多大只能问内容盒
-	# （滚动容器的最小尺寸恒为 0，隔着它问 _panel 问不出内容多大，见 _content_size）。
-	_box.minimum_size_changed.connect(_fit_size)
 	scroll.add_child(_box)
 
 	# 叠加层：给"自由定位"的子元素（关闭按钮、菜单）用——它不是容器，position/size 不会被布局覆盖
@@ -204,6 +212,82 @@ func _scroll_cap() -> Vector2:
 	if arr.size() >= 2:
 		return Vector2(float(arr[0]), float(arr[1]))
 	return Vector2.ZERO
+
+
+## 面板尺寸一定，就按矩阵把子元素重摆一遍（矩阵模式才有事做，见 _create_control 的 matrix 分支）。
+## 被谁用：UIBase._fit_size（build、拖"改尺寸"手柄、内容最小尺寸变化都会走到）。
+func _fit_size() -> void:
+	super._fit_size()
+	if config.has("matrix"):
+		_layout_matrix()
+
+
+## 按 `config["matrix"]` 把**写了 `config["grid"]` 序号**的子元素摆进网格：
+## 位置与尺寸 = `grid_rect(矩阵, 内容区当前大小, gap, 0, 序号)`——内容区变一点，格子就按比例重算一次
+## ⇒ 拖"改尺寸"手柄时**排版不变、大小位置跟着缩放**。四周留白就是面板的 `margin`（内容区已在它里面），
+## 格间距写 `config["gap"]`（不写 = 4）。没写 `grid` 的子元素不参与网格（贴角的关闭按钮、竖排内容照旧）。
+## 矩阵面板的 `size` 要**定死**（或用手柄拖）：格子是按"内容区现在多大"算的，没有"内容需要多大"可言。
+## 写回的是子元素自己的 `config`（size/position）再让它应用：它内部的排版（折行、子元素）就与新尺寸
+## 一致，之后它自己的 `_fit_size` 也算出同样的值，不会跟面板打架。
+## 被谁用：_fit_size、_box.resized（矩阵模式：视口一变就重摆）。
+func _layout_matrix() -> void:
+	var m: Variant = config.get("matrix")
+	if not (m is Array) or _box == null or _box.size.x <= 0.0 or _box.size.y <= 0.0:
+		return                       # 布局还没跑（内容区还是 0）：等 _box.resized 再算
+	var gap: float = float(config.get("gap", 4))
+	for child in children:
+		if not child.config.has("grid"):
+			continue                 # 没写序号 = 不进网格（保持原样）
+		var r: Rect2 = grid_rect(m, [_box.size.x, _box.size.y], gap, 0.0, child.config["grid"])
+		child.config["size"] = [r.size.x, r.size.y]
+		child.config["position"] = [r.position.x, r.position.y]
+		child._fit_size()
+		child.refresh("position")
+
+
+## 二维矩阵 → 某个编号的**位置与尺寸**（纯几何，不装配 UI；静态，配置层也能调）。
+## 输入：
+##   matrix      二维矩阵，一行一个子数组；**同一个编号出现几格 = 那个元素跨几格 / 跨几行**（编号任意值）；
+##   panel_size  [宽, 高]：网格区总尺寸（含四周 padding；矩阵面板传的就是内容区大小）；
+##   gap         格与格的间距；pad  四周内边距；id  要查的元素编号。
+## 返回 Rect2（position 相对网格区左上角）。编号不存在 / 矩阵为空 ⇒ 空 Rect2 并警告一次；
+## L 形（非矩形区域）表达不了 ⇒ 警告一次、按外接矩形放。
+## 被谁用：_layout_matrix、UIPreset_Test 的 MatrixTest 演示。
+@warning_ignore_start("unsafe_cast")
+static func grid_rect(matrix: Array, panel_size: Array, gap: float, pad: float, id: Variant) -> Rect2:
+	if matrix.is_empty() or (matrix[0] as Array).is_empty():
+		push_warning("grid_rect: 矩阵是空的")
+		return Rect2()
+	var rows: int = matrix.size()
+	var cols: int = (matrix[0] as Array).size()
+	var cell: Vector2 = Vector2(
+		(float(panel_size[0]) - pad * 2.0 - gap * float(cols - 1)) / float(cols),
+		(float(panel_size[1]) - pad * 2.0 - gap * float(rows - 1)) / float(rows))
+	var x0: int = 1 << 30
+	var y0: int = 1 << 30
+	var x1: int = -1
+	var y1: int = -1
+	var count: int = 0
+	for r in rows:
+		for c in cols:
+			if (matrix[r] as Array)[c] != id:
+				continue
+			count += 1
+			x0 = mini(x0, c)
+			y0 = mini(y0, r)
+			x1 = maxi(x1, c)
+			y1 = maxi(y1, r)
+	if count == 0:
+		push_warning("grid_rect: 矩阵里没有编号 %s" % str(id))
+		return Rect2()
+	if count != (x1 - x0 + 1) * (y1 - y0 + 1):
+		push_warning("grid_rect: 编号 %s 的格子不是矩形（%d 格 ≠ %dx%d），按外接矩形放"
+			% [str(id), count, x1 - x0 + 1, y1 - y0 + 1])
+	return Rect2(
+		pad + x0 * (cell.x + gap), pad + y0 * (cell.y + gap),
+		float(x1 - x0 + 1) * cell.x + float(x1 - x0) * gap,
+		float(y1 - y0 + 1) * cell.y + float(y1 - y0) * gap)
+@warning_ignore_restore("unsafe_cast")
 
 
 ## 把 config["background"] 的图做成九宫格面板底。

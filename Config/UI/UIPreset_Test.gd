@@ -13,7 +13,23 @@ extends ConfigBase
   - J / K 键开关它们：状态层的按键快捷，见 Config/Character/Archetype/Archetype_System.gd。
 
 两个都可以右键（菜单挂在它自己下面）：复制名称 / 绑定 ▸ / 菜单编辑（菜单那套是通用的）。
+
+  MatrixTest  矩阵网格：版式写在面板 config 的 `matrix` 里——同一个编号出现几格 = 那个元素
+              跨几格 / 跨几行；想进网格的子元素写一个 `grid: 编号`，面板负责按矩阵把它们的
+              position/size 算好（几何函数 `UI_Panel.grid_rect`）——**拖"改尺寸"手柄，
+              格子按比例跟着缩放**。跨格 / 跨行天然支持，不用容器、不用嵌套。
 """
+## 矩阵网格的演示格子：一个带底图的标签，`grid` 序号对应矩阵里的编号
+## （面板会按矩阵把它的 position/size 算好；拖"改尺寸"手柄时跟着缩放）。
+static func _gcell(id: int, text_: String) -> Array:
+    return [str(id), "UI_Label", {
+        "grid": id,
+        "content": "%d：%s" % [id, text_],
+        "background": UIPreset_Keyboard.KEY_BG, "background_slice": UIPreset_Keyboard.KEY_BG_SLICE,
+        "font_color": UIPreset_Keyboard.FONT_COLOR,
+    }]
+
+
 var values: Array[Array] = [
     # 显示用：整块就是一个滚动文本，收到什么显示什么（提交链就是写它的 config["content"] 再刷新）
     ["TestShow", "UI_Scroll", {
@@ -39,6 +55,38 @@ var values: Array[Array] = [
                 "content": "这段文字用来验证「以面板为准」：拖大面板，它折行会变少；拖小面板，折行会变多。"
                     + "文字宽度始终等于面板宽度减掉内边距，既不会把面板撑开，也不会被裁掉。",
             }],
+        ],
+    }],
+    # 矩阵网格：版式写在面板 config 的 `matrix` 里（同一个数字出现几格 = 跨几格 / 跨几行）；
+    # 想进网格的子元素写一个 `grid: 编号`，面板负责把它的 position/size 算好——
+    # **拖右下角的"改尺寸"手柄，格子按矩阵比例跟着缩放**（排版不变）。
+    # 不同位置可以用不同的元素：1–3、5–8 是纯标签，4 号是面板（里面还套着自己的子元素）。
+    # 没写 `grid` 的子元素不参与网格；面板尺寸要定死（拖手柄改的就是它）。
+    ["MatrixTest", "UI_Panel", {
+        "position": [560, 40],
+        "size": [500, 320],                            # 定死：矩阵按"内容区现在多大"算
+        "margin": 8,
+        "gap": 4,                                      # 格间距（不写 = 4）
+        "matrix": [
+            [1, 1, 1, 1, 1, 1],
+            [2, 2, 2, 3, 3, 3],
+            [4, 4, 5, 5, 6, 6],
+            [4, 4, 7, 7, 8, 8],
+        ],
+        "events": [QName.UI_event_pointer1_drag, QName.UI_event_pointer2_menu],
+        "children": [
+            _gcell(1, "占满一整行"),
+            _gcell(2, "半行·左"), _gcell(3, "半行·右"),
+            # 4 号跨两行两列：用面板，里面还能套自己的子元素（跟着格子一起缩放）
+            ["4", "UI_Panel", {
+                "grid": 4, "margin": 0,
+                "background": UIPreset_Keyboard.KEY_BG, "background_slice": UIPreset_Keyboard.KEY_BG_SLICE,
+                "children": [["Text", "UI_Label", {
+                    "content": "4：跨两行两列（面板里还能套元素）", "font_color": UIPreset_Keyboard.FONT_COLOR,
+                }]],
+            }],
+            _gcell(5, "第三行·中"), _gcell(6, "第三行·右"),
+            _gcell(7, "第四行·中"), _gcell(8, "第四行·右"),
         ],
     }],
     # 输入用：标题 + 输入框 + 一句提示；回车提交 → 发给绑定的那个 UI
