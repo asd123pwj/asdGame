@@ -166,6 +166,12 @@ static var ui_font_color_default := Color(0.13, 0.13, 0.16)
 #   `…-Light`（细）/ `…-Regular`（常规）/ `…-Medium`（**最粗，当前用的这个**）。
 # 想换档就改这一行；想换别的字体就把它指到那个文件（**不用**改任何别的地方）。
 static var ui_font_file := "res://Material/Fonts/LXGWWenKaiMonoGB-Medium.ttf"
+# **导入时开了 MSDF**（`Material/Fonts/*.ttf.import` 里 `multichannel_signed_distance_field=true`）：
+# 字形以"距离场"存，等比缩放（`UIInteract.rescale`）放大多少倍字都清晰——位图字体放大会糊。
+# 换字体时记得同样把那个 ttf 的导入配置打开（编辑器里是"Import → 勾 Multichannel SDF"）。
+# **MSDF 必须配"线性采样"**（距离场靠插值求字边，最近邻会让字发毛）：文字控件在建的时候显式设
+# `TEXTURE_FILTER_LINEAR`（只有 `UI_Label` / `UI_Input` 两处，见 UI.md 的"采样"那条）；
+# 全项目其余（所有图，含角色图 / 瓦片）走 `project.godot` 的最近邻全局默认。
 
 # **几何加粗**（伪粗体，`FontVariation.variation_embolden`）：>0 时把字体再套一层加粗。
 # 霞鹜文楷这一族**没有 Bold** ⇒ 这就是"Ctrl+B 那种加粗"的替代：0.2~0.4 已经看得出来，

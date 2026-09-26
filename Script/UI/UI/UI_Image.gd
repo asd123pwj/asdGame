@@ -9,6 +9,8 @@ var image: TextureRect
 
 
 ## 建控件：TextureRect（按 size 拉伸填充）。
+## 采样模式不在这儿指定：**全项目统一最近邻**（像素风、放大取最近纹素不糊），一处生效——
+## `project.godot` 的 `rendering/textures/canvas_textures/default_texture_filter=0`（见 UI.md 的说明）。
 ## 被谁用：UIBase.build()。
 func _create_control() -> Control:
 	image = TextureRect.new()

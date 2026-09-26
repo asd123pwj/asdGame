@@ -53,6 +53,9 @@ var _corners: Dictionary = {}
 func _create_control() -> Control:
 	var root: Control = Control.new()
 	root.name = name
+	# 采样模式：**全项目统一最近邻**（像素风、放大不糊），一处生效——
+	# `project.godot` 的 `rendering/textures/canvas_textures/default_texture_filter=0`。
+	# 所以这里不再逐个控件指定 texture_filter（原来分过"图像最近邻 / 文字线性"两层，见 UI.md）。
 	# **不裁画面**（root.clip_contents 保持 false）：浮窗、子菜单这类"挂在面板里、却要画到面板外"的
 	# UI 全靠越出面板矩形——裁了它们就整个被裁没（实测：浮窗只露出约 24px 的一条边，看着就是
 	# "开不出来"，指针事件其实都好好走着）。当初加裁剪防的是"固定宽面板装不下长文案、画出去的

@@ -56,6 +56,8 @@ func _create_control() -> Control:
 	if bool(config.get("multiline", false)):
 		var te: TextEdit = TextEdit.new()
 		te.name = name
+		# 采样：输入框里也是文字 ⇒ 线性（全项目其余走"最近邻"这个全局默认，见 UI_Label 那段说明）
+		te.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		te.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY   # 自动换行（长内容一眼看全）
 		te.scroll_fit_content_height = false             # 高度由本元素按行数算（有上限，见 _content_size）
 		_apply_width_cap(te)
@@ -66,6 +68,7 @@ func _create_control() -> Control:
 		return te
 	var line: LineEdit = LineEdit.new()
 	line.name = name
+	line.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR   # 同上：文字用线性
 	_apply_width_cap(line)
 	return line
 

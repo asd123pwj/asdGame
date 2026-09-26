@@ -37,6 +37,13 @@ var meta_hover: Variant = null
 func _create_control() -> Control:
 	label = RichTextLabel.new()
 	label.name = name
+	# 采样：**文字唯一用线性的地方**（全项目其余都走"最近邻"这个全局默认，见 project.godot 的
+	# `default_texture_filter=0` 与 UI.md 的"采样"那条）。
+	# 为什么文字要例外：字体是 **MSDF 距离场**（`Material/Fonts/*.ttf.import` 里开了
+	# `multichannel_signed_distance_field`）——它按"距离场插值"求字边，最近邻采样会让字发毛、坑洼。
+	# 图相反：位图放大用线性只会糊，最近邻才锐利。
+	# 谁新建"带文字的控件"就照这里补一行（现在只有本元素与 UI_Input）。
+	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	label.bbcode_enabled = true
 	label.fit_content = true
 	label.scroll_active = false
