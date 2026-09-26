@@ -4,6 +4,7 @@ extends UIBase
 ## 全部由 config["children"] 声明的子元素组装（见 Script/UI/UI.md）。
 ## 结构（内部节点都起了名，编辑器里看树一眼能认）：
 ##   root(Control，本元素的 control) → Panel → Margin → Box(VBoxContainer，普通子元素挂这里)
+##                                   │                      └→ Grid(Control)：**网格模式才建**，网格区
 ##                                   └→ Overlay(Control)：free 子的自由定位挂载点
 ## **子元素怎么排，看 config**（都在 `_layout_grid` 里分派）：
 ##   · 不写      ⇒ 竖排（VBoxContainer）：一个接一个往下堆；
@@ -11,6 +12,10 @@ extends UIBase
 ##                  `grid: 编号`；面板尺寸一变，格子按比例跟着缩放 ⇒ 拖"改尺寸"手柄排版不变（见 `_layout_matrix`）；
 ##   · `cell`    ⇒ 等大格子网格（背包那种）：格子等大、**列数随内容区宽度变**，不够一格的余量摊进间距
 ##                  （撑到能多塞一列就换行）；排不下时内容盒撑高 ⇒ 面板出滚动条（见 `_layout_uniform`）。
+## **网格面板照样能带普通子元素**：写了 `grid` 的进网格区；**没写的留在竖排里、排在网格上方**
+## （可折叠标题、一行说明都放这儿）。所以网格区是竖排容器里"占剩下高度"的那个子节点（`_grid_box`）。
+## （网格面板的尺寸要**定死**——`size` / `size_ratio`，或用手柄拖：格子按"网格区现在多大"算，
+##   没有"内容需要多大"可言；不写的话网格区只剩标题那么高。）
 ## **内容外面总有一层 ScrollContainer**（… → Margin → Scroller → Box）⇒ "装不下"永远是滚动条，不画到面板外：
 ##   · 面板尺寸**由内容定**（size 那一维写 0）⇒ 面板长到刚好装下，滚动条不出现；
 ##   · 面板尺寸**由面板定**（size 写了数 / 拖手柄改小过）⇒ 内容超出去就在框内滚动
@@ -26,10 +31,14 @@ const MARGIN_SIZE := Vector2(16, 16)
 ## 内层面板（真正的容器：含边距 + 内容）。
 ## 被谁用：_create_control（建）、_content_size（问内容多大）。
 var _panel: PanelContainer
-## 子元素的挂载点：默认 VBoxContainer（竖排）；配了 `matrix` / `cell`（两种网格模式）时是**普通 Control**
-## （容器不做任何布局：子元素的 position/size 由 `_layout_grid` 按矩阵 / 等大格子自己算）。
-## 被谁用：_create_control（建）、_content_box、_layout_grid / _layout_matrix / _layout_uniform。
+## 普通子元素的挂载点：**永远是 VBoxContainer**（竖排；网格模式下网格区也排在它里面，见 `_grid_box`）。
+## 被谁用：_create_control（建）、_content_box、_content_size、_attach_child_control。
 var _box: Control
+## **网格区**（配了 `matrix` / `cell` 才建）：普通 Control，占竖排里剩下的高度，格子都挂它下面——
+## 子元素的 position/size 由 `_layout_grid` 按矩阵 / 等大格子自己算（它不做任何布局）。
+## 单独立一个而不是直接用 `_box`：这样网格上方还能有一行标题（见文件头）。
+## 被谁用：_create_control（建）、_attach_child_control（格子挂这儿）、_layout_matrix / _layout_uniform。
+var _grid_box: Control
 ## free 子元素的挂载点（非容器，position 不会被布局覆盖）。
 ## 被谁用：_create_control（建）、_free_box。
 var _overlay: Control
@@ -77,24 +86,36 @@ func _create_control() -> Control:
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.name = "Scroller"
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	# **嵌套面板（网格格/段，`parent` 是 `UI_Panel`）的竖向滚动条常驻**：嵌套空间小、内容几乎总比
+	# 可视区高，滚动条几乎常在；而且"内容最小高"会随可用宽变（折行文本宽了行就少）——若滚动条
+	# 出现/消失，可视区宽跟着变 8px，折行数跟着变，内容高又跟着变…… **双稳态帧间振荡**（RichText
+	# 的折行高还是异步更新的，永远差一拍）⇒ 排版永不收敛，最终把引擎排版队列压崩 = 开着看板就
+	# signal 11 闪退（实测：角色看板三格布局，段标题在 1 行/2 行之间无限横跳）。常驻滚动条把可视区
+	# 宽钉死，反馈链斩断。顶层窗口保持 AUTO（装得下就不出滚动条，不糟蹋视觉）。
+	if parent is UI_Panel:
+		scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 	margin.add_child(scroll)
 
+	# 内容盒：**永远是竖排**（网格模式下"网格区"也排在它里面，见文件头那一节）。
+	_box = VBoxContainer.new()
+	# **行间距归零**：竖排默认 separation = 4 ⇒ "两行"会变成 32+32+4 = 68（超过网格的 64）。
+	# 行自己的高度里已经有富余（32 装 28 的字 ⇒ 上下各 2px），不靠容器的间隔留白。
+	_box.add_theme_constant_override("separation", 0)
+	# 子元素最小尺寸一变就重算面板尺寸：内容多大只能问内容盒
+	# （滚动容器的最小尺寸恒为 0，隔着它问 _panel 问不出内容多大，见 _content_size）。
+	_box.minimum_size_changed.connect(_fit_size)
 	if config.has("matrix") or config.has("cell"):
-		# **网格模式**（`matrix`：二维矩阵 / `cell`：等大格子）：内容盒换成普通 Control（不做任何布局）
-		# ——子元素的 position/size 由 `_layout_grid` 算。两轴都撑满视口：网格按"内容区现在多大"排，
+		# **网格模式**（`matrix`：二维矩阵 / `cell`：等大格子）：**另起一个"网格区"**
+		# （普通 Control，占竖排剩下的高）——写 `grid` 的子元素挂那儿，没写的（标题这类）留在竖排里
+		# ⇒ 网格上方能有一行标题（见文件头）。竖排撑满视口高：网格按"网格区现在多大"排，
 		# 面板变大变小都跟着重算（矩阵是缩放、等大网格是**换列数**），所以默认不会出滚动条
-		# （等大网格排不下时例外：那种情况给内容盒一个最小高，交给滚动，见 `_layout_uniform`）。
-		_box = Control.new()
+		# （等大网格排不下时例外：给网格区一个最小高，交给滚动，见 `_layout_uniform`）。
 		_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_box.resized.connect(_layout_grid)         # 视口一变就重摆（含第一次排完版那一帧）
-	else:
-		_box = VBoxContainer.new()
-		# **行间距归零**：竖排默认 separation = 4 ⇒ "两行"会变成 32+32+4 = 68（超过网格的 64）。
-		# 行自己的高度里已经有富余（32 装 28 的字 ⇒ 上下各 2px），不靠容器的间隔留白。
-		_box.add_theme_constant_override("separation", 0)
-		# 子元素最小尺寸一变就重算面板尺寸：内容多大只能问内容盒
-		# （滚动容器的最小尺寸恒为 0，隔着它问 _panel 问不出内容多大，见 _content_size）。
-		_box.minimum_size_changed.connect(_fit_size)
+		_grid_box = Control.new()
+		_grid_box.name = "Grid"
+		_grid_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_grid_box.resized.connect(_layout_grid)    # 网格区一变就重摆（含第一次排完版那一帧）
+		_box.add_child(_grid_box)
 	_box.name = "Box"
 	# **横向撑满视口**：ScrollContainer 只把子节点排到"它自己的最小尺寸"，不负责拉宽——不写这一句，
 	# Box 就停在最小宽度，而折行文本的最小宽度是 0/1px ⇒ **里面的文字被压成一列**
@@ -160,6 +181,21 @@ func _content_box() -> Control:
 	return _box
 
 
+## 覆写：**网格模式下要分流**——写了 `grid` 的子元素挪到网格区（`_grid_box`），其余（可折叠标题这类）
+## 留在竖排里；再把网格区**挪到最后**，让它永远占"标题之下剩下的高"（顺序 = 谁在上不靠配置里的先后）。
+## 其它情况与基类一样（free 子元素挂叠加层 / 贴角的进角落容器，见 UIBase._attach_child_control）。
+## 被谁用：UIBase._build_children / add_child_element。
+func _attach_child_control(child: UIBase, child_config: Dictionary) -> void:
+	super(child, child_config)
+	if _grid_box == null or bool(child_config.get("free", false)):
+		return                                   # 非网格模式 / 自由定位的子元素：不参与网格
+	if child_config.has("grid"):
+		# **换父级要用 reparent**：基类刚把它挂在竖排（Box）上，而 Godot 4 的 add_child **不认**
+		# "已经有父级"的节点（会报 already has a parent 并且什么都不做——实测：格子全留在竖排里堆成一列）。
+		child.control.reparent(_grid_box, false)  # false = 不管全局坐标（位置随后由布局写）
+	_box.move_child(_grid_box, -1)
+
+
 ## 让内边距跟着 config 走：`margin` 是布局项（`_create_control` 建的时候就套上了），
 ## 运行时改了要**重刷一次**才生效（`@self.reapply()`；重开这个 UI 也会走到）。
 ## 被谁用：UIBase.build()、配置里改完布局项紧跟的 `@self.reapply()`。
@@ -189,16 +225,19 @@ func _own_free_layer() -> Control:
 	return _overlay
 
 
-## 内容需要多大：**问内容盒**（装内容那个竖排容器）+ 内边距。
-## **不能问 `_panel`**：根 Control 是普通 Control 不汇总子元素（问它只得到"配置里写的那点值"，
+## 内容需要多大：**内容盒 + 内边距 + 底图边距**（三项相加，不是取大）。
+## **不能只问 `_panel`**：根 Control 是普通 Control 不汇总子元素（问它只得到"配置里写的那点值"，
 ## [宽, 0] 就成了高度 0 的退化矩形、画不出来也命中不到）；而 `_panel` 里隔着 ScrollContainer，
-## 滚动容器的最小尺寸恒为 0 ⇒ 问它只会得到"边距那么大"，内容等于没了。
-## **底图（StyleBox）自己也有最小尺寸**（九宫格边距）：面板整体不能比它小，所以取两者大的那个。
+## 滚动容器的最小尺寸恒为 0 ⇒ 单问它只会得到"边距那么大"，内容等于没了。
+## 另外 `PanelContainer` 的"最小尺寸"取的是 `max(底图边距, 子元素最小)`，不是相加——底图边距（带边距的图，
+## 默认那张 8px）比内容大时它会**少报一整圈** ⇒ 面板矮/窄一圈、明明装得下却出滚动条（实测踩过）。
+## 所以这里**自己把三项加起来**：内容盒 + `_margin()*2`（内边距）+ 底图样式的最小尺寸。
 ## `config["scroll"]` 的上限在这里收口：内容再多面板也只长到上限，多出来的进去滚动（见文件头）。
 ## 被谁用：UIBase._fit_size。
 func _content_size() -> Vector2:
-	var need: Vector2 = _box.get_combined_minimum_size() + _margin() * 2.0
-	need = need.max(_panel.get_combined_minimum_size())
+	var sb: StyleBox = _panel.get_theme_stylebox("panel")
+	var sb_min: Vector2 = sb.get_minimum_size() if sb != null else Vector2.ZERO
+	var need: Vector2 = _box.get_combined_minimum_size() + _margin() * 2.0 + sb_min
 	var cap: Vector2 = _scroll_cap()
 	if cap.x > 0.0:
 		need.x = minf(need.x, cap.x)
@@ -234,6 +273,12 @@ func _fit_size() -> void:
 ## 两个都没配 ⇒ 什么都不做（普通竖排面板，行为与以前一样）。
 ## 被谁用：_fit_size、内容盒 resized（网格模式：视口一变就重摆）。
 func _layout_grid() -> void:
+	# **收起中不排网格**：格子都藏起来了，排了也看不见；而且"排不下就撑高网格区"（等大网格那一支）
+	# 会把面板顶住不放 ⇒ 收起后仍是一大块空底（见 UIBase._fit_size 的"收起时高度让给内容"）。
+	if bool(config.get("collapsed", false)):
+		if _grid_box != null:
+			_grid_box.custom_minimum_size = Vector2.ZERO
+		return
 	if config.has("matrix"):
 		_layout_matrix()
 	elif config.has("cell"):
@@ -251,39 +296,39 @@ func _place_cell(child: UIBase, r: Rect2) -> void:
 
 
 ## 按 `config["matrix"]` 把**写了 `config["grid"]` 序号**的子元素摆进网格：
-## 位置与尺寸 = `grid_rect(矩阵, 内容区当前大小, gap, 0, 序号)`——内容区变一点，格子就按比例重算一次
-## ⇒ 拖"改尺寸"手柄时**排版不变、大小位置跟着缩放**。四周留白就是面板的 `margin`（内容区已在它里面），
-## 格间距写 `config["gap"]`（不写 = 4）。没写 `grid` 的子元素不参与网格（贴角的关闭按钮、竖排内容照旧）。
-## 矩阵面板的 `size` 要**定死**（或用手柄拖）：格子是按"内容区现在多大"算的，没有"内容需要多大"可言。
+## 位置与尺寸 = `grid_rect(矩阵, 网格区当前大小, gap, 0, 序号)`——网格区变一点，格子就按比例重算一次
+## ⇒ 拖"改尺寸"手柄时**排版不变、大小位置跟着缩放**。四周留白就是面板的 `margin`（网格区已在它里面），
+## 格间距写 `config["gap"]`（不写 = 4）。没写 `grid` 的子元素不参与网格（标题、贴角的关闭按钮照旧）。
+## 网格区的尺寸是"竖排里剩下的高"（见 `_grid_box`），所以面板的 `size` 要**定死**：没有"内容需要多大"可言。
 ## 写回的是子元素自己的 `config`（size/position）再让它应用：它内部的排版（折行、子元素）就与新尺寸
 ## 一致，之后它自己的 `_fit_size` 也算出同样的值，不会跟面板打架。
-## 被谁用：_layout_grid（由 _fit_size 与内容盒 resized 进来）。
+## 被谁用：_layout_grid（由 _fit_size 与网格区 resized 进来）。
 func _layout_matrix() -> void:
 	var m: Variant = config.get("matrix")
-	if not (m is Array) or _box == null or _box.size.x <= 0.0 or _box.size.y <= 0.0:
-		return                       # 布局还没跑（内容区还是 0）：等 _box.resized 再算
+	if not (m is Array) or _grid_box == null or _grid_box.size.x <= 0.0 or _grid_box.size.y <= 0.0:
+		return                       # 布局还没跑（网格区还是 0）：等 _grid_box.resized 再算
 	var gap: float = float(config.get("gap", 4))
 	for child in children:
 		if not child.config.has("grid"):
 			continue                 # 没写序号 = 不进网格（保持原样）
-		_place_cell(child, grid_rect(m, [_box.size.x, _box.size.y], gap, 0.0, child.config["grid"]))
+		_place_cell(child, grid_rect(m, [_grid_box.size.x, _grid_box.size.y], gap, 0.0, child.config["grid"]))
 
 
 ## **等大网格**（背包那种）：每个子元素一样大（`config["cell"]` = [宽, 高]，方形 / 长方形都行），
-## 列数由**内容区宽度**决定（能塞几列就几列）⇒ 拖宽一点，东西就"往上走"一行；行数 = 个数 / 列数 向上取整。
+## 列数由**网格区宽度**决定（能塞几列就几列）⇒ 拖宽一点，东西就"往上走"一行；行数 = 个数 / 列数 向上取整。
 ## 剩下不足一格的空位**摊进间距**（列 / 行间距变大，上界是一格的大小）——所以拖到"不够一列"时看到的是
 ## 间距变宽，直到能多塞下一列为止（那时列数 +1、间距回到最小）。这正是"多余不足一格 ⇒ gap 变多"。
-## 排不下的情况（行数 × 格子 + 间距 > 内容区高）：给内容盒一个最小高 ⇒ 面板的滚动条出现，滚着看。
-## 参与网格的子元素 = **非 free** 的（free 的挂叠加层，如关闭按钮）；顺序 = config 里 children 的顺序。
+## 排不下的情况（行数 × 格子 + 间距 > 网格区高）：给网格区一个最小高 ⇒ 面板的滚动条出现，滚着看。
+## 参与网格的子元素 = **非 free 的**（free 的挂叠加层，如关闭按钮）；顺序 = config 里 children 的顺序。
 ## 被谁用：_layout_grid。
 func _layout_uniform() -> void:
 	@warning_ignore_start("unsafe_cast")
 	var c: Variant = config.get("cell")
-	if not (c is Array) or (c as Array).size() < 2 or _box == null:
+	if not (c is Array) or (c as Array).size() < 2 or _grid_box == null:
 		return
 	var cell: Vector2 = Vector2(float((c as Array)[0]), float((c as Array)[1]))
-	if cell.x <= 0.0 or cell.y <= 0.0 or _box.size.x <= 0.0:
-		return                       # 布局还没跑（内容区还是 0）：等 _box.resized 再算
+	if cell.x <= 0.0 or cell.y <= 0.0 or _grid_box.size.x <= 0.0:
+		return                       # 布局还没跑（网格区还是 0）：等 _grid_box.resized 再算
 	var gap: float = float(config.get("gap", 4))
 	var items: Array = []
 	for child in children:
@@ -291,7 +336,7 @@ func _layout_uniform() -> void:
 			items.append(child)
 	if items.is_empty():
 		return
-	var area: Vector2 = _box.size
+	var area: Vector2 = _grid_box.size
 	var cols: int = clampi(int((area.x + gap) / (cell.x + gap)), 1, items.size())
 	var rows: int = ceili(float(items.size()) / float(cols))
 	# 空位摊进间距：`clampf(摊出来的间距, 最小间距, 一格的大小)`——不够摊就退回最小间距，
@@ -302,13 +347,13 @@ func _layout_uniform() -> void:
 	var gy: float = gap
 	if rows > 1:
 		gy = clampf((area.y - float(rows) * cell.y) / float(rows - 1), gap, cell.y + gap)
-	# 排不下 ⇒ 撑高内容盒（滚动条交给面板的滚动容器）；排得下 ⇒ 保持 0（= 撑满视口，不出滚动条）。
-	# **判断要用"视口高"（滚动容器的尺寸），不能用内容盒自己的高**：内容盒被撑高之后它自己就是那个高
+	# 排不下 ⇒ 撑高**网格区**（滚动条交给面板的滚动容器）；排得下 ⇒ 保持 0（= 撑满视口，不出滚动条）。
+	# **判断要用"视口高"（滚动容器的尺寸），不能用网格区自己的高**：网格区被撑高之后它自己就是那个高
 	# （`area.y` == need_h）⇒ 拿它比会把刚设的最小高又清成 0（实测：滚动条闪一下就没、怎么都滚不动）。
 	var sc: ScrollContainer = _panel.get_node_or_null("Margin/Scroller") as ScrollContainer
 	var view_h: float = sc.size.y if sc != null and sc.size.y > 0.0 else area.y
 	var need_h: float = float(rows) * cell.y + float(rows - 1) * gap
-	_box.custom_minimum_size = Vector2(0.0, need_h if need_h > view_h + 0.5 else 0.0)
+	_grid_box.custom_minimum_size = Vector2(0.0, need_h if need_h > view_h + 0.5 else 0.0)
 	for i in items.size():
 		var col: int = i % cols
 		@warning_ignore("integer_division")
@@ -370,6 +415,14 @@ static func grid_rect(matrix: Array, panel_size: Array, gap: float, pad: float, 
 ## 不用专门放个 Image 元素当背景：Image 属于"内容"，摆在叠加层上会盖住其它子元素。
 ## 被谁用：UIBase._apply_config。
 func _apply_background(path: String) -> void:
+	# **没写 `background` 就用全局默认底图**（`SysCfg.ui_background` + `ui_background_slice`）：
+	# 面板就是全项目的"窗口"，不给底就是引擎默认那块半透明黑（难看）。
+	# 想"这个面板不要底"就**显式写** `"background": ""`（写了空串 = 明确不要，与"没写"区分开）。
+	# **所有面板都套默认底**（顶层窗口、嵌套的网格格/子面板都算"UI"），**圆角边距（slice）照留**
+	# （用户要求：圆角半框要留）。代价是嵌套的格子要按"格宽 - 圆角边距 - margin"收窄自己的内容
+	# （如角色看板把 CELL_CHARS 调小），否则内容最小宽会超过格宽、文字被裁。
+	if path == "" and not config.has("background"):
+		path = SysCfg.ui_background
 	var style: StyleBoxTexture = _make_background(path)
 	if style == null:
 		return

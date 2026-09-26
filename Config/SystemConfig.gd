@@ -142,6 +142,19 @@ static var resize_min_size := Vector2(96, 64)
 # 找"当底的 stylebox 槽"时的顺序：哪个控件有哪个就用哪个（见 UIBase._background_slot）。
 static var ui_background_slots: Array[String] = ["panel", "normal", "background"]
 
+# ---- UI 底图 ----
+# **面板的默认底图**（`UI_Panel` 没写 `background` 就用它）：窗口是全项目的脸面，
+# 不写底就是引擎默认那块半透明黑（难看）。想换底图改这两行；**某个面板不想要底**就显式写 `"background": ""`。
+# 九宫格边距（`background_slice`，圆角不被拉伸）：默认这张是 32×32 的圆角方块，圆角 ≈ 8。
+# 别的图各有各的圆角 ⇒ 用别的图时在那一处显式写 `background_slice`（见 UIBase._make_background）。
+static var ui_background := "res://Material/Texture/UI/RoundedIcon_32.png"
+static var ui_background_slice := 8
+
+# **默认字色**（没配 `font_color` 的元素就用它，见 UIBase.reapply / UI_Label.reapply）：
+# 默认底是**浅色**的（上面那张白底圆角图）⇒ 字必须深色，引擎默认那接近白的字画在白底上等于看不见。
+# 想把界面换回"深底浅字"就调这里（一处生效），或给需要的地方显式配 `font_color`。
+static var ui_font_color_default := Color(0.13, 0.13, 0.16)
+
 # ---- UI 字体 ----
 # **全项目就这一个字体**：项目里的 ttf 文件（`Material/Fonts/` 下那三个就是同一族的三档字重）。
 # 加载不了（路径写错 / 没被编辑器导入过）就**保持引擎默认主题字体**＋控制台提醒一次，

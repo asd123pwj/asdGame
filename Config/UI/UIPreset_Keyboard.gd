@@ -15,8 +15,9 @@ extends ConfigBase
   所以它们多一列 `KEY_LOCATION_LEFT/RIGHT`；元素名也带 `_L`/`_R` 后缀，不然两个键会撞名互相覆盖。
 - x/行/尺寸照原样写 Unity 那版的表达式（`32*2`、`row1 = -36*2`…），统一再乘 SCALE（1.0 = 与 Unity 同尺寸）。
 - 整块面板可以按住拖动（按住 → `UIInteract.drag self event` 登记 → 每帧 `dragging`，和 MiniHUD 标题栏同一套）。
-- 底图：`background`（九宫格拉伸）+ 字色/字号（`font_color` / `font_size`，主题默认是接近白色的字，
-  配在浅色键底上会看不见，所以必须显式给深色）。
+- 底图：**不用写**——面板与键都是 `UI_Panel`，不写 `background` 就自带**全项目默认那张**（`SysCfg.ui_background`：
+  浅色圆角图，见 UI_Panel._apply_background）。字色/字号才要配（`font_color` / `font_size`：
+  默认字色已是深色，这里显式写出来是为了"一眼看出这些键上的字是什么色"）。
 - 以后给某个键绑操作：改它的描述文本即可，登记名 = `Keyboard/键名/Desc`
   （键名由键码生成，如 `Keyboard/Key_Q/Desc`、`Keyboard/Key_Kp8/Desc`、`Keyboard/Key_Shift_L/Desc`）。
 - 开启：独立 UI，`UIInteract.open(preset_name="Keyboard")`；
@@ -28,15 +29,12 @@ extends ConfigBase
 ## 想缩进小窗口就调小它（如 0.7 ⇒ 1120×403）。
 const SCALE: float = 1.0
 
-## 整块面板的底图 / 每个键的底图（留空 = 不打底，用默认主题样式）。
-## 九宫格切分**跟着图走**（不同图圆角不同，不能统一默认值）：这两张都是 32×32 圆角方块，圆角≈8px。
-const PANEL_BG: String = "res://Material/Texture/UI/RoundedIcon_32.png"
-const KEY_BG: String = "res://Material/Texture/UI/RoundedIcon_32.png"
-const PANEL_BG_SLICE: int = 8
-const KEY_BG_SLICE: int = 8
+## 整块面板 / 每个键的底图：**都在这里不写**——`UI_Panel` 没配 `background` 就用全项目默认那一张
+## （`SysCfg.ui_background`，浅色圆角图；九宫格边距也是全局值 `SysCfg.ui_background_slice`）。
+## 想给键盘单独换底：在这两个地方写 `"background"` / `"background_slice"`（写法见 UIPreset_Keyboard 之外的那些预设）。
 ## 键里文字的字号、字色（Unity 的 UIKeyName/UIKeyDescription 是 16；这里取 13，比原文小一点键里放得下）。
 ## 注意字号**不跟着 SCALE 走**，改 SCALE 后要自己看着调。
-## 主题重写不向下传，所以配在每个键的那两行文本身上；字色必须给（主题默认接近白色，浅底上看不见）。
+## 主题重写不向下传，所以配在每个键的那两行文本身上；字色显式给（浅底上要深色字，与全局默认同一个色）。
 const FONT_SIZE: int = 13
 const FONT_COLOR: Color = Color(0.13, 0.13, 0.16)
 ## 还没绑操作时，键的描述里显示的占位文本。
@@ -221,7 +219,7 @@ static func _build_layout() -> Dictionary:
 			"free": true,                                      # 绝对定位：键盘按坐标摆，不进父级竖排布局
 			"position": [float(k[1]) * SCALE, -row * SCALE],    # 行的负值（Unity 向下）→ 本项目的正坐标
 			"size": [key_size.x * SCALE, key_size.y * SCALE],
-			"background": KEY_BG, "background_slice": KEY_BG_SLICE,
+			# 底图不写：`UI_Panel` 自带全项目默认那张（见文件头）
 			# 这个键的身份：以后"点它 → 绑到某操作"就是拿这两个值造 InputEventKey
 			"key_code": code,
 			"key_location": location,
@@ -240,8 +238,7 @@ static func _build_layout() -> Dictionary:
 var values: Array[Array] = [
     ["Keyboard", "UI_Panel", {
         "position": [PANEL_POSITION.x, PANEL_POSITION.y],
-        "size": _layout["size"],
-        "background": PANEL_BG, "background_slice": PANEL_BG_SLICE,
+        "size": _layout["size"],                      # 底图不写：`UI_Panel` 自带全项目默认那张（见文件头）
         # 整块面板按住拖动（子元素没配这个事件时会冒泡到这里）；和 MiniHUD 标题栏是同一套。
         # 这条绑定也随时能被菜单项"启用/移除拖拽"加删（switch_value 直接开关这个列表，见 UIPreset_Menu）。
         "events": [QName.UI_event_pointer1_drag],

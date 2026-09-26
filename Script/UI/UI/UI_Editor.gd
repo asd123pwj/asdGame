@@ -59,7 +59,7 @@ func _fill() -> void:
 		return                      # 这一帧里已经被移除了（重建 / 关掉了），别铺了
 	add_child_element("Where", "UI_Label", {
 		"content": "编辑：%s" % _target_path(),
-		"font_color": Color(0.55, 0.60, 0.70),
+		"font_color": Color(0.33, 0.39, 0.50),
 	})
 	add_child_element("Rebuild", "UI_Label", {
 		"content": "[重建：重读]",
@@ -107,7 +107,7 @@ func _editor_sections(key: String, value: Variant, conf: Variant) -> Array:
 func _row(key: String, value: Variant, spec: Array) -> Array:
 	var parts: Array = _spec_parts(spec)
 	return [
-		["Key", "UI_Label", {"content": key, "font_color": Color(0.62, 0.68, 0.78)}],
+		["Key", "UI_Label", {"content": key, "font_color": Color(0.33, 0.39, 0.50)}],
 		["Value", str(parts[0]), _value_cfg(parts[1], value, key)],
 	]
 
@@ -123,14 +123,11 @@ func _value_cfg(conf: Dictionary, value: Variant, key: String = "") -> Dictionar
 	return cfg
 
 
-## 一段可折叠分组：标题是折叠交互那套；里面的编辑器写进 `items`，**首次展开时才建**。
+## 一段可折叠分组：形状**借用折叠交互那套**（`UIInteract_Fold.section_item`——与各一览的"一条一段"同一处，
+## 别在这儿再抄一遍 `size / collapsed / items / title_item` 那四行）；里面的编辑器写进 `items`，**首次展开时才建**。
 func _section(title: String, source: String, folded: bool) -> Array:
-	return ["Sec", "UI_Panel", {
-		"size": [0, 0],
-		"collapsed": folded,
-		"items": [["Ed", "UI_Editor", {"content_cmd": source}]],
-		"children": [UIInteract_Fold.title_item(title, folded)],
-	}]
+	return UIInteract_Fold.section_item("Sec", title,
+		[["Ed", "UI_Editor", {"content_cmd": source}]], folded)
 
 
 ## 字典数组里的一项 → [标题, 它那个编辑器的 target]。

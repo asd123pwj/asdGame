@@ -3,8 +3,8 @@
 ## 定位
 "技能系统"：一种**每物理帧被驱动**的角色行为(改 body.velocity 等)。由某"依赖状态"满足才进入行为队列。
 
-**想看它长什么样**：角色技能一览（外壳 `Config/UI/UIPreset_Skill.gd` + 内容元素 `Script/UI/UI/UI_Skill.gd`，
-打开就是 `UIInteract.open(preset_name="Skill")`）——一条技能一段，摊开实现类 / 依赖状态 + 现在满不满足 /
+**想看它长什么样**：角色技能一览（外壳 = `Config/UI/UIPreset_View.gd` 表里的 `Skill` 一行 + 内容元素 `Script/UI/UI/UI_Skill.gd`，
+就在"角色数据看板"里的那一格，`UIInteract.open(preset_name="RoleData")`）——一条技能一段，摊开实现类 / 依赖状态 + 现在满不满足 /
 **在不在执行队列** / 流水（加装 / 移除 / 执行了多少帧）/ 参数。
 
 ## 文件

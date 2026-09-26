@@ -40,7 +40,7 @@ extends UIInteractBase
 ##
 ## **想顺手给这个 UI 改任意一项配置**：直接写键名就行（本函数有 `config` 参数 ⇒ 走 CmdSys 的
 ## 「任意配置键」约定：没对上参数名的命名参数都进 config）——不必为了某一项专门加个参数：
-##   UIInteract.open(preset_name="Status", content_cmd="@Char/人类")
+##   UIInteract.open(preset_name="RoleData", content_cmd="@Char/人类")
 ##   UIInteract.open(@host, "Editor", @host, host=@host, content_cmd="host.config", size=[310, 210])
 ## （`host` 是个例外：它要落成**注册名**再写进 config，得在这里转一手，所以留着专门参数。）
 ##
@@ -195,12 +195,15 @@ static func _build_open(preset: UIPreset, preset_name: String, mount: UIBase, ex
 ##   ANCHOR_TOP_RIGHT          → 开在 anchor 的右上角顶点（多级菜单传触发它的那个菜单项）
 ##   ANCHOR_TOP_RIGHT_IN       → 开在 anchor **内部**的右上角（按自己宽度内缩；如面板的 "X" 按钮）
 ##   ANCHOR_BOTTOM_RIGHT_IN    → 开在 anchor **内部**的右下角（如缩放手柄）
+##   CENTER                    → 开在**屏幕正中**（按屏幕尺寸和自己的尺寸算——"占屏幕一块"的窗口，如角色数据看板）
 ## 被谁用：open。
 static func _place(ui: UIBase, anchor: UIBase) -> void:
 	if ui.control == null:
 		return
 	var strategy: int = int(ui.config.get("open_at", Enums.OpenAt.CONFIG))
-	if strategy == Enums.OpenAt.POINTER:
+	if strategy == Enums.OpenAt.CENTER:
+		ui.show_at(((UISys.screen_size() - ui.control.size) * 0.5).floor())
+	elif strategy == Enums.OpenAt.POINTER:
 		ui.show_at(InputSys.mouse_position)
 	elif strategy in [Enums.OpenAt.ANCHOR_TOP_RIGHT, Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,
 			Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN]:

@@ -13,105 +13,67 @@ extends UI_View
 ##     交互是"一帧事件"，跑过去就没了，摆出来才看得出**刚才到底触发没触发**。
 ## 段标题是摘要：`名字（实现类 ｜ 依赖：状态名 ✔ ｜ 最近执行 14:03:21）`——收起时也看得出"刚跑过没"。
 ##
-## **实时**：订两样——
+## **看哪个角色 / 铺 / 只重铺一段 / 订阅生命周期**这套骨架都在 `UI_View`（同技能一览，两边的
+## 流水行、依赖解析、参数行都是它给的公共零件）。本元素只回答它那组钩子，外加"订什么"——
 ##   · 每条交互**依赖的那个状态**（`listen_status_satisfied / unsatisfied`，用的就是
 ##     `InteractionPreset.listen` 那条依赖名 ⇒ 与"真的触发"完全同一个节点）⇒ 那一段就地重铺，✔/✘ 当场变；
 ##   · **任意交互**的通配 `Msg.listen_interaction_any_changed`（增 / 删 / 触发，见 MessageHub）——
-##     增 / 删 ⇒ 整块重铺（成员真变了）；**触发 ⇒ 不重铺**，只就地刷标题（和展开时的流水行），
-##     省得每次触发都动展开态 / 次序。
-## 开着才订、关掉全退、重开订回（骨架见 UI_View）。
-
-## 每条交互那一段：交互名 -> 段（UI_Panel）。依赖状态一变就就地重铺其中一段。
-var _secs: Dictionary = {}
-## 整块重铺前记下的"哪几段展开着"：`_fill` 按它一次建对（箭头与 collapsed 同时就位，
-## 不必"先按收起建、再展回来"——那样箭头会与实际状态不一致）。
-var _open_names: Dictionary = {}
+##     增 / 删 ⇒ 整块重铺（成员真变了）；**触发 ⇒ 只重铺那一段**（不整块重铺，省得动到别的段与次序）。
 
 
-## 清掉"交互名 → 段"的索引（重铺时由 UI_View.reload 调）。
-func _before_fill() -> void:
-	_secs.clear()
+## ---------- 铺什么（UI_View 那组钩子）----------
+func _head_title() -> String:
+	return "角色交互"
 
 
-## 铺：抬头 → 取不到角色就说清怎么给 → 一行总计 → 每条交互一段。
-func _fill() -> void:
-	_fill_head("角色交互")
-	if _fill_missing():
-		return
-	var char_: Character = shown_char()
-	if char_.interactions == null:
-		add_child_element("NoSet", "UI_Label", {"content": "这个角色还没有交互集合"})
-		return
-	var dict: Dictionary = char_.interactions.interactions
-	var names_: Array = dict.keys()
+func _missing_text() -> String:
+	return "" if _all() != null else "这个角色还没有交互集合"
+
+
+## **那张表**：一条交互一个条目。
+func _keys() -> Array:
+	var names_: Array = _all().interactions.keys()
 	names_.sort()
-	add_child_element("Count", "UI_Label", {
-		"content": "共 %d 条交互（点一条展开看实现类 / 依赖状态 / 参数；标题上的 ✔/✘ 是实时的）" % names_.size(),
-		"font_color": Color(0.55, 0.60, 0.70),
-	})
-	for interaction_name in names_:
-		_section(char_, dict[interaction_name], null, _open_names.has(str(interaction_name)))
+	return names_
 
 
-## 一条交互 = 一段：标题是摘要，内容（每一行）写成 `items` ⇒ **展开才建**（同状态一览）。
-## `old` 给了 ⇒ **原地换掉它**（位置不动，见 UIBase.replace_child_element）。
-## `open_` = 重铺时这一段原来展开没有：**标题的箭头与 collapsed 都要按它来**，再把 `items` 建回来，
-## 不然"重铺一次就把人展开的段收回去"（而且箭头还会和实际状态不一致）。
-func _section(char_: Character, preset: InteractionPreset, old: UIBase = null, open_: bool = false) -> void:
-	var sec_name: String = "S_" + str(preset.name)
-	var cfg: Dictionary = {
-		"size": [0, 0],
-		"collapsed": not open_,                  # 默认收起：交互多的时候打开也不卡
-		"items": _rows(char_, preset),
-		"children": [UIInteract_Fold.title_item(_section_title(char_, preset), not open_, _chars())],
-	}
-	var sec: UIBase = replace_child_element(old, sec_name, "UI_Panel", cfg) if old != null \
-		else add_child_element(sec_name, "UI_Panel", cfg)
-	_secs[preset.name] = sec
-	if open_:
-		UIInteract_Fold.fold(sec, false)         # 展开态：顺手把 items 建出来（fold 里做的就是这个）
+func _count_text(n: int) -> String:
+	return "共 %d 条交互（点一条展开看实现类 / 依赖状态 / 参数；标题上的 ✔/✘ 是实时的）" % n
 
 
 ## 段标题：`名字（实现类 ｜ 依赖：状态名 ✔ ｜ 最近执行 14:03:21）`。
 ## 最后那段只在**触发过**时才出现（没跑过的交互不印一串没意义的字）。
-static func _section_title(char_: Character, preset: InteractionPreset) -> String:
+func _title_of(key: String) -> String:
+	var preset: InteractionPreset = _preset(key)
+	if preset == null:
+		return key
+	var char_: Character = shown_char()
 	var extra: String = ""
-	var rec: Dictionary = char_.interactions.history.get_rec(str(preset.name))
+	var rec: Dictionary = _rec(key)
 	if rec.has("act"):
 		extra = " ｜ 最近执行 %s" % str((rec["act"] as Dictionary).get("clock", ""))
-	return "%s（%s ｜ 依赖：%s %s%s）" % [str(preset.name), str(preset.interaction_name),
+	return "%s（%s ｜ 依赖：%s %s%s）" % [key, str(preset.interaction_name),
 		str(preset.dependence_status), "✔" if _dep_hit(char_, preset.dependence_status) else "✘", extra]
 
 
 ## 段里的行：实现类 / 依赖状态（+ 解析到谁）/ 流水（最后时间）/ 参数。
-func _rows(char_: Character, preset: InteractionPreset) -> Array:
+func _rows_of(key: String) -> Array:
+	var preset: InteractionPreset = _preset(key)
+	if preset == null:
+		return []
+	var char_: Character = shown_char()
 	var built: bool = preset.interaction != null
 	var out: Array = [
 		_row("Impl", "实现类：%s%s" % [str(preset.interaction_name),
 			"" if built else "　（**没建出来**：类名写错了吗？）"],
-			Color(0.75, 0.78, 0.85) if built else Color(0.85, 0.55, 0.55)),
+			Color(0.13, 0.13, 0.16) if built else Color(0.70, 0.20, 0.20)),
 		_row("Dep", "依赖状态：%s　→　%s%s" % [str(preset.dependence_status),
 			"✔ 满足" if _dep_hit(char_, preset.dependence_status) else "✘ 未满足",
 			_resolve_note(char_, preset.dependence_status)]),
 	]
-	out.append_array(_history_rows(char_, preset))
-	out.append_array(_config_rows(preset.config))
+	out.append_array(_history_rows(_rec(key)))          # 公共零件（UI_View）
+	out.append_array(_config_rows(preset.config))       # 公共零件（UI_View）
 	return out
-
-
-## 流水那三行：加装 / 移除 / 执行（各是"最后一次"的时间）。
-## 摆出来的理由：交互触发只持续一帧，不留痕就"看不出刚才发生过"。
-func _history_rows(char_: Character, preset: InteractionPreset) -> Array:
-	var rec: Dictionary = char_.interactions.history.get_rec(str(preset.name))
-	return [
-		_row("Hist_add", "加装：%s" % _stamp(rec.get("add", null)), Color(0.62, 0.68, 0.78)),
-		_row("Hist_remove", "移除：%s" % _stamp(rec.get("remove", null)), Color(0.62, 0.68, 0.78)),
-		_row("Hist_act", "执行：%s" % _stamp(rec.get("act", null)), Color(0.70, 0.75, 0.62)),
-	]
-
-
-## （`_stamp`（流水一笔）、`_dep_of` / `_dep_hit` / `_resolve_note`（依赖解析与满不满足）、
-##   `_config_rows`（参数）这几个零件已挪到 `UI_View`：技能一览与这边**逐字相同**，共用一份。）
 
 
 ## ---------- 实时：订"每条交互依赖的状态" + "任意交互"通配（骨架见 UI_View）----------
@@ -119,55 +81,40 @@ func _history_rows(char_: Character, preset: InteractionPreset) -> Array:
 ## 带 `@identity` 的也照样能跟着身份换绑（那套迁移在 MessageHub 里）。
 func _listen(char_: Character) -> void:
 	for preset: InteractionPreset in char_.interactions.interactions.values():
-		var on_hit: Callable = func(_msg): _on_dep_changed(char_, str(preset.name))
+		var on_hit: Callable = func(_msg): _refresh_section(str(preset.name))
 		_watch(Msg.listen_status_satisfied(char_, preset.dependence_status, on_hit), on_hit)
-		var on_lost: Callable = func(_msg): _on_dep_changed(char_, str(preset.name))
+		var on_lost: Callable = func(_msg): _refresh_section(str(preset.name))
 		_watch(Msg.listen_status_unsatisfied(char_, preset.dependence_status, on_lost), on_lost)
-	var on_any: Callable = func(msg): _on_any_interaction(char_, msg)
+	var on_any: Callable = func(msg): _on_any(char_, msg)
 	_watch(Msg.listen_interaction_any_changed(char_, on_any), on_any)
 
 
-## 某条交互的依赖状态变了 ⇒ **只重铺那一段**，并保持它原来展开没展开。
-## 找不到那条交互（被删了）/ 还没铺过 ⇒ 整块重铺（成员变过，重铺最省事）。
-func _on_dep_changed(char_: Character, interaction_name: String) -> void:
-	var preset: InteractionPreset = char_.interactions.interactions.get(interaction_name)
-	if preset == null or not _secs.has(interaction_name):
-		reload()
-		return
-	var sec: UIBase = _secs[interaction_name]
-	var open_: bool = not bool(sec.config.get("collapsed", true))
-	_section(char_, preset, sec, open_)
-
-
 ## 交互被增 / 删 / 触发（通配消息，payload = `[交互名, 动作]`，见 `Msg.send_interaction_any_changed`）：
-##   · **触发（act）⇒ 只就地刷标题那一行字**（展开着的话连流水行一起刷）——不重铺，
-##     省得每次触发都动展开态 / 次序（以前这里整块重铺，于是"每次触发都把展开的段收回去"；
+##   · **触发（act）⇒ 只重铺那一段**（保留展开态）——标题的"最近执行"与展开后的流水行当场变新。
+##     不整块重铺：那会把其它段一起重建（以前就是这么写的 ⇒ "每次触发都把展开的段收回去"，
 ##     测试循环每秒触发一次，看着就是"展开不到一秒自动收回"）；
 ##   · 增 / 删 ⇒ 成员真的变了，整块重铺（`reload` 会把原来展开的段展回来）。
-func _on_any_interaction(char_: Character, msg: Variant) -> void:
+func _on_any(char_: Character, msg: Variant) -> void:
 	if msg is Array and (msg as Array).size() >= 2 and str((msg as Array)[1]) == "act":
-		_on_act(char_, str((msg as Array)[0]))
+		_refresh_section(str((msg as Array)[0]))
 		return
 	reload()
 
 
-## 触发一次 ⇒ **只就地重铺那一段**（保留它展开没展开）：标题的"最近执行"与展开后的流水行都当场变新。
-## 不整块重铺：那会把其它段一起重建（以前就是这么写的 ⇒ "每次触发都把展开的段收回去"，
-## 测试循环每秒触发一次，看着就是"展开不到一秒自动收回"）。
-func _on_act(char_: Character, interaction_name: String) -> void:
-	var preset: InteractionPreset = char_.interactions.interactions.get(interaction_name)
-	if preset == null or not _secs.has(interaction_name):
-		return
-	var sec: UIBase = _secs[interaction_name]
-	_section(char_, preset, sec, not bool(sec.config.get("collapsed", true)))
+## ---------- 取数据 ----------
+## 这个角色的交互集合（没有就给 null，`_missing_text` 靠它说话）。
+func _all() -> Interactions:
+	var char_: Character = shown_char()
+	return char_.interactions if char_ != null else null
 
 
-## 重铺前记下"哪几段展开着"（给 `_fill` 用）——
-## 不然任何一次整块重铺（交互被增 / 删）都会把用户展开的段全收回去。
-func reload() -> void:
-	_open_names.clear()
-	for key in _secs.keys():
-		var sec: UIBase = _secs[key]
-		if is_instance_valid(sec) and not bool(sec.config.get("collapsed", true)):
-			_open_names[key] = true
-	super.reload()
+## 某条交互那份共享预设。
+func _preset(key: String) -> InteractionPreset:
+	var all: Interactions = _all()
+	return all.interactions.get(key) if all != null else null
+
+
+## 某条交互的流水记录（`{add / remove / act: {clock, text}}`，没记过就是空字典）。
+func _rec(key: String) -> Dictionary:
+	var all: Interactions = _all()
+	return all.history.get_rec(key) if all != null else {}

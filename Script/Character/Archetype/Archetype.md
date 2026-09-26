@@ -3,8 +3,8 @@
 ## 定位
 "种族/角色定义"的组合根：描述一个角色由哪些模块预设组成（不含模块内部实现）。只存各模块的**预设名数组**，不落地任何能力本身。
 
-**想看它长什么样**：角色原型一览（外壳 `Config/UI/UIPreset_Archetype.gd` + 内容元素 `Script/UI/UI/UI_Archetype.gd`，
-打开就是 `UIInteract.open(preset_name="Archetype")`）——一个字段一段（`buffs` / `statuses` / … / `packages`），
+**想看它长什么样**：角色原型一览（外壳 = `Config/UI/UIPreset_View.gd` 表里的 `Archetype` 一行 + 内容元素 `Script/UI/UI/UI_Archetype.gd`，
+就在"角色数据看板"里的那一格，`UIInteract.open(preset_name="RoleData")`）——一个字段一段（`buffs` / `statuses` / … / `packages`），
 段里一行一个预设名，段标题是 `字段（N 项）`。**不实时**（原型只在角色初始化那刻生效一次）⇒ 点 `[刷新]` / 换人时才重读。
 注意看到的是**合并 `packages` 之后**的清单。
 

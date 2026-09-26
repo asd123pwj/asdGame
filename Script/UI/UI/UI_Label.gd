@@ -15,6 +15,9 @@ extends UIBase
 ##   · `max_chars` / `max_width` 是宽度上限 ⇒ **宽 = min(内容自然宽, 上限)**：短内容不撑满、
 ##     超了才折行（见 `_content_size`；RichTextLabel 本来就自动换行，**折行后的 meta 命中依旧跟手**）；
 ##     不配就交给容器。
+##   · `wrap: true` = **宽度完全交给容器**（自己那份宽不算数，面板宽由别的元素定——折行正文用它）；
+##     `fill_width: true` = **顶满容器**（自己那份宽仍算数、当最小宽：容器更宽就顶满，更窄也不会把字折碎）
+##     ——窗口标题栏（`UIInteract_Fold.title_item`）用的就是它：标题条横跨整块面板，却不把面板撑开。
 ## 字体走 `normal_font` / `normal_font_size` / `default_color`（RichTextLabel 的主题项名与 Label 不同，
 ## 见 reapply）。
 
@@ -75,8 +78,10 @@ func reapply() -> void:
 		SysCfg.ui_font_size_default)
 	for item in ["normal_font_size", "bold_font_size", "italics_font_size", "mono_font_size"]:
 		rtl.add_theme_font_size_override(item, font_size)
-	if config.has("font_color"):
-		rtl.add_theme_color_override("default_color", config["font_color"])
+	# 字色：没配就用**全局默认字色**（`SysCfg.ui_font_color_default`，深色；见 UIBase.reapply 的说明）。
+	# RichTextLabel 的主题项叫 `default_color`（与 Label 的 `font_color` 不是一个名字），基类那一手它读不到 ⇒ 这里必须再写一遍。
+	rtl.add_theme_color_override("default_color",
+		config.get("font_color", SysCfg.ui_font_color_default))
 	# **链接不画下划线**：`[url]` 默认带一条下划线（标题里的 ▾ 箭头、拖动文字上都不好看）。
 	# 这个版本里链接没有单独的"链接色"主题项（颜色项只有 default_color / selection 那几个），
 	# 下划线是**常量 `underline_alpha`** 管的 ⇒ 0 = 看不见（`[u]` 也一并没了；本项目不用 `[u]`）。
@@ -93,9 +98,22 @@ func reapply() -> void:
 ## 报出 1×N 行的最小尺寸，而 `_fit_size` 会把它固定成元素尺寸 ⇒ **一行文字变成一列高塔**
 ## （实测：快捷名 "Key J" 变 1×120，五个元素之间因此空出一大段）。
 ## 被谁用：UIBase._fit_size。
-## 宽度听容器的两种情况（见 `_in_fixed_panel` 与 `wrap`）：见 `_content_size` / UIBase._fit_size。
+## 宽度听容器的三种情况（见 `_in_fixed_panel` / `wrap` / `fill_width`）：见 `_content_size` / UIBase._fit_size。
 func _width_from_parent() -> bool:
-	return bool(config.get("wrap", false)) or _in_fixed_panel()
+	return bool(config.get("wrap", false)) or bool(config.get("fill_width", false)) or _in_fixed_panel()
+
+
+## 宽度交给容器时，**自己那份宽还算不算数**（见 UIBase._keep_min_width）：`fill_width` = 算（顶满容器）。
+func _keep_min_width() -> bool:
+	return bool(config.get("fill_width", false))
+
+
+## 自己那份宽：**不折行**时的自然宽，受 `max_chars` / `max_width` 上限约束。
+## 被谁用：_content_size（"配上限"与"顶满容器"两档的宽度都是它，别再各算一份）。
+func _own_width(ctrl: Control) -> float:
+	var cap: float = _max_width_px(ctrl)
+	var plain: float = _plain_width(ctrl)
+	return plain if cap <= 0.0 else minf(plain, cap)
 
 
 func _content_size() -> Vector2:
@@ -103,14 +121,14 @@ func _content_size() -> Vector2:
 	# custom_minimum_size 的旧值也算进来 ⇒ 一旦某帧因为"宽还没定"报高了，这个高就永远粘住
 	# （实测：快捷名 "Key J" 卡在 1×120 五行高，怎么刷新都不掉）。
 	var need: Vector2 = control.get_minimum_size()
-	# **宽度听容器**（见 `_width_from_parent`）⇒ 报 0：不去撑容器，宽度由容器给；
+	# **宽度听容器**（见 `_width_from_parent`）⇒ 宽度由容器给、不去撑容器；
 	# 高度按**给到的那点宽**折行算（宽一变 resized → _refit 再算）。
-	# 这是"面板尺寸定、内容跟着面板走"的那一半；反过来（内容为准）走下面的分支。
+	# 报 0（`wrap`：面板宽由别人定）还是报自己那份（`fill_width`：顶满容器），见 `_keep_min_width`。
 	if _width_from_parent():
-		return Vector2(0.0, need.y)
+		return Vector2(_own_width(control) if _keep_min_width() else 0.0, need.y)
 	var cap: float = _max_width_px(control)
 	if cap > 0.0:
-		return Vector2(minf(_plain_width(control), cap), need.y)
+		return Vector2(_own_width(control), need.y)
 	if control.size.x > 0.0:
 		return Vector2(control.size.x, need.y)
 	return Vector2(need.x, _row_height(control))

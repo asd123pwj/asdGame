@@ -12,12 +12,13 @@ extends UI_View
 ## 所以"有 buff 但还没算出属性"的类别也会列出来，不会漏。
 ##
 ## **段标题是摘要**（收起时也有信息）：`生命（CUR 2 ｜ buff 2 个 ｜ 改动：Init）`；
-## 展开才建那几行（折叠交互的 `items` 按需建，类别多也不卡）。
+## 展开才建那几行（`items` 按需建，类别多也不卡）。
 ##
-## **实时**：订两条就够——"任何属性变化"（`AnyChanged`，payload = 类别 ⇒ **只重铺那一段**）
-## 与"**任意 buff** 变化"（`Msg.listen_buff_any_changed`，通配节点，见 MessageHub）：
-## buff 的具体消息是按**名字**分节点的，没有通配时只能订"当前已知的那些"，运行期新加的收不到。
-## 开着才订、关掉全退、重开订回（骨架见 UI_View）。
+## **看哪个角色 / 铺 / 只重铺一段 / 订阅生命周期**这套骨架都在 `UI_View`：本元素只回答它那组钩子，
+## 外加"订什么"——订两条就够：
+##   · "任何属性变化"（`AnyChanged`，payload = 类别 ⇒ **只重铺那一段**）；
+##   · "**任意 buff** 变化"（`Msg.listen_buff_any_changed`，通配节点，见 MessageHub）：buff 的具体消息是按
+##     **名字**分节点的，没有通配时只能订"当前已知的那些"，运行期新加的收不到 ⇒ 它整块重铺。
 
 ## 值域的显示顺序（见 Enums.ValueType / StrValueType）。
 const VALUE_ORDER: Array[int] = [
@@ -28,41 +29,83 @@ const VALUE_ORDER: Array[int] = [
 	Enums.ValueType.MULTIPLIER,
 ]
 
-## 每个类别那一段：类别 -> 段（UI_Panel）。属性变化时就地重铺其中一段。
-var _secs: Dictionary = {}
-## 整块重铺前记下的"哪几段展开着"：`_fill` 按它一次建对（箭头与 collapsed 同时就位）。
-var _open_names: Dictionary = {}
+
+## ---------- 铺什么（UI_View 那组钩子）----------
+func _head_title() -> String:
+	return "角色属性"
 
 
-## 清掉"类别 → 段"的索引（重铺时由 UI_View.reload 调）。
-func _before_fill() -> void:
-	_secs.clear()
+func _missing_text() -> String:
+	return "" if _all() != null else "这个角色还没有属性系统"
 
 
-## 铺：抬头 → 取不到角色就说清怎么给 → 一行总计 → 每个类别一段。
-func _fill() -> void:
-	_fill_head("角色属性")
-	if _fill_missing():
-		return
+## **那张表**：一个类别一个条目。
+func _keys() -> Array:
+	return _categories()
+
+
+func _count_text(n: int) -> String:
+	return "共 %d 个类别 ｜ %d 个 buff（点类别展开看当前值 / 改动前 / 改动来源 / 参与 Buff）" \
+		% [n, _buff_names().size()]
+
+
+## 段标题：`类别（CUR 2 ｜ buff 2 个 ｜ 改动：Init）`——收起时也能一眼看出这个类别值多少。
+func _title_of(key: String) -> String:
+	var attrs: Attributes = _all()
+	var parts: Array = []
+	var values: Dictionary = attrs.attributes.get(key, {})
+	if values.has(Enums.ValueType.CUR):
+		parts.append("CUR %s" % str(values[Enums.ValueType.CUR]))
+	var n: int = 0
+	for by_name: Dictionary in (attrs.buffs.get(key, {}) as Dictionary).values():
+		n += by_name.size()
+	if n > 0:
+		parts.append("buff %d 个" % n)
+	var how: String = str(attrs.attributes_changed_by_how.get(key, ""))
+	if how != "" and how != "Init":
+		parts.append("改动：%s" % how)
+	return key if parts.is_empty() else "%s（%s）" % [key, " ｜ ".join(parts)]
+
+
+## 一段里的所有行：当前值 / 改动前 / 最近改动（三个视角各一行）+ 参与 Buff（**一行一个 buff**）。
+func _rows_of(key: String) -> Array:
+	var attrs: Attributes = _all()
+	var out: Array = [
+		_row("Now", "当前值：%s" % _value_text(attrs.attributes.get(key, {}))),
+		_row("Before", "改动前：%s" % _value_text(attrs.attributes_before.get(key, {})),
+			Color(0.33, 0.39, 0.50)),
+		_row("Changed", "最近改动：谁=%s  怎么改=%s" % [
+			_brief(RegSys.name_of(attrs.attributes_changed_by_who.get(key))),
+			_brief(attrs.attributes_changed_by_how.get(key))]),
+	]
+	out.append_array(_buff_rows(key))
+	return out
+
+
+## ---------- 实时：订两条通配（骨架见 UI_View）----------
+## · 任何属性变化（payload = 类别）⇒ 只重铺那一段；
+## · **任意 buff** 变化（加 / 减 / 消耗 / 耗尽都在这个通配节点上）⇒ 整块重铺
+##   （buff 一变成员与"参与 Buff"那行都会变，重铺最省事；这类事件不频繁）。
+func _listen(char_: Character) -> void:
+	var on_attr: Callable = func(msg): _refresh_section(str(msg))
+	_watch(Msg.listen_any_attr_changed(char_, on_attr), on_attr)
+	var on_buff: Callable = func(_msg): reload()
+	_watch(Msg.listen_buff_any_changed(char_, on_buff), on_buff)
+
+
+## ---------- 取数据 ----------
+## 这个角色的属性系统（没有就给 null，`_missing_text` 靠它说话）。
+func _all() -> Attributes:
 	var char_: Character = shown_char()
-	if char_.attrs == null:
-		add_child_element("NoSet", "UI_Label", {"content": "这个角色还没有属性系统"})
-		return
-	var cats: Array = _categories(char_)
-	add_child_element("Count", "UI_Label", {
-		"content": "共 %d 个类别 ｜ %d 个 buff（点类别展开看当前值 / 改动前 / 改动来源 / 参与 Buff）"
-			% [cats.size(), _buff_names(char_).size()],
-		"font_color": Color(0.55, 0.60, 0.70),
-	})
-	for category in cats:
-		_section(char_, str(category), null, _open_names.has(str(category)))
+	return char_.attrs if char_ != null else null
 
 
 ## 类别 = 四个字典与 buffs 的键**取并集**（属性是懒算的，"有 buff 还没算出值"的类别也要列）。
-static func _categories(char_: Character) -> Array:
+func _categories() -> Array:
+	var attrs: Attributes = _all()
 	var out: Array = []
-	for dict: Dictionary in [char_.attrs.attributes, char_.attrs.attributes_before,
-			char_.attrs.buffs, char_.attrs.attributes_changed_by_who, char_.attrs.attributes_changed_by_how]:
+	for dict: Dictionary in [attrs.attributes, attrs.attributes_before,
+			attrs.buffs, attrs.attributes_changed_by_who, attrs.attributes_changed_by_how]:
 		for key in dict.keys():
 			if not out.has(key):
 				out.append(key)
@@ -70,10 +113,10 @@ static func _categories(char_: Character) -> Array:
 	return out
 
 
-## 所有 buff 名（`buffs` 是三层：类别 → 值域 → buff 名）。给"总计"那行与订阅名单用。
-static func _buff_names(char_: Character) -> Array:
+## 所有 buff 名（`buffs` 是三层：类别 → 值域 → buff 名）。给"总计"那行用。
+func _buff_names() -> Array:
 	var out: Array = []
-	for by_type: Dictionary in char_.attrs.buffs.values():
+	for by_type: Dictionary in _all().buffs.values():
 		for by_name: Dictionary in by_type.values():
 			for buff_name in by_name.keys():
 				if not out.has(buff_name):
@@ -81,61 +124,12 @@ static func _buff_names(char_: Character) -> Array:
 	return out
 
 
-## 一个类别 = 一段：标题是摘要，内容（每一行）写成 `items` ⇒ **展开才建**。
-## `old` 给了 ⇒ **原地换掉它**（位置不动，见 UIBase.replace_child_element）。
-## `open_` = 重铺时这一段原来展开没有（标题箭头与 collapsed 都按它来，再把 `items` 建回来）。
-func _section(char_: Character, category: String, old: UIBase = null, open_: bool = false) -> void:
-	var sec_name: String = "S_" + category
-	var cfg: Dictionary = {
-		"size": [0, 0],
-		"collapsed": not open_,                  # 默认收起：类别多的时候打开也不卡
-		"items": _rows(char_, category),
-		"children": [UIInteract_Fold.title_item(_section_title(char_, category), not open_, _chars())],
-	}
-	var sec: UIBase = replace_child_element(old, sec_name, "UI_Panel", cfg) if old != null \
-		else add_child_element(sec_name, "UI_Panel", cfg)
-	_secs[category] = sec
-	if open_:
-		UIInteract_Fold.fold(sec, false)         # 展开态：顺手把 items 建出来
-
-
-## 段标题：`类别（CUR 2 ｜ buff 2 个 ｜ 改动：Init）`——收起时也能一眼看出这个类别值多少。
-static func _section_title(char_: Character, category: String) -> String:
-	var parts: Array = []
-	var values: Dictionary = char_.attrs.attributes.get(category, {})
-	if values.has(Enums.ValueType.CUR):
-		parts.append("CUR %s" % str(values[Enums.ValueType.CUR]))
-	var n: int = 0
-	for by_name: Dictionary in (char_.attrs.buffs.get(category, {}) as Dictionary).values():
-		n += by_name.size()
-	if n > 0:
-		parts.append("buff %d 个" % n)
-	var how: String = str(char_.attrs.attributes_changed_by_how.get(category, ""))
-	if how != "" and how != "Init":
-		parts.append("改动：%s" % how)
-	return category if parts.is_empty() else "%s（%s）" % [category, " ｜ ".join(parts)]
-
-
-## 一段里的所有行：当前值 / 改动前 / 最近改动（三个视角各一行）+ 参与 Buff（**一行一个 buff**）。
-func _rows(char_: Character, category: String) -> Array:
-	var out: Array = [
-		_row("Now", "当前值：%s" % _value_text(char_.attrs.attributes.get(category, {}))),
-		_row("Before", "改动前：%s" % _value_text(char_.attrs.attributes_before.get(category, {})),
-			Color(0.62, 0.68, 0.78)),
-		_row("Changed", "最近改动：谁=%s  怎么改=%s" % [
-			_brief(RegSys.name_of(char_.attrs.attributes_changed_by_who.get(category))),
-			_brief(char_.attrs.attributes_changed_by_how.get(category))]),
-	]
-	out.append_array(_buff_rows(char_, category))
-	return out
-
-
 ## **参与 Buff：一行一个**，把 `BuffPreset` 那几个字段摊开——
 ## `值域  名字  +10  次数：不限` / `值域  名字  =Health 的当前值  次数：已用 1 / 上限 2`。
 ## 对应：`value_type` / `name` / `method + value` / `max_uses + uses[这个角色]`；
-## `category` 不用再写一遍——这一段本身就是那个类目（见 _section）。
-func _buff_rows(char_: Character, category: String) -> Array:
-	var by_type: Dictionary = char_.attrs.buffs.get(category, {})
+## `category` 不用再写一遍——这一段本身就是那个类目（见 `_rows_of`）。
+func _buff_rows(category: String) -> Array:
+	var by_type: Dictionary = _all().buffs.get(category, {})
 	var out: Array = []
 	var n: int = 0
 	for vt in VALUE_ORDER:
@@ -144,11 +138,11 @@ func _buff_rows(char_: Character, category: String) -> Array:
 			var buff: BuffPreset = by_name[buff_name]
 			n += 1
 			out.append(_row("B_%s_%d" % [_value_name(vt), n],
-				"%s   %s   %s   %s" % [_value_name(vt), str(buff.name), _effect_text(buff), _uses_text(buff, char_)],
-				Color(0.72, 0.78, 0.62)))
+				"%s   %s   %s   %s" % [_value_name(vt), str(buff.name), _effect_text(buff), _uses_text(buff)],
+				Color(0.36, 0.44, 0.28)))
 	if out.is_empty():
 		return [_row("NoBuff", "参与 Buff：（无）", Color(0.45, 0.48, 0.55))]
-	out.push_front(_row("BuffHead", "参与 Buff（%d 个）" % n, Color(0.62, 0.68, 0.78)))
+	out.push_front(_row("BuffHead", "参与 Buff（%d 个）" % n, Color(0.33, 0.39, 0.50)))
 	return out
 
 
@@ -160,10 +154,10 @@ static func _effect_text(buff: BuffPreset) -> String:
 
 ## 一个 buff "用掉几次"：`max_uses <= 0` = 不限；否则 `已用 x / 上限 y（剩 z）`。
 ## `uses` 是**按角色**记的（见 BuffPreset.uses），所以这里要那个角色。
-static func _uses_text(buff: BuffPreset, char_: Character) -> String:
+func _uses_text(buff: BuffPreset) -> String:
 	if buff.max_uses <= 0:
 		return "次数：不限"
-	var used: int = int(buff.uses.get(char_, 0))
+	var used: int = int(buff.uses.get(shown_char(), 0))
 	return "次数：已用 %d / 上限 %d（剩 %d）" % [used, buff.max_uses, maxi(0, buff.max_uses - used)]
 
 
@@ -190,36 +184,3 @@ static func _value_name(value_type: Variant) -> String:
 	if value_type is int and value_type >= 0 and value_type < Enums.StrValueType.size():
 		return Enums.StrValueType[value_type]
 	return str(value_type)
-
-
-## ---------- 实时：订两条通配（骨架见 UI_View）----------
-## · 任何属性变化（payload = 类别）⇒ 只重铺那一段；
-## · **任意 buff** 变化（加 / 减 / 消耗 / 耗尽都在这个通配节点上）⇒ 整块重铺
-##   （buff 一变成员与"参与 Buff"那行都会变，重铺最省事；这类事件不频繁）。
-func _listen(char_: Character) -> void:
-	var on_attr: Callable = func(msg): _on_attr_changed(char_, msg)
-	_watch(Msg.listen_any_attr_changed(char_, on_attr), on_attr)
-	var on_buff: Callable = func(_msg): reload()
-	_watch(Msg.listen_buff_any_changed(char_, on_buff), on_buff)
-
-
-## 某属性变了（payload = 类别）⇒ **只重铺那一段**，并保持它原来展开没展开。
-func _on_attr_changed(char_: Character, msg: Variant) -> void:
-	var category: String = str(msg)
-	if not _secs.has(category):
-		reload()                          # 还没铺过的类别（第一次算出来）⇒ 整块重铺最省事
-		return
-	var sec: UIBase = _secs[category]
-	var open_: bool = not bool(sec.config.get("collapsed", true))
-	_section(char_, category, sec, open_)
-
-
-## 重铺前记下"哪几段展开着"（给 `_fill` 用）——
-## 不然一次整块重铺（buff 增 / 减走的通配）就把用户展开的段全收回去。
-func reload() -> void:
-	_open_names.clear()
-	for key in _secs.keys():
-		var sec: UIBase = _secs[key]
-		if is_instance_valid(sec) and not bool(sec.config.get("collapsed", true)):
-			_open_names[key] = true
-	super.reload()

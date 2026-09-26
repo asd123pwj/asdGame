@@ -127,10 +127,11 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - **运行时增改**：`add_child_element(child_name, ui_class, child_config)` 加子元素（内部交给 `UISys.register_child` 登记，登记名 = `挂载点登记名/名字`，登记后才可被指针命中）；对调两项配置用 `Utils.swap`（`Utils.gd`，两条路径写出来）、`switch_value(键, 值)` 在一个列表里"有就删、没有就加"（两者都是开关式按钮的底座：菜单的"启用关闭按钮"用前者、"启用拖拽"用后者——直接开关宿主 `events` 里的那一条绑定，不必预摆两套）。"关闭按钮"连新指令都不需要：它是普通预设 `CloseButton`，用 `open` / `close` 开关。
 - **开关式按钮（可选框）**：不需要专门元素——同一个元素上放两套配置（`events` / `content` 与 `events_2` / `content_2`），点击时"做事 + `Utils.swap` 对调"，下次点击自然走另一套；**只加减一项**（如给宿主加/减一条绑定）用 `switch_value`，连第二套配置都不用写。事件串里多条命令用 `\v` 分隔（见 `CmdSys.execute`）。
 - **改完 config 让界面跟上**：`refresh(键)` 管 content / visible（子类刷到控件上）；`reapply()` 管"**只有应用时才生效**"的那几项（`size` / `font_size` / `font_color` / `background`）。**两者都不碰 position**——位置会被拖动这类运行期行为偏离，改别的键不该把窗口拽回配置里那个位置；要按配置摆回去得显式 `refresh("position")`。编辑器改配置（`UI_Editor`）就是 `reapply()` → `refresh()` → `_fit_size()` 三步。
-- **config 可选属性**：`position` / `size` / `content` / `children` / `events` / `visible` / `free`（自由定位：挂到叠加层的非容器挂载点，`position`/`size` 不被父级布局覆盖，用于"右上角的关闭按钮""菜单""键盘的每个键"这类元素）；`collapsed`（父元素）/ `collapse_keep`（子元素自己标"收起时留我"）不是 UIBase 读的，是**收起/展开交互**（`UIInteract.fold`）读的，见"长内容与收回 / 展开"一节。**配置子元素与运行时加的子元素共用这条规则**（`_build_children` 与 `add_child_element` 一致）：配了 `free` 就进叠加层任意摆，没配才进内容盒（容器类 = 竖排）。
+- **config 可选属性**：`position` / `size` / `size_ratio` / `content` / `children` / `events` / `visible` / `free`（自由定位：挂到叠加层的非容器挂载点，`position`/`size` 不被父级布局覆盖，用于"右上角的关闭按钮""菜单""键盘的每个键"这类元素）；`collapsed`（父元素）/ `collapse_keep`（子元素自己标"收起时留我"）不是 UIBase 读的，是**收起/展开交互**（`UIInteract.fold`）读的，见"长内容与收回 / 展开"一节。**配置子元素与运行时加的子元素共用这条规则**（`_build_children` 与 `add_child_element` 一致）：配了 `free` 就进叠加层任意摆，没配才进内容盒（容器类 = 竖排）。
+  - **`size_ratio` = [宽比, 高比]，尺寸按屏幕算**（`UISys.screen_size`；写了它就以它为准，`size` 不看）：`[0.75, 0.75]` 在 1920×1080 上是 1440×810、在 2560×1440 上是 1920×1080——"占屏幕多少"这件事不该跟着分辨率改数字（角色数据看板用的就是它）。
   - `font_size`（字号）/ `font_color`（字色）与 `background`（背景图路径）是**公共属性**（都在 `UIBase._apply_config` 里读，不是某个元素独有）：
-    - `font_size` / `font_color` 作用在**配它的那个控件**上——主题重写不向下传，所以要小字/深色字就配在真正显示文本的元素上。**不配字色就是主题默认（接近白色）**，配在浅色底图上会看不见。
-    - `background`（九宫格底图）由 `UIBase._apply_background` 统一实现：找本元素控件的 stylebox 槽套上去（槽名由 `_background_slot` 按 `panel → normal → background` 取第一个存在的）。**实测各元素对应哪个槽**：
+    - `font_size` / `font_color` 作用在**配它的那个控件**上——主题重写不向下传，所以要小字/深色字就配在真正显示文本的元素上。**不配字色就用全局默认深色**（`SysCfg.ui_font_color_default`）：面板默认底是**浅色**图（见下 `background`），引擎默认那接近白的字画在白底上等于看不见，所以默认深色。要"深底浅字"就调那个全局值、或给这一处显式配 `font_color`。
+    - `background`（九宫格底图）由 `UIBase._apply_background` 统一实现：找本元素控件的 stylebox 槽套上去（槽名由 `_background_slot` 按 `panel → normal → background` 取第一个存在的）。**`UI_Panel` 没写 `background` 就用全局默认底图**（`SysCfg.ui_background` + `ui_background_slice`：全项目窗口长一个样；想换底图改这两个全局值，某个面板不要底显式写 `"background": ""`）。**所有面板都套默认底**（顶层窗口、嵌套的网格格 / 子面板都算"UI"），**圆角边距（slice）照留**（用户要求：圆角半框要留）。代价：底图的圆角边距（默认 8px 一圈）占掉内容宽度，**每嵌套一层面板都要从可用宽里再扣一圈**——嵌套的格子要把内容按"格宽 − 各层圆角边距 − margin"收窄（角色看板用 `CELL_CHARS` 反推；实测不收窄时内容 min 超过格宽，文字溢出右邻格）。**实测各元素对应哪个槽**：
 
       | 元素 | 内部控件 | 可用的槽 |
       |---|---|---|
@@ -139,7 +140,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
       | `UI_Image` | TextureRect | **无**（TextureRect 本身不画 StyleBox，配了只警告一次、不画） |
 
       控件一个槽都没有时警告一次、不画——要"带底"就换有槽的元素（文字带底 = `UI_Panel` 里放 `UI_Label`，键盘的键就是这么做的）。**整块底图走它，不要放 Image 元素当背景**——Image 属于内容，摆在叠加层上会盖住别的子元素。
-    - 九宫格边距 = `background_slice`（**每张底图各自给**，跟着图的圆角走；不写 = 0 = 整张拉伸）。
+    - 九宫格边距 = `background_slice`（**每张底图各自给**，跟着图的圆角走；不写 = 全局默认 `SysCfg.ui_background_slice`，默认那张就是按它量的；要"整张拉伸"显式写 0）。
   - **面板宽度**：默认**跟着内容走**（`size[0]` / `scroll[0]` 写 0 = 该维不限）；要限制高度就写
     `scroll: [0, 上限高]`（宽不限、高到上限就进滚动）。写死宽 / 高之后，**装不下的内容不会画到面板外**：
     竖向进去滚动（自动出滚动条），横向不滚（子元素按视口宽排 ⇒ 长文本自己在框里换行）。
@@ -206,30 +207,51 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | `UIInteract.set_top @self.parent` | 把 target 所在的**窗口**（沿 `parent` 爬到最外层那个 UI）提到最前：只需一句 `control.move_to_front()`——命中已与绘制同序（见下），不用再维护登记顺序。**一般不用写**：`PointerDetect.key` 里"点它"就会自动调（`open` 也会调，新开的排最前） | 点一下谁谁在最上面 |
 | `UIInteract.close([宿主], [预设名])` | 关闭（隐藏）：**不写预设名 = 关 target 自己**；写了 = 关"挂在 target 下的那个预设 UI"（按"挂载点 + 预设名"查，没开过就什么都不做）。与 `open` 成对：给某个 UI 加/减东西 = 开/关一个预设 | 关闭"按钮"、开关式按钮的"移除"一侧：`UIInteract.close(宿主, "CloseButton")` |
 | `UIInteract.toggle([目标], [预设名])` | **开关**：现在显示着就关、否则开（开/关都走本文件那两条，复用与摆位照旧）。键状态只在"满足变化"时给一次，写两条指令做不到判断该开还是该关，所以要有它 | `J → UIInteract.toggle(preset_name="TestShow")` |
-| `UIInteract.fold(target, collapsed=?)` / `UIInteract.unfold(target)` / `UIInteract.toggle_fold(target)` | **收起 / 展开**（隐藏子元素，不是关闭）：收起只留子元素里**自己标了 `collapse_keep = true`** 的，其余 `hide()`；不可见的子元素不参与布局 ⇒ 容器按内容收缩（"高随内容"的面板自己变短），实例还在。状态记在 `config["collapsed"]`。见"长内容与收回 / 展开" | 收回按键：`UIInteract.toggle_fold(@self.parent)`\v`Utils.swap` 换文字 |
+| `UIInteract.fold(target, collapsed=?)` / `UIInteract.unfold(target)` / `UIInteract.toggle_fold(target)` | **收起 / 展开**（隐藏子元素，不是关闭）：收起只留子元素里**自己标了 `collapse_keep = true`** 的，其余 `hide()`；不可见的子元素不参与布局 ⇒ 容器按内容收缩，**连"尺寸定死"的面板也缩成标题条**（见"长内容与收回 / 展开"），实例还在。状态记在 `config["collapsed"]`。收起 / 展开会改变内容 ⇒ 内部会重算一次尺寸（网格面板的"内容盒"是普通 Control，不发最小尺寸信号，光靠信号收不掉） | 收回按键：`UIInteract.toggle_fold(@self.parent)`\v`Utils.swap` 换文字 |
 | （UI 编辑器没有专用指令） | 打开 = 一条通用 `UIInteract.open(@host, "Editor", @host, host=@host)`；内容由元素 `UI_Editor` 在登记完成时自己铺；展开某段 = 折叠交互的通用"按需建"；"[重建]"= 内容第一行 `@self.parent.rebuild()` | 见"UI 编辑器"一节 |
 | （改一项配置**没有专门指令**） | 编辑器每行自带：`Utils.write` 把输入框的字**按文本→值**（`CommandParser.parse_value`：算不出就按原样字符串、空文本 = `null`）写回那条路径，再 `reapply()` + `refresh()` + `_fit_size()` 让界面跟上（见 `UI_Editor`） | 见"UI 编辑器"一节的"改完怎么生效" |
 
 ## 原子元素（Script/UI/UI/）
 | 类 | 职责 | 事件配置示例 |
 |---|---|---|
-| `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑。`background` 可给整块面板铺一张九宫格底图。**内容外面总有一层滚动容器**（横向关掉）：面板尺寸**由内容定**（`size` 那一维写 0）⇒ 长到刚好装下、不出滚动条；**由面板定**（写了数 / 拖手柄改小过）⇒ 内容超出就**在框内滚动**（竖向滚动条自动出）；`scroll: [上限宽, 上限高]`（0 = 该维不限制）是"**面板最多长到这儿**"——长出来的进去滚动（见"长内容"一节的"面板滚动"） | — |
-| `UI_Label` | 文本，**内核是 RichTextLabel**：content 按 **BBCode** 解析（`[b]` / `[color]` / `[url=meta]文字[/url]`）——"段落里哪几个字可点 / 可悬浮"是引擎原生能力，meta 的用法见 `UIInteract_Meta`；悬停在链接上指针自动变手型。**绑 `"Pointer 1 Hold"`（按住）即"按钮"/"拖动手柄"**（无需单独 Button 类）。**给一栏文字定宽**：`max_chars`（字符数，中文算 2）/ `max_width`（像素）——配了就 `宽 = min(内容自然宽, 上限)`（短内容不撑满、超了才折行），不配交给容器。**`size` 高度写 0 = 高随内容；写了数 = 显示区定死，内容多了框内滚动**（"三行只显示两行"的测法） | `["Pointer 1 Hold", "UIInteract.close @self.parent"]` |
+| `UI_Panel` | 面板容器：PanelContainer+Margin+VBox，子元素竖排；自身无功能逻辑。**子元素怎么排有三种**（见文件头）：不写 = 竖排；`matrix` = **二维矩阵网格**（子元素写 `grid: 编号`，同一编号出现几格就跨几格 / 跨几行，格子随面板等比缩放）；`cell` = **等大格子网格**（背包那种：格子等大、列数随宽度变、余量摊进间距）。**网格面板照样能带普通子元素**：写了 `grid` 的进"网格区"，没写的（可折叠标题、一行说明）留在竖排里、排在网格上方——所以网格面板的尺寸要**定死**（`size` / `size_ratio`）。**所有面板默认自带全项目底图**（`SysCfg.ui_background` + `ui_background_slice`：不写 `background` 就用它、想不要显式写 `"background": ""`；嵌套在别的面板里的子面板也套，圆角照留——内容宽度要按"格宽 − 各层圆角边距 − margin"收窄以免溢出，见上面 `background` 那条）。**内容外面总有一层滚动容器**（横向关掉）：面板尺寸**由内容定**（`size` 那一维写 0）⇒ 长到刚好装下、不出滚动条；**由面板定**（写了数 / 拖手柄改小过）⇒ 内容超出就**在框内滚动**（竖向滚动条自动出）。**嵌套面板（父级是 `UI_Panel` 的格子/段）的竖向滚动条常驻**（`SCROLL_MODE_SHOW_ALWAYS`）：嵌套空间里内容几乎总比可视区高，滚动条几乎常在；更要紧的是若它"装得下就藏"，出现/消失会改变可视区宽 8px ⇒ 折行文本的行数跟着变 ⇒ 内容最小高又跟着变……**双稳态帧间振荡**（RichText 的折行高还是异步更新的，永远差一拍），排版永不收敛，最终把引擎排版队列压崩（实测：角色看板开着就 signal 11 闪退）。常驻滚动条把可视区宽钉死、反馈链斩断；顶层窗口保持"自动出"不糟蹋视觉；`scroll: [上限宽, 上限高]`（0 = 该维不限制）是"**面板最多长到这儿**"——长出来的进去滚动（见"长内容"一节的"面板滚动"） | — |
+| `UI_Label` | 文本，**内核是 RichTextLabel**：content 按 **BBCode** 解析（`[b]` / `[color]` / `[url=meta]文字[/url]`）——"段落里哪几个字可点 / 可悬浮"是引擎原生能力，meta 的用法见 `UIInteract_Meta`；悬停在链接上指针自动变手型。**绑 `"Pointer 1 Hold"`（按住）即"按钮"/"拖动手柄"**（无需单独 Button 类）。**给一栏文字定宽**：`max_chars`（字符数，中文算 2）/ `max_width`（像素）——配了就 `宽 = min(内容自然宽, 上限)`（短内容不撑满、超了才折行），不配交给容器。**`size` 高度写 0 = 高随内容；写了数 = 显示区定死，内容多了框内滚动**（"三行只显示两行"的测法）。**宽度交给容器**的三种情况：`wrap: true`（完全交给容器，自己那份宽不算数——折行正文用它）/ `fill_width: true`（**顶满容器**：自己那份宽仍算最小宽，容器更宽就顶满、更窄也不把字折碎——窗口标题栏用它，见 fold 一节）/ `size_ratio`（按屏幕比例，见 config 属性表）；都不配就按内容自然宽。 | `["Pointer 1 Hold", "UIInteract.close @self.parent"]` |
 | `UI_Image` | 图片：content = 纹理路径，refresh 时 load；改图 = 写 `config["content"]` + 一条 `self.refresh` | — |
 | ~~`UI_Scroll`~~（已撤） | 原来的滚动文本元素。**已并入 `UI_Panel`**：内容盒外面本来就有一层滚动容器，文字由子元素显示——一块"会滚的文本" = `["Show", "UI_Panel", {"size": [260, 140], "children": [UIPreset_Basic.text_item("…")]}]`（`size` 两维写数 = 定死的可视区，内容多了在框内滚）。**"外壳持 `content`、子元素用 `content_cmd` 读它"**是全项目通行的写法（浮窗 `Tip` 也是），不必再有一个元素类 | — |
 | `UI_Input` | 输入框（LineEdit）：content 是**配置里写的初值**（`refresh()` 写进框里），回车提交 → 派发 `Input Submit`。**框里正在打的字不同步进 content**：要用就直接读 `@self.control.text`（取值链能读实例成员）——于是提交没有"先收文本"这一步，**元素自己没有提交逻辑**，提交就是配置里的普通命令串（送到哪 + 清空 + 要不要退出编辑 + 刷改过的两个 UI）。**元素里没有任何特判**：点它进编辑也是一条普通配置（`[QName.pointer1_hold, 'UIInteract.begin_edit self']`，换成别的事件也行），事件照常走配置 + 冒泡。宽度上限两种说法：`max_width`（像素）/ `max_chars`（**字符数**，中文算 2——等宽字体里中文正好两个半角宽），超了多行框换行、单行框横向滚，且**是硬上限**（连 `size` 也压）；配 `multiline: true` 时控件换成 TextEdit：**自动换行 + 高度按"折行后的行数"自适应**（行高 = 字高 + 主题行距，运行时量出来，换字体自动变；`max_lines` = 最多显示几行，超出框内滚动），**回车仍是提交、不会插换行**（输入层判"这次算提交"就吃掉那个事件；按着 Shift 才留给 TextEdit 插换行） | `[[QName.pointer1_hold, 'UIInteract.begin_edit self'], [QName.input_submit, 'Utils.write "@self.config.send_to" @self.control.text\vUtils.write "@self.config.content"\vUIInteract.end_edit self\v@self.refresh("content")\vself.refresh']]` |
 - **一览类元素**（把运行期数据铺出来看）：`UI_Status`（角色状态）、`UI_Shortcut`（角色快捷）、
   `UI_Attr`（角色属性 / buff）、`UI_Interaction`（角色交互）、`UI_Skill`（角色技能）、
-  `UI_Archetype`（角色原型——**唯一不实时的**：原型只在角色初始化时生效一次，所以它不覆写 `_listen`）——六者共用底座 **`UI_View`**
-  （"看哪个角色（查看项 `content_cmd` 优先、其次自己的 `char`）/ 推迟一帧铺 / 换对象自动重铺 /
-  开着才订·关掉全退·重开订回 / 抬头两行 / 找不到对象那行 / 只读文字行 / 依赖解析与满不满足 / 参数那几行 /
-  流水一笔怎么显示"都在它那儿；子类只实现 `_fill`（铺什么）与 `_listen`（订什么，不实时就别覆写））。
-  外壳预设各一份（`UIPreset_Status` / `UIPreset_Shortcut` / `UIPreset_Attr` / `UIPreset_Interaction` /
-  `UIPreset_Skill` / `UIPreset_Archetype`），
-  打开都是 `UIInteract.open(preset_name="…")`，换人写 `content_cmd="@Char/人类"`（再点 `[刷新]`）。
-  为什么内容交给元素而不是写在外壳预设里：一个角色有哪些状态 / 快捷 / 类别 / 交互 / 技能，全是**运行期**才知道的。
-  "流水"（`ActionHistory`，加装 / 移除 / 执行各一笔）在两处用：`UI_Interaction`、`UI_Skill`
-  ——技能每物理帧都在执行，所以它那一览**不重铺整段**，只在原地换标题那一行（见 `UI_Skill._on_act`）。
+  `UI_Archetype`（角色原型）——六者共用底座 **`UI_View`**，**六个摆在一块"角色数据看板"里**：
+  - **看板**就是一个普通预设（`Config/UI/UIPreset_View.gd` 的 `RoleData`）：**没有专门的元素类**——
+    尺寸 `size_ratio: [0.75, 0.75]`（屏幕的 3/4：1920×1080 ⇒ 1440×810，换分辨率自动跟）、
+    `open_at: Enums.OpenAt.CENTER`（屏幕正中），排法是 `matrix`（2 行 3 列，六格各占一格），
+    头部一个**可折叠标题**（点它整块收起 / 展开）+ 关闭图标（`UI_Panel` 的网格模式支持"网格上方有普通子元素"，
+    见元素表那一行）。一块面板、六个一览：状态 / 属性 / 交互 / 技能 / 快捷 / 原型。
+    **格内自己滚**：格子尺寸由矩阵定死，装不下的部分在**格内**滚（每格一个竖滚动条），面板自己那层反而用不上。
+    打开就是 `UIInteract.open(preset_name="RoleData")`；换人写在**看板**上
+    （`content_cmd="@Char/人类"`）⇒ 六格一起换（各格自己的 `char` 是默认值），再点各格的 `[刷新]`。
+    哪一格放什么、看谁，见预设里的 `CELLS` 表；**一栏的宽度**（`max_chars`）按格子宽反推（`CELL_CHARS`）。
+  - **元素侧只回答三件事**（`UI_View` 的钩子）：
+    **摆哪些** = `_keys()`（**那张表**：条目名，顺序 = 显示顺序，**条目现取现算**——数据可能散在好几个成员里，
+    而预设对象是共享的，"名字 → 现读"永远拿到当前那份）；**每条怎么显示** = `_title_of`（段标题摘要）
+    + `_rows_of`（段里几行）；**订什么** = `_listen`（不实时就不写——原型一览就是不写）。
+    另有 `_head_title` / `_missing_text` / `_count_text`，可选 `_folded`（默认收起；原型一览覆写成"有东西就摊开"）。
+  - **条目外壳只有一种**：一个**可折叠段**（`UIInteract_Fold.section_item`：标题常显、内容写成 `items`
+    展开才建）——快捷一览原来那种"常显块"也收进了这一种（一条一段，展开才见两个输入框）。
+  - **局部刷新两种**（按"变化有多频繁"选）：`_refresh_section(名)` 只重铺那一条（保留展开态）；
+    `_refresh_section_title(名)` 只换标题那行字（**每帧都在来的**消息用它，如技能执行）。`reload` 会先记下
+    "哪几段展开着"，重铺后展回来。
+  - 底座还包掉：看哪个角色（查看项 `content_cmd` 优先、其次自己的 `char`）/ 推迟一帧铺 / 换对象自动重铺 /
+    开着才订·关掉全退·重开订回 / 抬头两行 / 找不到对象那行 / 只读文字行 `_row` / 值的短文本 `_brief` /
+    依赖解析与满不满足 `_dep_*` / 参数那几行 `_config_rows` / 流水三行 `_history_rows`。
+  - **为什么"每条怎么显示"不进配置**：`✔/✘ 满足`、`依赖几条`、`在队列`、`流水三行`、`buff 值域顺序` 这些是
+    **领域语义**，在配置里表达就得再造一套表达式语言（等于第二个指令系统）——所以"看板形状 / 放哪几格"放表
+    （`UIPreset_View` 的 `CELLS` / `MATRIX`），"摆哪些"放 `_keys()`，"怎么显示"留在元素的 `_title_of` / `_rows_of` 里。
+  - **别用 `fit_content: false`（"以面板为准"）来做"照格子宽折行"**：那条路（一栏文字改成"宽度听容器"）
+    在"矩阵格子 + 格内滚动"这套上会让 Godot 4.7 **直接崩**（signal 11，二分到它：去掉这个键就不崩）。
+    一栏宽度改用 `max_chars` 按格子宽反推（见 `CELL_CHARS`）。
+  - "流水"（`ActionHistory`，加装 / 移除 / 执行各一笔）在两处用：`UI_Interaction`、`UI_Skill`
+    ——技能每物理帧都在执行，所以它那一览**只换标题那一行**、绝不重铺。
 - 组合控件（如带背景的按钮）直接用 `children` 配置堆叠（Panel 背景子元素 + Label 文字子元素），不写子类。
 - 元素**不连接任何引擎信号**（含 `Button.pressed`、`LineEdit.text_changed` / `focus_exited` / `text_submitted`）：点击/拖动等全部由 PointerDetect 命中 → 事件 → `on_event` → 指令/消息 派发；引擎控件"自己才知道"的状态（框里的文字、编辑焦点）一律**按需直接读**（取值链读 `@self.control.text`）或走交互层那几个命令（`UIInteract.begin_edit` / `end_edit`；点别处由 `PointerDetect.key` 开头收掉）。输入链路唯一，那条"唯一链路"仍旧管游戏按键（`edit_ui` 期间不翻译按键）。
 
@@ -272,7 +294,7 @@ var values: Array[Array] = [
 - **开启 = 开一个 UI（唯一入口 `UIInteract_OpenClose.open`，指令形式 `UIInteract.open`）**：整个开启逻辑（复用查找 `_child_ui` → 现建 `_build_open` → 摆位 `_place`）都在这个文件里，`UISys` 只提供登记表与登记名规则。**挂哪由 anchor/host 决定**（见上面的挂载规则），摆在哪由**被开启 UI 自己配置里的 `open_at`** 声明：
   - `host` 为空 → 独立 UI 挂 UI 根，指令写成 `UIInteract.open(preset_name="MiniHUD")`（命名参数跳过 target）。
   - 有 `anchor`（多级菜单：触发它的那个菜单项）→ **挂在 anchor 下**，子菜单成为该菜单项的后代；只给 `host` → 挂在 host 下。
-  - `Enums.OpenAt.CONFIG`（不写 `open_at` 时的默认）：摆回配置里的 `position`；`POINTER`：开在指针处（右键菜单——**仍然要传 anchor**，因为它决定挂在谁下面）；`ANCHOR_TOP_RIGHT`：开在 `anchor` 的右上角顶点（多级菜单把触发它的那个菜单项传进来）；`ANCHOR_TOP_RIGHT_IN` / `ANCHOR_BOTTOM_RIGHT_IN`：开在 `anchor` **内部**的右上角 / 右下角（关闭按钮与两个手柄用的就是这两个）。**同一个角上的多个图标会自动排成一行**（`UI_Panel._corner_box`）：先加的贴着角、后加的往左依次排，所以"等比缩放在右、改尺寸在左"就是先开缩放再开改尺寸。
+  - `Enums.OpenAt.CONFIG`（不写 `open_at` 时的默认）：摆回配置里的 `position`；`POINTER`：开在指针处（右键菜单——**仍然要传 anchor**，因为它决定挂在谁下面）；`ANCHOR_TOP_RIGHT`：开在 `anchor` 的右上角顶点（多级菜单把触发它的那个菜单项传进来）；`ANCHOR_TOP_RIGHT_IN` / `ANCHOR_BOTTOM_RIGHT_IN`：开在 `anchor` **内部**的右上角 / 右下角（关闭按钮与两个手柄用的就是这两个）；`CENTER`：开在**屏幕正中**（按 `UISys.screen_size()` 和自己的尺寸算，"占屏幕一块"的窗口——如配合 `size_ratio` 的角色数据看板——用它）。**同一个角上的多个图标会自动排成一行**（`UI_Panel._corner_box`）：先加的贴着角、后加的往左依次排，所以"等比缩放在右、改尺寸在左"就是先开缩放再开改尺寸。
   - 位置换算（屏幕坐标 → 挂载点坐标系的 `position`）在 `UIBase.show_at`：**别用 `set_global_position`**（按当前全局变换求逆，重复摆会跟旧 position 复合、越摆越偏），**也别设 `Control.top_level`**（会失去父级可见性继承，宿主关掉后它还留在屏幕上、还能被命中）。
 - **菜单链是一棵子树**：`Menu` 挂在宿主下、子菜单挂在"触发它的菜单项"下（`MiniHUD → Menu → Edit → MenuEdit`）。菜单项的功能都作用在宿主上（"关闭"关宿主、"添加关闭按钮"给宿主加 X、"启用拖拽"拖宿主），菜单只是快捷方式——像右键窗口标题栏点"关闭"，关掉的是窗口。宿主一 `hide()`，整条链随之不可见、也不再被指针命中（可见性照常继承）。
   - **菜单项里管理宿主一律写 `host`**（不要数 `@self.parent` 的级数）：链里层级深浅不一（`Menu` 的项 vs `MenuEdit` 的项差着好几层），但 `host` 无论深浅都指向同一个对象；给菜单项再套一层可折叠分组也不会指歪。`self` 留给"我自己的挂载点/锚点"（`UIInteract.open(@self, "MenuEdit", @self)` 用它）。
@@ -301,8 +323,8 @@ var values: Array[Array] = [
 - **两个配置键，都在元素自己的 config 里**（一份数据一处真相，和别的配置键一个待遇）：
   - 父元素上 `collapsed`：收起态（默认 false = 展开）；
   - **子元素自己**标 `collapse_keep = true`：表示"收起时留着我"（默认不标 = 跟着收起）⇒ "谁留下"写在自己身上，**父元素不用维护名字清单**（子元素改名、加删，都不用回头改父级配置）。
-- **为什么收起后就不占屏幕了**：不可见的子元素**不参与容器布局** ⇒ 容器按内容收缩 ⇒ `size` 里为 0 的那一维（"宽固定、高随内容"，菜单/面板都这么配）自己就变短了。
-- **一行搞定："可折叠标题"片段**（推荐用法）——`UIInteract_Fold.title_item("标题")` 返回一条普通 `UI_Label` 配置：它自己**既是标题也是收回按键**（显示 `▾ 标题` / `▸ 标题`）；箭头是一段 `[url]` 链接（meta = 折叠那串指令，见 `UIInteract_Fold.LINK_FOLD`），标题上同时绑着拖动——**两条独立绑定、都挂在"按下"这一个事件上，都会执行**（见 `UIBase.on_event` 的"一个事件可以绑多条"），没有一个"又折叠又拖动"的合成函数；自带 `collapse_keep: true`。第三个参数 `chars`（>0）给标题**限宽**（`max_chars`，字符数）：标题常是"一行小结"，不限宽会把整块面板撑开（见"面板宽度"）。给一段内容加"收 / 展"就是**加这一行**：
+- **为什么收起后就不占屏幕了**：不可见的子元素**不参与容器布局** ⇒ 容器按内容收缩 ⇒ `size` 里为 0 的那一维（"宽固定、高随内容"，菜单/面板都这么配）自己就变短了。**连"尺寸定死"的面板也缩成标题条**：`UIBase._fit_size` 在收起时**宽高都让给内容**（`config["collapsed"]` 只在此处读一次）——不再按 `size_ratio` 撑着，于是定尺寸的看板收起后就是"标题文本宽 + 一圈边距"那么小，而不是留一长条大底（实测：之前只把高度让给内容、宽度还按 `size_ratio`，收起后仍占满原来的宽，看着像没收干净）。收起 / 展开内部会重算一次尺寸（`UIInteract.fold` 末了调 `_fit_size`）——网格面板的"内容盒"是普通 Control 不发最小尺寸信号，光靠布局信号收不掉。
+- **一行搞定："可折叠标题"片段**（推荐用法）——`UIInteract_Fold.title_item("标题")` 返回一条普通 `UI_Label` 配置：它自己**既是标题也是收回按键**（显示 `▾ 标题` / `▸ 标题`）；箭头是一段 `[url]` 链接（meta = 折叠那串指令，见 `UIInteract_Fold.LINK_FOLD`），标题上同时绑着拖动——**两条独立绑定、都挂在"按下"这一个事件上，都会执行**（见 `UIBase.on_event` 的"一个事件可以绑多条"），没有一个"又折叠又拖动"的合成函数；自带 `collapse_keep: true`。**标题条顶满整块面板**（`fill_width: true`，见 `UI_Label` 宽度三档）：容器给多宽占多宽（窗口标题栏那种观感），而它自己那份宽仍算数 ⇒ 不会把面板缩成一条；第三个参数 `chars`（>0）给标题**限宽/保底宽**（`max_chars`，字符数）——既"标题最多多宽"，也是上面"顶满"时的**最小宽**（短标题不会长成一大段空白），不限宽会把整块面板撑开（见"面板宽度"）。给一段内容加"收 / 展"就是**加这一行**：
   ```gdscript
   static func title_item(what: String) -> Array:
       return ["Title", "UI_Label", {

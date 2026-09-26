@@ -43,6 +43,23 @@ const ROOT_LAYER: int = 100
 static var root: CanvasLayer
 
 
+## **屏幕尺寸**（UI 坐标下的显示区大小）：给"按屏幕比例定尺寸"（元素的 `size_ratio`，见 UIBase._config_size）
+## 与"开在屏幕正中"（`OpenAt.CENTER`，见 UIInteract_OpenClose._place）用——**只此一处**，两处都别自己算。
+## 取视口的**可见矩形**，不取窗口像素：项目用 `stretch/mode = canvas_items`（见 project.godot），
+## UI 坐标 ≠ 窗口像素，拿窗口像素算出来的尺寸会被 stretch 再缩一道。
+## 拿不到视口（还没进树 / 异常路径）就退回项目配的基准分辨率——**不能返回 0**：
+## 尺寸 0 的面板会把网格算成退化矩形（实测：整块摆不出来，引擎还会崩）。
+static func screen_size() -> Vector2:
+	var vp: Viewport = Sys.sys.get_viewport() if Sys.sys != null else null
+	if vp != null:
+		var s: Vector2 = vp.get_visible_rect().size
+		if s.x > 0.0 and s.y > 0.0:
+			return s
+	return Vector2(
+		float(ProjectSettings.get_setting("display/window/size/viewport_width", 1920)),
+		float(ProjectSettings.get_setting("display/window/size/viewport_height", 1080)))
+
+
 ## 启动触发（**唯一的实例方法**）：建 UI 根并延迟挂到树上。
 ## 被谁用：Sys.init_sub_system（`uiSys = UISys.new()`）——别的地方不要 new 它，直接用静态成员。
 func _init() -> void:

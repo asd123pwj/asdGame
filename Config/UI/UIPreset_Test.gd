@@ -25,25 +25,27 @@ extends ConfigBase
 """
 ## 矩阵网格的演示格子：一个带底图的标签，`grid` 序号对应矩阵里的编号
 ## （面板会按矩阵把它的 position/size 算好；拖"改尺寸"手柄时跟着缩放）。
+## **表格子带底**：底图默认只给 `UI_Panel`（见 UI_Panel._apply_background），标签要带底得自己写
+## `background`（这里就是"文字带底"的那个演示）——两个值都取全局的，与面板底同一张图。
 static func _gcell(id: int, text_: String) -> Array:
     return [str(id), "UI_Label", {
         "grid": id,
         "content": "%d：%s" % [id, text_],
-        "background": UIPreset_Keyboard.KEY_BG, "background_slice": UIPreset_Keyboard.KEY_BG_SLICE,
-        "font_color": UIPreset_Keyboard.FONT_COLOR,
+        "background": SysCfg.ui_background, "background_slice": SysCfg.ui_background_slice,
+        "font_color": SysCfg.ui_font_color_default,
     }]
 
 
 ## 等大网格的演示格子（背包那种）：n 个一样大的格子，内容 = 序号。
 ## **顺序就是 children 的顺序**（等大网格按声明顺序铺，不看 `grid`）。
+## 底图不写：格子是 `UI_Panel`，自带全项目默认那张（见 UI_Panel._apply_background）。
 static func _bag_cells(n: int) -> Array:
     var out: Array = []
     for i in n:
         out.append(["Cell%d" % i, "UI_Panel", {
             "margin": 0,
-            "background": UIPreset_Keyboard.KEY_BG, "background_slice": UIPreset_Keyboard.KEY_BG_SLICE,
             "children": [["Text", "UI_Label", {
-                "content": str(i + 1), "font_color": UIPreset_Keyboard.FONT_COLOR,
+                "content": str(i + 1),
             }]],
         }])
     return out
@@ -97,12 +99,11 @@ var values: Array[Array] = [
         "children": [
             _gcell(1, "占满一整行"),
             _gcell(2, "半行·左"), _gcell(3, "半行·右"),
-            # 4 号跨两行两列：用面板，里面还能套自己的子元素（跟着格子一起缩放）
+            # 4 号跨两行两列：用面板，里面还能套自己的子元素（跟着格子一起缩放）；底图不写（默认自带）
             ["4", "UI_Panel", {
                 "grid": 4, "margin": 0,
-                "background": UIPreset_Keyboard.KEY_BG, "background_slice": UIPreset_Keyboard.KEY_BG_SLICE,
                 "children": [["Text", "UI_Label", {
-                    "content": "4：跨两行两列（面板里还能套元素）", "font_color": UIPreset_Keyboard.FONT_COLOR,
+                    "content": "4：跨两行两列（面板里还能套元素）",
                 }]],
             }],
             _gcell(5, "第三行·中"), _gcell(6, "第三行·右"),

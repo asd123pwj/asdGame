@@ -36,10 +36,12 @@
 
 ## 快捷监控（UI，名称只读、状态与指令可改）
 - 看一个角色装了哪些快捷、每条**依赖哪个状态**、**要跑什么指令**，并**就地改后两样**：
-  `Config/UI/UIPreset_Shortcut.gd`（外壳）+ `Script/UI/UI/UI_Shortcut.gd`（内容元素）。
-- 打开：`UIInteract.open(preset_name="Shortcut")`（默认看 `@Char/SYS`）；
-  换人：`UIInteract.open(preset_name="Shortcut", content_cmd="@Char/人类")` 再点 `[刷新]`（`content_cmd` 优先于 `char`）。
-- 每条快捷一块：**名称**（只读，亮）＋ "依赖状态"输入框 ＋ "执行的指令"输入框（点进去改、回车提交）。
+  `Config/UI/UIPreset_View.gd` 那张表里的 `Shortcut` 一行（六个一览共用的外壳）+ `Script/UI/UI/UI_Shortcut.gd`（内容元素，底座 `UI_View`）。
+- 它在**角色数据看板**的中下那格（`UIInteract.open(preset_name="RoleData")`），默认看 `@Char/SYS`；
+  换人：`UIInteract.open(preset_name="RoleData", content_cmd="@Char/人类")` 再点各格 `[刷新]`
+  （`content_cmd` 写在看板上 ⇒ 六格一起换；`content_cmd` 优先于 `char`）。
+- **一条快捷一段、默认收起**：段标题 = `名称 ｜ 依赖：状态名`（收起时也看得出绑在什么上），
+  展开才见两个输入框："依赖状态" ＋ "执行的指令"（点进去改、回车提交）。
 - **改的是预设**（一个快捷名全项目一份，见 `SystemShortcutPreset._we`）⇒ 所有装了这条快捷的角色都受影响。
 - **指令**：改完立刻生效——触发时是**现读** `config`（`listen` 的闭包里读），不用重听。
   多条命令在预设里用 `\v` 分隔，输入框**显示成换行**、提交时换回 `\v`（编辑期间回车是提交、插不进换行 ⇒ 往返无损）。

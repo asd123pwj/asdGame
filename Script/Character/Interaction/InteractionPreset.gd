@@ -4,8 +4,8 @@ extends PresetRegister
 ## 触发时会把"最近一次依赖状态消息里的 target"交给实现类，所以交互能知道对象是谁。
 ## 被谁用：Interactions.add_interaction（装到角色身上）、Archetype 的 interactions 字段。
 ##
-## **想看它长什么样**：角色交互一览（外壳 `Config/UI/UIPreset_Interaction.gd` + 内容元素
-## `Script/UI/UI/UI_Interaction.gd`，打开就是 `UIInteract.open(preset_name="Interaction")`）——
+## **想看它长什么样**：角色交互一览（外壳 = `Config/UI/UIPreset_View.gd` 表里的 `Interaction` 一行 + 内容元素
+## `Script/UI/UI/UI_Interaction.gd`，就在"角色数据看板"里的那一格，`UIInteract.open(preset_name="RoleData")`）——
 ## 一条交互一段，摊开下面这几个字段（实现类 / 依赖状态 + 现在满不满足 / 参数 config 一行一个键）。
 
 ## 预设名（唯一）。被谁用：Interactions 的字典键、消息与指令。

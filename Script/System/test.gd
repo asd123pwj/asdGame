@@ -106,34 +106,12 @@ func ui_test() -> void:
     # （被编辑 UI 的 config 每项一行，子UI每段一行且**默认收起**，展开哪段才铺那段）
     Msg.send_cmd('UIInteract.open(@UI/MiniHUD, "Editor", @UI/MiniHUD, host=@UI/MiniHUD)')
 
-    # 角色状态一览（外壳 Config/UI/UIPreset_Status.gd + 内容元素 Script/UI/UI/UI_Status.gd）：
-    # 独立 UI，看哪个角色由预设里 Body 的 `char` 决定（默认 @Char/SYS）。
-    # 换人：UIInteract.open(preset_name="Status", content_cmd="@Char/人类")。
-    Msg.send_cmd('UIInteract.open(preset_name="Status")')
-
-    # 角色快捷监控（外壳 Config/UI/UIPreset_Shortcut.gd + 内容元素 Script/UI/UI/UI_Shortcut.gd）：
-    # 每条快捷两行：名称 / "依赖状态 → 执行的指令"。同样默认看 @Char/SYS，换人写 content_cmd。
-    Msg.send_cmd('UIInteract.open(preset_name="Shortcut")')
-
-    # 角色属性 / Buff 一览（外壳 Config/UI/UIPreset_Attr.gd + 内容元素 Script/UI/UI/UI_Attr.gd）：
-    # 每个类别一段（当前值 / 改动前 / 改动来源 / 参与 Buff）。默认看 char_A，也就是上面 spawn("人类","player") 那个。
-    # 换人：UIInteract.open(preset_name="Attr", content_cmd="@Char/兔子")。
-    Msg.send_cmd('UIInteract.open(preset_name="Attr")')
-
-    # 角色交互一览（外壳 Config/UI/UIPreset_Interaction.gd + 内容元素 Script/UI/UI/UI_Interaction.gd）：
-    # 每条交互一段：实现类 / 依赖状态（现在满不满足，实时）/ 参数 config（一行一个键）。默认同样看 char_A。
-    # 换人：UIInteract.open(preset_name="Interaction", content_cmd="@Char/兔子")。
-    Msg.send_cmd('UIInteract.open(preset_name="Interaction")')
-
-    # 角色技能一览（外壳 Config/UI/UIPreset_Skill.gd + 内容元素 Script/UI/UI/UI_Skill.gd）：
-    # 每条技能一段：实现类 / 依赖状态 / **现在在不在执行队列里** / 流水（加装 / 移除 / 执行了多少帧）。
-    # 技能是每物理帧执行的 ⇒ "最近执行"那一行字会一直在跳（关掉队列那段就停）。
-    Msg.send_cmd('UIInteract.open(preset_name="Skill")')
-
-    # 角色原型一览（外壳 Config/UI/UIPreset_Archetype.gd + 内容元素 Script/UI/UI/UI_Archetype.gd）：
-    # 一个字段一段（buffs / statuses / interactions / bodies / skills / collisions / inventories /
-    # shortcuts / packages），段里一行一个预设名。**不实时**（原型只在初始化那刻生效一次）。
-    Msg.send_cmd('UIInteract.open(preset_name="Archetype")')
+    # 角色数据看板（就一个普通预设：Config/UI/UIPreset_View.gd 的 `RoleData`）：
+    # 一块面板 = 屏幕的 3/4（`size_ratio`）、开在屏幕正中（`open_at: CENTER`），
+    # 头部是可折叠标题 + 关闭图标，下面按 2 行 3 列摆着六个一览（状态 / 属性 / 交互 / 技能 / 快捷 / 原型），
+    # 一格一个、**格内自己滚**。每个一览的骨架见 UI_View：一条一段、默认收起、标题是实时摘要（✔/✘ 等）。
+    # 看哪个角色由预设那张表决定；换人写在**看板**上（content_cmd），六个格子都读它 ⇒ 整块一起换（再点各格 [刷新]）。
+    Msg.send_cmd('UIInteract.open(preset_name="RoleData")')
 
     # 富文本链接测试（Config/UI/UIPreset_MetaTest.gd）：三行只显示两行（滚动条）+ 文字里的
     # 拖动 / 关闭 / 折叠 / 悬浮提示——都是 [url=meta] + 一条通用指令（见 UIInteract_Meta）。

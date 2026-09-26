@@ -16,12 +16,13 @@ extends BaseClass
 ## 被谁用：UISys._register_tree / find_name（拼登记名）、各处的警告文案。
 var name: String = ""
 
-## 背景图九宫格的边距**每张图各自给**：写在 config["background_slice"]（不写 = 0，整张拉伸）。
-## 别用统一默认值——不同底图的圆角不一样，切多切少都会变形（见 _make_background）。
+## 背景图九宫格的边距**每张图各自给**：写在 config["background_slice"]（不写 = 全局默认
+## `SysCfg.ui_background_slice`；要"整张拉伸"就显式写 0）——不同底图的圆角不一样，切多切少都会变形（见 _make_background）。
 ## "找当底的 stylebox 槽"的顺序放全局参数里：SysCfg.ui_background_slots（Config/SystemConfig.gd）。
 ## 本元素的配置（见 Config/UI/）。公共属性：position/size/content/children/events/visible/free，
 ## 各子类另有自己的（如菜单的 open_at / close_on_blur）；收起/展开那两个键（父元素的 collapsed、
-## 子元素自己的 collapse_keep）不在这里读——由交互 UIInteract.fold 读（见 Interact/UIInteract_Fold.gd）。
+## 子元素自己的 collapse_keep）由交互 UIInteract.fold 读（见 Interact/UIInteract_Fold.gd）——
+## 本类**只在 _fit_size 里看一眼 `collapsed`**：收起时**宽高都让给内容**（窗口缩成标题文本宽那么小，见那儿）。
 ## 被谁用：_apply_config、_build_children、on_event、UISys._place（读 open_at）。
 var config: Dictionary = {}
 
@@ -133,37 +134,70 @@ static func _dispatch_life(ui: UIBase, shown: bool) -> void:
 func _fit_size() -> void:
 	if control == null:
 		return          # 已被移除的动态 UI（见 clear_children）：没有控件可摆，晚到的信号直接忽略
-	var want: Vector2 = _config_size()
+	var collapsed: bool = bool(config.get("collapsed", false))
+	# **收起时宽高都让给内容**（`collapsed` 见 UIInteract_Fold）：收起后只留 `collapse_keep` 的元素
+	# （标题条），整个面板缩成"标题文本宽 + 一圈边距"那么小——而不是还占着配置里那整块宽
+	# （如 `size_ratio` 的 3/4 屏）：那样收起来仍是一条大底，看着像没收干净（实测踩过）。
+	# 宽度也走内容而非 `size_ratio`：标题是 `fill_width`，它的"最小宽"就是文本宽，于是面板宽 =
+	# 文本宽 + 边距，标题条正好等于文本宽（见 UIInteract_Fold.title_item 的 fill_width）。
+	# 不收起 ⇒ 按配置尺寸（`size_ratio` / `size`），那一维写 0 才走内容。
+	var want: Vector2 = _content_size() if collapsed else _config_size()
+	# **挂在容器（Container）里的元素不自己写 size**：宽高由容器排版时分配，自己再写一遍只会跟容器
+	# 打架——容器分 433、自己缩回 432，段里恰好压在折行边界上的标题就在"1 行 / 2 行"之间无限翻转
+	# （段最小高 204↔228 ⇒ 格子滚动条反复出现/消失 ⇒ 一帧永远排不完版 = 整个游戏卡死，实测踩过）。
+	# 容器只需要 `custom_minimum_size`（它在，容器自然会把尺寸分配到位）；
+	# 不在容器里的（顶层窗口挂 CanvasLayer、free 挂 Overlay、网格格挂 Grid）才自己写 size。
+	var in_container: bool = control.get_parent() is Container
 	if want.x > 0.0 and want.y > 0.0:
 		control.custom_minimum_size = want
-		control.size = want
+		if not in_container:
+			control.size = want
 		return
 	var need: Vector2 = _content_size()
 	var out: Vector2 = Vector2(want.x if want.x > 0.0 else need.x, want.y if want.y > 0.0 else need.y)
 	# **宽度由容器给**的元素（见 `_width_from_parent`）：只报高度，**一点不碰宽**——
 	# 报了宽（哪怕报 0）都会把控件钉在那个宽度上，容器再排也拉不开
 	# （实测：文本被压成 1px、折了 61 行）。宽度由容器在它自己排版时赋给。
+	# `_keep_min_width` 为真时（"顶满"的标题栏）自己那份宽仍报出去当**最小宽**：容器更宽就顶满、更窄也不会折碎。
 	if _width_from_parent() and want.x <= 0.0:
-		control.custom_minimum_size = Vector2(0.0, out.y)
-		control.size.y = out.y
+		control.custom_minimum_size = Vector2(out.x if _keep_min_width() else 0.0, out.y)
+		if not in_container:
+			control.size.y = out.y
 		return
 	control.custom_minimum_size = out
-	control.size = out
+	if not in_container:
+		control.size = out
 
 
 ## 本元素的**宽度由容器给**吗（自己不报宽、也不设 `size.x`，由容器排版时赋）？
 ## 默认 false = 宽度按"配置想要 / 内容需要"自己定（绝大多数元素）。
-## 覆写者：UI_Label（在"以面板为准"的环境里，或自己配了 `wrap: true`）——那时宽度归面板，
-## 文本只负责"照给到的宽折行、算出该多高"。见 `_fit_size` 里那一支。
+## 覆写者：UI_Label（在"以面板为准"的环境里，或自己配了 `wrap: true` / `fill_width: true`）——
+## 那时宽度归面板，文本只负责"照给到的宽折行、算出该多高"。见 `_fit_size` 里那一支。
 func _width_from_parent() -> bool:
 	return false
 
 
-## config["size"] 里写的尺寸（没写 / 不足两项 = 0，即"由内容决定"）。
+## 宽度交给容器时，**自己那份宽还算不算数**（算 = 报出去当最小宽，容器更宽就顶满）。
+## 默认 false = 完全不占宽（面板有多宽由**别人**定：折行正文 `wrap` 就是这样）。
+## 覆写者：UI_Label（配了 `fill_width` 的元素——窗口标题栏要"顶满整块面板"，又不能让面板缩到只剩边距）。
+## 被谁用：_fit_size（宽度交给容器那一支）。
+func _keep_min_width() -> bool:
+	return false
+
+
+## "配置想要多大"（两维都为 0 = 由内容决定）。两种写法，**`size_ratio` 优先**：
+##   · `config["size"]`      = [宽, 高] 像素（写 0 的那一维随内容走）；
+##   · `config["size_ratio"]`= [宽比, 高比] **相对屏幕**（见 `UISys.screen_size`）——
+##     写它就不用跟着分辨率改数字：`[0.75, 0.75]` 在 1920×1080 上是 1440×810、
+##     在 2560×1440 上是 1920×1080（"占屏幕多少"这件事本来就跟屏幕挂钩）。
 ## **不要读 control.custom_minimum_size 当"配置想要多大"**：那个值会被 _fit_size 覆盖成
 ## "内容实际多大"，于是分不清"配置要什么"和"内容给了多少"（宽固定、高随内容这种就废了）。
-## 被谁用：_fit_size。
+## 被谁用：_fit_size、reapply（"应用尺寸"只此一处）。
 func _config_size() -> Vector2:
+	var ratio: Variant = config.get("size_ratio")
+	if ratio is Array and (ratio as Array).size() >= 2:
+		var area: Vector2 = UISys.screen_size()
+		return Vector2(area.x * float((ratio as Array)[0]), area.y * float((ratio as Array)[1]))
 	var s: Variant = config.get("size")
 	if not (s is Array):
 		return Vector2.ZERO
@@ -350,7 +384,7 @@ func remove_child_element(ui: UIBase) -> void:
 
 
 ## **原地换掉**一个子元素：摘掉 `old` → 按参数新建一个 → **放回它原来的位置**（children 里与容器里的位次都不变）。
-## 只重铺其中一块时用它（见 UI_Status._rebuild_section）：直接"摘掉再加"会把那块排到**最底下**，
+## 只重铺其中一块时用它（见 UI_View._refresh_section）：直接"摘掉再加"会把那块排到**最底下**，
 ## 于是"状态一变，那一行就跳到最后"（实测踩过——面板里的次序是用户看着的东西，不能自己动）。
 ## `old` 为 null / 不在 children 里 ⇒ 退回"追加到末尾"（新加的块本来就该在后面）。
 ## 返回新元素。
@@ -526,11 +560,12 @@ func _apply_config() -> void:
 func reapply() -> void:
 	if control == null:
 		return          # 已被移除的动态 UI：控件没了，没什么可应用
-	if config.has("size") and config["size"] is Array:
-		var s: Array = config["size"]
-		if s.size() >= 2:
-			control.custom_minimum_size = Vector2(float(s[0]), float(s[1]))
-			control.size = control.custom_minimum_size
+	# "配置想要多大"走 `_config_size()`（`size` 与 `size_ratio` 两种写法都在它里面，别在这儿另读一遍）：
+	# 两维都给了才在这里先套上——写 0 的那一维随内容走，由 _fit_size 补（那是它的活）。
+	var want: Vector2 = _config_size()
+	if want.x > 0.0 and want.y > 0.0:
+		control.custom_minimum_size = want
+		control.size = want
 	# visible / position 不在这里设：它们由 refresh() 统一"让界面跟 config 一致"
 	# （build 里紧跟着就会调 refresh()，位置用 refresh("position")；content 由子类 refresh 读）
 	# 字号/字色是通用属性（谁都能配），作用在**本元素的控件**上：
@@ -547,9 +582,11 @@ func reapply() -> void:
 	# 字号与字体是一个入口：想换字体改 `SysCfg.ui_font_file`，别在各个配置里各写各的。
 	if UISys.ui_font != null:
 		control.add_theme_font_override("font", UISys.ui_font)
-	if config.has("font_color"):
-		var font_color: Color = config["font_color"]
-		control.add_theme_color_override("font_color", font_color)
+	# **字色也是这一处**：没配 `font_color` 就用全局默认（`SysCfg.ui_font_color_default`，深色）——
+	# 面板底是浅色图（见 SysCfg.ui_background），引擎默认那接近白的字画在白底上等于看不见。
+	# 要深底浅字：改那个全局值，或给这一处显式配 `font_color`。
+	control.add_theme_color_override("font_color",
+		config.get("font_color", SysCfg.ui_font_color_default))
 	_apply_background(str(config.get("background", "")))
 
 
@@ -583,7 +620,8 @@ func _background_slot() -> String:
 
 
 ## 造一张九宫格背景样式（供 config["background"] 用）；路径为空/图片不存在/加载失败返回 null。
-## 九宫格的边距取 config["background_slice"]（**每张图各自指定**，不写 = 0 = 整张拉伸）：
+## 九宫格的边距取 config["background_slice"]（**每张图各自指定**，不写 = 全局默认
+## `SysCfg.ui_background_slice`：默认那张就是按它量的；要"整张拉伸"显式写 0）：
 ## 每张图的圆角半径不一样（Unity 那边每张 sprite 也自带自己的九宫格参数），所以要能逐个指定。
 ## 被谁用：_apply_background（本类与 UI_Panel 的覆写）。
 func _make_background(path: String) -> StyleBoxTexture:
@@ -597,7 +635,7 @@ func _make_background(path: String) -> StyleBoxTexture:
 		return null
 	var style: StyleBoxTexture = StyleBoxTexture.new()
 	style.texture = tex
-	style.set_texture_margin_all(int(config.get("background_slice", 0)))  # 九宫格：圆角不被拉伸
+	style.set_texture_margin_all(int(config.get("background_slice", SysCfg.ui_background_slice)))  # 圆角不被拉伸
 	return style
 
 

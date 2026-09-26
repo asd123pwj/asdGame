@@ -35,9 +35,10 @@
 
 ## 角色状态一览（UI，只读 + 实时）
 - 看的是"**某个角色**现在装了哪些状态、每个状态依赖什么、现在触发成什么样"：
-  `Config/UI/UIPreset_Status.gd`（外壳）+ `Script/UI/UI/UI_Status.gd`（内容元素）。
-- 打开：`UIInteract.open(preset_name="Status")`（默认看 `@Char/SYS`）；
-  换人：`UIInteract.open(preset_name="Status", content_cmd="@Char/人类")` 再点 `[刷新]`（`content_cmd` 优先于 `char`）。
+  `Config/UI/UIPreset_View.gd` 那张表里的 `Status` 一行（六个一览共用的外壳）+ `Script/UI/UI/UI_Status.gd`（内容元素，底座 `UI_View`）。
+- 它在**角色数据看板**的左上那格（`UIInteract.open(preset_name="RoleData")`），默认看 `@Char/SYS`；
+  换人：`UIInteract.open(preset_name="RoleData", content_cmd="@Char/人类")` 再点各格 `[刷新]`
+  （`content_cmd` 写在看板上 ⇒ 六格一起换；`content_cmd` 优先于 `char`）。
 - 每个状态一段、**默认收起**；标题就写着满足情况（`✔ 满足 / ✘ 未满足` + 依赖条数），
   展开才建那一行行（折叠交互的 `items` 按需建）：满足 / 最近消息 / `auto_reset·match_any·外部检测` /
   六组依赖（`属性·Buff·状态·交互·按键·时间`）逐条"声明 → 触发真值"（真标绿、假标灰）/ 两种外部检测各一条（瞬时 / 保持型）。

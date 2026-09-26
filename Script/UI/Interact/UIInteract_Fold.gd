@@ -41,6 +41,11 @@ static func fold(target: UIBase, collapsed: bool = true) -> void:
 		_build_items(ui)
 	ui.config["collapsed"] = collapsed
 	_apply_children(ui, collapsed)
+	# **收起 / 展开都会改变内容，所以要重算一次尺寸**：内容是"长出来的"面板靠内容盒的最小尺寸信号
+	# 自己就收缩了（见文件头）——但**网格面板**的内容盒是个普通 Control（不发那个信号），
+	# 光等信号收不了，还会剩一大块空底（见 UIBase._fit_size 的"收起时高度让给内容"）。
+	# 重算一次是幂等的：内容为准的面板算出来的还是同一个尺寸。
+	ui._fit_size()
 
 
 ## 建 `config["items"]` 里声明的子元素（**只建一次**：built 标上就不再建）。
@@ -78,8 +83,11 @@ static func toggle_fold(target: UIBase) -> void:
 ## **为什么放这儿而不是预设里**：它是"折叠"这个交互的一部分（收起时留我 / 箭头对调 / 点完刷新
 ## 都跟 fold 是一件事），放交互里谁都能用；预设只负责构造**自己**的 widgets，不该给别处提供零件。
 ## 想换样子（标题带底、或者另放一个 `[+]`/`[-]` 按钮）照抄这段改 `content` / `events` 即可。
-## `chars` 给了（>0）就给标题**限宽**（`max_chars`，字符数）：标题常是"一行小结"，不限宽的话
-## 它会把整块面板撑到内容那栏的两三倍宽（实测踩过）——限宽之后它自己折行，宽度和内容对齐。
+## **标题条顶满整块面板**（`fill_width: true`，见 UI_Label 的宽度三档）：容器给多宽就占多宽
+## （窗口标题栏那种观感），而它**自己那份宽仍算数**（当最小宽）⇒ 不会出现"面板被标题缩成一条"。
+## `chars` 给了（>0）就给标题**限宽**（`max_chars`，字符数）：它既是"标题最宽到哪儿"、
+## 也是上面说的**最小宽**（短标题的标题条不会长成一大段空白）；不给就按文字自然宽。
+## （不限宽的话它会把整块面板撑到内容那栏的两三倍宽——实测踩过，所以这个上限留着；顶满只是"往上长"。）
 ## 点击行为：**按住就拖；若指针正停在箭头那段链接上，再跑那段链接自己的指令（折叠）**。
 ## 两条都是普通绑定、都挂在"按下"这一个事件上（一个事件可以绑多条，见 UIBase.on_event）——
 ## **没有一个"又折叠又拖动"的合成函数**：要拖动就直接写拖动，要折叠就写在那段 `[url]` 的 meta 里。
@@ -90,6 +98,7 @@ static func title_item(title: String, collapsed: bool = false, chars: int = 0) -
 	var cfg: Dictionary = {
 		"content": texts[0],
 		"content_2": texts[1],
+		"fill_width": true,                          # **顶满容器**：标题条横跨整块面板（见 UI_Label）
 		"collapse_keep": true,                       # 收起时留着我——**别删**，不标的话收起来就再也点不回来了
 		# 独立绑定（都执行）：① 按住拖 `@host`（窗口；拖"竖排里的一段"会被布局盖回去，没意义）；
 		# ② 按"指针下那段链接"跑它自己的指令——箭头那段链接挂着折叠与悬停说明（见 _sym_meta）；
@@ -107,14 +116,29 @@ static func title_item(title: String, collapsed: bool = false, chars: int = 0) -
 	return ["Title", "UI_Label", cfg]
 
 
+## **可折叠段**（片段构造器）：一个 UI_Panel，标题常显、内容写成 `items` **展开才建**（见 fold / _build_items）。
+## "一条一段"的列表全用它——各一览（见 UI_View._section）、UI 编辑器（每个键 / 子UI一段）。
+## 于是"段长什么样"只有一处，谁也不必再抄一遍 `size / collapsed / items / title_item` 那四行。
+## `name_` 是这一段的元素名（同一父级下要唯一；重名会自动加后缀，见 UIBase._unique_child_name）。
+## `chars` 同 `title_item`：>0 就给标题限宽（"标题最多/最少多宽"，见那儿的说明）。
+static func section_item(name_: String, title: String, items: Array, folded: bool = true,
+		chars: int = 0) -> Array:
+	return [name_, "UI_Panel", {
+		"size": [0, 0],
+		"collapsed": folded,
+		"items": items,
+		"children": [title_item(title, folded, chars)],
+	}]
+
+
 ## 折叠那条绑定**就在 QName 里**（`QName.UI_event_pointer1_fold_parent`：按下 ⇒ 收起/展开所在分组
 ## ＋ 两套文字对调 ＋ 刷新）——常用绑定都放那儿，改也只改一处。这里只是把它拼成 meta 的形状。
 ## 注意指令里**别出现 `]`**（如路径写 `arr[0]`）：BBCode 的 `[url=…]` 读到 `]` 就完了。
 static var LINK_FOLD := UIInteract_Meta.as_meta(QName.UI_event_pointer1_fold_parent)
 
 ## 箭头上的说明文字（**两套**，跟箭头本身一样随状态换）：展开时提示"点它收起"、收起时提示"点它展开"。
-const TIP_OPEN := "点击这里收起这一段"
-const TIP_SHUT := "点击这里展开这一段"
+const TIP_OPEN := "收起"
+const TIP_SHUT := "展开"
 
 
 ## 标题的两套文字（`[现在显示的, 对调后的]`）：收起 = `▸ …`、展开 = `▾ …`。
