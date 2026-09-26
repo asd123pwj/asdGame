@@ -96,6 +96,16 @@ func ui_test() -> void:
     # 玩法：右键 TestShow → 复制名称 → 右键 TestInput → 绑定 ▸ → 回车，然后在输入框里打字回车
     Msg.send_cmd("UIInteract.open(preset_name=\"TestShow\")")
     Msg.send_cmd("UIInteract.open(preset_name=\"TestInput\")")
+    # 富文本图片演示：RichTextLabel 的 BBCode 支持 `[img]`，可带 `width` / `height` 缩放（原图 32×32）。
+    # 图用全项目默认底图那张（SysCfg.ui_background，见 Config/SystemConfig.gd）；TestShow 是"会滚的文本"，
+    # 内容写外壳的 config["content"] 再刷整棵（同上面 MiniHUD Info 的流程，见 UIPreset_Basic.text_item）。
+    var show: UIBase = UISys.get_ui("UI/TestShow")
+    if show != null:
+        var img: String = SysCfg.ui_background
+        show.config["content"] = "[img]%s[/img] 原始尺寸\n" % img \
+            + "[img width=16 height=16]%s[/img] 16×16\n" % img \
+            + "[img width=64 height=64]%s[/img] 64×64" % img
+        show.refresh_tree()
 
     # 长内容 / 可收回演示（Config/UI/UIPreset_Fold.gd）：整块能收成一个标题，三段各自也能收
     Msg.send_cmd("UIInteract.open(preset_name=\"FoldDemo\")")
