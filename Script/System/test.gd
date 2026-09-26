@@ -117,7 +117,7 @@ func ui_test() -> void:
     Msg.send_cmd('UIInteract.open(@UI/MiniHUD, "Editor", @UI/MiniHUD, host=@UI/MiniHUD)')
 
     # 角色数据看板（就一个普通预设：Config/UI/UIPreset_View.gd 的 `RoleData`）：
-    # 一块面板 = 屏幕的 3/4（`size_ratio`）、开在屏幕正中（`open_at: CENTER`），
+    # 一块面板 = 屏幕的 3/4（尺寸在预设里按屏幕算）、开在屏幕正中（`open_at: CENTER`），
     # 头部是可折叠标题 + 关闭图标，下面按 2 行 3 列摆着六个一览（状态 / 属性 / 交互 / 技能 / 快捷 / 原型），
     # 一格一个、**格内自己滚**。每个一览的骨架见 UI_View：一条一段、默认收起、标题是实时摘要（✔/✘ 等）。
     # 看哪个角色由预设那张表决定；换人写在**看板**上（content_cmd），六个格子都读它 ⇒ 整块一起换（再点各格 [刷新]）。

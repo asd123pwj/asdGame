@@ -32,7 +32,7 @@ extends ConfigBase
 
 三个预设：
   Menu      : 关闭 / 复制名称 / 绑定 ▸ / 菜单编辑
-  MenuEdit  : 关闭按钮（开关式按钮：两套配置对调） / 启用拖拽 / 高级管理
+  MenuEdit  : 关闭按钮 / 缩放手柄 / 改尺寸手柄（三个**开关式按钮**：两套配置对调） / 启用拖拽 / 高级管理
   （"内容对象 ▸"不占预设：开通用 Editor 编辑宿主的 content_cmd）
 （"UI 编辑器"= 外壳 Config/UI/UIPreset_Editor.gd + 内容元素 Script/UI/UI/UI_Editor.gd：
  打开就是一条通用 open，内容由元素按 source / special / kinds 自己铺，见 UI.md 的"UI 编辑器"一节。）
@@ -136,6 +136,42 @@ var values: Array[Array] = [
                     'UIInteract.switch_value(@host, "events", QName.UI_event_pointer1_drag)'
                     + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
                     + '\v@self.refresh("content")']],
+            }],
+            # 两个手柄的开关（与 CloseToggle 同一个路子：开/关一个普通预设 + 两套配置对调）：
+            #   · ResizeButton = 等比缩放手柄（说明文字"等比缩放"，见 UIPreset_Basic.handle_cfg）；
+            #   · SizeGrip     = 改尺寸手柄（说明文字"改尺寸"）。
+            # 注意与 CloseToggle 同一个坑：窗口若**自带**某个手柄（元素名 = 预设名），开关复用的就是它。
+            ["RescaleToggle", "UI_Label", {
+                "content": "启用缩放手柄",
+                "content_2": "移除缩放手柄",
+                "events": [
+                    [QName.pointer1_hold, 'UIInteract.open(@host, "ResizeButton", @host)'
+                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
+                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
+                        + '\v@self.refresh("content")'],
+                ],
+                "events_2": [
+                    [QName.pointer1_hold, 'UIInteract.close(@host, "ResizeButton")'
+                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
+                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
+                        + '\v@self.refresh("content")'],
+                ],
+            }],
+            ["SizeGripToggle", "UI_Label", {
+                "content": "启用改尺寸手柄",
+                "content_2": "移除改尺寸手柄",
+                "events": [
+                    [QName.pointer1_hold, 'UIInteract.open(@host, "SizeGrip", @host)'
+                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
+                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
+                        + '\v@self.refresh("content")'],
+                ],
+                "events_2": [
+                    [QName.pointer1_hold, 'UIInteract.close(@host, "SizeGrip")'
+                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
+                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
+                        + '\v@self.refresh("content")'],
+                ],
             }],
             # UI 编辑器：开"能编辑这个 UI 全部内容"的菜单（config 每一项 + 子UI，递归；子UI默认收起）。
             # **就一条通用 open**：外壳与内容都在 UIPreset_Editor 里声明好了，元素在 build 时自己铺。

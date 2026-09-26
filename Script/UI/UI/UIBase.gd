@@ -137,10 +137,10 @@ func _fit_size() -> void:
 	var collapsed: bool = bool(config.get("collapsed", false))
 	# **收起时宽高都让给内容**（`collapsed` 见 UIInteract_Fold）：收起后只留 `collapse_keep` 的元素
 	# （标题条），整个面板缩成"标题文本宽 + 一圈边距"那么小——而不是还占着配置里那整块宽
-	# （如 `size_ratio` 的 3/4 屏）：那样收起来仍是一条大底，看着像没收干净（实测踩过）。
-	# 宽度也走内容而非 `size_ratio`：标题是 `fill_width`，它的"最小宽"就是文本宽，于是面板宽 =
+	# （如看板那块 3/4 屏）：那样收起来仍是一条大底，看着像没收干净（实测踩过）。
+	# 宽度也走内容而非配置尺寸：标题是 `fill_width`，它的"最小宽"就是文本宽，于是面板宽 =
 	# 文本宽 + 边距，标题条正好等于文本宽（见 UIInteract_Fold.title_item 的 fill_width）。
-	# 不收起 ⇒ 按配置尺寸（`size_ratio` / `size`），那一维写 0 才走内容。
+	# 不收起 ⇒ 按配置尺寸（`config["size"]`），那一维写 0 才走内容。
 	var want: Vector2 = _content_size() if collapsed else _config_size()
 	# **挂在容器（Container）里的元素不自己写 size**：宽高由容器排版时分配，自己再写一遍只会跟容器
 	# 打架——容器分 433、自己缩回 432，段里恰好压在折行边界上的标题就在"1 行 / 2 行"之间无限翻转
@@ -185,19 +185,15 @@ func _keep_min_width() -> bool:
 	return false
 
 
-## "配置想要多大"（两维都为 0 = 由内容决定）。两种写法，**`size_ratio` 优先**：
-##   · `config["size"]`      = [宽, 高] 像素（写 0 的那一维随内容走）；
-##   · `config["size_ratio"]`= [宽比, 高比] **相对屏幕**（见 `UISys.screen_size`）——
-##     写它就不用跟着分辨率改数字：`[0.75, 0.75]` 在 1920×1080 上是 1440×810、
-##     在 2560×1440 上是 1920×1080（"占屏幕多少"这件事本来就跟屏幕挂钩）。
+## "配置想要多大"（两维都为 0 = 由内容决定）：`config["size"]` = [宽, 高] 像素，
+## 写 0 的那一维随内容走。**要"占屏幕多少 / 按比例"就在预设里自己算成像素写进来**
+## （如 `UIPreset_View._panel_size()`，用 `UISys.screen_size() × 比例`）——
+## 框架不提供"比例尺寸"这种配置项：尺寸怎么来由用它的那一处自己决定就够，
+## 配合已就位的"改尺寸 / 等比缩放"手柄，框架不必再管尺寸的"来路"。
 ## **不要读 control.custom_minimum_size 当"配置想要多大"**：那个值会被 _fit_size 覆盖成
 ## "内容实际多大"，于是分不清"配置要什么"和"内容给了多少"（宽固定、高随内容这种就废了）。
 ## 被谁用：_fit_size、reapply（"应用尺寸"只此一处）。
 func _config_size() -> Vector2:
-	var ratio: Variant = config.get("size_ratio")
-	if ratio is Array and (ratio as Array).size() >= 2:
-		var area: Vector2 = UISys.screen_size()
-		return Vector2(area.x * float((ratio as Array)[0]), area.y * float((ratio as Array)[1]))
 	var s: Variant = config.get("size")
 	if not (s is Array):
 		return Vector2.ZERO
@@ -354,13 +350,19 @@ func target_object(fallback_key: String = "") -> Object:
 ## 位置换算成"挂载点坐标系"的 position：
 ##   - 不用 set_global_position——它按"当前全局变换求逆"算，重复摆会跟旧 position 复合，越摆越偏；
 ##   - 也不设 Control.top_level——那会让元素不再继承父级可见性（父级 hide 后它还留在屏幕上、也还能被命中）。
+## **全局位移要除以父级的 scale**：父控件可能处在被等比缩放的子树里（如看板缩放后，挂在其
+## 叠加层的手柄浮窗 Tip）——只减原点不除的话，全局位置 = 原点 + (目标-原点)×scale，
+## 缩得越小浮窗漂得越厉害、跑得比鼠标还快（实测踩过）。
 ## 被谁用：UISys._place（POINTER / ANCHOR_TOP_RIGHT 两种策略）。
 func show_at(pos: Vector2) -> void:
 	if control == null:
 		return
 	var box: Control = control.get_parent() as Control
 	var origin: Vector2 = box.get_global_rect().position if box != null else Vector2.ZERO
-	control.position = pos - origin
+	var s: float = box.get_global_transform().get_scale().x if box != null else 1.0
+	if s == 0.0:
+		s = 1.0                        # 退化保护：scale 为 0 的父级没有意义，按 1 摆
+	control.position = (pos - origin) / s
 	control.show()
 
 
@@ -479,7 +481,8 @@ func _in_fixed_panel() -> bool:
 ## 裁掉**——文本的内核 RichTextLabel 自带 `clip_contents`，滚动容器也要裁（不然滚动露馅）；
 ## 而浮窗、子菜单正是要画到外面去（实测：浮窗只剩约一条边，看着就是"开不出来"）。
 ## **元素层的父子关系不变**：`child.parent` 仍是本元素（登记名、失焦判定的挂载点、`@self.parent` 链
-## 全都照旧），变的只是 Control 挂在谁下面 ⇒ `show_at` 按"实际父控件"换算坐标，位置照样准。
+## 全都照旧），变的只是 Control 挂在谁下面 ⇒ `show_at` 按"实际父控件"换算坐标（含父级的 scale），
+## 位置照样准。
 ## 被谁用：_build_children、add_child_element（两条加子元素的路的 free 分支）。
 ## 覆写者：UI_Panel（它自己就有叠加层，直接返回，不必爬）。
 func _free_box() -> Control:
@@ -560,7 +563,7 @@ func _apply_config() -> void:
 func reapply() -> void:
 	if control == null:
 		return          # 已被移除的动态 UI：控件没了，没什么可应用
-	# "配置想要多大"走 `_config_size()`（`size` 与 `size_ratio` 两种写法都在它里面，别在这儿另读一遍）：
+	# "配置想要多大"走 `_config_size()`（`size` 的两种写法都在它里面，别在这儿另读一遍）：
 	# 两维都给了才在这里先套上——写 0 的那一维随内容走，由 _fit_size 补（那是它的活）。
 	var want: Vector2 = _config_size()
 	if want.x > 0.0 and want.y > 0.0:

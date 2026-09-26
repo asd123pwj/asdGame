@@ -43,8 +43,9 @@ const ROOT_LAYER: int = 100
 static var root: CanvasLayer
 
 
-## **屏幕尺寸**（UI 坐标下的显示区大小）：给"按屏幕比例定尺寸"（元素的 `size_ratio`，见 UIBase._config_size）
-## 与"开在屏幕正中"（`OpenAt.CENTER`，见 UIInteract_OpenClose._place）用——**只此一处**，两处都别自己算。
+## **屏幕尺寸**（UI 坐标下的显示区大小）：给"开在屏幕正中"（`OpenAt.CENTER`，见 UIInteract_OpenClose._place）
+## 与"按屏幕比例自己算尺寸"的预设（如 `UIPreset_View._panel_size`）用——**只此一处**，别处都别自己算
+## （框架不提供"比例尺寸"配置项；要按屏幕算的地方自己乘比例，比例值由调用方保管）。
 ## 取视口的**可见矩形**，不取窗口像素：项目用 `stretch/mode = canvas_items`（见 project.godot），
 ## UI 坐标 ≠ 窗口像素，拿窗口像素算出来的尺寸会被 stretch 再缩一道。
 ## 拿不到视口（还没进树 / 异常路径）就退回项目配的基准分辨率——**不能返回 0**：

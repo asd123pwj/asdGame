@@ -23,6 +23,9 @@ static func drag(target: UIBase, status_name: String) -> void:
 ## 按住拖动 —— **每帧执行**（不写在配置里，只由 AutoSys 调）：
 ## 把"指针本帧的累计位移"(InputSys.mouse_delta)作用到 UI 上。
 ## 指针移出 UI 也照拖（AutoSys 按状态驱动，不看 hover）；一帧一次，指针不动时位移 (0,0)，不会漂。
+## **不要除以 scale**：position 是父坐标（窗口挂 CanvasLayer，坐标系与鼠标一致），窗口自己的
+## `scale` 只影响内容绕左上角的绘制缩放、不改变 position 的含义——直接加位移，抓取点就精确
+## 跟着鼠标走（窗口缩放后拖动速度也正确；上一版除过一次 scale，缩小的窗口拖得比鼠标快，实测踩过）。
 ## 被谁用：AutoSys._process（经 drag 登记）。参数由 drag 绑定，这里不必再校验（不做重复判断）。
 static func dragging(ui: UIBase) -> void:
 	ui.control.position += InputSys.mouse_delta

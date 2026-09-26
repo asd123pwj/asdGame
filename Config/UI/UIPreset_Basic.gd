@@ -56,8 +56,11 @@ static func close_cfg() -> Dictionary:
 
 
 ## 把 `close_cfg()` 包成"`children` 里的一项"（`[名字, 类, 配置]`，见 UIBase._build_children）。
+## 元素名**必须与 CloseButton 预设同名**：`UIInteract.open / close` 按"挂载点 + 预设名"寻址
+## （见 UIInteract_OpenClose._child_ui），名字对不上时菜单的"启用/移除关闭按钮"开关就会
+## 找不到窗口自带的这个、又建一个（实测：叫 "Close" 时看板出现两个 X）。
 static func close_item() -> Array:
-    return ["Close", "UI_Image", close_cfg()]
+    return ["CloseButton", "UI_Image", close_cfg()]
 
 
 ## "悬停弹说明"那两条事件：指针移上去开、移开收，开的就是下面的 "Tip" 预设（内容由这里给）。

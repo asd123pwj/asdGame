@@ -21,6 +21,9 @@ static func rescale(target: UIBase, status_name: String) -> void:
 ## 沿对角线拖是像素级跟手；垂直于对角线的位移在数学上跟不了（等比只有一个自由度），这是固有代价。
 ## 上下限与保护值取自 Config/SystemConfig.gd（SysCfg.resize_min_scale / resize_max_scale / rescale_epsilon）。
 ## 指针移出 UI 也照缩 —— 执行由 AutoSys（状态层）驱动，与 hover 派发无关。
+## （手柄本身**跟着窗口一起缩是应该的**——它就是窗口的一部分；不要把手柄钉回鼠标，
+##   那会把它从角落拽走。会"跑太快"的是它的浮窗 Tip——它挂在手柄下面、处在被缩放的子树里，
+##   位置与大小都被 scale 乘了一遍，见 UIInteract_OpenClose._place 的 scale 补偿。）
 ## 被谁用：AutoSys._process（经 rescale 登记）。参数由 rescale 绑定，这里不必再校验（不做重复判断）。
 static func rescaling(ui: UIBase) -> void:
 	ui.control.pivot_offset = Vector2.ZERO     # 缩放中心钉在左上角（不设就绕控件中心缩、位置乱跑）

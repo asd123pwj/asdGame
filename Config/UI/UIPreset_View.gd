@@ -2,8 +2,8 @@ class_name UIPreset_View
 extends ConfigBase
 
 """ ---------- 角色数据看板（6 个一览摆在一块面板里） ----------
-一块面板 = **屏幕的 3/4**（`size_ratio`，开在屏幕正中），标题下面按 **2 行 3 列**的二维矩阵分成 6 格，
-六个一览各占一格：
+一块面板 = **屏幕的 3/4**（尺寸在本预设里自己算，见 `_panel_size()`；开在屏幕正中），
+标题下面按 **2 行 3 列**的二维矩阵分成 6 格，六个一览各占一格：
 
   ▾ 角色数据                              ← 头部（可折叠标题：点它整块收起 / 展开）
   ┌──────────────┬──────────────┬──────────────┐
@@ -18,8 +18,9 @@ extends ConfigBase
 - **格内自己滚**：格子尺寸由矩阵算定（`UI_Panel` 的 `matrix` + 子元素的 `grid`），装不下的部分在**格内**滚。
 
 **为什么这么配**：
-  · **尺寸按屏幕比例**（`size_ratio: [0.75, 0.75]`，见 UIBase._config_size）：1920×1080 上就是 1440×810，
-    换 2560×1440 自动变 1920×1080——"占屏幕多少"这件事不跟着分辨率改数字；
+  · **尺寸按屏幕比例、在本预设里自己算**（`_panel_size()` = `UISys.screen_size() × RATIO`）：1920×1080 上
+    就是 1440×810，换 2560×1440 自动变 1920×1080——"占屏幕多少"这件事不跟着分辨率改数字
+    （框架没有"比例尺寸"配置项，见 `_panel_size` 的说明）；
   · **每格写一个 `max_chars`**（`CELL_CHARS`）= "一栏文字最多多宽"：格子比原来那 6 个独立窗口**窄**
     （3/4 屏 ÷ 3 列 ≈ 470px），还按全局默认的 48 个字符（≈480px）走，长行右边会被裁掉一块
     ——所以要按格子宽反推一个值（怎么来的见 `CELL_CHARS`）；
@@ -65,7 +66,18 @@ const GAP := 6
 const CELL_CHARS := 40
 
 ## 占屏幕的比例（宽, 高）：3/4（1920×1080 ⇒ 1440×810；2560×1440 ⇒ 1920×1080）。
-const RATIO := [0.75, 0.75]
+## **尺寸在预设里自己算**（见 `_panel_size`），不再是框架的配置项——框架不必知道"尺寸从哪来"。
+const RATIO := Vector2(0.75, 0.75)
+
+
+## 看板尺寸 = 屏幕 × RATIO（像素）。
+## **为什么自己算**：以前有个框架级配置项 `size_ratio`（写比例、由 `UIBase._config_size` 换算），
+## 已删——"占屏幕多少"只有这一处在用，写在用它的地方就够了；而尺寸的"来路"框架本来就不该管
+## （改尺寸 / 等比缩放手柄都已就位，尺寸定死之后由手柄改）。
+## `UISys.screen_size()` 拿不到视口时（如静态初始化阶段）会退回项目基准分辨率，算出来照样对。
+static func _panel_size() -> Array:
+	var px: Vector2 = (UISys.screen_size() * RATIO).floor()
+	return [px.x, px.y]
 
 
 ## 由上面那几张表生成这一个预设——**看板的形状只有这一处**。
@@ -79,7 +91,7 @@ static func _values() -> Array[Array]:
 		# 内容宽度靠 CELL_CHARS 收窄装进"格宽 - 16 - 8"（见 UI_Panel._apply_background）
 		kids.append([cls.substr(3), cls, {"char": cell[1], "grid": i + 1, "max_chars": CELL_CHARS, "margin": 4}])
 	return [["RoleData", "UI_Panel", {
-		"size_ratio": RATIO,                          # 尺寸 = 屏幕 × 3/4（跟分辨率走，见 UIBase._config_size）
+		"size": _panel_size(),                        # 尺寸 = 屏幕 × 3/4（在本预设里算，见 _panel_size）
 		"open_at": Enums.OpenAt.CENTER,               # 开在屏幕正中
 		"gap": GAP,
 		"matrix": MATRIX,
