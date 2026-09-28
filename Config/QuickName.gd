@@ -32,6 +32,12 @@ static var submit_on_what_keys := "Submit on What Keys"
 static var key_j := "Key J"                     # 测试用：开关"显示"测试 UI
 static var key_k := "Key K"                     # 测试用：开关"输入"测试 UI
 
+# ---- UI 常态右键菜单（点在空地上右键开的那一扇，见 Archetype_System / UIPreset_Menu）----
+static var pointer_on_ui := "Pointer On UI"     # 保持型状态：**指针下有没有 UI**（hover 变化时由 PointerDetect
+                                                # 手动开/关，同 QName.editing 那套）；常态右键菜单靠它判"点在空地上"
+static var desktop_menu := "Desktop Menu"       # 常态右键菜单该开：**右键按住 ∧ 指针不在任何 UI 上**（两个依赖）；
+                                                # 满足时由快捷指令开出 "DesktopMenu"（开在指针处）
+
 # ---- 时间周期 ----
 static var tick := "Tick"
 static var hour_advance := "Hour Advance"

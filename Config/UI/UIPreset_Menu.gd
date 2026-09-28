@@ -30,9 +30,13 @@ extends ConfigBase
 `host` = 它所在的那个窗口（"管理宿主"用它）。另见 UI.md 的"占位符只有三个词"。
 （"关父级时整条链一起关""鼠标在子菜单上不会被判失焦"都由这棵树自动成立。）
 
-三个预设：
-  Menu      : 关闭 / 复制名称 / 绑定 ▸ / 菜单编辑
-  MenuEdit  : 关闭按钮 / 缩放手柄 / 改尺寸手柄（三个**开关式按钮**：两套配置对调） / 启用拖拽 / 高级管理
+四个预设：
+  Menu        : 关闭 / 复制名称 / 绑定 ▸ / 菜单编辑
+  MenuEdit    : 关闭按钮 / 缩放手柄 / 改尺寸手柄（三个**开关式按钮**：两套配置对调） / 启用拖拽 / 高级管理
+  DesktopMenu : **常态右键菜单**——点在**空地上**右键开的那一扇（`open_at = POINTER`、独立 UI、开在指针处）。
+                第一项开"指针下那个角色"的看板（没抓到角色就写成"（当前无角色）"占位、点了不做事），
+                第二项固定开 **SYS 角色**的看板。由 SYS 角色上那条状态 + 一条快捷指令开出
+                （`QName.desktop_menu`，见 Archetype_System）。
   （"内容对象 ▸"不占预设：开通用 Editor 编辑宿主的 content_cmd）
 （"UI 编辑器"= 外壳 Config/UI/UIPreset_Editor.gd + 内容元素 Script/UI/UI/UI_Editor.gd：
  打开就是一条通用 open，内容由元素按 source / special / kinds 自己铺，见 UI.md 的"UI 编辑器"一节。）
@@ -184,6 +188,72 @@ var values: Array[Array] = [
             }],
         ],
     }],
+    # **常态右键菜单**：点在**空地上**右键开的那一扇（谁开的见 Archetype_System 里 `QName.desktop_menu`）。
+    # 它是**独立 UI**（没有宿主、没有锚点）⇒ 开在指针处、点别处关（`close_on_blur` 由开它的那一句传）。
+    # 两项都是"开角色数据看板"（`RoleData`），差的只是**看谁**：
+    #   · OpenChar：看**指针下那个角色**——开菜单那句把 `content=PointerDetect.hover_char` 传了进来，
+    #     文字与动作都由下面两个静态函数按它算（没角色 ⇒ 写"（当前无角色）"、点了不做事）；
+    #   · OpenSYS ：固定看 **SYS 角色**（系统角色：看板里"状态 / 快捷"那两格本来就是看它，见 UIPreset_View.CELLS）。
+    ["DesktopMenu", "UI_Panel", {
+        "size": [190, 0],
+        "free": true,                              # 自由定位：挂到 UI 根（没有宿主）的叠加层
+        "open_at": Enums.OpenAt.POINTER,           # 开在指针处（和窗口右键菜单同一个策略）
+        "children": [
+            ["OpenChar", "UI_Label", {
+                # 文字与动作都读"菜单上存着的那个角色"（见 _menu_char）；`@self.parent` = 这扇菜单
+                "content_cmd": "UIPreset_Menu.char_option_text(@self.parent)",
+                "events": [[QName.pointer1_hold,
+                    "UIPreset_Menu.open_char_window(@self.parent)"]],
+            }],
+            ["OpenSYS", "UI_Label", {
+                "content": "打开 SYS 角色的窗口",
+                "events": [[QName.pointer1_hold,
+                    'UIInteract.open(preset_name="RoleData", content_cmd="%s")' % SYS_CHAR_PATH]],
+            }],
+        ],
+    }],
     # （原来的 Editor（内容对象） 面板已删："填一个对象路径"就是**开通用编辑器去编辑宿主的 content_cmd**
     #   ——见菜单编辑里的"内容对象 ▸"项。编辑单个值不再各写一个面板，都用 UI_Editor。）
 ]
+
+
+## ---------- 常态右键菜单（DesktopMenu）那两项 ----------
+## 菜单的 `config["content"]` 存着"**开菜单那一刻指针下的角色**"（开它的快捷指令传的
+## `content=PointerDetect.hover_char`；在空地上点就是 null）——下面两件事都从它读，别再各处自己取。
+const DESKTOP_MENU_OPTION := "打开角色窗口"
+const DESKTOP_MENU_NO_CHAR := "（当前无角色）"
+const SYS_CHAR_PATH := "@Char/SYS"
+
+
+## 常态菜单第一项的**文字**：有角色 = "打开角色窗口：<角色名>"；没角色 = "打开角色窗口（当前无角色）"。
+## **没角色时只是个占位**：那种"不可按的按钮"的样子还没做（用户要求先别做，先用括号说明），
+## 点了也不做事（见 open_char_window）。
+## 被谁用：预设里那一项的 `content_cmd`（`UIPreset_Menu.char_option_text(@self.parent)`）。
+static func char_option_text(menu: UIBase) -> String:
+    var char_: Character = _menu_char(menu)
+    if char_ == null:
+        return DESKTOP_MENU_OPTION + DESKTOP_MENU_NO_CHAR
+    return "%s：%s" % [DESKTOP_MENU_OPTION, char_.name]
+
+
+## 常态菜单第一项**点了做什么**：把角色数据看板开到那个角色身上（`content_cmd` 写它的注册名 ⇒
+## 看板六个格子一起看它，见 UIPreset_View）。
+## **没角色就什么都不做**（那是占位项）。**开 UI 仍走指令**：`UIInteract.open` 是全项目唯一的开启入口，
+## 这里只是按当场抓到的角色把那条指令拼出来（同"开哪一扇"都只写一处的规矩）。
+## 被谁用：预设里那一项的 events。
+static func open_char_window(menu: UIBase) -> void:
+    var char_: Character = _menu_char(menu)
+    if char_ == null:
+        return
+    Msg.send_cmd('UIInteract.open(preset_name="RoleData", content_cmd="@%s")' % RegSys.name_of(char_))
+
+
+## 这扇常态菜单**当场抓到的那个角色**：菜单 config 里存的那一个（没抓到 / 已经没了给 null）。
+## 开菜单的快捷指令传的是 `PointerDetect.hover_char`（"指针下那个角色"）——那一刻还没有这扇菜单，
+## 所以判的是"右键点在谁身上"，之后指针挪到菜单上也不影响（值已经存下来了）。
+## 被谁用：char_option_text / open_char_window。
+static func _menu_char(menu: UIBase) -> Character:
+    if menu == null:
+        return null
+    var c: Variant = menu.config.get("content")
+    return c as Character

@@ -55,6 +55,13 @@ static func _process(_delta: float) -> void:
 			_prev_hover_ui.on_event(QName.pointer_exit)
 		if hover_ui != null:
 			hover_ui.on_event(QName.pointer_enter)
+		# 顺手告诉**状态层**"指针下有没有 UI"（保持型状态，声明见 Archetype_System）：
+		# 常态右键菜单就是"右键 ∧ 指针不在任何 UI 上"两个依赖合成的（见 QName.desktop_menu）。
+		# 只在变化那一下发（同 InputSystem.end_edit 的规矩：没变就别白发一条）。
+		if hover_ui != null:
+			Msg.send_status_detected_manual(Sys.sys_status, QName.pointer_on_ui)
+		else:
+			Msg.send_status_undetected_manual(Sys.sys_status, QName.pointer_on_ui)
 		_prev_hover_ui = hover_ui
 	# 指针移动：本帧位移不为 0 就算"动过"，派发 `Pointer Move`（和上面的 enter/exit 一样直接派发）。
 	# 位移由 InputSys._input 累计、帧末清零，所以这里看到的正是"这一帧移动了没有"。

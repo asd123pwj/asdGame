@@ -29,6 +29,13 @@ var values: Array[Dictionary] = [
             # 状态这份给**状态层**：延时指令的取消条件写它即"鼠标一动就作废"
             # （`TimeSys.after(..., cancel_on=QName.pointer_move)`；配合"同一条重置"= 停住才执行）。
             {"name": QName.pointer_move, "auto_reset": true, "with_detect_transient": true},
+            # 指针下**有没有 UI**（**保持型状态**：hover 变化时由 PointerDetect 手动开 / 关，同 QName.editing 那套）。
+            # 常态右键菜单靠它判"点在空地上"（见下面那个依赖）。
+            {"name": QName.pointer_on_ui, "with_detect_manual": true},
+            # **常态右键菜单该开**：右键按住 ∧ 指针不在任何 UI 上 —— 两个依赖都满足才满足。
+            # 满足时由"指针交互"里的快捷指令开出 "DesktopMenu"（开在指针处、点别处关，见 UIPreset_Menu）。
+            {"name": QName.desktop_menu, "statuses": [
+                [QName.pointer2_hold, "Satisfied"], [QName.pointer_on_ui, "Unsatisfied"]]},
             
             {"name": QName.right, "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.HOLD], [KEY_D, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.up, "match_any": true, "keys": [[KEY_UP, Enums.KeyStatus.HOLD], [KEY_W, Enums.KeyStatus.HOLD]],}, 
@@ -64,6 +71,11 @@ var values: Array[Dictionary] = [
             # 测试用：J / K 开关两个测试 UI（独立 UI，只给预设名；toggle = 显示着就关、否则开）
             [QName.key_j, QName.key_j, 'UIInteract.toggle(preset_name="TestShow")'],
             [QName.key_k, QName.key_k, 'UIInteract.toggle(preset_name="TestInput")'],
+            # 常态右键菜单（点在空地上右键）：状态一满足就开那一扇 —— **独立 UI**（没有宿主、没有锚点），
+            # 开在预设声明的指针处、点别处关。`content` 传"开菜单那一刻指针下的角色"（没有就是 null）：
+            # 菜单第一项用它决定"打开谁的角色窗口 / 当前无角色"（见 UIPreset_Menu.char_option_text）。
+            [QName.desktop_menu, QName.desktop_menu,
+                'UIInteract.open(preset_name="DesktopMenu", content=PointerDetect.hover_char, close_on_blur=true)'],
         ],
     },
     {
