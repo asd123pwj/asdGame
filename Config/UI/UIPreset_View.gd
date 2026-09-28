@@ -21,6 +21,9 @@ extends ConfigBase
   · **尺寸按屏幕比例、在本预设里自己算**（`_panel_size()` = `UISys.screen_size() × RATIO`）：1920×1080 上
     就是 1440×810，换 2560×1440 自动变 1920×1080——"占屏幕多少"这件事不跟着分辨率改数字
     （框架没有"比例尺寸"配置项，见 `_panel_size` 的说明）；
+  · **窗口的底图是竹框**（`WINDOW_BACKGROUND`，用户画的 64×64、四角 16×16 ⇒ `background_slice: 16` +
+    `background_stretch: "tile"`）：不写 `background` 就用全局默认那张圆角方块，这里显式点成竹框
+    ——"一个窗口长什么样"只属于这个预设；**换底图那圈边距也变，`CELL_CHARS` 要跟着重算**；
   · **每格写一个 `max_chars`**（`CELL_CHARS`）= "一栏文字最多多宽"：格子比原来那 6 个独立窗口**窄**
     （3/4 屏 ÷ 3 列 ≈ 470px），还按全局默认的 48 个字符（≈480px）走，长行右边会被裁掉一块
     ——所以要按格子宽反推一个值（怎么来的见 `CELL_CHARS`）；
@@ -55,19 +58,33 @@ const MATRIX: Array[Array] = [[1, 2, 3], [4, 5, 6]]
 const GAP := 6
 
 ## 每格"**一栏文字最多多宽**"（`max_chars`，字符数，中文算 2）——按格子宽反推：
-##   3/4 屏（1920×1080 时 = 1440）÷ 3 列 ≈ 465px，扣掉：格子底图圆角边距 16 + 格子内边距 8
-##   （`margin: 4` 四边）+ 格内滚动条 8 + 每个折叠段自己的底图圆角 16 + 段内边距 16 ⇒ 约 401px；
-##   一个字符 ≈ 10px（等宽字体 20 号，见 `UIBase._half_width` 是**量**出来的）⇒ 40。
+##   3/4 屏（1920×1080 时 = 1440）÷ 3 列 ≈ 465px，扣掉：**看板竹框的四角 16（一圈 32，摊到每列约 11）**
+##   + 格子底图圆角边距 16 + 格子内边距 8（`margin: 4` 四边）+ 格内滚动条 **12**（`SysCfg.ui_scroll_side * 2`）
+##   + 每个折叠段自己的底图圆角 16 + 段内边距 16 ⇒ 约 411px；
+##   一个字符 ≈ 10.8px（等宽字体 20 号，见 `UIBase._half_width` 是**量**出来的）⇒ 38。
 ##   （底图圆角照留——用户要求"圆角半框要留"——所以每层面板都要从宽度里扣它那一圈，见
 ##   `UI_Panel._apply_background`；不收窄字数的话内容 min 超过格宽，文字溢出右邻格。）
-## **为什么非写不可**：不写就用全局默认（`SysCfg.ui_view_chars` = 48 ⇒ 480px）> 401px，
+## **为什么留余量**：实测 40 字符 = 432px 会把格内视口撑满（余 0），39 时滚条一换宽（8→12）也只剩 2px
+## ——所以收到 38，留约 13px；哪天多出几像素（换个字、改个字号、条再宽一点）也不会撑出格子。
+## **为什么非写不可**：不写就用全局默认（`SysCfg.ui_view_chars` = 48 ⇒ 480px）> 411px，
 ## 长行会**宽过格子、右边被裁掉一块**。宁可窄一点，也别把字切掉。
 ## 屏幕更大 / 想更宽：调这个数（它是"一栏"这个概念的宽度，与 `SysCfg.ui_view_chars` 同一个意思）。
-const CELL_CHARS := 40
+const CELL_CHARS := 38
 
 ## 占屏幕的比例（宽, 高）：3/4（1920×1080 ⇒ 1440×810；2560×1440 ⇒ 1920×1080）。
 ## **尺寸在预设里自己算**（见 `_panel_size`），不再是框架的配置项——框架不必知道"尺寸从哪来"。
 const RATIO := Vector2(0.75, 0.75)
+
+## 看板**窗口自己的底图**（竹框，64×64）：不写 `background` 就用全局默认那张圆角方块
+## （`SysCfg.ui_background`），这里显式换成竹框——"角色窗口长这样"只属于本预设。
+## 用 `UI_Bamboo_Empty.png`（**空框**；与 `UI_Bamboo_Panel.png` 同一张画）：窗口的底只要"一个空框"，
+## 不必为大窗口再画一张大的——九宫格平铺本来就够，图越小越省。
+const WINDOW_BACKGROUND := "res://Material/Texture/UI/UI_Bamboo_Empty.png"
+## 竹框的**四角各 16×16**（用户给的规格）⇒ 九宫格边距 16（不写会按全局默认的 8 切，角会被切坏）。
+const WINDOW_BACKGROUND_SLICE := 16
+## **必须平铺，不能拉伸**（见 UIBase._make_background）：这张图的边框中间段里有 2px 的竹节，
+## 拉伸会把它按面板宽（约 1440px）等比放大成一条很宽的暗带；平铺则整段原样重复、竹节间距均匀。
+const WINDOW_BACKGROUND_STRETCH := "tile"
 
 
 ## 看板尺寸 = 屏幕 × RATIO（像素）。
@@ -93,6 +110,9 @@ static func _values() -> Array[Array]:
 	return [["RoleData", "UI_Panel", {
 		"size": _panel_size(),                        # 尺寸 = 屏幕 × 3/4（在本预设里算，见 _panel_size）
 		"open_at": Enums.OpenAt.CENTER,               # 开在屏幕正中
+		"background": WINDOW_BACKGROUND,              # 本窗口的底 = 竹框（不是全局默认那张圆角方块）
+		"background_slice": WINDOW_BACKGROUND_SLICE,  # 四角各 16×16
+		"background_stretch": WINDOW_BACKGROUND_STRETCH,  # 平铺（拉伸会把竹节拉成宽暗带）
 		"gap": GAP,
 		"matrix": MATRIX,
 		"events": [QName.UI_event_pointer2_menu],     # 右键 → 管理菜单（里面有"关闭"）

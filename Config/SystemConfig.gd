@@ -135,8 +135,10 @@ var history_window_max := 10
 static var resize_min_scale := 0.2      # 等比缩放的下限（拖再狠也不会缩成 0）
 static var resize_max_scale := 5.0      # 等比缩放的上限（拖再狠也不会涨到天上去）
 static var rescale_epsilon := 0.001     # 缩放里"上帧距离"作除数时的保护下限
-# 拖右下角"改尺寸"的下限（拖再狠也不会被拖没）。**默认 96×64**：右下角那两个 32px 图标
-# ＋ 间隔就要约 68px 宽，再小它们会排到面板外面去（实测）。
+# 拖"改尺寸"手柄时的下限（拖再狠也不会被拖没）。**默认 96×64**：只要窗口"还看得见、还点得到"就行。
+# 它**不再按图标尺寸推**：关闭 / 等比缩放 / 改尺寸这三个按钮现在挂在**窗口右侧外面的一列**里
+# （见 UIPreset_Basic 文件头），不占窗口内部地方，窗口拖多小都摆得下。实际下限还会与内容最小尺寸取大者
+# （见 UIInteract_Resize）。
 static var resize_min_size := Vector2(96, 64)
 
 # 找"当底的 stylebox 槽"时的顺序：哪个控件有哪个就用哪个（见 UIBase._background_slot）。
@@ -149,6 +151,26 @@ static var ui_background_slots: Array[String] = ["panel", "normal", "background"
 # 别的图各有各的圆角 ⇒ 用别的图时在那一处显式写 `background_slice`（见 UIBase._make_background）。
 static var ui_background := "res://Material/Texture/UI/RoundedIcon_32.png"
 static var ui_background_slice := 8
+
+# ---- 滚动条皮肤（竖条） ----
+# 滚动条是**引擎画的**（`ScrollContainer` 的内部子节点 VScrollBar）⇒ "换样式"就是给它的主题槽打覆盖，
+# 代码在 `UI_Panel._apply_scroll_skin`（全项目只那一处建滚动容器 ⇒ 改这里就够，一处生效）。
+# 两张图都是 **12 宽**、左右各留 2px 透明/渐隐（实际画的是一根 8px 的条，两头那 2px 是呼吸位）：
+# **条宽 = 左右切边之和**（`ui_scroll_side * 2`）——`ScrollBar` 的宽取自样式的最小宽，图多宽、条就多宽，
+# 于是横向永远 1:1、不会被拉宽压扁。条宽变了要跟着重算"每行几个字"（见 UIPreset_View.CELL_CHARS）。
+static var ui_scroll_track := "res://Material/Texture/UI/UI_Bamboo_Scroll.png"     # 轨道（槽 scroll / scroll_focus）
+static var ui_scroll_grabber := "res://Material/Texture/UI/UI_Bamboo_Grabber.png"  # 抓手（槽 grabber / _highlight / _pressed）
+static var ui_scroll_side := 6            # 左右各切 6（12 ⇒ 条宽 12px；横向不缩放）
+static var ui_scroll_track_cap := 4       # 轨道上下端帽（图里那圈描边的高度）
+static var ui_scroll_grabber_top := 4     # 抓手上端帽：图第 0 行深描边 + 3 行体色（用户按"边缘 4 格"画的）
+static var ui_scroll_grabber_bottom := 4  # 抓手下端帽：4 行（体色 + 深描边 + 2px 渐隐）
+# 中段（帽与帽之间那几行）怎么填：**平铺**（像素原样重复）/ "stretch" 拉伸。
+# 抓手那张图的中段**带竹节纹理**（每 14px 左右一道高光）⇒ 只能用平铺：拉伸会把竹节按"抓手长度 ÷ 56"
+# 等比放大（一条 300px 长的抓手 = 放大 5 倍 ⇒ 竹节变成稀疏的宽条）。轨道那张中段是纯色，填法无所谓。
+static var ui_scroll_stretch := "tile"
+# 悬停 / 按下态 = 同一张抓手图**调色**（乘算：>1 变亮、<1 变暗），不另画图。
+static var ui_scroll_highlight_tint := Color(1.25, 1.25, 1.25)
+static var ui_scroll_pressed_tint := Color(0.8, 0.8, 0.85)
 
 # **默认字色**（没配 `font_color` 的元素就用它，见 UIBase.reapply / UI_Label.reapply）：
 # 默认底是**浅色**的（上面那张白底圆角图）⇒ 字必须深色，引擎默认那接近白的字画在白底上等于看不见。

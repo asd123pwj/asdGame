@@ -526,7 +526,9 @@ func _attach_child_control(child: UIBase, child_config: Dictionary) -> void:
 ## 如右上角的关闭按钮、右下角的缩放按钮）：用**控件锚点**钉上去，而不是算一次坐标——
 ## 父级常是"宽高随内容"的（一览收 / 展一次尺寸就变），只算一次就飞了；
 ## 锚点由引擎维护，父级尺寸一变位置自己跟上，不用我们去连信号追。
-## **只认"内部右上 / 内部右下"**：其余 open_at 策略是"开在屏幕某处"，那是 open 的事（见 UISys._place）。
+## **只认"内部右上 / 内部右下"**：其余 open_at 策略是"开在屏幕某处"，那是 open 的事（见 UISys._place）；
+## `ANCHOR_RIGHT_OUT`（宿主右侧外面那一列）也不走这里——它由面板的角落容器整列管（见 UI_Panel._corner_box），
+## 宿主不是面板时才会落到这里，那时什么都不做（位置留在配置值上）。
 ## 被谁用：_build_children / add_child_element（两条加子元素的路都要过这一道）。
 static func _anchor_free_child(ui: UIBase) -> void:
 	if not bool(ui.config.get("free", false)):
@@ -626,6 +628,12 @@ func _background_slot() -> String:
 ## 九宫格的边距取 config["background_slice"]（**每张图各自指定**，不写 = 全局默认
 ## `SysCfg.ui_background_slice`：默认那张就是按它量的；要"整张拉伸"显式写 0）：
 ## 每张图的圆角半径不一样（Unity 那边每张 sprite 也自带自己的九宫格参数），所以要能逐个指定。
+## **边与中央怎么填**取 config["background_stretch"]（不写 = `"stretch"` 拉伸）：
+##   · `"stretch"`（默认）——中间那段按面板大小等比铺开。图里中间是纯色（如默认那张圆角方块）时看不出
+##     差别，最省事；
+##   · `"tile"` —— **平铺**：中间的整段原样重复。图案有细节时必须用它：拉伸会把"2px 的竹节"按面板宽
+##     等比放大成一条很宽的暗带（"角色数据看板"那张 64×64 竹框就是，实测不看会踩）；
+##   · `"tile_fit"` —— 平铺并微缩到整数块（一般用不着，边与面板宽不成整数倍时用来避免半块）。
 ## 被谁用：_apply_background（本类与 UI_Panel 的覆写）。
 func _make_background(path: String) -> StyleBoxTexture:
 	if path == "":
@@ -639,6 +647,13 @@ func _make_background(path: String) -> StyleBoxTexture:
 	var style: StyleBoxTexture = StyleBoxTexture.new()
 	style.texture = tex
 	style.set_texture_margin_all(int(config.get("background_slice", SysCfg.ui_background_slice)))  # 圆角不被拉伸
+	match str(config.get("background_stretch", "stretch")):
+		"tile":
+			style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+			style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		"tile_fit":
+			style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+			style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
 	return style
 
 

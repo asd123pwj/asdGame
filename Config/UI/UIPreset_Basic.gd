@@ -29,28 +29,38 @@ config: Dictionary
 预设也是"普通 UI"，所以重复出现的东西（关闭按钮 CloseButton、缩放手柄 ResizeButton、改尺寸手柄 SizeGrip）
 都做成预设、用 UIInteract.open / close 开与关，不写专门函数。**悬停说明**（这几个按钮"移上去说一句"）用下面的
 "Tip" 预设 + `tip_events(文字)`：内容由开它的那一句带进去，所以一份预设够全项目用。
-**同一个角的多个图标会自动排成一行**（见 UI_Panel._corner_box）：先加的那个贴在角上，后加的往左依次排。
+**这三个按钮都挂在宿主窗口"右侧外面"的一列里**（`open_at = ANCHOR_RIGHT_OUT`，见 Enums.OpenAt 与
+`UI_Panel._corner_box`）：**列左沿 = 窗口右边缘、列上沿 = 窗口上边缘**，往下一个一个排 ⇒ 按钮不占窗口内容的
+地方，窗口再小也摆得下（画在窗口外照样能点：命中判定不做祖先矩形剪枝）。**列内顺序 = 添加顺序**
+（先开的在上面：窗口自带的关闭按钮最先加 ⇒ 永远在最上；两个手柄谁先开谁在上面）。
 
 要"**定死可视区、内容多了在里面滚**"就把面板的 `size` 两维都写数（那是要不要出滚动条的判据）；
 写 0 / 不写的那一维随内容走，长到刚好装下、不出滚动条。
 """
-## 图标（换图只改这两处：关闭按钮、两个手柄）。
-const CLOSE_ICON := "res://Material/Texture/UI/CloseButtom_16.png"
-const RESIZE_ICON := "res://Material/Texture/UI/ResizeButtom_16.png"
+## 图标（**换图只改这几行**）＝一套竹框图标，都是 **64×64**、四角各 16×16、最外 4px 透明
+## （和窗口那张竹框同一套画法，所以贴上去边框能接上）。
+## **一律按原图 1:1 显示**（`ICON_SIZE`）：缩小（如 32）会让像素对不上——0.5 缩放 = 丢一半像素，
+## 最近邻也救不回。换图时按新图的原始边长改 `ICON_SIZE`。
+const CLOSE_ICON := "res://Material/Texture/UI/UI_Bamboo_CloseButtom.png"       # 关闭（外置列，最上）
+const RESCALE_ICON := "res://Material/Texture/UI/UI_Bamboo_RescaleButtom.png"   # 等比缩放
+const RESIZE_ICON := "res://Material/Texture/UI/UI_Bamboo_ResizeButtom.png"     # 改尺寸
+const ICON_SIZE := 64
+## 同族的 `UI_Bamboo_CheckBox_Checked.png`（可选框打勾）**还没用上**：项目里现无可选框元素
+## （`UI_CheckBox` 只剩一个空 .uid 残留），做那个元素时直接把它当 `content` 接进来即可。
 
 
 ## 右上角那个**图标式关闭按钮的配置**——只写一份，两个用法：
 ##   · 当 `children` 里的一项：`UIPreset_Basic.close_item(),`（窗口自带，如一览 / 编辑器 / MiniHUD）
 ##   · 当独立预设：`UIInteract.open(宿主, "CloseButton", 宿主)`（运行时加/减，如键盘 UI）
-## 图 = `CLOSE_ICON`（`UI_Image` 的 content 即纹理），`free` + `open_at = ANCHOR_TOP_RIGHT_IN`
-## ⇒ 钉在**本窗口**右上角（落点见 UIBase._anchor_free_child：用锚点，窗口宽高随内容变也跟得上），
-## 点它关掉所在的窗口（`@host`，见 QName.UI_event_pointer1_close_host）。
+## 图 = `CLOSE_ICON`（`UI_Image` 的 content 即纹理），`free` + `open_at = ANCHOR_RIGHT_OUT`
+## ⇒ 挂进**本窗口右侧外面那一列**（列首、最上面那个；落点见 UI_Panel._corner_box——整列由锚点维护，
+## 窗口宽高随内容变也跟得上），点它关掉所在的窗口（`@host`，见 QName.UI_event_pointer1_close_host）。
 static func close_cfg() -> Dictionary:
     return {
         "content": CLOSE_ICON,
-        "size": [16 * 2, 16 * 2],
+        "size": [ICON_SIZE, ICON_SIZE],                # 1:1 不缩放（见上面图标那段的说明）
         "free": true,                                  # 自由定位：挂到窗口叠加层，位置不被竖排布局改
-        "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,   # 贴在本窗口内部的右上角
+        "open_at": Enums.OpenAt.ANCHOR_RIGHT_OUT,      # 挂在窗口右侧外面的那一列里（列首）
         "events": [QName.UI_event_pointer1_close_host] + tip_events("关闭"),
     }
 
@@ -73,18 +83,20 @@ static func tip_events(text_: String) -> Array:
     ]
 
 
-## 右下角那两个手柄的配置——**只有"按住后登记哪个交互"和说明文字不同，其余一样**，所以合一：
+## 那两个手柄的配置——**只有图标、"按住后登记哪个交互"和说明文字不同，其余一样**，所以合一：
 ##   · `QName.UI_event_pointer1_rescale_host`：等比缩放（整块放大，字也变大）= "看得更大"；
 ##   · `QName.UI_event_pointer1_resize_host`：改宽高（内容照新宽度折行）= "看更多字"。
-## 两个在同一个角上会**自动排成一行、后加的排左边**（见 UI_Panel._corner_box）。
+## 两个都挂进**宿主窗口右侧外面那一列**（`ANCHOR_RIGHT_OUT`）——和关闭按钮同一列，往下一个一个排。
+## **挂在哪与"拖的是谁"无关**：hold 起来登记的是 `@host`（那个窗口），所以列挂在窗口外侧，
+## 拖动/缩放照样作用在窗口上；元素在哪一格只影响"看着在哪"。
 ## 元素侧只有"按住"这一条：登记后由 AutoSys 每帧调（松开时状态不满足，AutoSys 自己删登记 ⇒
 ## 不用写"松开"，也不存任何跨帧状态）。用 Hold 不用 Press：它只在"开始按住"那一下触发。
-static func handle_cfg(hold_bind: Array, tip: String) -> Dictionary:
+static func handle_cfg(icon: String, hold_bind: Array, tip: String) -> Dictionary:
     return {
-        "content": RESIZE_ICON,                        # 两个手柄同一张图（要分开换图就再加个参数）
-        "size": [16 * 2, 16 * 2],
+        "content": icon,                               # 两个手柄各用各的图（见上面那三个常量）
+        "size": [ICON_SIZE, ICON_SIZE],                # 1:1 不缩放
         "free": true,                                  # 自由定位：挂到宿主叠加层，位置不被父级布局覆盖
-        "open_at": Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN,   # 开在锚点（宿主自己）内部的右下角
+        "open_at": Enums.OpenAt.ANCHOR_RIGHT_OUT,      # 挂在宿主右侧外面的那一列里
         "events": [hold_bind] + tip_events(tip),
     }
 
@@ -165,6 +177,6 @@ var values: Array[Array] = [
     # 两个手柄：等比缩放（整块放大，字也变大）/ 改宽高（内容跟着折行，见 UIInteract_Resize）。
     # 同一个角上 ⇒ 自动排成一行，**后加的在左边**（见 UI_Panel._corner_box）⇒
     # "先开 ResizeButton、再开 SizeGrip" = 等比缩放在右、改尺寸在左。
-    ["ResizeButton", "UI_Image", handle_cfg(QName.UI_event_pointer1_rescale_host, "等比缩放")],
-    ["SizeGrip", "UI_Image", handle_cfg(QName.UI_event_pointer1_resize_host, "改尺寸")],
+    ["ResizeButton", "UI_Image", handle_cfg(RESCALE_ICON, QName.UI_event_pointer1_rescale_host, "等比缩放")],
+    ["SizeGrip", "UI_Image", handle_cfg(RESIZE_ICON, QName.UI_event_pointer1_resize_host, "改尺寸")],
 ]

@@ -195,13 +195,19 @@ static func _build_open(preset: UIPreset, preset_name: String, mount: UIBase, ex
 ##   ANCHOR_TOP_RIGHT          → 开在 anchor 的右上角顶点（多级菜单传触发它的那个菜单项）
 ##   ANCHOR_TOP_RIGHT_IN       → 开在 anchor **内部**的右上角（按自己宽度内缩；如面板的 "X" 按钮）
 ##   ANCHOR_BOTTOM_RIGHT_IN    → 开在 anchor **内部**的右下角（如缩放手柄）
+##   ANCHOR_RIGHT_OUT          → 挂进 anchor **右侧外面**的那一列（外置按钮：关闭 / 两个手柄）——
+##                               位置由宿主面板的角落容器整列维护（UI_Panel._corner_box），这里只负责显示
 ##   CENTER                    → 开在**屏幕正中**（按屏幕尺寸和自己的尺寸算——"占屏幕一块"的窗口，如角色数据看板）
 ## 被谁用：open。
 static func _place(ui: UIBase, anchor: UIBase) -> void:
 	if ui.control == null:
 		return
 	var strategy: int = int(ui.config.get("open_at", Enums.OpenAt.CONFIG))
-	if strategy == Enums.OpenAt.CENTER:
+	if strategy == Enums.OpenAt.ANCHOR_RIGHT_OUT:
+		# 外置按钮列：**不摆位**——它在宿主面板的角落容器里，位置由容器整列排（写了也会被容器覆盖，
+		# 只白添一帧闪烁）。宿主不是面板时无处可排，也就停在配置值上（见 UIBase._anchor_free_child）。
+		ui.control.show()
+	elif strategy == Enums.OpenAt.CENTER:
 		ui.show_at(((UISys.screen_size() - ui.control.size) * 0.5).floor())
 	elif strategy == Enums.OpenAt.POINTER:
 		ui.show_at(InputSys.mouse_position)

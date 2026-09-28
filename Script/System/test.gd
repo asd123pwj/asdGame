@@ -51,7 +51,6 @@ func run() -> void:
     delay_loop_test()
 
 
-
 ## UI 演示：**开启路径与游戏内完全一致**（发指令 UIInteract.open，不直接调内部函数）。
 ## 被谁用：run。
 func ui_test() -> void:

@@ -98,6 +98,7 @@ func _create_control() -> Control:
 	if parent is UI_Panel:
 		scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 	margin.add_child(scroll)
+	_apply_scroll_skin(scroll)
 
 	# 内容盒：**永远是竖排**（网格模式下"网格区"也排在它里面，见文件头那一节）。
 	_box = VBoxContainer.new()
@@ -135,6 +136,63 @@ func _create_control() -> Control:
 	return root
 
 
+## 给滚动条**换皮肤**：轨道 → `scroll`（+ `scroll_focus`），抓手 → `grabber`（+ 悬停 `grabber_highlight`、
+## 按下 `grabber_pressed`，都是同一张图调色，不另画图）。
+## 为什么在这儿：滚动条是**引擎画的**（`ScrollContainer` 的内部子节点 VScrollBar），框架 `config["background"]`
+## 那套够不到它（只认 `panel / normal / background` 三个槽，见 UIBase._background_slot）⇒ 只能在"建滚动容器"
+## 这一处给它的主题槽打覆盖。**全项目只有这里建滚动容器**（UI_Base 的其它元素没有滚动条）⇒ 一处生效。
+## 图与九宫格参数全在 `SysCfg.ui_scroll_*`：换图 / 换条宽只改那几行。
+## **横向条不换**：项目里横向滚动是关掉的（见 _create_control），且这两张图是竖条（端帽在上下、条宽就是图宽）。
+## 被谁用：_create_control。
+func _apply_scroll_skin(scroll: ScrollContainer) -> void:
+	var vb: VScrollBar = scroll.get_v_scroll_bar()
+	if vb == null:
+		return
+	var track: StyleBoxTexture = _scroll_style(SysCfg.ui_scroll_track,
+		SysCfg.ui_scroll_side, SysCfg.ui_scroll_track_cap, SysCfg.ui_scroll_track_cap)
+	if track != null:
+		vb.add_theme_stylebox_override("scroll", track)
+		vb.add_theme_stylebox_override("scroll_focus", track)
+	var grab: StyleBoxTexture = _scroll_style(SysCfg.ui_scroll_grabber,
+		SysCfg.ui_scroll_side, SysCfg.ui_scroll_grabber_top, SysCfg.ui_scroll_grabber_bottom)
+	if grab == null:
+		return
+	vb.add_theme_stylebox_override("grabber", grab)
+	vb.add_theme_stylebox_override("grabber_highlight", _scroll_style(SysCfg.ui_scroll_grabber,
+		SysCfg.ui_scroll_side, SysCfg.ui_scroll_grabber_top, SysCfg.ui_scroll_grabber_bottom,
+		SysCfg.ui_scroll_highlight_tint))
+	vb.add_theme_stylebox_override("grabber_pressed", _scroll_style(SysCfg.ui_scroll_grabber,
+		SysCfg.ui_scroll_side, SysCfg.ui_scroll_grabber_top, SysCfg.ui_scroll_grabber_bottom,
+		SysCfg.ui_scroll_pressed_tint))
+
+
+## 造一张"滚动条用"的九宫格样式（图不存在/加载失败给 null）：
+##   · **左右边距合计 = 条宽**（`side * 2`）⇒ 样式的最小宽就是图宽（`ScrollBar` 的宽取自它）⇒ 条与图**同宽、
+##     横向 1:1 不缩放**（图里那一圈描边/高光就照原样画出来，不会糊也不会被拉宽）；
+##   · **上下边距 = 端帽**（都按图的画法量出来的，见 `SysCfg.ui_scroll_*_cap / _top / _bottom`）⇒ 帽之间那段
+##     被填到任意长度：填法由 `SysCfg.ui_scroll_stretch` 定（`"tile"` 平铺 = 像素原样重复，中段有纹理时用它；
+##     `"stretch"` 拉伸 = 整段等比放大）。**抓手长度随内容变**，所以这段必须能"无限长"。
+## `tint` 给悬停 / 按下态调色（`StyleBoxTexture.modulate_color` 是乘算：>1 变亮、<1 变暗）。
+## 被谁用：_apply_scroll_skin。
+func _scroll_style(path: String, side: int, top: int, bottom: int, tint: Color = Color.WHITE) -> StyleBoxTexture:
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	var tex: Texture2D = load(path)
+	if tex == null:
+		return null
+	var style: StyleBoxTexture = StyleBoxTexture.new()
+	style.texture = tex
+	style.set_texture_margin(SIDE_LEFT, side)
+	style.set_texture_margin(SIDE_RIGHT, side)
+	style.set_texture_margin(SIDE_TOP, top)
+	style.set_texture_margin(SIDE_BOTTOM, bottom)
+	if SysCfg.ui_scroll_stretch == "tile":
+		style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+	style.modulate_color = tint
+	return style
+
+
 ## 面板内边距（**四边各多少**）：`config["margin"]` 可覆盖默认值，一个数（四边都这么多）
 ## 或 `[横向, 纵向]`；不写 = 四边各 8（= `MARGIN_SIZE` 的一半）。
 ## 想"内容离边框更远/更近"就写它，**别去改 `MARGIN_SIZE` 那个常量**（它是全项目默认值）。
@@ -152,25 +210,55 @@ func _margin() -> Vector2:
 const CORNER_GAP := 4
 
 
-## 四角的"自动排位"容器（按需建）：同一个角上放多个图标（关闭 / 缩放 / 改尺寸…）时自己排成一行，
+## "外置按钮"的自动排位容器（按需建）：同一处的多个图标（关闭 / 缩放 / 改尺寸…）自己排成一排 / 一列，
 ## **不用手算坐标**、也就不用跟着面板尺寸变来变去（锚点由引擎维护，面板缩放/改尺寸都自动跟）。
-## 整行**贴着右边缘**，尺寸变大时**往左长**（`grow_horizontal = BEGIN`）⇒ 角上那个（最先加的）位置不动。
-## 只做"内部右上 / 内部右下"两种（与 `UIBase._anchor_free_child` 认的一致）；其余 open_at 是"开在屏幕某处"，
-## 那是 open 的事（见 UIInteract_OpenClose._place）。
+## 三种（与 Enums.OpenAt 那两个 IN + 一个 OUT 对应）：
+##   · 内部右上（一**行**，贴右边缘、往左长）——最先加的在角上；
+##   · 内部右下（一**行**，贴右边缘、往左长；竖向向上长）——最先加的在角上；
+##   · **右侧外面一列**（`ANCHOR_RIGHT_OUT`）：列**左沿 = 宿主右边缘**（整列挂在面板外）、上沿 = 宿主上边缘，
+##     往下一个一个排（`alignment = BEGIN` ⇒ 最先加的在最上面）。这是外置按钮的默认排法：
+##     按钮不吃窗口内容的地方，窗口再小也摆得下。**画在面板外照样能点**（PointerDetect 不做祖先矩形剪枝）。
+## 其余 open_at 是"开在屏幕某处"，那是 open 的事（见 UIInteract_OpenClose._place）。
 ## 被谁用：UIBase._attach_child_control。
 func _corner_box(at: int) -> Control:
 	var top_right: bool = at == Enums.OpenAt.ANCHOR_TOP_RIGHT_IN
 	var bottom_right: bool = at == Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN
-	if not (top_right or bottom_right):
+	var right_out: bool = at == Enums.OpenAt.ANCHOR_RIGHT_OUT
+	if not (top_right or bottom_right or right_out):
 		return null
 	if _corners.has(at):
 		return _corners[at]
+	if right_out:
+		var col: VBoxContainer = VBoxContainer.new()
+		col.name = "RightOutColumn"
+		col.mouse_filter = Control.MOUSE_FILTER_IGNORE         # 只负责排位，不参与命中
+		col.add_theme_constant_override("separation", CORNER_GAP)
+		col.alignment = BoxContainer.ALIGNMENT_BEGIN           # 从上往下排（最先加的在最上）
+		col.grow_horizontal = Control.GROW_DIRECTION_END       # 往右长：左沿（= 宿主右边缘）不动
+		col.grow_vertical = Control.GROW_DIRECTION_END         # 往下长：上沿（= 宿主上边缘）不动
+		# 锚在宿主的**右上角顶点**，偏移全 0 ⇒ 列左上角就在那个顶点上；随后
+		# "尺寸变大沿 grow 方向长"会把它往**右和下**撑开 ⇒ 整列落在面板外侧（尺寸由子元素的最小尺寸定）。
+		col.anchor_left = 1.0
+		col.anchor_right = 1.0
+		col.anchor_top = 0.0
+		col.anchor_bottom = 0.0
+		col.offset_left = 0.0
+		col.offset_right = 0.0
+		col.offset_top = 0.0
+		col.offset_bottom = 0.0
+		_overlay.add_child(col)
+		_corners[at] = col
+		return col
 	var row: HBoxContainer = HBoxContainer.new()
 	row.name = "CornerTopRight" if top_right else "CornerBottomRight"
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE             # 只负责排位，不参与命中
 	row.add_theme_constant_override("separation", CORNER_GAP)
 	row.alignment = BoxContainer.ALIGNMENT_END                 # 整行贴着右边缘
 	row.grow_horizontal = Control.GROW_DIRECTION_BEGIN         # 尺寸变了往左长（右边缘不动）
+	# 竖向**往面板里面长**：上角那行锚在上沿 ⇒ 向下长；下角那行锚在下沿 ⇒ 向上长。
+	# 不写默认是 END（向下长）：下面那行会整排挂到窗口下沿**外面**去，且挂出的量 = 图标高
+	# （32px 图标挂 32px、64px 托盘挂 64px——实测换大图标后才发现）。
+	row.grow_vertical = Control.GROW_DIRECTION_END if top_right else Control.GROW_DIRECTION_BEGIN
 	row.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT if top_right else Control.PRESET_BOTTOM_RIGHT,
 		Control.PRESET_MODE_MINSIZE)
 	_overlay.add_child(row)
