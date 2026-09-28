@@ -24,6 +24,11 @@ var values: Array[Dictionary] = [
             {"name": QName.pointer2_hold, "statuses": [[QName.mouseRight, "Satisfied"]],},
             {"name": QName.mouseLeft, "keys": [[MOUSE_BUTTON_LEFT, Enums.KeyStatus.HOLD]],},
             {"name": QName.mouseRight, "keys": [[MOUSE_BUTTON_RIGHT, Enums.KeyStatus.HOLD]],},
+            # 指针"这一帧动过"（**瞬时状态**）：由 PointerDetect._process 在派发 `Pointer Move` **事件之前**
+            # 发一条瞬时检测。**同一个名字两种身份**——事件那份给 UI 元素（派发给当前 hover 的那个元素），
+            # 状态这份给**状态层**：延时指令的取消条件写它即"鼠标一动就作废"
+            # （`TimeSys.after(..., cancel_on=QName.pointer_move)`；配合"同一条重置"= 停住才执行）。
+            {"name": QName.pointer_move, "auto_reset": true, "with_detect_transient": true},
             
             {"name": QName.right, "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.HOLD], [KEY_D, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.up, "match_any": true, "keys": [[KEY_UP, Enums.KeyStatus.HOLD], [KEY_W, Enums.KeyStatus.HOLD]],}, 

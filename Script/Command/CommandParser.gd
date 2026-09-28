@@ -544,7 +544,12 @@ static func _compile_value(raw: String) -> Dictionary:
 		if keys.size() == vals.size():
 			return { "lit": true, "dict_keys": keys, "dict_values": vals }
 		return { "lit": false, "expr": _compile_expr(_as_expr(s)) }
-	if s.length() >= 2 and s.begins_with("\"") and s.ends_with("\""):
+	# **字符串字面量**：双引号、单引号都认（成对且同一种）。
+	# 单引号是给"**把一整条指令串当参数传**"用的——里面就能直接写双引号，例如：
+	#   `TimeSys.after(0.5, 'UIInteract.open(@self, "Tip", @self, content="关闭")', cancel_on="Pointer Move")`
+	# 引号内**不认转义**（别的扫描器也不认）：要在字符串里写引号就换另一种引号。
+	var q: String = s.substr(0, 1)
+	if s.length() >= 2 and (q == "\"" or q == "'") and s.ends_with(q):
 		return { "lit": true, "value": s.substr(1, s.length() - 2) }
 	var lit: Variant = _convert_literal(s)
 	if lit != null:
@@ -616,15 +621,19 @@ static func _run_arg_plans(plans: Array) -> Array:
 
 ## 找顶层（不在引号 / 括号里）的 `=`，且不是 `==` / `!=` / `>=` / `<=` 的一部分；没有返回 -1。
 ## 被谁用：_compile_call_args（判 `名字=值`）。
+## 引号与 _find_top_level_colon / _split_top_level_args 同一套：**双引号单引号都认、且认准是被哪种打开的**
+## （节点串当参数时常写成 `'…content="x"…'`，里面那些 `"` 不能被当成"字符串结束"）。
 static func _find_top_level_assign(s: String) -> int:
 	var depth := 0
-	var in_quote := false
+	var quote := ""
 	for i in s.length():
 		var c: String = s.substr(i, 1)
-		if c == "\"":
-			in_quote = not in_quote
+		if quote != "":
+			if c == quote:
+				quote = ""
 			continue
-		if in_quote:
+		if c == "\"" or c == "'":
+			quote = c
 			continue
 		if c == "(" or c == "[":
 			depth += 1
@@ -903,12 +912,16 @@ static func _split_top_level_args(args_str: String) -> Array:
 	var parts: Array = []
 	var cur := ""
 	var depth := 0
-	var in_quote := false
+	# **记住是哪种引号打开的**（`"` 或 `'`）：另一种引号在它里面只是普通字符（如 `"it's"` 不该停止），
+	# 规则与 _find_top_level_colon / _find_top_level_assign 一致。
+	var quote := ""
 	for c in args_str:
-		if c == "\"":
-			in_quote = not in_quote
+		if quote != "":
 			cur += c
-		elif in_quote:
+			if c == quote:
+				quote = ""
+		elif c == "\"" or c == "'":
+			quote = c
 			cur += c
 		elif c == "(" or c == "[" or c == "{":
 			depth += 1

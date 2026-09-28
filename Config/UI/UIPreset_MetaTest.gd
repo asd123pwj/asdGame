@@ -19,8 +19,10 @@ Text(UI_Label，内核是 RichTextLabel)：**三行文本、只显示两行**（
 ## 本窗自己的三条绑定（"事件 + 指令"的一整对；拖动 / 关闭用 QName 里那两条常用的）。
 ## 用 `static var` 而不是 `const`：里面引用了 QName 的 static var（const 不能引用它们）。
 static var FOLD_STATUS := [QName.pointer1_hold, 'UIInteract.toggle_fold(@UI/Status)']
-static var TIP_ONE := [QName.pointer_move, 'UIInteract.open(@self, "Tip", @self, content="地图「草药田」：3 块地，产量 2/天，可采集")']
-static var TIP_TWO := [QName.pointer_move, 'UIInteract.open(@self, "Tip2", @self, content="第二个浮窗：这段字有它自己的说明")']
+## 两扇浮窗都走 `UIPreset_Basic.tip_hover_bind`（**说明浮窗怎么开只有那一处**：延时 + 一动就作废）。
+## 第二扇只是换个预设名（同形状的 "Tip2"，见本文件末尾），用来测"换一扇时上一扇会不会自动关"。
+static var TIP_ONE := UIPreset_Basic.tip_hover_bind("地图「草药田」：3 块地，产量 2/天，可采集")
+static var TIP_TWO := UIPreset_Basic.tip_hover_bind("第二个浮窗：这段字有它自己的说明", "Tip2")
 
 var values: Array[Array] = [
     ["MetaTest", "UI_Panel", {

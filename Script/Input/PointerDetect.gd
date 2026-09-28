@@ -59,6 +59,11 @@ static func _process(_delta: float) -> void:
 	# 指针移动：本帧位移不为 0 就算"动过"，派发 `Pointer Move`（和上面的 enter/exit 一样直接派发）。
 	# 位移由 InputSys._input 累计、帧末清零，所以这里看到的正是"这一帧移动了没有"。
 	if InputSys.mouse_delta != Vector2.ZERO:
+		# 先给**状态层**发"这一帧动过"（瞬时状态，声明见 Archetype_System）：延时指令的取消条件靠它
+		# （`TimeSys.after(..., cancel_on=QName.pointer_move)` = 一动就作废 / 停住才执行）。
+		# **必须早于下面那条 UI 事件**：这样"移动 ⇒ 先作废旧的延时、再由事件重新登记"的顺序才对，
+		# 效果就是"同一条指令的重置"（见 TimeSys.after）。
+		Msg.send_status_detected_transient(Sys.sys_status, QName.pointer_move)
 		if hover_ui != null:
 			hover_ui.on_event(QName.pointer_move)
 		# 顺手收尾"移开关"的那批 UI（hover 展开的子菜单、绑定菜单）：指针一动就判，挪开即关。

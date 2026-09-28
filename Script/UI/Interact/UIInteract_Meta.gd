@@ -4,7 +4,8 @@ extends UIInteractBase
 ##
 ## **meta = 事件名 + 冒号 + 一条指令**，例如：
 ##   [url=Pointer 1 Hold:UIInteract.drag(@host, @event)]拖动[/url]
-##   [url=Pointer Move:UIInteract.open(@self, "Tip", @self, content="要显示的文字")]这段字[/url]
+##   [url=Pointer Move:<打开说明浮窗那条指令>]这段字[/url]     ← 内容用 `UIPreset_Basic.tip_hover_bind("文字")`
+##                                                         拼（**别自己拼 open 指令**：延时与"一动就作废"都在那儿）
 ## 前缀写的就是**事件名**（`QName` 里那个，如 `QName.pointer1_hold` / `QName.pointer_move`）——
 ## 于是"哪个事件触发"和"meta 里写的前缀"是同一个词，**不必再维护 Click→某事件 那张映射表**；
 ## 事件名对不上就一个字都不执行（指针 1 按下不会去跑 `Pointer Move:` 那条）。

@@ -14,6 +14,10 @@
 ## 参数里引用变量/函数（直接写取值链，链式：字典 .key、数组 [index]、函数 ()）：
 ##     Msg.send_cmd("MapSys.place(Test.a, 5, -10, \"门\", 2, -1, true)")
 ##     Msg.send_cmd("MapSys.place(0, Test.test_func(Test.a, 4), Test.test_int2.value[0], \"门\", 2, -1, true)")
+## **字符串字面量**：双引号或**单引号**都行（成对、且必须是同一种）。**"把一整条指令当参数传"就用单引号**——
+## 里面可以直接写双引号，例如把开窗指令包一层延时（见 TimeSys.after）：
+##     TimeSys.after(0.5, 'UIInteract.open(@self, "Tip", @self, content="说明")', cancel_on="Pointer Move")
+## 引号内**不认转义**：要在字符串里写引号，就换成另一种引号。
 ## **取值一行**（拿值，不一定调用）：末尾带 () 就"调完拿返回值"，不带 () 就取这个值本身：
 ##     Msg.send_cmd("Test.a")                     读静态变量
 ##     Msg.send_cmd("@self.control.text")          读实例属性（`@self` 由指令系统解析）

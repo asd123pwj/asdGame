@@ -155,12 +155,11 @@ static func title_texts(title: String, collapsed: bool = false) -> Array:
 	return [shut, open_] if collapsed else [open_, shut]
 
 
-## 箭头那段链接的 meta：折叠（`LINK_FOLD`）＋ 悬停说明（开 "Tip" 预设，内容随状态给）。
+## 箭头那段链接的 meta：折叠（`LINK_FOLD`）＋ 悬停说明（内容随状态给）。
+## **说明浮窗怎么开只有一处**（`UIPreset_Basic.tip_hover_bind`：延时 + 一动就作废），这里别再自己拼 open 指令。
 ## 两条之间用**换行**分隔——`\v` 是"一条指令里接多条子指令"，两种分隔各管一段，别混用（见 UIInteract_Meta）。
 static func _sym_meta(tip: String) -> String:
-	var hover: String = UIInteract_Meta.as_meta([
-		QName.pointer_move,
-		'UIInteract.open(@self, "Tip", @self, content="%s")' % tip])
+	var hover: String = UIInteract_Meta.as_meta(UIPreset_Basic.tip_hover_bind(tip))
 	return LINK_FOLD + "\n" + hover
 
 

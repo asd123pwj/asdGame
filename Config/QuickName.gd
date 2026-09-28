@@ -9,7 +9,9 @@ extends BaseClass
 # ---- 输入监控（指针 / 键）----
 static var pointer1_hold := "Pointer 1 Hold"
 static var pointer2_hold := "Pointer 2 Hold"
-static var pointer_move := "Pointer Move"       # 指针移动（不是状态，由 PointerDetect 直接派发）
+static var pointer_move := "Pointer Move"       # 指针移动，**一个名字两种身份**：① PointerDetect 直接派发给
+                                                # hover 元素的 **UI 事件**；② SYS 角色上的**瞬时状态**（这一帧动过就
+                                                # 亮一下，见 Archetype_System）——延时指令的取消条件用后者
 static var pointer_enter := "Pointer Enter"     # hover 进入（同上）
 static var pointer_exit := "Pointer Exit"       # hover 离开（同上）
 static var input_submit := "Input Submit"       # 输入框回车提交（编辑中按回车照常进状态链，QName.submit 满足时由状态侧派发；框里文字用 @self.control.text 读）

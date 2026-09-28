@@ -73,13 +73,39 @@ static func close_item() -> Array:
     return ["CloseButton", "UI_Image", close_cfg()]
 
 
-## "悬停弹说明"那两条事件：指针移上去开、移开收，开的就是下面的 "Tip" 预设（内容由这里给）。
-## **给按钮这种"整块都算说明"的元素**用；文本里的链接不用它——那种走链接的 meta
-## （见 UIInteract_Meta），因为"这一行里哪几个字有说明"只有链接自己知道。
+## 悬停多久才弹说明（秒）：指针**停住**满这么久才弹；期间每动一下都重新计时（见 tip_open_cmd）。
+const TOOLTIP_DELAY := 0.5
+## 说明浮窗的**预设名**（默认那扇 `Tip`）：要开"同形状的另一扇"（如 MetaTest 的 `Tip2`）就当参数传。
+const TIP_PRESET := "Tip"
+
+
+## **"打开说明浮窗"那条指令** —— **全项目的说明浮窗都从这儿来**（别处别再自己拼 open 指令）。
+## 内容由调用方给，预设名默认那扇 `Tip`。做法是**包一层延时**（`TimeSys.after`，见 Script/Time/TimeSystem.gd）：
+##   · 指针每动一下（`pointer_move`）都会再登记**同一条**指令 ⇒ 延时被**重置**，只有停住不动满
+##     TOOLTIP_DELAY 才真的开；
+##   · `cancel_on=QName.pointer_move` = **取消条件**：**鼠标一动就作废**（那是 SYS 角色上的瞬时状态，
+##     由 PointerDetect 在派发"移动"事件之前发；所以指针挪开、停下、甚至原地动一下，这条待执行都会
+##     先作废再由本次移动重新登记 ⇒ 只有"停在原地"才等得到）。取消条件统一是**角色状态名**（见 TimeSys.after）。
+## 指令串用**单引号**括着传（里面还要写双引号，见 CommandParser 的"字符串字面量"那条）。
+## 被谁用：tip_events（整块元素那条路）、tip_hover_bind（富文本链接那条路，UIInteract_Fold 也在用）。
+static func tip_open_cmd(text_: String, preset: String = TIP_PRESET) -> String:
+    var open_cmd: String = 'UIInteract.open(@self, "%s", @self, content="%s")' % [preset, text_]
+    return "TimeSys.after(%s, '%s', cancel_on=\"%s\")" % [TOOLTIP_DELAY, open_cmd, QName.pointer_move]
+
+
+## **富文本链接**用的那一对：`[事件名, 指令串]`（`UIInteract_Meta.as_meta` 要的形状）——"悬停这段字就弹说明"。
+## **收窗不在这儿**：链接那一路由 `UIInteract_Meta` 管（它认"指针还在不在那扇浮窗上"）。
+## 被谁用：UIPreset_MetaTest 的 TIP_ONE / TIP_TWO、UIInteract_Fold 的标题箭头（`_sym_meta`）。
+static func tip_hover_bind(text_: String, preset: String = TIP_PRESET) -> Array:
+    return [QName.pointer_move, tip_open_cmd(text_, preset)]
+
+
+## **整块元素**（按钮 / 手柄这种"整块都算说明"的）用的那两条事件：悬停弹说明 ＋ 移开收窗。
+## 文本里的链接不用它——那种走链接的 meta（见 tip_hover_bind）："这一行里哪几个字有说明"只有链接自己知道。
 static func tip_events(text_: String) -> Array:
     return [
-        [QName.pointer_move, 'UIInteract.open(@self, "Tip", @self, content="%s")' % text_],
-        [QName.pointer_exit, 'UIInteract.close(@self, "Tip")'],
+        tip_hover_bind(text_),
+        [QName.pointer_exit, 'UIInteract.close(@self, "%s")' % TIP_PRESET],
     ]
 
 
