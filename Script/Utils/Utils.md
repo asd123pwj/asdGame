@@ -31,4 +31,4 @@
 ## ChangeResult.gd / ListenType.gd / Utils.gd
 - ChangeResult：`code/ori/new/offset`，属性改动回调的返回体。
 - ListenType：`name/match_type/thres` + `check(a,b)`(比较符：== != >= <= > <)。
-- Utils：`find_dict/set_dict/get_or_set_dict`(按键数组嵌套读写字典)、`identity`。
+- Utils：`find_dict/set_dict`(按键数组嵌套读写字典)、`hash_bitmap`(位图→MD5 缓存键)、`save_debug_png`(调试图存盘)、`write/swap/copy`(指令化的小工具)。

@@ -99,9 +99,15 @@ static func open(target: UIBase = null, preset_name: String = "", anchor: UIBase
 	ui.config["close_on_blur"] = close_on_blur
 	ui.config["close_on_move"] = close_on_move
 	_place(ui, anchor)
-	# 新开的排到最前（也会顺带把它的窗口提到最前，见 UIInteract_SetTop）
-	UIInteract_SetTop.set_top(ui)
+	_schedule_replace(ui, anchor)          # 尺寸是估的：下一帧真实尺寸出来再校一次（只一次，见该函数）
+	# 排到最前——**只在宿主内**（`set_top_in_host`，见 UIInteract_SetTop 文件头）：
+	# 悬停开出来的浮窗（Tip、hover 展开的子菜单）**不该把背后的宿主窗口整个提到前面**——鼠标只是
+	# 掠过背后的菜单 B 上某个按钮，菜单 B 就跳到正在用的菜单 A 上面，A 就没法用了（实测困扰）。
+	# 浮窗仍会被提到它宿主的那一层最前 ⇒ 照样压在自己的宿主内容之上、正常显示。
+	# **点击那一下的窗口置顶**由 `PointerDetect.key` 走全局 `set_top` 负责，所以这里不提窗口不影响"点谁谁在前"。
+	UIInteract_SetTop.set_top_in_host(ui)
 	_reg_blur(ui)
+	_just_opened.append(ui)                # 本帧刚开出来：失焦判定放过一次（见 _just_opened）
 	# 告诉整棵子树"你被显示了"（元素据此开关自己的开销，如 UI_Status 订阅状态消息）——
 	# **复用路径也走到这里**，所以"关掉再开"的元素也能收到（这条不发消息，见 UIBase.on_shown）。
 	UIBase.dispatch_shown(ui)
@@ -137,6 +143,7 @@ static func close(target: UIBase, preset_name: String = "") -> void:
 	# 从两张失焦候选表里都摘掉（关过再开时 open 会重新登记 ⇒"显示着"与"在表里"始终一致）
 	_blur_uis.erase(ui)
 	_move_blur_uis.erase(ui)
+	_drop_pending(ui)              # 关掉了就不必再跟着尺寸挪（也顺手把它的"尺子"摘掉，别一直持有实例）
 
 
 ## 开关：现在**显示着**就关掉，否则开出来。开/关两条路都走本文件的 open / close（含复用与摆位）。
@@ -189,15 +196,36 @@ static func _build_open(preset: UIPreset, preset_name: String, mount: UIBase, ex
 	return mount.add_child_element(preset_name, preset.ui_name, cfg)
 
 
+## 指针类摆位的间隙：**0 = 浮窗左上角就在指针上**（与 Windows 菜单一致，也是"离鼠标最近"）。
+## **别调大**：失焦判定（`close_blur_ui`）就是"指针不在浮窗上就关"——留出间隙等于让指针落在浮窗外面，
+## 右键菜单"一开就关"就是这么来的（实测踩过）。往左 / 往上摆的那几个候选更要注意：要**压住指针 1px**
+## 才算"指针在浮窗里"（`Rect2` 的右/下边是不含的）。
+const POINTER_GAP := 0
+
+
 ## 按被开启 UI 自己的 config["open_at"] 摆位置并显示（Enums.OpenAt）：
 ##   CONFIG（默认，不写就是它）→ 摆回配置声明的 position（独立面板；被拖动过就回到初值）
-##   POINTER                   → 开在指针处（右键菜单仍要传 anchor：它决定了挂在谁下面）
-##   ANCHOR_TOP_RIGHT          → 开在 anchor 的右上角顶点（多级菜单传触发它的那个菜单项）
-##   ANCHOR_TOP_RIGHT_IN       → 开在 anchor **内部**的右上角（按自己宽度内缩；如面板的 "X" 按钮）
-##   ANCHOR_BOTTOM_RIGHT_IN    → 开在 anchor **内部**的右下角（如缩放手柄）
+##   POINTER                   → 开在**指针附近**（右键菜单、悬停提示浮窗）
+##   ANCHOR_TOP_RIGHT          → 贴 anchor 的右上角顶点（多级菜单传触发它的那个菜单项）
+##   ANCHOR_TOP_RIGHT_IN       → 贴 anchor **内部**的右上角（按自己宽度内缩；如面板的 "X" 按钮）
+##   ANCHOR_BOTTOM_RIGHT_IN    → 贴 anchor **内部**的右下角（如缩放手柄）
 ##   ANCHOR_RIGHT_OUT          → 挂进 anchor **右侧外面**的那一列（外置按钮：关闭 / 两个手柄）——
 ##                               位置由宿主面板的角落容器整列维护（UI_Panel._corner_box），这里只负责显示
+##   ANCHOR_NEAREST            → 贴 anchor **顶点、挑离指针最近的那个角**（=="ANCHOR_TOP_RIGHT + nearest"，
+##                               悬停说明浮窗用它；见 Enums.OpenAt）
 ##   CENTER                    → 开在**屏幕正中**（按屏幕尺寸和自己的尺寸算——"占屏幕一块"的窗口，如角色数据看板）
+##
+## **摆位一律是"给一串候选、挑最不挡的"**（见 `_fit_pos`）：候选按"喜好顺序"排，**第一个能完整落在
+## 屏幕里**的就用它；全都被屏幕挡掉 ⇒ 用"露出来的面积最大"的那个。
+## **候选顺序"在哪弄"**：默认在 `Enums.OPEN_ORDER_POINTER / OPEN_ORDER_ANCHOR`
+## （角名一律英文、与 `OpenAt` 里的叫法一致：`bottom_right` / `bottom_left` / `top_right` / `top_left`），
+## 被开 UI 自己的 config 可以覆盖两样：
+##   · `open_order` —— 一串角名（可只写前几个，如 `["top_left"]`），决定"先试哪个角"；
+##   · "离指针最近优先" —— **`open_at = ANCHOR_NEAREST`**（贴锚点那种，推荐：一个"开在哪"只写一处），
+##     或在别的策略上再补 `nearest: true`（如"指针旁也挑最近角"）；角名顺序只当平手时用。
+## 于是两种常见尴尬自动消失：指针已贴着屏幕右下角 ⇒ 菜单翻到左上；子菜单贴着菜单项右侧而菜单已在
+## 屏幕右边缘 ⇒ 翻到菜单项左边。
+## **不需要"开出来再等几帧挪一下"**：`_want_size` 能在一帧内拿到"要多大"（还没排版就问元素自己）。
 ## 被谁用：open。
 static func _place(ui: UIBase, anchor: UIBase) -> void:
 	if ui.control == null:
@@ -207,26 +235,193 @@ static func _place(ui: UIBase, anchor: UIBase) -> void:
 		# 外置按钮列：**不摆位**——它在宿主面板的角落容器里，位置由容器整列排（写了也会被容器覆盖，
 		# 只白添一帧闪烁）。宿主不是面板时无处可排，也就停在配置值上（见 UIBase._anchor_free_child）。
 		ui.control.show()
-	elif strategy == Enums.OpenAt.CENTER:
-		ui.show_at(((UISys.screen_size() - ui.control.size) * 0.5).floor())
-	elif strategy == Enums.OpenAt.POINTER:
-		ui.show_at(InputSys.mouse_position)
-	elif strategy in [Enums.OpenAt.ANCHOR_TOP_RIGHT, Enums.OpenAt.ANCHOR_TOP_RIGHT_IN,
-			Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN]:
-		if anchor == null or anchor.control == null:
-			push_warning("UIInteract.open: 「%s」要求开在锚点角上，但锚点不可用，改在指针处开" % ui.name)
-			ui.show_at(InputSys.mouse_position)
-			return
-		var rect: Rect2 = anchor.control.get_global_rect()
-		# IN 版：按自己的宽/高往内缩，落在锚点内部（见 Enums.OpenAt 的说明）
-		var inside: bool = strategy != Enums.OpenAt.ANCHOR_TOP_RIGHT
-		var bottom: bool = strategy == Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN
-		var x: float = rect.end.x - ui.control.size.x if inside else rect.end.x
-		var y: float = rect.end.y - ui.control.size.y if bottom else rect.position.y
-		ui.show_at(Vector2(x, y))
-	else:
-		ui.refresh("position")
-		ui.control.show()
+		return
+	var size: Vector2 = _want_size(ui)
+	# "离指针最近优先"两种写法（见函数头）：`ANCHOR_NEAREST` 这个策略本身就是它，
+	# 别的策略则靠 `nearest: true` 补一条。
+	var nearest: bool = bool(ui.config.get("nearest", false)) or strategy == Enums.OpenAt.ANCHOR_NEAREST
+	var order: Array = ui.config.get("open_order", [])
+	match strategy:
+		Enums.OpenAt.CENTER:
+			ui.show_at(_fit_pos([(UISys.screen_size() - size) * 0.5], size))
+		Enums.OpenAt.POINTER:
+			var names: Array = order if not order.is_empty() else Enums.OPEN_ORDER_POINTER
+			ui.show_at(_fit_pos(_ordered(names, _pointer_positions(size), nearest, size), size))
+		Enums.OpenAt.ANCHOR_TOP_RIGHT, Enums.OpenAt.ANCHOR_NEAREST, \
+				Enums.OpenAt.ANCHOR_TOP_RIGHT_IN, Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN:
+			if anchor == null or anchor.control == null:
+				push_warning("UIInteract.open: 「%s」要求开在锚点角上，但锚点不可用，改在指针处开" % ui.name)
+				ui.show_at(_fit_pos([InputSys.mouse_position], size))
+				return
+			var base: Array = Enums.OPEN_ORDER_ANCHOR if strategy != Enums.OpenAt.ANCHOR_BOTTOM_RIGHT_IN \
+				else Enums.OPEN_ORDER_POINTER
+			var pick: Array = order if not order.is_empty() else base
+			ui.show_at(_fit_pos(_ordered(pick, _anchor_positions(strategy, anchor.control.get_global_rect(), size),
+				nearest, size), size))
+		_:
+			ui.refresh("position")
+			ui.control.show()
+
+
+## "指针附近"的四个候选（角名 → 坐标），见 Enums.OPEN_ORDER_POINTER。
+## 往左 / 往上的那几个要**压住指针 1px**：`Rect2` 的右 / 下边不含 ⇒ 正好贴着边等于"指针不在浮窗里"
+## ⇒ 会被失焦判定当场关掉（见 POINTER_GAP 的说明）。
+## 被谁用：_place。
+static func _pointer_positions(size: Vector2) -> Dictionary:
+	var p: Vector2 = InputSys.mouse_position
+	var px: float = p.x - size.x + POINTER_GAP + 1.0
+	var py: float = p.y - size.y + POINTER_GAP + 1.0
+	return {
+		"bottom_right": p + Vector2(POINTER_GAP, POINTER_GAP),
+		"bottom_left": Vector2(px, p.y + POINTER_GAP),
+		"top_right": Vector2(p.x + POINTER_GAP, py),
+		"top_left": Vector2(px, py),
+	}
+
+
+## "贴锚点"的四个候选（角名 → 坐标）：IN 版往锚点**内部**缩，顶点版贴着锚点四角**外面**。
+## 被谁用：_place。
+static func _anchor_positions(strategy: int, rect: Rect2, size: Vector2) -> Dictionary:
+	# **顶点版**（贴锚点四角**外面**）只有这两个策略：`ANCHOR_TOP_RIGHT`（多级菜单）与 `ANCHOR_NEAREST`
+	# （悬停说明：同样贴锚点外，只是候选按"离指针最近"排）；其余（两个 `*_IN`）都往锚点**内部**缩。
+	# **别写"不等于 ANCHOR_TOP_RIGHT 就算 inside"**：那样新加一个顶点版策略会**静默**变成内部版
+	# （加 ANCHOR_NEAREST 时实测踩到：浮窗贴到锚点里侧去了）。
+	var inside: bool = strategy != Enums.OpenAt.ANCHOR_TOP_RIGHT \
+		and strategy != Enums.OpenAt.ANCHOR_NEAREST
+	var x_right: float = rect.end.x - size.x if inside else rect.end.x
+	var x_left: float = rect.position.x if inside else rect.position.x - size.x
+	var y_top: float = rect.position.y
+	var y_bottom: float = rect.end.y - size.y if inside else rect.end.y
+	return {"bottom_right": Vector2(x_right, y_bottom), "bottom_left": Vector2(x_left, y_bottom),
+		"top_right": Vector2(x_right, y_top), "top_left": Vector2(x_left, y_top)}
+
+
+## 把"角名 → 坐标"排成候选序列：按 `names` 的顺序；`nearest` 时改成**按"离指针最近"排序**
+## （用候选矩形中心算距离；`names` 里的先后只当平手时的次序）。`names` 里没提到的角补在末尾。
+## 被谁用：_place。
+static func _ordered(names: Array, positions: Dictionary, nearest: bool, size: Vector2) -> Array:
+	var out: Array = []
+	for n in names:
+		if positions.has(n) and not out.has(positions[n]):
+			out.append(positions[n])
+	for n in positions.keys():
+		if not out.has(positions[n]):
+			out.append(positions[n])
+	if nearest:
+		var p: Vector2 = InputSys.mouse_position
+		var half: Vector2 = size * 0.5
+		out.sort_custom(func(a: Vector2, b: Vector2) -> bool:
+			return (a + half).distance_squared_to(p) < (b + half).distance_squared_to(p))
+	return out
+
+
+## "这个 UI 要占多大"：**优先用控件自己的尺寸**（已经排过一次的那版，通常只差一行）；
+## 哪一维还是 0（还没排过版）才去问元素自己（`_content_size`）。
+## 为什么不直接信 `_content_size`：**在建好那一刻它是"高估"的**——折行文字那时还不知道自己多宽，
+## 会按"很窄"去估行数（实测：菜单真实 108、它报 252，反而把浮窗摆得更远）；控件自己的尺寸是
+## 引擎按实际宽排过的，近得多。剩下那点误差（折行高的异步更新 ⇒ 常差一行）由 `_schedule_replace`
+## 在下一帧用真实尺寸补一刀。
+## 被谁用：_place。
+static func _want_size(ui: UIBase) -> Vector2:
+	var s: Vector2 = ui.control.size
+	if s.x <= 0.0 or s.y <= 0.0:
+		s = s.max(ui._content_size())
+	return s
+
+
+## 定位置后挂一把尺子：**刚开出来的这几帧里**，尺寸一变就按真实尺寸重摆一次（见 `REPLACE_WINDOW_MS`）。
+## 为什么需要：打开那一帧的尺寸只能是估的（见 `_want_size`），估小一点就会"贴着屏幕边开出去"或
+## "该翻边没翻"；尺寸落定后重摆就正了——**只错一帧、只挪一点，肉眼几乎看不出**，比"一开就在屏幕外"好。
+## **为什么不是"只校一次"**：尺寸不是一次就到位——实测菜单是 84 → **252（排版中途的虚高）** → 108，
+## 只跟第一拍（252）会摆得比真实需要的更远（偏高 144px）。所以在"刚开出来"的这段时间里**每变一次跟一次**。
+## **盯控件的 `resized`、不盯 `SceneTree.process_frame`**：开机那一批 UI 是在 `_ready` 里开的，那时
+## **UI 根还没挂进场景树**（`Sys._ready` 用的是 `add_child.call_deferred`）⇒ 走 `get_tree()` 会拿到 null
+## 并抛 "Parameter data.tree is null"，还把 `open` 的后续（置顶 / 失焦登记 / dispatch_shown）一起打断。
+## 控件自己的信号不需要树，任何时候都能连。
+## 退化尺寸那一拍跳过（排版中途会发"尺寸瞬时为 0"的 resized，用那一拍摆位反而更偏），等下一次。
+## **只对"自适应摆位"的策略做**：`CONFIG`（摆回配置里的 position）与 `ANCHOR_RIGHT_OUT`（角落容器整列排）
+## 不该被挪——前者可能已经被拖动过，后者位置不归这里管。
+## 被谁用：open。
+static func _schedule_replace(ui: UIBase, anchor: UIBase) -> void:
+	var strategy: int = int(ui.config.get("open_at", Enums.OpenAt.CONFIG))
+	if strategy == Enums.OpenAt.CONFIG or strategy == Enums.OpenAt.ANCHOR_RIGHT_OUT:
+		return
+	if ui.control == null:
+		return
+	if _pending.has(ui):                       # 同一个 UI 又开了一次：先撤掉上一把尺子
+		_drop_pending(ui)
+	var cb: Callable = _replace_once.bind(ui)
+	_pending[ui] = [anchor, cb, Time.get_ticks_msec()]
+	ui.control.resized.connect(cb)
+
+
+## 摘掉某元素的"待校正尺子"（断开信号 + 忘掉记录）——**断开是必须的**，否则 `_pending` 会一直持有它
+## （元素就永远释放不掉），而且它下次再开时会被误判成"已经有尺子了"。
+## 被谁用：_schedule_replace（重开时）、_replace_once（过期时）、close（关掉时）。
+static func _drop_pending(ui: UIBase) -> void:
+	var entry: Array = _pending.get(ui, [])
+	if entry.is_empty():
+		return
+	if ui.control != null and ui.control.resized.is_connected(entry[1]):
+		ui.control.resized.disconnect(entry[1])
+	_pending.erase(ui)
+
+
+## "刚开出来"的这段时间（毫秒）：这期间尺寸一变就重摆（过了就摘掉尺子，之后内容变化不再挪浮窗）。
+const REPLACE_WINDOW_MS := 300
+## 待校正的元素：`ui -> [anchor, 连接用的 Callable, 开出来的时刻]`（要能断开，所以 Callable 留着）。
+static var _pending: Dictionary = {}
+## **本帧刚开出来的 UI**：失焦判定放过它们一次（见 `_close_outside`）。
+## 为什么：浮窗尺寸/位置在开出来的那一帧还没落定，"指针在不在它上面"此刻判不出准头——
+## 右键菜单"一开就关"就有这一半原因（实测）。它也不可能在这一帧被"点别处"关掉（那一帧指针没动过）。
+static var _just_opened: Array[UIBase] = []
+
+
+## 清掉"本帧刚开出来"的名单——**每帧刷新一次**（由 PointerDetect._process 的尾巴调，那次刷新末尾本就是
+## 失焦判定的收尾处）。不清理的话第一帧之后它还在名单里 ⇒ 那个浮窗**永远**跳过失焦判定（关不掉）。
+static func clear_just_opened() -> void:
+	_just_opened.clear()
+
+
+## `_schedule_replace` 的那一刀：按真实尺寸重摆一次（尺寸还会再变就留着尺子，过了时限才摘）。
+static func _replace_once(ui: UIBase) -> void:
+	var entry: Array = _pending.get(ui, [])
+	if entry.is_empty():
+		return
+	var anchor: UIBase = entry[0]
+	if ui.control == null:
+		_drop_pending(ui)
+		return
+	if Time.get_ticks_msec() - int(entry[2]) > REPLACE_WINDOW_MS:
+		_drop_pending(ui)
+		return                                  # 已过"刚开出来"那段：不再跟着挪（用户可能已经在用了）
+	if ui.control.size.x <= 0.0 or ui.control.size.y <= 0.0:
+		return                                  # 退化尺寸那一拍不算数（排版中途会发），等下一次
+	if ui.control.visible:
+		_place(ui, anchor)
+
+
+## 在候选位置里挑一个（候选**已按喜好排序**）：
+##   · **第一个"能完整落在屏幕里"的**就选它——所以"首选右下、右下放不下就左下"是这样表达的；
+##   · 全都被屏幕挡掉（浮窗比屏幕还大之类）⇒ 选"与屏幕相交面积最大"的那个 = **被挡得最少**。
+## **一帧算完**：只有几次矩形求交（候选最多 4 个），不需要跨帧试探。坐标取整（像素风）。
+## 被谁用：_place（所有策略）。
+static func _fit_pos(candidates: Array, size: Vector2) -> Vector2:
+	var screen: Rect2 = Rect2(Vector2.ZERO, UISys.screen_size())
+	var best: Vector2 = candidates[0]
+	var best_vis: float = -1.0
+	for c: Vector2 in candidates:
+		var r: Rect2 = Rect2(c, size)
+		var vis: float = r.intersection(screen).get_area()
+		if vis >= r.get_area() - 0.5:
+			return c.floor()                     # 完整可见 ⇒ 就它
+		if vis > best_vis:
+			best_vis = vis
+			best = c
+	return best.floor()
+
+
+## ---------- 失焦关闭（点关 / 移开关，与"是不是菜单"无关）----------
 
 
 ## ---------- 失焦关闭（点关 / 移开关，与"是不是菜单"无关）----------
@@ -262,6 +457,8 @@ static func close_move_blur_ui(hover_ui: UIBase) -> void:
 static func _close_outside(uis_list: Array[UIBase], hover_ui: UIBase, with_mount: bool) -> void:
 	var closing: Array[UIBase] = []
 	for ui: UIBase in uis_list:
+		if _just_opened.has(ui):
+			continue                       # 本帧刚开出来：这一帧不判（尺寸/位置还没落定，见 _just_opened）
 		# 尺寸还没算出来的先当它"还在指针下"：布局没跑时 get_global_rect() 是退化矩形，
 		# 会被误判成"指针在外面"当场关掉（多级菜单"一开就没"就是这么来的）。
 		# 反过来说：**尺寸被谁压成 0 的 UI 会永远跳过判定 ⇒ 永远关不掉**（free 子元素别挂进滚动容器，见 UI_Panel）。

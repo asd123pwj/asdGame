@@ -55,15 +55,37 @@ enum KeyStatus{
 ## UI 的开启位置策略（由被开启 UI 自己的 config["open_at"] 声明，见 UIInteract_OpenClose.open/_place）。
 ## 开独立 UI 与开菜单/提示是一回事：读配置 → 建 UI → 挂到锚点/宿主或 UI 根；差的只是摆在哪。
 ## 注意 open 的 anchor 参数不只用在这里：它同时是**挂载点**（决定挂在谁下面），见该函数的说明。
+
+# ---- 摆位的**候选顺序**（"开在哪"的次序，见 UIInteract_OpenClose._place / _ordered）----
+# 角名**一律英文**（与下面 OpenAt 里的叫法一致，也用不着额外翻译）：
+#   `top_right` / `top_left` / `bottom_right` / `bottom_left`
+# 意思就是**"把浮窗摆在参照物的哪一角"**。开出来时按这个次序挑"**第一个能完整落在屏幕里**"的位置；
+# 全被屏幕挡掉就挑"露出来最多"的那个。
+# 两种参照物各一套默认（为什么两套：指针旁优先右下 = 与 Windows 菜单一致；贴锚点优先右上 =
+# 子菜单该贴着菜单项的右边往外长）。**想在某个预设上换顺序就写 config["open_order"]**（一串角名，
+# 可以只写前几个，如 `["top_left"]`）；**想按"离指针最近"排有两种写法**：
+#   · `open_at = OpenAt.ANCHOR_NEAREST`（== 贴锚点 + 挑最近角，悬停说明浮窗用这条；推荐）；
+#   · 或在别的策略上再补一条 `config["nearest"] = true`（如"指针旁也挑最近角"）。
+# 两种都是"离指针最近优先"，角名顺序只当平手时用。
+const OPEN_ORDER_POINTER := ["bottom_right", "bottom_left", "top_right", "top_left"]
+const OPEN_ORDER_ANCHOR := ["top_right", "top_left", "bottom_right", "bottom_left"]
 enum OpenAt {
-    POINTER,          # 开在指针处（右键菜单）
-    ANCHOR_TOP_RIGHT, # 开在"锚点 UI"的右上角顶点（多级菜单：锚点 = 触发它的那个菜单项）
+    POINTER,          # 开在**指针附近**（右键菜单 / 悬停提示浮窗）：优先"指针右下"，那里放不下会自动
+                      # 翻到左下 / 右上 / 左上（见 UIInteract_OpenClose._fit_pos —— 所有策略都带避让）
+    ANCHOR_TOP_RIGHT, # 开在"锚点 UI"的右上角顶点（多级菜单：锚点 = 触发它的那个菜单项）；
+                      # 右侧放不下会自动翻到锚点左边、下面放不下翻到上面（同一处避让）
     CONFIG,           # 摆回配置里声明的 position（独立面板；被拖动过就回到初值）——不写 open_at 时的默认
     ANCHOR_TOP_RIGHT_IN, # 开在"锚点 UI"**内部**的右上角（按自己的宽度内缩；如给面板加的 "X" 关闭按钮）
     ANCHOR_BOTTOM_RIGHT_IN, # 开在"锚点 UI"**内部**的右下角（如缩放手柄）
     CENTER,           # 开在**屏幕正中**（按屏幕尺寸与自己的尺寸算，"占屏幕一块"的那种窗口用它）
     ANCHOR_RIGHT_OUT, # 外置按钮列：整列贴在"锚点 UI"**右侧外面**——列左沿 = 宿主右边缘、列上沿 = 宿主上边缘，
                       # 往下一个个排（关闭 / 等比缩放 / 改尺寸）。宿主是谁由锚点（或 host）决定，见 UI_Panel._corner_box。
+    ANCHOR_NEAREST,   # **贴锚点，挑离指针最近的那个角**（候选还是"锚点顶点周围的四角"，只是改成按
+                      # "离指针最近"排 ⇒ 指针在哪边就往哪边冒；**悬停说明浮窗（Tip）用的就是它**）。
+                      # 与"`ANCHOR_TOP_RIGHT` + `nearest: true`"是同一件事，只是收进一个 open_at 值里：
+                      # 一个"开在哪"的策略只写一处，不必再配一条布尔键（见 UIPreset_Basic.tip_cfg）。
+                      # 为什么不直接跟着指针开（`POINTER`）：指针一落进浮窗，事件从浮窗冒泡回锚点、
+                      # `meta_hover` 变 null ⇒ 会被当成"离开链接"当场收掉（详见 UIInteract_Meta 文件头）。
     # 注意：新值一律追加在末尾——已存盘的 json 里记的是枚举整数（见 SysCfg.RESET），插在中间会让旧值串位。
 }
 

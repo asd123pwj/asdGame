@@ -169,6 +169,19 @@ func _fit_size() -> void:
 		control.size = out
 
 
+## "连几帧各重算一次尺寸"（默认 2 帧、有界），等排版稳定后再定稿。
+## 为什么不能只算一次：折行数 / 文本最小尺寸要等控件拿到宽度、主题字体就绪并重排完才准，
+## 建的那一帧读到的还是旧值——只算一次会停在"一行高"（实测，见 UI_Label._refit / UI_Input._reheight）。
+## 各子类自己的判断（如"正在编辑就别算"）留在自己那层，重算这一步共用这里。
+## 被谁用：UI_Label._refit、UI_Input._reheight（控件 resized 信号反复叫的就是它们）。
+func _repeat_fit(method: StringName, round_: int = 2) -> void:
+	if control == null:
+		return
+	_fit_size()
+	if round_ > 0:
+		Callable(self, method).bind(round_ - 1).call_deferred()
+
+
 ## 本元素的**宽度由容器给**吗（自己不报宽、也不设 `size.x`，由容器排版时赋）？
 ## 默认 false = 宽度按"配置想要 / 内容需要"自己定（绝大多数元素）。
 ## 覆写者：UI_Label（在"以面板为准"的环境里，或自己配了 `wrap: true` / `fill_width: true`）——
@@ -194,13 +207,20 @@ func _keep_min_width() -> bool:
 ## "内容实际多大"，于是分不清"配置要什么"和"内容给了多少"（宽固定、高随内容这种就废了）。
 ## 被谁用：_fit_size、reapply（"应用尺寸"只此一处）。
 func _config_size() -> Vector2:
-	var s: Variant = config.get("size")
-	if not (s is Array):
-		return Vector2.ZERO
-	var arr: Array = s
+	return _as_vector2(config.get("size"), Vector2.ZERO)
+
+
+## 把"配置里写的二元数组"读成 Vector2 —— `[宽, 高]` / `[横, 纵]` 这种写法在 UI 里好几处都有
+## （size / scroll / margin…），**别再各写一份"是不是数组、够不够两项、转 float"**。
+## 不是数组 / 少于两项 ⇒ 返回 def（默认值由调用方各给各的）。
+## 被谁用：_config_size、UI_Panel._scroll_cap、UI_Panel._margin（后者另支持"只写一个数"）。
+static func _as_vector2(v: Variant, def: Vector2 = Vector2.ZERO) -> Vector2:
+	if not (v is Array):
+		return def
+	var arr: Array = v
 	if arr.size() >= 2:
 		return Vector2(float(arr[0]), float(arr[1]))
-	return Vector2.ZERO
+	return def
 
 
 ## 内容本身需要多大（默认取控件的最小尺寸）。
@@ -475,15 +495,12 @@ func _in_fixed_panel() -> bool:
 	return false
 
 
-## 自由定位子元素（`free: true`，如浮窗 / 子菜单 / 关闭按钮）的挂载点：**从本元素往上找最近一个有
-## 叠加层的祖先**，都没有才退回自己的内容盒。
+## 自由定位子元素（`free: true`，如浮窗 / 子菜单 / 关闭按钮）的挂载点：**爬到最外层那个 UI（宿主窗口）
+## 的叠加层**——"浮窗类元素一律挂在窗口这一层"，见 `_top_free_layer`（两条加子元素的路都走它）。
+## 这里保留的是**兜底**：最外层那个 UI 没有叠加层（不是面板）时，才往上找最近的一个，都没有就退回内容盒。
 ## 为什么不直接挂自己的 control：**叶子元素（文本 / 菜单项）与滚动容器都会把"画到自己矩形外"的子元素
 ## 裁掉**——文本的内核 RichTextLabel 自带 `clip_contents`，滚动容器也要裁（不然滚动露馅）；
 ## 而浮窗、子菜单正是要画到外面去（实测：浮窗只剩约一条边，看着就是"开不出来"）。
-## **元素层的父子关系不变**：`child.parent` 仍是本元素（登记名、失焦判定的挂载点、`@self.parent` 链
-## 全都照旧），变的只是 Control 挂在谁下面 ⇒ `show_at` 按"实际父控件"换算坐标（含父级的 scale），
-## 位置照样准。
-## 被谁用：_build_children、add_child_element（两条加子元素的路的 free 分支）。
 ## 覆写者：UI_Panel（它自己就有叠加层，直接返回，不必爬）。
 func _free_box() -> Control:
 	var ui: UIBase = self
@@ -493,6 +510,27 @@ func _free_box() -> Control:
 			return layer
 		ui = ui.parent
 	return _content_box()
+
+
+## free 子元素**实际挂哪一层**：沿 `parent` 爬到**最外层那个 UI**（窗口），用它的叠加层。
+## **不用"最近的那个叠加层"**（那是 `_free_box` 的老规矩，实测不够）：面板层层嵌套时，中间每一层
+## （格子、折叠段…）都有自己的叠加层，挂到"最近的那个"就等于挂在**中间层里面**——而中间层几乎都在
+## 某个滚动容器里 ⇒ 浮窗超出中间层的部分被 `ScrollContainer` 裁掉（实测：角色看板里折叠段标题的
+## 提示浮窗，右侧直接被裁没）。挂到最外层窗口的叠加层则**不在任何滚动容器里**，整窗都能画。
+## 顺带把置顶也理顺了：它所在的那一层就是窗口的叠加层 ⇒ `UIInteract_SetTop.set_top_in_host`
+## 提的就是"最顶层 UI 之内的最前"（用户要的正是这个）。
+## **元素层的父子关系不变**：`child.parent` 仍是它的父元素（登记名、失焦判定的挂载点、`@self.parent`
+## 链全都照旧），变的只是 Control 挂在谁下面 ⇒ `show_at` 按"实际父控件"换算坐标（含父级的 scale），
+## 位置照样准。
+## 被谁用：_attach_child_control（`_build_children` / `add_child_element` 两条路都过它）。
+func _top_free_layer() -> Control:
+	var top: UIBase = self
+	while top.parent != null:
+		top = top.parent
+	var layer: Control = top._own_free_layer()
+	if layer != null:
+		return layer
+	return _free_box()          # 最外层不是面板（极少）：退回"往上找最近的那一层"
 
 
 ## 自由定位子元素"贴角"时使用的**角落容器**：同一个角上放多个（关闭 / 缩放 / 改尺寸…）时，
@@ -505,12 +543,16 @@ func _corner_box(_at: int) -> Control:
 
 
 ## 把子元素的控件**挂到该去的地方**，并做收尾定位——挂载规则只有这一份
-## （普通子 → 内容盒；free 子 → 叠加层，贴角的进角落容器）。
+## （普通子 → 内容盒；free 子 → 叠加层，贴角的进角落容器）：
+##   · **贴角类**（`open_at` = 内部右上/右下/右侧外一列，见 _corner_box）→ 挂**本面板**的角落容器
+##     （它们是"这个面板的装饰"，位置相对本面板，就该钉在本面板上）；
+##   · **其余 free（浮窗 / 菜单 / 提示）**→ 挂**最外层窗口**的叠加层（见 `_top_free_layer`：
+##     挂"最近的那一层"会被中间层的滚动容器裁掉）。
 ## 被谁用：_build_children（配置里的子元素）、add_child_element（运行时追加）。
 func _attach_child_control(child: UIBase, child_config: Dictionary) -> void:
 	var loose: bool = bool(child_config.get("free", false))
 	var corner: Control = _corner_box(int(child_config.get("open_at", Enums.OpenAt.CONFIG))) if loose else null
-	var box: Control = corner if corner != null else (_free_box() if loose else _content_box())
+	var box: Control = corner if corner != null else (child._top_free_layer() if loose else _content_box())
 	box.add_child(child.control)
 	if corner == null:
 		_anchor_free_child(child)
@@ -556,6 +598,20 @@ static func _anchor_free_child(ui: UIBase) -> void:
 func _apply_config() -> void:
 	refresh("position")
 	reapply()
+
+
+## ---- UI 文字配色（一览 / 编辑器那几屏共用；一处定义，别在各屏各写一遍字面值）----
+## **这一族都是按"浅色面板底"挑的深色**（面板底是浅色图，见 `SysCfg.ui_background`）：
+## 原来给暗底挑的是浅色，换浅底后统一压暗了一档（否则白底上发虚看不清）。再调色就改这里。
+## 正文（默认）字色**不在这里**：它由 `SysCfg.ui_font_color_default` 给（见 reapply）——那是全局默认；
+## 这里只是"某个语义该用什么色"的少数几处。
+## 被谁用：UI_View 与它下面那几个一览（UI_Status / UI_Skill / UI_Interaction / UI_Shortcut / UI_Attr /
+## UI_Archetype），以及 UI_Editor（参数 / 历史那些次要行）。
+const TEXT_DIM_COLOR := Color(0.33, 0.39, 0.50)     # 次要文字：参数行 / 历史行 / 总计那行
+const TEXT_NONE_COLOR := Color(0.45, 0.48, 0.55)    # 空值（"（无）"）
+const TEXT_YES_COLOR := Color(0.20, 0.52, 0.24)     # 满足 / 已进队
+const TEXT_NO_COLOR := Color(0.62, 0.24, 0.24)      # 不满足
+const TEXT_ALERT_COLOR := Color(0.70, 0.20, 0.20)   # 提醒（红字：还没建成之类）
 
 
 ## 重新应用"**只有应用时才生效**"的那几项公共属性：size / font_size / font_color / background。

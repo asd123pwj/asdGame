@@ -59,10 +59,10 @@ func _rows_of(key: String) -> Array:
 	if preset == null:
 		return []
 	return [
-		_row("SL", "    依赖状态（回车提交；改了会重新监听）", Color(0.33, 0.39, 0.50)),
+		_row("SL", "    依赖状态（回车提交；改了会重新监听）", TEXT_DIM_COLOR),
 		["SI", "UI_Input", _input_cfg(key, "status", preset.dependence_status, 2,
 			"@self.parent.parent.write_status(@self.config.scut, @self.control.text)")],
-		_row("CL", "    执行的指令（多条命令在预设里用 \\v 分隔，这里显示成换行）", Color(0.33, 0.39, 0.50)),
+		_row("CL", "    执行的指令（多条命令在预设里用 \\v 分隔，这里显示成换行）", TEXT_DIM_COLOR),
 		["CI", "UI_Input", _input_cfg(key, "cmd", _input_text(preset.config), 4,
 			"@self.parent.parent.write_cmd(@self.config.scut, @self.control.text)")],
 	]

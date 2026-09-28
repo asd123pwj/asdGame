@@ -52,7 +52,7 @@ func _notes() -> Array:
 	return [["Note", "UI_Label", {
 		"content": "原型：%s（只在角色**初始化时**装配一次，之后改原型不会回头动这个角色；下面是合并 packages 之后的清单）"
 			% _type_name(),
-		"font_color": COUNT_COLOR,
+		"font_color": TEXT_DIM_COLOR,
 	}]]
 
 
@@ -68,7 +68,7 @@ func _title_of(key: String) -> String:
 func _rows_of(key: String) -> Array:
 	var list: Array = _field(key)
 	if list.is_empty():
-		return [_row("Empty", "（无）", Color(0.45, 0.48, 0.55))]
+		return [_row("Empty", "（无）", TEXT_NONE_COLOR)]
 	var out: Array = []
 	for i in list.size():
 		out.append(_row("Item_%d" % i, "　· %s" % str(list[i])))

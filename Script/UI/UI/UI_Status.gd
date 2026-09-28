@@ -67,7 +67,7 @@ func _rows_of(key: String) -> Array:
 	var sat: bool = _satisfied(preset)
 	var out: Array = [
 		_row("Now", "满足：%s" % ("✔" if sat else "✘"),
-			Color(0.20, 0.52, 0.24) if sat else Color(0.62, 0.24, 0.24)),
+			TEXT_YES_COLOR if sat else TEXT_NO_COLOR),
 		_row("Msg", "最近消息：%s" % _brief(preset.latest_message.get(char_))),
 		_row("Decl", "auto_reset=%s   match_any=%s   外部检测：瞬时=%s 保持型=%s"
 			% [preset.auto_reset, preset.match_any, preset.with_detect_transient, preset.with_detect_manual]),
@@ -79,7 +79,7 @@ func _rows_of(key: String) -> Array:
 			continue
 		out.append(_row("G_%s" % str(group[0]),
 			"【%s 依赖：%d 条】" % [str(group[0]), listeners.size()],
-			Color(0.33, 0.39, 0.50)))
+			TEXT_DIM_COLOR))
 		# **按角色取触发真值**：预设里那张表是"所有角色混在一起"的，这里只拿这个角色那一份
 		var triggers: Dictionary = preset.get(str(group[2])).get(char_, {})
 		var i: int = 0
@@ -87,22 +87,22 @@ func _rows_of(key: String) -> Array:
 			var hit: bool = bool(triggers.get(lt.name, false))
 			out.append(_row("L_%s_%d" % [str(group[0]), i], "%s   → %s"
 				% [_dep_text(lt), "✔ 已触发" if hit else "✘ 未触发"],
-				Color(0.20, 0.52, 0.24) if hit else Color(0.62, 0.24, 0.24)))
+				TEXT_YES_COLOR if hit else TEXT_NO_COLOR))
 			total += 1
 			i += 1
 	if preset.with_detect_transient:
 		var hit_t: bool = bool(preset._detect_transient_triggers.get(char_, false))
 		out.append(_row("G_detect_t", "【外部检测（瞬时）】→ %s" % ("✔ 已触发" if hit_t else "✘ 未触发"),
-			Color(0.20, 0.52, 0.24) if hit_t else Color(0.62, 0.24, 0.24)))
+			TEXT_YES_COLOR if hit_t else TEXT_NO_COLOR))
 		total += 1
 	if preset.with_detect_manual:
 		var hit_m: bool = bool(preset._detect_manual_triggers.get(char_, false))
 		out.append(_row("G_detect_m", "【外部检测（保持型）】→ %s" % ("✔ 已触发" if hit_m else "✘ 未触发"),
-			Color(0.20, 0.52, 0.24) if hit_m else Color(0.62, 0.24, 0.24)))
+			TEXT_YES_COLOR if hit_m else TEXT_NO_COLOR))
 		total += 1
 	if total == 0:
 		out.append(_row("NoDep", "（没有依赖声明——靠外部检测，或恒不满足）",
-			Color(0.45, 0.48, 0.55)))
+			TEXT_NONE_COLOR))
 	return out
 
 
@@ -123,23 +123,20 @@ func _listen(char_: Character) -> void:
 ##     只听前两条的话"段里那些依赖行"会一直是旧值（实测就是这个现象）；
 ##   · 两种外部检测（按预设声明订）：瞬时 / 保持型的亮灭同样不一定改 satisfied。
 func _subscribe(char_: Character, status_name: String) -> void:
-	var on_hit: Callable = func(_msg): _refresh_section(status_name)
-	_watch(Msg.listen_status_satisfied(char_, status_name, on_hit), on_hit)
-	var on_lost: Callable = func(_msg): _refresh_section(status_name)
-	_watch(Msg.listen_status_unsatisfied(char_, status_name, on_lost), on_lost)
-	var on_dep: Callable = func(_msg): _refresh_section(status_name)
-	_watch(Msg.listen_status_trigger_changed(char_, status_name, on_dep), on_dep)
+	# 这几条订阅的**回调是同一个**："这条状态有动静就重铺它那一段"——所以只造一个 Callable。
+	# （原来每条各写一个 lambda，六处一模一样。）
+	var on_change: Callable = func(_msg): _refresh_section(status_name)
+	_watch(Msg.listen_status_satisfied(char_, status_name, on_change), on_change)
+	_watch(Msg.listen_status_unsatisfied(char_, status_name, on_change), on_change)
+	_watch(Msg.listen_status_trigger_changed(char_, status_name, on_change), on_change)
 	var preset: StatusPreset = _preset(status_name)
 	if preset == null:
 		return
 	if preset.with_detect_transient:
-		var on_t: Callable = func(_msg): _refresh_section(status_name)
-		_watch(Msg.listen_status_detected_transient(char_, status_name, on_t), on_t)
+		_watch(Msg.listen_status_detected_transient(char_, status_name, on_change), on_change)
 	if preset.with_detect_manual:
-		var on_m: Callable = func(_msg): _refresh_section(status_name)
-		_watch(Msg.listen_status_detected_manual(char_, status_name, on_m), on_m)
-		var on_u: Callable = func(_msg): _refresh_section(status_name)
-		_watch(Msg.listen_status_undetected_manual(char_, status_name, on_u), on_u)
+		_watch(Msg.listen_status_detected_manual(char_, status_name, on_change), on_change)
+		_watch(Msg.listen_status_undetected_manual(char_, status_name, on_change), on_change)
 
 
 ## ---------- 取数据（一律按名字现取：预设是共享的，拿名字取永远拿到当前那份）----------

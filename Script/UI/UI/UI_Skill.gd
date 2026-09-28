@@ -69,12 +69,12 @@ func _rows_of(key: String) -> Array:
 	var out: Array = [
 		_row("Impl", "实现类：%s%s" % [str(preset.skill_name),
 			"" if built else "　（**没建出来**：类名写错了吗？）"],
-			Color(0.13, 0.13, 0.16) if built else Color(0.70, 0.20, 0.20)),
+			Color(0.13, 0.13, 0.16) if built else TEXT_ALERT_COLOR),
 		_row("Dep", "依赖状态：%s　→　%s%s" % [str(preset.dependence_status),
 			"✔ 满足" if _dep_hit(char_, preset.dependence_status) else "✘ 未满足",
 			_resolve_note(char_, preset.dependence_status)]),
 		_row("Queue", _queue_text(preset, in_q),
-			Color(0.20, 0.52, 0.24) if in_q else Color(0.33, 0.39, 0.50)),
+			TEXT_YES_COLOR if in_q else TEXT_DIM_COLOR),
 	]
 	out.append_array(_history_rows(_rec(key)))          # 公共零件（UI_View）
 	out.append_array(_config_rows(preset.config))       # 公共零件（UI_View）

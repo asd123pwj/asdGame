@@ -403,8 +403,11 @@ func listen(char_: Character) -> void:
             if listener.name == "Year":
                 msg_ID = Msg.listen_advance_year(trigger_func)
             elif listener.name == "Month":
-                msg_ID = Msg.listen_advance_xun(trigger_func)
+                # 原来误写成 listen_advance_xun（复制粘贴时串到了下一支），而**旬已从时间粒度里移除**
+                # （TimeSys 不推进旬、send_advance_xun 从不发）⇒ 挂 "Month" 的状态永远收不到消息。
+                msg_ID = Msg.listen_advance_month(trigger_func)
             elif listener.name == "Xun":
+                # 旬这一粒度已移除（无人发 send_advance_xun）⇒ 挂 "Xun" 的状态当前不会触发。
                 msg_ID = Msg.listen_advance_xun(trigger_func)
             elif listener.name == "Day":
                 msg_ID = Msg.listen_advance_day(trigger_func)

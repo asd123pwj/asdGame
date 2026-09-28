@@ -66,7 +66,7 @@ func _rows_of(key: String) -> Array:
 	var out: Array = [
 		_row("Impl", "实现类：%s%s" % [str(preset.interaction_name),
 			"" if built else "　（**没建出来**：类名写错了吗？）"],
-			Color(0.13, 0.13, 0.16) if built else Color(0.70, 0.20, 0.20)),
+			Color(0.13, 0.13, 0.16) if built else TEXT_ALERT_COLOR),
 		_row("Dep", "依赖状态：%s　→　%s%s" % [str(preset.dependence_status),
 			"✔ 满足" if _dep_hit(char_, preset.dependence_status) else "✘ 未满足",
 			_resolve_note(char_, preset.dependence_status)]),

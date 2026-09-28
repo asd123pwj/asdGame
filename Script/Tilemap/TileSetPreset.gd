@@ -258,7 +258,7 @@ static func get_tile_variant_info(set_name: String, tile_name: String, variant: 
 ## 被谁用：MapLayer._place_p3d。
 static func get_or_register_masked_p3d(sprite_name: String, atlas_coords: Vector2i,
         mask: BitMap) -> Dictionary:
-    var mask_hash := _hash_mask(mask)
+    var mask_hash := Utils.hash_bitmap(mask)
     var cache_key := sprite_name + "|" + str(atlas_coords) + "|" + mask_hash
     if _p3d_mask_variant_cache.has(cache_key):
         return _p3d_mask_variant_cache[cache_key]
@@ -271,26 +271,10 @@ static func get_or_register_masked_p3d(sprite_name: String, atlas_coords: Vector
     src.create_tile(Vector2i(0, 0))
     var source_id: int = TileSpritePreset.tileset.add_source(src)
     var td: TileData = src.get_tile_data(Vector2i(0, 0), 0)
-    td.texture_origin = Vector2i(-8, 8)
+    td.texture_origin = Sys.sysCfg.P3D_TILE_ORIGIN
     var result := {"source_id": source_id, "atlas_coords": Vector2i(0, 0)}
     _p3d_mask_variant_cache[cache_key] = result
     return result
-
-
-## 把掩码压成一串 MD5（缓存键用：掩码相同即同一变体）。
-## 被谁用：get_or_register_masked_p3d。
-static func _hash_mask(bit_map: BitMap) -> String:
-    var alpha := PackedByteArray()
-    alpha.resize(Sys.sysCfg.REGION_SIZE.x * Sys.sysCfg.REGION_SIZE.y)
-    var n := 0
-    for y in Sys.sysCfg.REGION_SIZE.y:
-        for x in Sys.sysCfg.REGION_SIZE.x:
-            alpha[n] = 1 if bit_map.get_bit(x, y) else 0
-            n += 1
-    var ctx := HashingContext.new()
-    ctx.start(HashingContext.HASH_MD5)
-    ctx.update(alpha)
-    return ctx.finish().hex_encode()
 
 
 # 获取/注册 (set_name, tile_name, variant) 的 tile id
@@ -434,14 +418,6 @@ static func save_all_tiles_debug() -> void:
                     # 同时保存该位置的单个格子素材，命名含位置（锚点左下为 1,1）
                     var pos_file := "%s_%s_v%d_%d,%d_%s.png" % [
                         set_name, tile_name, v, p.dx + 1, p.dy + 1, sprite_name]
-                    _save_debug_png(cell, pos_file)
+                    Utils.save_debug_png(cell, pos_file, "TileSetPreset")
                 var file_name := "%s_%s_v%d_%s.png" % [set_name, tile_name, v, sprite_name]
-                _save_debug_png(img, file_name)
-
-
-## 把一张图存到 DEBUG_DIR（自动建目录，失败报错）。被谁用：save_all_tiles_debug。
-static func _save_debug_png(image: Image, file_name: String) -> void:
-    var debug_path: String = Sys.sysCfg.DEBUG_DIR + file_name
-    DirAccess.make_dir_recursive_absolute(Sys.sysCfg.DEBUG_DIR)
-    if image.save_png(debug_path) != OK:
-        push_error("TileSetPreset: 保存调试图像失败: ", debug_path)
+                Utils.save_debug_png(img, file_name, "TileSetPreset")

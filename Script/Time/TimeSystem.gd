@@ -5,13 +5,6 @@ extends BaseClass
 ## 时钟推进是**秒**驱动——两者都在本类的 _process 里发。
 ## 被谁用：Sys._process（唯一驱动）；状态层的 time 监听与各 Msg.send_advance_* 的接收方。
 
-""" -----  ----- """
-## 以下四个 msgID_* 是历史遗留常量，实际发送走 Msg.send_advance_*（当前无人用这四个常量）。
-static var msgID_advance: String = "TIME_ADVANCE"
-static var msgID_advance_year: String = "TIME_ADVANCE_YEAR"
-static var msgID_advance_month: String = "TIME_ADVANCE_MONTH"
-static var msgID_advance_day: String = "TIME_ADVANCE_DAY"
-
 """ ----- 年 月 旬 日 时辰 ----- """
 ## 当前时间（都是 1 起算：年/月 1-12、日 1-30、时辰 1-12）。
 ## 被谁用：TimeFormat.update（转中文）、状态的 time 监听、各处展示。

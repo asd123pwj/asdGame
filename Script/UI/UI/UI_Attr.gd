@@ -73,7 +73,7 @@ func _rows_of(key: String) -> Array:
 	var out: Array = [
 		_row("Now", "当前值：%s" % _value_text(attrs.attributes.get(key, {}))),
 		_row("Before", "改动前：%s" % _value_text(attrs.attributes_before.get(key, {})),
-			Color(0.33, 0.39, 0.50)),
+			TEXT_DIM_COLOR),
 		_row("Changed", "最近改动：谁=%s  怎么改=%s" % [
 			_brief(RegSys.name_of(attrs.attributes_changed_by_who.get(key))),
 			_brief(attrs.attributes_changed_by_how.get(key))]),
@@ -141,8 +141,8 @@ func _buff_rows(category: String) -> Array:
 				"%s   %s   %s   %s" % [_value_name(vt), str(buff.name), _effect_text(buff), _uses_text(buff)],
 				Color(0.36, 0.44, 0.28)))
 	if out.is_empty():
-		return [_row("NoBuff", "参与 Buff：（无）", Color(0.45, 0.48, 0.55))]
-	out.push_front(_row("BuffHead", "参与 Buff（%d 个）" % n, Color(0.33, 0.39, 0.50)))
+		return [_row("NoBuff", "参与 Buff：（无）", TEXT_NONE_COLOR)]
+	out.push_front(_row("BuffHead", "参与 Buff（%d 个）" % n, TEXT_DIM_COLOR))
 	return out
 
 

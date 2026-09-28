@@ -24,6 +24,10 @@ extends UIInteractBase
 ##   · 指针**不在"有说明的那段字"上**（移到别的链接 / 这行的空白处）⇒ 收掉；
 ##   · 指针**移进浮窗自己身上不算离开**（浮窗是它的子窗，得能凑近看）——判据就是基类那条
 ##     `UIInteractBase._in_subtree`（与子菜单用的是同一条）；
+##     ⚠️ **这一条对"悬停类事件"同样必须判**（不只是 `Pointer Exit`）：指针一落到浮窗上，事件是
+##     从浮窗**冒泡**上来的（`UIBase.on_event`：本层没配就交给父级），而那一刻 `meta_hover` 天然是
+##     null（指针不在链接上）⇒ 不判就会"鼠标一动，窗就被当成'离开链接'收掉"（实测踩过：
+##     一段始终弹说明的链接，指针在它附近挪一下就闪断）；
 ##   · 指针移出整个元素（`Pointer Exit`）⇒ 全收。
 ##
 ## meta 从哪来：`UI_Label` 把 RichTextLabel 的两个 hover 信号（started / ended —— **这个版本没有
@@ -61,12 +65,18 @@ static func meta_event(rtl: UIBase) -> void:
 		return
 	var meta: Variant = label.meta_hover      # 当前悬停的那段链接（不在链接上 = null）
 	if not (meta is String):
+		if _hover_in_tips(label):
+			return                            # 指针在自己那扇浮窗上（见下）⇒ 这一帧不动它
 		_close_tips(label)                    # 不在链接上（这行的空白处）⇒ 本元素的浮窗收掉
 		return
 	var cmd: String = _pick(meta as String, event_name)
 	if cmd == "":
+		if _hover_in_tips(label):
+			return                            # 同上：指针在浮窗上，别收
 		_close_tips(label)                    # 这段字不归本事件管 ⇒ 同样收
 		return
+	if _hover_in_tips(label):
+		return                                # 指针在浮窗上：这一帧什么都不做（点击也是点在窗上）
 	_apply(label, Msg.send_cmd(cmd))
 
 

@@ -108,7 +108,13 @@ static func tip_cfg(fallback: String) -> Dictionary:
     return {
         "size": [0, 0],
         "free": true,
-        "open_at": Enums.OpenAt.ANCHOR_TOP_RIGHT,      # 开在锚点右上角外（不压住被说明的那个东西）
+        # **贴着被说明的那个东西**（锚点 = 那段字/那个按钮），并**挑离鼠标最近的那个角**：
+        # 就这一个 open_at 值（`ANCHOR_NEAREST` = 取"锚点顶点周围的四角"、按"离指针最近"排）⇒
+        # 指针在哪边就往哪边冒（窗口再长、指针再靠边都看得见），而浮窗**不压住指针**——
+        # 贴指针那条路试过：指针一落进浮窗，事件从浮窗冒泡到锚点，`meta_hover` 变 null ⇒
+        # 会被当成"离开链接"当场收掉（详见 UIInteract_Meta 文件头那条 ⚠️）。
+        # （"离指针最近"也可以写成别的策略 + `nearest: true`，见 Enums.OpenAt；这里贴锚点，用前者。）
+        "open_at": Enums.OpenAt.ANCHOR_NEAREST,
         "children": [
             ["Text", "UI_Label", {
                 "content": fallback,                    # 字面值 = 没带内容进来时的兜底

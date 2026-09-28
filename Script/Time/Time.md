@@ -14,7 +14,6 @@
 - 内部计时：`elapse`(累计秒)、`_period_accum`(距上次推进的累计)。
 - `static _process(delta)`：累加时间；累计到 `Sys.sysCfg.hour_period`(秒) → `advance()`；每帧发 `Msg.send_tick`。
 - `static advance()`：hour+1，满 12→day+1，满 30→month+1，满 12→year+1；`TimeFormat.update()`；分别发 `Msg.send_advance_year/month/day/hour`。
-- 消息 id 常量：`msgID_advance[_year/month/day]`。
 - 供谁调用：被 `Sys._process` 驱动；`advance_*`/`tick` 被其它系统监听(如状态里的 time 监听、UI 时钟)。
 
 ## TimeFormat.gd（TimeFormat，extends BaseClass）

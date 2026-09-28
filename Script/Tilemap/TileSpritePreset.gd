@@ -237,7 +237,7 @@ static func get_erase_id(sprite_name: String, atlas_coords: Vector2i) -> int:
     var bit_map := _union_bitmap(
         get_content_matrix(sprite_name, atlas_coords),
         get_p3d_content_matrix(sprite_name, atlas_coords))
-    var hash_key := _hash_bitmap(bit_map)
+    var hash_key := Utils.hash_bitmap(bit_map)
     if _erase_id_by_hash.has(hash_key):
         var id: int = _erase_id_by_hash[hash_key]
         _erase_id_map[key] = id
@@ -268,22 +268,6 @@ static func _union_bitmap(a: BitMap, b: BitMap) -> BitMap:
     return result
 
 
-# 对内容矩阵(BitMap)做哈希，相同形状共享
-## 被谁用：get_erase_id。
-static func _hash_bitmap(bit_map: BitMap) -> String:
-    var alpha := PackedByteArray()
-    alpha.resize(Sys.sysCfg.REGION_SIZE.x * Sys.sysCfg.REGION_SIZE.y)
-    var n := 0
-    for y in Sys.sysCfg.REGION_SIZE.y:
-        for x in Sys.sysCfg.REGION_SIZE.x:
-            alpha[n] = 1 if bit_map.get_bit(x, y) else 0
-            n += 1
-    var ctx := HashingContext.new()
-    ctx.start(HashingContext.HASH_MD5)
-    ctx.update(alpha)
-    return ctx.finish().hex_encode()
-
-
 ## 建共享 TileSet（48x48 格，带一层物理层，碰撞层/掩码都是 1）。
 ## 被谁用：tileset 的静态初始化。
 static func _create_tileset() -> TileSet:
@@ -306,8 +290,6 @@ static func _create_source(path: String, cell_sizes: Array[Array], tiles_name: A
     var img: Image = texture.get_image()
     # 任何素材都生成掩码并重排（全48时重排结果与原图一致）
     img = _to_48_atlas(img, cell_sizes, tiles_name, sprite_name)
-    if false:
-        _save_debug_png(img, path.get_file().get_basename() + "_48.png")
     var source := TileSetAtlasSource.new()
     source.texture = ImageTexture.create_from_image(img)
     source.texture_region_size = Sys.sysCfg.REGION_SIZE
@@ -424,7 +406,7 @@ static func _to_48_atlas(image: Image, cell_sizes: Array[Array], tiles_name: Arr
     out.fill(Color(0, 0, 0, 0))
     # 生成剪裁掩码并保存（任何素材都生成）
     var mask := _build_mask(row_cells_data, group_width, group_variant_count)
-    _save_debug_png(mask, sprite_name + "_CropMask.png")
+    Utils.save_debug_png(mask, sprite_name + "_CropMask.png", "TileSpritePreset")
     # 全48规整素材无需重排，直接返回原图
     if not _need_reflow(cell_sizes):
         return image
@@ -557,7 +539,7 @@ static func _create_tiles(source: TileSetAtlasSource, with_collision: bool = tru
             var coords := Vector2i(x, y)
             source.create_tile(coords)
             var tile_data := source.get_tile_data(coords, 0)
-            tile_data.texture_origin = Vector2i(-8, 8)
+            tile_data.texture_origin = Sys.sysCfg.P3D_TILE_ORIGIN
             if with_collision:
                 _set_tile_collision(source, texture, coords)
 
@@ -645,11 +627,3 @@ static func _hash_alpha(image: Image) -> String:
     ctx.start(HashingContext.HASH_MD5)
     ctx.update(alpha)
     return ctx.finish().hex_encode()
-
-
-## 把一张图存到 DEBUG_DIR（自动建目录，失败报错）。被谁用：_to_48_atlas（剪裁掩码）、_create_source。
-static func _save_debug_png(image: Image, file_name: String) -> void:
-    var debug_path: String = Sys.sysCfg.DEBUG_DIR + file_name
-    DirAccess.make_dir_recursive_absolute(Sys.sysCfg.DEBUG_DIR)
-    if image.save_png(debug_path) != OK:
-        push_error("TileSpritePreset: 保存调试图像失败: ", debug_path)

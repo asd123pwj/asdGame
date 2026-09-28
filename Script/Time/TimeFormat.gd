@@ -1,18 +1,16 @@
 class_name TimeFormat
 extends BaseClass
-## 时间的中文显示（年/月/旬/日/时辰），从 TimeSys 的数字换算而来。
+## 时间的中文显示（年/月/日/时辰），从 TimeSys 的数字换算而来。
 ## 被谁用：需要"给人看的时间文本"的地方（打印/日志/UI 展示）。
 
-## 下面五个都是**给人和 UI 看的字符串**（由 update() 从 TimeSys 的数字刷新）。
+## 下面四个都是**给人和 UI 看的字符串**（由 update() 从 TimeSys 的数字刷新）。
 ## 被谁用：日志/UI 展示（如 Test 里的 year+month+day+hour 打印）。
 static var year: String
 static var month: String
-static var xun: String
 static var day: String
 static var hour: String
 
 static var _月: Array = ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"]
-# static var _旬: Array = ["上旬", "中旬", "下旬"]
 static var _日 = ["初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
            "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
            "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"]

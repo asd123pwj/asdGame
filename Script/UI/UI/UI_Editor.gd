@@ -59,7 +59,7 @@ func _fill() -> void:
 		return                      # 这一帧里已经被移除了（重建 / 关掉了），别铺了
 	add_child_element("Where", "UI_Label", {
 		"content": "编辑：%s" % _target_path(),
-		"font_color": Color(0.33, 0.39, 0.50),
+		"font_color": TEXT_DIM_COLOR,
 	})
 	add_child_element("Rebuild", "UI_Label", {
 		"content": "[重建：重读]",
@@ -107,7 +107,7 @@ func _editor_sections(key: String, value: Variant, conf: Variant) -> Array:
 func _row(key: String, value: Variant, spec: Array) -> Array:
 	var parts: Array = _spec_parts(spec)
 	return [
-		["Key", "UI_Label", {"content": key, "font_color": Color(0.33, 0.39, 0.50)}],
+		["Key", "UI_Label", {"content": key, "font_color": TEXT_DIM_COLOR}],
 		["Value", str(parts[0]), _value_cfg(parts[1], value, key)],
 	]
 

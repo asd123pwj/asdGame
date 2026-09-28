@@ -157,14 +157,10 @@ func _plain_width(ctrl: Control) -> float:
 	return best + sb.content_margin_left + sb.content_margin_right + 1.0
 
 
-## 元素尺寸跟着内容高重算（宽变 ⇒ 折行变 ⇒ 高变）：连几帧等排版稳定（有界，见 _create_control）。
+## 元素尺寸跟着内容高重算（宽变 ⇒ 折行变 ⇒ 高变）。"连几帧等排版稳定"那一步在 `_repeat_fit`（共用）。
 ## 被谁用：RichTextLabel 的 resized 信号。
 func _refit(round_: int = 2) -> void:
-	if control == null:
-		return
-	_fit_size()
-	if round_ > 0:
-		Callable(self, "_refit").bind(round_ - 1).call_deferred()
+	_repeat_fit(&"_refit", round_)
 
 
 ## 把 config["content"] 刷成文本（BBCode 原样进 RichTextLabel.text）。

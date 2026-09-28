@@ -37,11 +37,9 @@ extends UI_Panel
 ## （显示宽度是 `_chars()`，由行自己换行）。
 const BRIEF_CHARS := 160
 
-## 抬头下面那行总计的字色（"共 N 条…"那种）。五个一览原来各写一遍这个颜色值，收在这儿。
-## **这一族"次要 / 强调"色都是深色版**：面板底是**浅色**图（`SysCfg.ui_background`）——
-## 原来是给暗底挑的浅色，换浅底后统一压暗了一档（否则白底上发虚看不清）。
-## 再调就改这些字面值（正文默认色由 `SysCfg.ui_font_color_default` 给，不必逐个写）。
-const COUNT_COLOR := Color(0.33, 0.39, 0.50)
+## （原来这里定义着 `COUNT_COLOR`。那一族"次要 / 满足 / 不满足 / 提醒"色已**收到 `UIBase`**——
+##  见 UIBase 的"UI 文字配色"那段，现在叫 `TEXT_DIM_COLOR` / `TEXT_YES_COLOR` / …：
+##  本类与下面几个一览都继承 UIBase，直接写常量名即可。）
 
 ## 条目索引：条目名 -> 那一段（UI_Panel）。局部刷新（`_refresh_section`）靠它找"该重铺哪一段"。
 var _secs: Dictionary = {}
@@ -147,7 +145,7 @@ func _fill() -> void:
 	var keys: Array = _keys()
 	var count: String = _count_text(keys.size())
 	if count != "":
-		add_child_element("Count", "UI_Label", {"content": count, "font_color": COUNT_COLOR})
+		add_child_element("Count", "UI_Label", {"content": count, "font_color": TEXT_DIM_COLOR})
 	for note: Array in _notes():
 		add_child_element(str(note[0]), str(note[1]), note[2])
 	for key in keys:
@@ -281,7 +279,7 @@ func _chars() -> int:
 func _fill_head(title: String) -> void:
 	add_child_element("Where", "UI_Label", {
 		"content": "%s：%s" % [title, shown_path()],
-		"font_color": Color(0.33, 0.39, 0.50),
+		"font_color": TEXT_DIM_COLOR,
 	})
 	add_child_element("Reload", "UI_Label", {
 		"content": "[刷新]",
@@ -296,7 +294,7 @@ func _fill_missing() -> bool:
 		return false
 	add_child_element("None", "UI_Label", {
 		"content": "找不到角色「%s」——写 char=\"@Char/SYS\" 这种注册名（指令路径）" % shown_path(),
-		"font_color": Color(0.70, 0.20, 0.20),
+		"font_color": TEXT_ALERT_COLOR,
 	})
 	return true
 
@@ -369,11 +367,11 @@ static func _resolve_note(char_: Character, dependence_status: String) -> String
 @warning_ignore_start("unsafe_cast", "unsafe_method_access")
 func _config_rows(cfg: Variant) -> Array:
 	if cfg == null:
-		return [_row("Cfg", "参数：（无）", Color(0.45, 0.48, 0.55))]
+		return [_row("Cfg", "参数：（无）", TEXT_NONE_COLOR)]
 	if not (cfg is Dictionary):
-		return [_row("Cfg", "参数：%s" % _brief(cfg), Color(0.33, 0.39, 0.50))]
+		return [_row("Cfg", "参数：%s" % _brief(cfg), TEXT_DIM_COLOR)]
 	var out: Array = [_row("Cfg", "参数（%d 项）" % (cfg as Dictionary).size(),
-		Color(0.33, 0.39, 0.50))]
+		TEXT_DIM_COLOR)]
 	var i: int = 0
 	for key in (cfg as Dictionary).keys():
 		out.append(_row("Cfg_%d" % i, "　%s = %s" % [str(key), _brief(cfg[key])]))
@@ -386,8 +384,8 @@ func _config_rows(cfg: Variant) -> Array:
 ## 被谁用：UI_Interaction / UI_Skill。
 func _history_rows(rec: Dictionary) -> Array:
 	return [
-		_row("Hist_add", "加装：%s" % _stamp(rec.get("add", null)), Color(0.33, 0.39, 0.50)),
-		_row("Hist_remove", "移除：%s" % _stamp(rec.get("remove", null)), Color(0.33, 0.39, 0.50)),
+		_row("Hist_add", "加装：%s" % _stamp(rec.get("add", null)), TEXT_DIM_COLOR),
+		_row("Hist_remove", "移除：%s" % _stamp(rec.get("remove", null)), TEXT_DIM_COLOR),
 		_row("Hist_act", "执行：%s" % _stamp(rec.get("act", null)), Color(0.36, 0.44, 0.28)),
 	]
 

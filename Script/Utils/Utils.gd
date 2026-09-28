@@ -1,8 +1,10 @@
 class_name Utils
 extends BaseClass
-## 通用小工具：按"键路径"（Array）读写嵌套字典。
+## 通用小工具：一部分是"按键路径（Array）读写嵌套字典"，一部分是**几个类要一起用的零碎**
+## （位图哈希、调试图存盘——原来两个 Tilemap 预设各写一份一模一样的，收到这儿）。
 ## 路径例：[ "statuses", "Nourish", "time" ] → dict["statuses"]["Nourish"]["time"]。
-## 被谁用：按路径存/取嵌套配置与状态的地方（如 StatusPreset / Attributes 的 keys 路径读写）。
+## 被谁用：按路径存/取嵌套配置与状态的地方（如 StatusPreset / Attributes 的 keys 路径读写），
+## 以及 TileSpritePreset / TileSetPreset（哈希与调试存盘）。
 
 
 ## 沿 keys 逐层取；中间缺任何一层就返回 default（不报错、不建节点）。
@@ -25,21 +27,6 @@ static func set_dict(dict: Dictionary, keys: Array, value: Variant) -> void:
             current[key] = {}
         current = current[key]
     current[keys[-1]] = value
-
-## 沿 keys 取，取不到就把 default_value 写进去再返回（"取不到就初始化"的惯用写法）。
-## 被谁用：需要"读时顺带建默认值"的地方。
-static func get_or_set_dict(dict: Dictionary, keys: Array, default_value: Variant = {}) -> Variant:
-    var current: Dictionary = dict
-    for i in range(keys.size() - 1):
-        var key = keys[i]
-        if not current.has(key):
-            current[key] = {}
-        current = current[key]
-    var last_key = keys[-1]
-    if not current.has(last_key):
-        current[last_key] = default_value
-    return current[last_key]
-
 
 ## 通用"按路径写一个值"——**只有两个参数**（路径里已经带了宿主）。
 ## 路径语法与指令里**读值那套完全一致**（走的就是指令解析器，见 CommandParser.write）：
@@ -95,3 +82,31 @@ static func copy(text: Variant = "") -> void:
         print("[Utils.copy] 已复制：", s)
     else:
         push_warning("Utils.copy: 当前平台没有剪贴板，没复制成功：%s" % s)
+
+
+## 位图（BitMap）→ MD5 串：**内容相同就是同一个键**（"同形状共享一份"的缓存键）。
+## 两个 Tilemap 预设原来各写一份一模一样的（TileSpritePreset._hash_bitmap / TileSetPreset._hash_mask），收到这儿。
+## 被谁用：TileSpritePreset.get_erase_id（擦除掩码）、TileSetPreset.get_or_register_masked_p3d（P3D 掩码）。
+static func hash_bitmap(bit_map: BitMap) -> String:
+    var region: Vector2i = Sys.sysCfg.REGION_SIZE
+    var alpha := PackedByteArray()
+    alpha.resize(region.x * region.y)
+    var n := 0
+    for y in region.y:
+        for x in region.x:
+            alpha[n] = 1 if bit_map.get_bit(x, y) else 0
+            n += 1
+    var ctx := HashingContext.new()
+    ctx.start(HashingContext.HASH_MD5)
+    ctx.update(alpha)
+    return ctx.finish().hex_encode()
+
+
+## 把一张图存进 `SysCfg.DEBUG_DIR`（目录不存在就建），失败报错——报错里带上 `tag` 说明是谁存的。
+## 两个 Tilemap 预设原来各写一份一模一样的，收到这儿。
+## 被谁用：TileSpritePreset._to_48_atlas / _create_source、TileSetPreset.save_all_tiles_debug。
+static func save_debug_png(image: Image, file_name: String, tag: String) -> void:
+    var debug_path: String = Sys.sysCfg.DEBUG_DIR + file_name
+    DirAccess.make_dir_recursive_absolute(Sys.sysCfg.DEBUG_DIR)
+    if image.save_png(debug_path) != OK:
+        push_error("%s: 保存调试图像失败: %s" % [tag, debug_path])

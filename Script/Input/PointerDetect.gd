@@ -69,6 +69,8 @@ static func _process(_delta: float) -> void:
 	if _blur_pending:
 		_blur_pending = false
 		UIInteract_OpenClose.close_blur_ui(hover_ui)
+	# 本帧"刚开出来"的名单用完就清：它们只免判这一帧（见 UIInteract_OpenClose._just_opened）
+	UIInteract_OpenClose.clear_just_opened()
 
 
 ## 状态满足后的统一派发入口：把状态名当事件名派发给当前 hover 的 UI，

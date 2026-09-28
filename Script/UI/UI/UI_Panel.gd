@@ -199,11 +199,16 @@ func _scroll_style(path: String, side: int, top: int, bottom: int, tint: Color =
 ## 被谁用：_create_control（给 MarginContainer）、_content_size（算"内容需要多大"时要加上）。
 func _margin() -> Vector2:
 	var m: Variant = config.get("margin")
-	if m is Array and (m as Array).size() >= 2:
-		return Vector2(float(m[0]), float(m[1]))
 	if m is float or m is int:
-		return Vector2(float(m), float(m))
-	return MARGIN_SIZE / 2.0
+		return Vector2(float(m), float(m))       # 只写一个数 = 四边都这么多（二元数组走共用助手）
+	return _as_vector2(m, MARGIN_SIZE / 2.0)
+
+
+## 网格里格子之间的**最小间隔**（`config["gap"]` 像素，不写 = 4）。
+## 两处排版（矩阵 / 等大网格）都按它算 ⇒ 默认值只在**这一处**，别在排布里各读一遍。
+## 被谁用：_layout_matrix、_layout_uniform。
+func _gap() -> float:
+	return float(config.get("gap", 4))
 
 
 ## 同一角上多个图标之间的间隔（角落容器里）。
@@ -342,13 +347,7 @@ func _content_size() -> Vector2:
 ## 高度写个数就是"最多长这么高，再多进去滚动"。
 ## 被谁用：_content_size。
 func _scroll_cap() -> Vector2:
-	var s: Variant = config.get("scroll")
-	if not (s is Array):
-		return Vector2.ZERO
-	var arr: Array = s
-	if arr.size() >= 2:
-		return Vector2(float(arr[0]), float(arr[1]))
-	return Vector2.ZERO
+	return _as_vector2(config.get("scroll"), Vector2.ZERO)
 
 
 ## 面板尺寸一定，就把子元素重摆一遍（按 config 选排法，见 `_layout_grid`）。
@@ -398,7 +397,7 @@ func _layout_matrix() -> void:
 	var m: Variant = config.get("matrix")
 	if not (m is Array) or _grid_box == null or _grid_box.size.x <= 0.0 or _grid_box.size.y <= 0.0:
 		return                       # 布局还没跑（网格区还是 0）：等 _grid_box.resized 再算
-	var gap: float = float(config.get("gap", 4))
+	var gap: float = _gap()
 	for child in children:
 		if not child.config.has("grid"):
 			continue                 # 没写序号 = 不进网格（保持原样）
@@ -420,7 +419,7 @@ func _layout_uniform() -> void:
 	var cell: Vector2 = Vector2(float((c as Array)[0]), float((c as Array)[1]))
 	if cell.x <= 0.0 or cell.y <= 0.0 or _grid_box.size.x <= 0.0:
 		return                       # 布局还没跑（网格区还是 0）：等 _grid_box.resized 再算
-	var gap: float = float(config.get("gap", 4))
+	var gap: float = _gap()
 	var items: Array = []
 	for child in children:
 		if not bool(child.config.get("free", false)):

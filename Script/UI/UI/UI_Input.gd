@@ -101,9 +101,7 @@ func _config_size() -> Vector2:
 func _reheight(round_: int = 2) -> void:
 	if control == null or control.has_focus():
 		return
-	_fit_size()
-	if round_ > 0:
-		Callable(self, "_reheight").bind(round_ - 1).call_deferred()
+	_repeat_fit(&"_reheight", round_)
 
 
 ## config["content"] → 框里的文字（配置初值、或被写过的 content）。
