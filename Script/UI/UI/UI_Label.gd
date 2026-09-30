@@ -85,15 +85,25 @@ func reapply() -> void:
 		SysCfg.ui_font_size_default)
 	for item in ["normal_font_size", "bold_font_size", "italics_font_size", "mono_font_size"]:
 		rtl.add_theme_font_size_override(item, font_size)
-	# 字色：没配就用**全局默认字色**（`SysCfg.ui_font_color_default`，深色；见 UIBase.reapply 的说明）。
+	# 字色：没配就用**全局默认字色**（`QName.ui_font_color_default`，深色；见 UIBase.reapply 的说明）。
 	# RichTextLabel 的主题项叫 `default_color`（与 Label 的 `font_color` 不是一个名字），基类那一手它读不到 ⇒ 这里必须再写一遍。
 	rtl.add_theme_color_override("default_color",
-		config.get("font_color", SysCfg.ui_font_color_default))
+		config.get("font_color", QName.ui_font_color_default))
 	# **链接不画下划线**：`[url]` 默认带一条下划线（标题里的 ▾ 箭头、拖动文字上都不好看）。
 	# 这个版本里链接没有单独的"链接色"主题项（颜色项只有 default_color / selection 那几个），
 	# 下划线是**常量 `underline_alpha`** 管的 ⇒ 0 = 看不见（`[u]` 也一并没了；本项目不用 `[u]`）。
 	# 想留一点就配 `"underline_alpha"`（主题常量是整数，按引擎的量纲给）。
 	rtl.add_theme_constant_override("underline_alpha", int(config.get("underline_alpha", 0)))
+	# **可选中**（`config["selectable"] = true`）：RichTextLabel 自带这个开关（`selection_enabled`），
+	# 开了就能**按住拖动选中一段字**（`get_selected_text()` 取选中的内容）。
+	# **默认关，而且现在没有任何元素配它**：引擎不给 RichTextLabel 的 Ctrl+C（不像 LineEdit / TextEdit
+	# 自带剪贴板那一套），光能选中、复制不了，"拖一下就刷蓝一片"反而奇怪。
+	# 等真要做"选中 + 复制"（输入层拦 Ctrl+C → `get_selected_text()` → 写系统剪贴板）时，
+	# 给需要的地方配上这个键即可——那几行开关先留着就是为这个。
+	# 选中底色走主题色 `selection_color`：引擎默认那个是给深色底挑的，浅底上看不清 ⇒ 用与输入框同一支色。
+	rtl.selection_enabled = bool(config.get("selectable", false))
+	if rtl.selection_enabled and rtl.has_theme_color("selection_color"):
+		rtl.add_theme_color_override("selection_color", QName.ui_selection_color)
 
 
 ## 内容尺寸。**宽度是这三档**（高度都是"引擎按这个宽报的内容高"）：
@@ -138,7 +148,10 @@ func _content_size() -> Vector2:
 		return Vector2(_own_width(control), need.y)
 	if control.size.x > 0.0:
 		return Vector2(control.size.x, need.y)
-	return Vector2(need.x, _row_height(control))
+	# 宽还没定：先按一行报；**要加上下边距**（同 need.y 里含的那份，见 _style_pad），
+	# 否则刚建出来那一帧高度偏小、文字被裁（铺了九宫格底之后尤其明显）。
+	var sb: StyleBox = control.get_theme_stylebox("normal")
+	return Vector2(need.x, _row_height(control) + _style_pad(sb, SIDE_TOP) + _style_pad(sb, SIDE_BOTTOM))
 
 
 ## 这段文字**不折行**时的自然宽度（像素）：去掉 BBCode 后按行量，取最宽的那行（再留 1px 余量）。
@@ -154,7 +167,9 @@ func _plain_width(ctrl: Control) -> float:
 	for line in rtl.get_parsed_text().split("\n"):
 		best = maxf(best, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
 	var sb: StyleBox = rtl.get_theme_stylebox("normal")
-	return best + sb.content_margin_left + sb.content_margin_right + 1.0
+	# 边距取"有效值"（见 _style_pad）：九宫格底（StyleBoxTexture）的 content_margin 是 -1，
+	# 直接读会少算两圈边距 ⇒ 文本块比自己该有的窄、右边被裁。
+	return best + _style_pad(sb, SIDE_LEFT) + _style_pad(sb, SIDE_RIGHT) + 1.0
 
 
 ## 元素尺寸跟着内容高重算（宽变 ⇒ 折行变 ⇒ 高变）。"连几帧等排版稳定"那一步在 `_repeat_fit`（共用）。

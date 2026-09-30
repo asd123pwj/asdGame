@@ -14,14 +14,14 @@ extends ConfigBase
   左右修饰键（Shift/Ctrl/Alt 各有左右两个）在 Godot 里 keycode 相同、靠 `InputEventKey.location` 区分，
   所以它们多一列 `KEY_LOCATION_LEFT/RIGHT`；元素名也带 `_L`/`_R` 后缀，不然两个键会撞名互相覆盖。
 - x/行/尺寸照原样写 Unity 那版的表达式（`32*2`、`row1 = -36*2`…），统一再乘 SCALE（1.0 = 与 Unity 同尺寸）。
-- 整块面板可以按住拖动（按住 → `UIInteract.drag self event` 登记 → 每帧 `dragging`，和 MiniHUD 标题栏同一套）。
+- 整块面板可以按住拖动（按住 → `UIInteract.drag self event` 登记 → 每帧 `dragging`，和 RoleData 标题栏同一套）。
 - 底图：**不用写**——面板与键都是 `UI_Panel`，不写 `background` 就自带**全项目默认那张**（`SysCfg.ui_background`：
   浅色圆角图，见 UI_Panel._apply_background）。字色/字号才要配（`font_color` / `font_size`：
   默认字色已是深色，这里显式写出来是为了"一眼看出这些键上的字是什么色"）。
 - 以后给某个键绑操作：改它的描述文本即可，登记名 = `Keyboard/键名/Desc`
   （键名由键码生成，如 `Keyboard/Key_Q/Desc`、`Keyboard/Key_Kp8/Desc`、`Keyboard/Key_Shift_L/Desc`）。
 - 开启：独立 UI，`UIInteract.open(preset_name="Keyboard")`；
-  右上角的 "X" 就是普通预设 CloseButton（见 UIPreset_Basic），开启方一并开/关即可（见 Test.ui_test）。
+  右上角的 "X" 就是普通预设 CloseButton（见 UIPreset_Basic），开启方一并开 / 关即可。
 """
 
 ## Unity 数值 → 本项目像素的缩放（表里数值保持与 Unity 一致，不要改成算完的数）。
@@ -239,7 +239,7 @@ var values: Array[Array] = [
     ["Keyboard", "UI_Panel", {
         "position": [PANEL_POSITION.x, PANEL_POSITION.y],
         "size": _layout["size"],                      # 底图不写：`UI_Panel` 自带全项目默认那张（见文件头）
-        # 整块面板按住拖动（子元素没配这个事件时会冒泡到这里）；和 MiniHUD 标题栏是同一套。
+        # 整块面板按住拖动（子元素没配这个事件时会冒泡到这里）；和 RoleData 标题栏是同一套。
         # 这条绑定也随时能被菜单项"启用/移除拖拽"加删（switch_value 直接开关这个列表，见 UIPreset_Menu）。
         "events": [QName.UI_event_pointer1_drag],
         "children": _layout["children"],

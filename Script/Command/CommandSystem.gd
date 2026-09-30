@@ -10,7 +10,7 @@
 ## **命令调用**（位置参数 + 关键字参数；没写的参数用签名里的默认值，可跳着给）：
 ##     Msg.send_cmd('MapSys.place(0, 5, -10, "门", 2, -1, true)')
 ##	   Msg.send_cmd("MapSys.place(layer_id=0, x=10, source_name=\"门\", tile_name=2, force_space=true)")
-##     Msg.send_cmd("UIInteract.open(@UI/MiniHUD, \"Menu\", @UI/MiniHUD, close_on_blur=true)")
+##     Msg.send_cmd("UIInteract.open(@UI/RoleData, \"Menu\", @UI/RoleData, close_on_blur=true)")
 ## 参数里引用变量/函数（直接写取值链，链式：字典 .key、数组 [index]、函数 ()）：
 ##     Msg.send_cmd("MapSys.place(Test.a, 5, -10, \"门\", 2, -1, true)")
 ##     Msg.send_cmd("MapSys.place(0, Test.test_func(Test.a, 4), Test.test_int2.value[0], \"门\", 2, -1, true)")
@@ -21,7 +21,7 @@
 ## **取值一行**（拿值，不一定调用）：末尾带 () 就"调完拿返回值"，不带 () 就取这个值本身：
 ##     Msg.send_cmd("Test.a")                     读静态变量
 ##     Msg.send_cmd("@self.control.text")          读实例属性（`@self` 由指令系统解析）
-##     Msg.send_cmd("UISys.get_ui(\"MiniHUD\").refresh(\"content\")")   取值链末尾带 () = 调用
+##     Msg.send_cmd("UISys.get_ui(\"RoleData\").refresh(\"content\")")   取值链末尾带 () = 调用
 ## 用实例：把"类名"换成 `@注册名`，其它一样：
 ##     Msg.send_cmd("@678965479816.hp")
 ## send_cmd 返回的是"每行结果"的数组，取值再按下标：

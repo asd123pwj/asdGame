@@ -56,7 +56,7 @@ func _ready() -> void:
 
 ## 回车提交（`QName.submit` = 回车 ∧ 没按 Shift 满足时）：把 `QName.input_submit` 派给**正在编辑的输入框**。
 ## 干什么由**元素自己的配置**说了算（`[QName.input_submit, 'Utils.write(@host.config.content_cmd, …)…']`，
-## 见 UIPreset_Test）——本函数只负责"送到谁手上"，不替它决定提交内容。
+## 见 UI_Input 的文件头）——本函数只负责"送到谁手上"，不替它决定提交内容。
 ## 取成局部变量再派发：同一条状态上还挂着快捷 `PointerDetect.key("Submit")`（Archetype_System），
 ## 万一它把编辑收掉，至少这里还指着**当时那个**输入框。
 func when_submit(_msg) -> void:

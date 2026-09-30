@@ -46,11 +46,11 @@ extends UIInteractBase
 ##
 ## 指令写法：
 ##   UIInteract.open(@self, "Menu", @self, close_on_blur=true)       面板右键 → 指针处开菜单（点别处关）
-##   UIInteract.open(preset_name="MiniHUD")                        独立 UI → 开在配置声明的位置
+##   UIInteract.open(preset_name="RoleData")                        独立 UI → 开在配置声明的位置
 ##   UIInteract.open(@self, "MenuEdit", @self, close_on_move=true)   hover 展开的子菜单：挪开就收
 ##   UIInteract.open(@self, "Menu", @self, host=@self)                这个菜单改管自己（不是最外层窗口）
 ##   UIInteract.open(@self, "Menu", @self, host=@self.parent)         或者管别的 UI（取值链能算出来就行）
-## 被谁用：Config/UI 里各预设的 "events"、Test.ui_test（测试也走指令，不抄近路）、外部想直接拿实例时。
+## 被谁用：Config/UI 里各预设的 "events"，以及外部想直接拿实例时。
 ## 返回：开出来的 UI（找不到预设/建不出来为 null）。
 ## 独立 UI（没有挂载点）的登记名前缀：`UI/预设名`（见 UISys 的登记名规则）。
 const UI_ROOT: String = "UI/"

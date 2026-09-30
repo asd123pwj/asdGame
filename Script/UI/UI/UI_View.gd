@@ -313,12 +313,18 @@ func add_child_element(child_name: String, ui_class: String, child_config: Dicti
 
 
 ## 一行 `[名字, 元素类, 配置]`（行都是只读文字：要变就重铺那一段，别去改它的 config）。
-## **宽度取本视图的 `_chars()`**（字符数）：文字元素配了上限就自动换行、高度按折行数算，
-## 于是"长行不再把面板撑开"，而是自己折成几行（这就是"标题与内容同宽"的落点）。
+## **宽度不用在这儿写**：`add_child_element` 那条覆写会给"没写 `max_chars` 的文字行"补上本视图的
+## `_chars()`（字符数）——文字元素配了上限就自动换行、高度按折行数算，于是"长行不再把面板撑开"，
+## 而是自己折成几行（这就是"标题与内容同宽"的落点）。这里再写一遍就是同一个值写两处。
+## **颜色不传 = 用全局默认字色**（`QName.ui_font_color_default`，由 `reapply` 兜底）：
+## 以前这里把那个值抄成了字面值 ⇒ 改全局默认改不到它（"同一个值两处写"的老坑）。
 ## **不用配高度**：`UI_Label` 的高 = 折行数 × 行高（见它的 `_text_height`）。
 ## **是实例方法**（要读本视图的 config）——调它的一定是实例方法（`_rows_of`）。
-func _row(row_name: String, text: String, color: Color = Color(0.13, 0.13, 0.16)) -> Array:
-	return [row_name, "UI_Label", {"content": text, "font_color": color, "max_chars": _chars()}]
+func _row(row_name: String, text: String, color: Variant = null) -> Array:
+	var cfg: Dictionary = {"content": text}
+	if color != null:
+		cfg["font_color"] = color
+	return [row_name, "UI_Label", cfg]
 
 
 ## 值的短文本：null 说"（无）"；**太长只截一刀**（值可能挂着一整个角色 / 字典，那是无底洞）。

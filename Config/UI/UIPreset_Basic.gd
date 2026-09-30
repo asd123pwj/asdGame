@@ -50,7 +50,7 @@ const ICON_SIZE := 64
 
 
 ## 右上角那个**图标式关闭按钮的配置**——只写一份，两个用法：
-##   · 当 `children` 里的一项：`UIPreset_Basic.close_item(),`（窗口自带，如一览 / 编辑器 / MiniHUD）
+##   · 当 `children` 里的一项：`UIPreset_Basic.close_item(),`（窗口自带，如一览 / 编辑器 / RoleData）
 ##   · 当独立预设：`UIInteract.open(宿主, "CloseButton", 宿主)`（运行时加/减，如键盘 UI）
 ## 图 = `CLOSE_ICON`（`UI_Image` 的 content 即纹理），`free` + `open_at = ANCHOR_RIGHT_OUT`
 ## ⇒ 挂进**本窗口右侧外面那一列**（列首、最上面那个；落点见 UI_Panel._corner_box——整列由锚点维护，
@@ -71,6 +71,30 @@ static func close_cfg() -> Dictionary:
 ## 找不到窗口自带的这个、又建一个（实测：叫 "Close" 时看板出现两个 X）。
 static func close_item() -> Array:
     return ["CloseButton", "UI_Image", close_cfg()]
+
+
+## **开关式按钮**（可选项 / 开关项）的**片段构造器**：同一个元素上写两套配置，点一下"做事 + 换一套"，
+## 下次点击自然走另一套。项目里好几处都是这个形状（菜单的"启用关闭按钮 / 缩放手柄 / 改尺寸手柄"、
+## 地图格窗口的"实时监控"）——**差异只有三处**，所以收成一个模板（同 UIInteract_Fold.title_item）：
+##   1. 两套文字：`content`（现在这态显示什么）/ `content_2`（对调后显示什么）；
+##   2. 两套事件的第一条命令：`cmd`（现在点击做什么）/ `cmd_2`（对调后点击做什么）；
+##   3. （可选）其余配置：`cfg` 里写（如 `free` / `position` / `size`）。
+## **后面那两条"对调 + 刷新"完全一样**，模板里统一拼好，不再每处抄一遍：
+##   `Utils.swap(events ↔ events_2)` ＋ `Utils.swap(content ↔ content_2)` ＋ `refresh("content")`
+##   （只刷 content：events 是派发时才读的裸数据，刷它没意义）。
+## `name_` 由用它的那一处给（菜单里那三个就叫 CloseToggle / RescaleToggle / SizeGripToggle）。
+static func toggle_item(name_: String, content: String, content_2: String,
+        cmd: String, cmd_2: String, cfg: Dictionary = {}) -> Array:
+    var tail: String = '\vUtils.swap("@self.config.events", "@self.config.events_2")' \
+        + '\vUtils.swap("@self.config.content", "@self.config.content_2")' \
+        + '\v@self.refresh("content")'
+    var item: Dictionary = {
+        "content": content, "content_2": content_2,
+        "events": [[QName.pointer1_hold, cmd + tail]],
+        "events_2": [[QName.pointer1_hold, cmd_2 + tail]],
+    }
+    item.merge(cfg, true)
+    return [name_, "UI_Label", item]
 
 
 ## 悬停多久才弹说明（秒）：指针**停住**满这么久才弹；期间每动一下都重新计时（见 tip_open_cmd）。
@@ -95,7 +119,7 @@ static func tip_open_cmd(text_: String, preset: String = TIP_PRESET) -> String:
 
 ## **富文本链接**用的那一对：`[事件名, 指令串]`（`UIInteract_Meta.as_meta` 要的形状）——"悬停这段字就弹说明"。
 ## **收窗不在这儿**：链接那一路由 `UIInteract_Meta` 管（它认"指针还在不在那扇浮窗上"）。
-## 被谁用：UIPreset_MetaTest 的 TIP_ONE / TIP_TWO、UIInteract_Fold 的标题箭头（`_sym_meta`）。
+## 被谁用：UIInteract_Fold 的标题箭头（`_sym_meta`）；要"换个同形状的另一扇浮窗"就传第二个参数（预设名）。
 static func tip_hover_bind(text_: String, preset: String = TIP_PRESET) -> Array:
     return [QName.pointer_move, tip_open_cmd(text_, preset)]
 
@@ -151,6 +175,21 @@ static func tip_cfg(fallback: String) -> Dictionary:
     }
 
 
+## **底图三键**（`background` / `background_slice` / `background_stretch`）——三个键要一起写，
+## 而"图 + 边距 + 中段填充"就那么几种组合，所以收成这一处，别在每个预设里各手写三行
+## （`text_item`、`UIPreset_View` 的窗口竹框与格子卷轴，原来都是手写的三行）。
+## `slice` / `stretch` 不写 = **竹制图那套规格**（64×64、四角 16、中段平铺）：全项目这批竹图都是
+## 这个规格（`SysCfg.ui_bamboo_slice` / `ui_bamboo_stretch`）。
+## **中段按原样平铺、不拉伸**：这批图的纹样有细节（竹节 / 纸面），拉伸会按面板尺寸等比放大成一条宽暗带。
+## 用法：`cfg.merge(UIPreset_Basic.bg(图路径))`，或 `{...}.merged(...)` 接在字面量后面。
+static func bg(path: String, slice: int = -1, stretch: String = "") -> Dictionary:
+    return {
+        "background": path,
+        "background_slice": slice if slice >= 0 else SysCfg.ui_bamboo_slice,
+        "background_stretch": stretch if stretch != "" else SysCfg.ui_bamboo_stretch,
+    }
+
+
 ## 一块"**会滚的文本**"的正文子元素——原来 `UI_Scroll` 干的活，现在就是"普通 `UI_Panel` + 这一项"：
 ## 外壳（面板）的 `config["content"]` 是显示内容，这里读出来铺到一块**撑满宽、自动换行**的文本上。
 ## `wrap: true` = 宽度交给容器（见 `UI_Label._width_from_parent`）⇒ 文字照面板给到的宽折行、只报该多高。
@@ -160,48 +199,25 @@ static func tip_cfg(fallback: String) -> Dictionary:
 ##   ["Show", "UI_Panel", {"size": [260, 140], "children": [UIPreset_Basic.text_item("（空）")]}]
 ## **改内容写的是外壳的 `config["content"]`**，之后要刷**整棵**（`refresh_tree()`）——
 ## 正文是子元素，只刷外壳那一层它不会跟着变（`UISys.refresh_all()` 也行）。
-## 被谁用：MiniHUD 的 `Info`（本文件）、UIPreset_Test 的 `TestShow`。
+## 被谁用：任何"要一块能滚的文本框"的地方；用法照上面那行示例写即可。
 static func text_item(fallback: String = "") -> Array:
-    return ["Text", "UI_Label", {
+    var cfg: Dictionary = {
         "content": fallback,                        # 字面值 = 还没人写内容时的兜底
         "content_cmd": "@self.parent.config.content",
         "wrap": true,
-    }]
+        # **不配 `selectable`**（= 不能选中文字）：引擎不给 RichTextLabel 的 Ctrl+C，
+        # 光能拖蓝一片、复制不了反而奇怪。要做"选中 + 复制"时再给这里配上（见 UI_Label 的那段说明）。
+    }
+    # 展示文本框的底：**横版竹卷轴**（`SysCfg.ui_text_background`）——输入框那面用竖版
+    # （`UI_Input` 的默认底）；九宫格规格走 `bg()` 的默认值（竹图那套：16 + 平铺）。
+    cfg.merge(bg(SysCfg.ui_text_background))
+    return ["Text", "UI_Label", cfg]
 
 
 var values: Array[Array] = [
     # 悬停说明的小浮窗（关闭 / 缩放按钮、可折叠标题的箭头都用它，见 UIInteract_Fold._sym_meta）：
     # 配置来自 `tip_cfg()`，**内容由开它的那一句带进来**（`open(..., content="…")`）⇒ 一份预设够全项目用。
     ["Tip", "UI_Panel", tip_cfg("（说明）")],
-    ["MiniHUD", "UI_Panel", {
-        # 高度写 0 = **随内容**：以前写死 220，而里面只有"标题 + 滚动区"两行 ⇒ 底下剩一大段空白；
-        # 以后往里加内容它自己长，不用回来改这个数（宽仍定死 320，横向不要跟着文字跳）。
-        "position": [30, 30], "size": [320, 0],
-        # 右键这块 UI → 开"Menu"（菜单挂在这个面板下，菜单项里用 host 就指回它——不必数级数）
-        # 第一/第三个参数都传 self：第一个没有 anchor 时才用来当挂载点，第三个既是位置锚点
-        # 又是挂载点（菜单链因此是一棵子树）；摆在哪由 Menu 自己的 open_at 声明（POINTER = 指针处）
-        # 整块面板的"按住可拖"不写死在这儿：菜单项"启用拖拽"用 switch_value 往这个列表里加/减
-        # QName.UI_event_pointer1_drag（默认没有 ⇒ 面板体不可拖；标题栏用的是 _host 版那两条）。
-        "events": [QName.UI_event_pointer2_menu],
-        "children": [
-            # 标题栏：只显示文本；按住 → drag 登记后由 AutoSys 每帧拖这个窗口（host）
-            # （event = 事件名 = 状态名 = Key 名，由 指令系统（`@self`/`@host`/`@event`） 补成带引号的参数；松手 AutoSys 自动停）
-            ["Title", "UI_Label", {
-                "content": "MiniHUD（按住拖动）",
-                "events": [QName.UI_event_pointer1_drag_host],
-            }],
-            # 关闭"按钮"：图标式（和 CloseButton 预设同一套），贴在窗口右上角
-            UIPreset_Basic.close_item(),   # 图标式关闭（右上角）：和 CloseButton 预设同一张图 / 同一套指令
-            # 滚动内容：展示本元素 config["content"]（改内容 = 写它 + 刷整棵，见 UIPreset_Basic.text_item）
-            # 尺寸写死 = 定死的可视区，内容多了在框内滚（面板的滚动容器自动出竖向滚动条）
-            ["Info", "UI_Panel", {
-                "size": [280, 120],
-                "children": [text_item("初始内容")],
-            }],
-            # 图片示例：content 填纹理路径即可显示；改图 = 写它的 config["content"] + 一条刷新
-            # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],
-        ],
-    }],
     # 关闭按钮：**就是上面 close_cfg() 那份配置**，当独立预设开出来（元素侧没有任何专门逻辑）：
     #   UIInteract.open(宿主, "CloseButton", 宿主)   ← 挂到宿主下、开在宿主内部右上角
     #   UIInteract.close(宿主, "CloseButton")        ← 移除（隐藏；重开仍走 open）

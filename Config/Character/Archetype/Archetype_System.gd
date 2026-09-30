@@ -36,6 +36,12 @@ var values: Array[Dictionary] = [
             # 满足时由"指针交互"里的快捷指令开出 "DesktopMenu"（开在指针处、点别处关，见 UIPreset_Menu）。
             {"name": QName.desktop_menu, "statuses": [
                 [QName.pointer2_hold, "Satisfied"], [QName.pointer_on_ui, "Unsatisfied"]]},
+            # **地图格实时监控**：一个**外部开关**（`QName.map_monitor_on`，保持型，由"此格瓦片"窗口里的
+            # 可选项手动开/关，同 `QName.editing` 那套）＋"指针动过" —— 两个都满足时才实时刷新
+            # "MapCell"（见 UIPreset_MapCell 的"实时监控"项）。
+            {"name": QName.map_monitor_on, "with_detect_manual": true},
+            {"name": QName.map_monitor, "statuses": [
+                [QName.map_monitor_on, "Satisfied"], [QName.pointer_move, "Satisfied"]]},
             
             {"name": QName.right, "match_any": true, "keys": [[KEY_RIGHT, Enums.KeyStatus.HOLD], [KEY_D, Enums.KeyStatus.HOLD]],}, 
             {"name": QName.up, "match_any": true, "keys": [[KEY_UP, Enums.KeyStatus.HOLD], [KEY_W, Enums.KeyStatus.HOLD]],}, 
@@ -47,10 +53,6 @@ var values: Array[Dictionary] = [
             # 编辑模式：进 / 出输入框编辑时由 UIInteract_Edit 手动开 / 关（**保持型**外部检测，不会自己复位）。
             # 于是"编辑中要屏蔽谁 / 回车算不算提交 / 菜单快捷键要不要让路"都能写成状态。
             {"name": QName.editing, "with_detect_manual": true},
-            # 测试用：J / K 开关两个测试 UI（见 Config/UI/UIPreset_Test.gd）
-            # 用 PRESS 而不是 HOLD：HOLD 每帧都满足（开关会被按帧反复切），PRESS 只在按下的那一下满足
-            {"name": QName.key_j, "keys": [[KEY_J, Enums.KeyStatus.PRESS]],},
-            {"name": QName.key_k, "keys": [[KEY_K, Enums.KeyStatus.PRESS]],},
         
         ],
     },
@@ -68,14 +70,15 @@ var values: Array[Dictionary] = [
             [QName.submit, QName.submit, 'PointerDetect.key("%s", false)' % QName.submit],
             [QName.pointer1_hold, QName.pointer1_hold, 'PointerDetect.key("%s")' % QName.pointer1_hold],
             [QName.pointer2_hold, QName.pointer2_hold, 'PointerDetect.key("%s")' % QName.pointer2_hold],
-            # 测试用：J / K 开关两个测试 UI（独立 UI，只给预设名；toggle = 显示着就关、否则开）
-            [QName.key_j, QName.key_j, 'UIInteract.toggle(preset_name="TestShow")'],
-            [QName.key_k, QName.key_k, 'UIInteract.toggle(preset_name="TestInput")'],
             # 常态右键菜单（点在空地上右键）：状态一满足就开那一扇 —— **独立 UI**（没有宿主、没有锚点），
             # 开在预设声明的指针处、点别处关。`content` 传"开菜单那一刻指针下的角色"（没有就是 null）：
             # 菜单第一项用它决定"打开谁的角色窗口 / 当前无角色"（见 UIPreset_Menu.char_option_text）。
             [QName.desktop_menu, QName.desktop_menu,
                 'UIInteract.open(preset_name="DesktopMenu", content=PointerDetect.hover_char, close_on_blur=true)'],
+            # "此格瓦片"窗口的**实时监控**（见 UIPreset_MapCell 里那个可选项）：启用了才走这条。
+            # 状态一满足（= 启用 ∧ 指针动过）就按**鼠标所属格**刷新那个窗口——只改 x/y，窗口本身不动。
+            [QName.map_monitor, QName.map_monitor,
+                'UIInteract.open(preset_name="MapCell", cell=PointerDetect.map_position)'],
         ],
     },
     {

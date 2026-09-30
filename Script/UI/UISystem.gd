@@ -5,7 +5,7 @@ extends BaseClass
 ## 文件名保持 `XxxSystem.gd`——与 `CharacterSystem.gd`(CharSys)、`InputSystem.gd`(InputSys) 一套约定。
 ##
 ## 职责：**UI 树的登记与取件** + UI 根（`root`）。
-## **"叫什么名字"不在这里**：登记名（`MiniHUD/Menu` 这种）与"名字 ↔ 实例"两张表都在
+## **"叫什么名字"不在这里**：登记名（`RoleData/Menu` 这种）与"名字 ↔ 实例"两张表都在
 ## `RegSys`（通用注册名系统，见 Script/System/RegSystem.gd）——本类只负责"按 UI 树递归地调
 ## `RegSys.register`"，以及 UI 侧两个便利入口（`get_ui` / `find_name`）。以后别的系统要名字，
 ## 也走 RegSys 同一处（它当初就是为了"ID 对人不可读"而立的：UI 编辑器显示 config 时靠它认人）。
@@ -17,13 +17,13 @@ extends BaseClass
 ##
 ## **UI 树怎么长**（挂载规则：anchor 优先 → 宿主 → UI 根）见 `UIInteract_OpenClose.open`——
 ## 它决定了"关谁连谁一起关"，也决定了指令里的 `@self.parent` 链（菜单链是一棵单链子树，
-## `MiniHUD → Menu → Edit(菜单项) → MenuEdit → …`），所以失焦判定沿 parent 链就能认出"指针在我这条链上"
+## `RoleData → Menu → Edit(菜单项) → MenuEdit → …`），所以失焦判定沿 parent 链就能认出"指针在我这条链上"
 ## （见 UIInteract_OpenClose.close_blur_ui）；关父级时整条链随可见性继承一起消失。
 ##
 ## **登记名规则**（唯一的"寻址"约定，两条都只是 `RegSys.join` 的用法）：
-##   - 没有挂载点（独立 UI）→ 登记名就是预设名，如 `MiniHUD`；
-##   - 有挂载点 → `挂载点的登记名 + "/" + 名字`，如 `MiniHUD/Menu`、
-##     `MiniHUD/Menu/Edit/MenuEdit`（子菜单挂在菜单项下，名字也就层层接下去）。
+##   - 没有挂载点（独立 UI）→ 登记名就是预设名，如 `RoleData`；
+##   - 有挂载点 → `挂载点的登记名 + "/" + 名字`，如 `RoleData/Menu`、
+##     `RoleData/Menu/Edit/MenuEdit`（子菜单挂在菜单项下，名字也就层层接下去）。
 ##   **"开出来的 UI"与"配置里的子元素"共用这一条规则**（子 UI 的名字就是它的预设名），
 ##   所以登记表就是一整棵用 `/` 连接的树，看名字就知道挂在谁下面。
 ##   于是"同一个地方再开同一个 UI"就是**一次取件**（`RegSys.get_(登记名)`），
@@ -145,9 +145,9 @@ static func _load_font_file() -> Font:
 	return load(path) as Font
 
 
-## 取一个已登记的 UI（用登记名，如 "MiniHUD"、"UI/MiniHUD/Menu"、"UI/MiniHUD/Menu/Close"）。
+## 取一个已登记的 UI（用登记名，如 "RoleData"、"UI/RoleData/Menu"、"UI/RoleData/Menu/Close"）。
 ## 就是 `RegSys.get_(名字)` 加一层 UIBase 类型——配置里想让指令系统直接拿到 UI 就用它。
-## 被谁用：Test.ui_test（拿滚动区改内容）、外部按名取子元素。
+## 被谁用：外部按名取子元素（拿到实例就能读它的 config，改完再 refresh）。
 static func get_ui(reg_name: String) -> UIBase:
 	return RegSys.get_(reg_name) as UIBase
 

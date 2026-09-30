@@ -46,85 +46,9 @@ func run() -> void:
     char_C = CharSys.spawn("草药")
     # char_B.inventories.print_contents("DeadDrop")
     print(Sys.sysCfg.random_seed)
-    ui_test()
     @warning_ignore("missing_await")
     delay_loop_test()
 
-
-## UI 演示：**开启路径与游戏内完全一致**（发指令 UIInteract.open，不直接调内部函数）。
-## 被谁用：run。
-func ui_test() -> void:
-    # UI 演示（设计见 Script/UI/UI.md）：UIPreset 配置 → UIInteract_OpenClose.open 统一开启 → UIBase 包装 Control。
-    # 开启方式与游戏里**完全一致**：发指令（UIInteract.open），不直接调内部函数——
-    # 全项目开 UI 只有这一条路，改了才会全都被改到。想手动开关就绑快捷键到这个指令上。
-    Msg.send_cmd("UIInteract.open(preset_name=\"MiniHUD\")")
-    var ui: UIBase = UISys.get_ui("UI/MiniHUD")
-    if ui == null:
-        print("UI: MiniHUD 没开出来（查预设与 UIInteract.open）")
-        return
-    # 交互一律走 Msg（不用自定义 signal）；指针输入由 PointerDetect 用 InputSys 检测命中后派发。
-    Msg.listen_ui_close(ui, func(_m): print("UI close"))
-    Msg.listen_ui_submit(ui, func(_m): print("UI submit"))
-    Msg.listen_ui_fade(ui, func(m): print("UI fade -> ", m))
-    # 展示 content/refresh 流程：修改内容属性即可更新那块会滚的文本（不必重建控件）
-    var info: UIBase = UISys.get_ui("UI/MiniHUD/Info")
-    if info != null:
-        var lines: PackedStringArray = PackedStringArray()
-        for i in range(40):
-            lines.append("第 %d 行：滚动查看内容。" % i)
-        info.config["content"] = "\n".join(lines)
-        info.refresh_tree()     # 正文是子元素（读外壳的 content）⇒ 刷整棵；只刷外壳它不会跟着变
-
-    # 四个"带手柄的窗口"：键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）、
-    # 改尺寸测试窗（Config/UI/UIPreset_Test.gd 的 SizeTest：**以面板为准**，拖手柄时里面的文字跟着折行）、
-    # 矩阵网格测试窗（同文件的 MatrixTest：版式 = 面板 config 里的二维矩阵，拖手柄时格子按比例跟着缩放）、
-    # 等大网格测试窗（同文件的 BagTest：格子等大，拖手柄时**列数随宽度变**，余量摊进间距）。
-    # "给窗口加个按钮"就是**开一个普通预设**（CloseButton / ResizeButton / SizeGrip），不写专门函数；
-    # **顺序决定同一角上的左右**：先开的贴角、后开的排它左边（见 UI_Panel._corner_box）。
-    # 指令里引用实例写 **`@注册名`**（配置里写的是 `@self` / `@host` / `@event`，由指令系统在派发时解析；
-    # 这里是"事件之外"发的指令，没有 `@self` 可解析，所以手写完整注册名——UI 的登记名都带 `UI/` 前缀）。
-    Msg.send_cmd("UIInteract.open(preset_name=\"Keyboard\")")
-    Msg.send_cmd("UIInteract.open(preset_name=\"SizeTest\")")
-    Msg.send_cmd("UIInteract.open(preset_name=\"MatrixTest\")")
-    Msg.send_cmd("UIInteract.open(preset_name=\"BagTest\")")
-    for w in ["Keyboard", "SizeTest", "MatrixTest", "BagTest"]:
-        for preset in ["CloseButton", "ResizeButton", "SizeGrip"]:
-            Msg.send_cmd('UIInteract.open(@UI/%s, "%s", @UI/%s)' % [w, preset, w])
-
-    # 测试用的两个 UI：显示（TestShow）/ 输入（TestInput）——J / K 键开关它们
-    # 玩法：右键 TestShow → 复制名称 → 右键 TestInput → 绑定 ▸ → 回车，然后在输入框里打字回车
-    Msg.send_cmd("UIInteract.open(preset_name=\"TestShow\")")
-    Msg.send_cmd("UIInteract.open(preset_name=\"TestInput\")")
-    # 富文本图片演示：RichTextLabel 的 BBCode 支持 `[img]`，可带 `width` / `height` 缩放（原图 32×32）。
-    # 图用全项目默认底图那张（SysCfg.ui_background，见 Config/SystemConfig.gd）；TestShow 是"会滚的文本"，
-    # 内容写外壳的 config["content"] 再刷整棵（同上面 MiniHUD Info 的流程，见 UIPreset_Basic.text_item）。
-    var show: UIBase = UISys.get_ui("UI/TestShow")
-    if show != null:
-        var img: String = SysCfg.ui_background
-        show.config["content"] = "[img]%s[/img] 原始尺寸\n" % img \
-            + "[img width=16 height=16]%s[/img] 16×16\n" % img \
-            + "[img width=64 height=64]%s[/img] 64×64" % img
-        show.refresh_tree()
-
-    # 长内容 / 可收回演示（Config/UI/UIPreset_Fold.gd）：整块能收成一个标题，三段各自也能收
-    Msg.send_cmd("UIInteract.open(preset_name=\"FoldDemo\")")
-
-    # UI 编辑器（外壳 Config/UI/UIPreset_Editor.gd + 内容元素 Script/UI/UI/UI_Editor.gd）：
-    # 平时从"右键 UI → 菜单编辑 → UI 编辑器"打开；这里默认开一份方便直接看效果。
-    # 开它就是**一条通用 open**（内容由编辑器元素按配置自己铺；没有专用的开启指令）
-    # （被编辑 UI 的 config 每项一行，子UI每段一行且**默认收起**，展开哪段才铺那段）
-    Msg.send_cmd('UIInteract.open(@UI/MiniHUD, "Editor", @UI/MiniHUD, host=@UI/MiniHUD)')
-
-    # 角色数据看板（就一个普通预设：Config/UI/UIPreset_View.gd 的 `RoleData`）：
-    # 一块面板 = 屏幕的 3/4（尺寸在预设里按屏幕算）、开在屏幕正中（`open_at: CENTER`），
-    # 头部是可折叠标题 + 关闭图标，下面按 2 行 3 列摆着六个一览（状态 / 属性 / 交互 / 技能 / 快捷 / 原型），
-    # 一格一个、**格内自己滚**。每个一览的骨架见 UI_View：一条一段、默认收起、标题是实时摘要（✔/✘ 等）。
-    # 看哪个角色由预设那张表决定；换人写在**看板**上（content_cmd），六个格子都读它 ⇒ 整块一起换（再点各格 [刷新]）。
-    Msg.send_cmd('UIInteract.open(preset_name="RoleData")')
-
-    # 富文本链接测试（Config/UI/UIPreset_MetaTest.gd）：三行只显示两行（滚动条）+ 文字里的
-    # 拖动 / 关闭 / 折叠 / 悬浮提示——都是 [url=meta] + 一条通用指令（见 UIInteract_Meta）。
-    Msg.send_cmd('UIInteract.open(preset_name="MetaTest")')
 
 ## 打印角色全部属性（演示"用指令取属性字典再遍历"的写法）。
 ## 被谁用：delay_loop_test。

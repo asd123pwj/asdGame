@@ -60,19 +60,19 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 ## UISystem.gd（class_name UISys，extends BaseClass）
 - **成员全是静态的**：`UISys.root`（UI 根 CanvasLayer）、`UISys.get_ui(登记名)`、`UISys.find_name(ui)`，调用直接写它们，不用经 `Sys.uiSys`（那个实例只用于启动时跑一次 `_init` 建 UI 根）。**登记表不在这里**：名字 ↔ 实例两张表都在 `RegSys`（见"注册名系统"一节）；**开启也不在这里**：见 `UIInteract_OpenClose.open`。
 - **画在谁上面**：UI 根是 `CanvasLayer`，层号取 `UISys.ROOT_LAYER = 100`——**必须大于地图**（地图每个子层用自己的 `CanvasLayer.layer = 子层 id`，世界层 0 就是 0~5，以后加世界层还会更大），默认值 1 会被地图盖住。
-- **挂载规则**（决定 UI 树 ⇒ 决定"关谁连谁一起关"和 `@self.parent` 的级数）：有 `anchor`（触发它的那个元素）→ **挂在 anchor 下**；没有 anchor → 挂在 `host` 下；都没有 → 挂 UI 根（独立 UI）。所以"菜单开子菜单"得到的是一棵**单链子树**：`MiniHUD → Menu → Edit(菜单项) → MenuEdit → …`。
+- **挂载规则**（决定 UI 树 ⇒ 决定"关谁连谁一起关"和 `@self.parent` 的级数）：有 `anchor`（触发它的那个元素）→ **挂在 anchor 下**；没有 anchor → 挂在 `host` 下；都没有 → 挂 UI 根（独立 UI）。所以"菜单开子菜单"得到的是一棵**单链子树**：`RoleData → Menu → Edit(菜单项) → MenuEdit → …`。
 - **画在谁上面**：UI 根是 `CanvasLayer`，层号取 `UISys.ROOT_LAYER = 100`——**必须大于地图**（地图每个子层用自己的 `CanvasLayer.layer = 子层 id`，世界层 0 就是 0~5，以后加世界层还会更大），默认值 1 会被地图盖住。
 - **点一下谁谁在最前**：`UIInteract_SetTop.set_top`——**只有"点击"会调它**（`PointerDetect.key` 里除"指针移动"外的派发）。**提的是"窗口"不是被点到的小元素**——沿 `parent` 链爬到最外层那个 UI（挂 UI 根的那个）再排；直接对元素 `move_to_front()` 有两个后果：同级窗口没动（看着没生效）+ 元素在 VBox/PanelContainer 里重排兄弟 = 改布局（"子 UI 在面板里乱窜"）。爬完只需一句 `control.move_to_front()`：**命中已经和绘制同序**（见下），不用再维护登记表顺序。同一次按住里 HOLD 每帧派发，靠"最近提的是哪个窗口"去重。
 - **置顶分两个力度**（规矩与 Windows 一致：**只有点击才把窗口提到最前，鼠标掠过不改窗口前后**）：
   - `set_top`（**全局**：窗口 + 自由层元素）——给**点击**用（`PointerDetect.key`）。
   - `set_top_in_host`（**只在宿主内**：只把元素提到"它所在那个绝对定位层"的最前，**不动窗口前后**）——给**悬停类操作**用：**`open` 走的就是它**。为什么必须分：鼠标只是掠过背后的菜单 B 上某个按钮，B 弹出的浮窗（Tip / hover 子菜单）若顺手提窗口，就把 B 整个提到正在用的菜单 A 前面，A 就没法用了（实测困扰）；只提宿主那一层则浮窗照样压在自己的宿主内容之上、显示正常。点击那一下的窗口置顶由 `PointerDetect.key` 负责，所以"点谁谁在前"照旧。
-- **登记名规则**（唯一的"寻址"约定，`RegSys.join`，**只有这一条**）：没有挂载点 → `UI/预设名`（`UI/MiniHUD`）；有挂载点 → `挂载点的登记名/名字`（`UI/MiniHUD/Menu`、`UI/MiniHUD/Menu/Edit/MenuEdit`）。**"开出来的 UI"与"配置里的子元素"共用它**（子 UI 的名字就是它的预设名），所以登记表是一整棵 `/` 连接的树；**"是否能复用"就是一次 `RegSys.get_(登记名)`**，不需要按类型遍历。同一挂载点下不要重名。
+- **登记名规则**（唯一的"寻址"约定，`RegSys.join`，**只有这一条**）：没有挂载点 → `UI/预设名`（`UI/RoleData`）；有挂载点 → `挂载点的登记名/名字`（`UI/RoleData/Menu`、`UI/RoleData/Menu/Edit/MenuEdit`）。**"开出来的 UI"与"配置里的子元素"共用它**（子 UI 的名字就是它的预设名），所以登记表是一整棵 `/` 连接的树；**"是否能复用"就是一次 `RegSys.get_(登记名)`**，不需要按类型遍历。同一挂载点下不要重名。
 - `UIInteract.open(...)`：**全项目唯一的开启入口**（普通 UI 与菜单同一条路，不要再写第二个；签名见下面的指令表）。
-  - `host` 为空 → 独立 UI：建预设自己那份 → 挂 `root` → 登记（登记名就是预设名，如 `MiniHUD`）→ `Msg.send_ui_create`。
-  - 给了 `anchor` / `host` → 深拷贝模板 → `挂载点.add_child_element` 挂到它下面 → **登记名 = `挂载点登记名/预设名`**（如 `MiniHUD/Menu`、`MiniHUD/Menu/Edit/MenuEdit`）；两者都不给则挂 UI 根、登记名就是预设名。
+  - `host` 为空 → 独立 UI：建预设自己那份 → 挂 `root` → 登记（登记名就是预设名，如 `RoleData`）→ `Msg.send_ui_create`。
+  - 给了 `anchor` / `host` → 深拷贝模板 → `挂载点.add_child_element` 挂到它下面 → **登记名 = `挂载点登记名/预设名`**（如 `RoleData/Menu`、`RoleData/Menu/Edit/MenuEdit`）；两者都不给则挂 UI 根、登记名就是预设名。
   - 已存在就**只显示 + 重新摆位**，不重建控件——"是否存在"就是一次字典查找 `uis.get(登记名)`（命名规则见 `UISys` 文件头），**没有任何按 UI 类型的特判**。
   - 子元素也要登记，是为了 **PointerDetect 能把指针命中派发到具体子元素**（如关闭按钮、菜单项）；命中顺序**沿控件树倒序**走（同级后画的在上面、孩子先于父，见 `PointerDetect._ui_at`），不再看登记顺序。
-- `get_ui(登记名)`：按名取（子元素用全名，如 `MiniHUD/Info`）——就是 `RegSys.get_(名字)` 加一层 UIBase 类型。
+- `get_ui(登记名)`：按名取（子元素用全名，如 `RoleData/Info`）——就是 `RegSys.get_(名字)` 加一层 UIBase 类型。
 - `find_name(ui)`：反查"这个 UI 叫什么"——`RegSys.name_of` 的 UI 版。
 - `register_child(parent, child)` / `_register_tree(ui, 全名)`：**按 UI 树递归登记**（顺着父元素的 `children` 一层层走，登记名 = `RegSys.join(挂载点, 名字)`）。**"名字怎么拼"不在这里**，在 RegSys（下一节）；这里只管"UI 树怎么递归"。
 - **删掉动态子树**是 `UIBase.clear_children()`（整排）/ `remove_child_element(ui)`（摘一个）/ `replace_child_element(old, 名, 类, 配置)`（**原地换一个**）：
@@ -92,12 +92,12 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 
 ## 注册名系统（RegSys，Script/System/RegSystem.gd）
 
-- **要解决的问题**：config 里存的是**名字**（字符串，如 `UI/MiniHUD/Menu`，见 `host`），
+- **要解决的问题**：config 里存的是**名字**（字符串，如 `UI/RoleData/Menu`，见 `host`），
   但名字给人看能认出来，编辑 / 排错时一眼知道是谁；反过来"敲一个名字、要拿到那个实例"也需要一条路。
   ⇒ 需要"名字 ↔ 实例"两张表。
 - **两张表一起维护**（成员全静态）：`_to_obj`（注册名 → **实例**）、`_to_name`（实例 → 注册名）。
   **只认名字**：ID 每次运行都不一样、写盘也存不住，所以"指到某个实例"一律用注册名（`@注册名`、`config["host"]`）。
-  **UI 的注册名带 `UI/` 根前缀**（`UI/MiniHUD`、`UI/MiniHUD/Menu/Close`）——独立 UI 就是 `UI/预设名`
+  **UI 的注册名带 `UI/` 根前缀**（`UI/RoleData`、`UI/RoleData/Menu/Close`）——独立 UI 就是 `UI/预设名`
   （见 UIInteract_OpenClose.UI_ROOT），于是"这是 UI 还是别的东西"从名字上分得清。
   入口：`register(obj, 名字, dedup=false)`（**返回真正用上的名字**）/ `unregister(obj)` / `get_(名字)`（名字→实例）/
   `name_of(实例)` / `has(名字)` / `join(父, 名字)` / `names()` / `clear()`。
@@ -133,8 +133,8 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - **config 可选属性**：`position` / `size` / `content` / `children` / `events` / `visible` / `free`（自由定位：`position`/`size` 不被父级布局覆盖；**挂在哪一层**见 `UIBase._top_free_layer`——贴角类挂本面板的角落容器、其余（菜单 / 浮窗）挂**最外层窗口**的叠加层，用于"右上角的关闭按钮""菜单""键盘的每个键"这类元素）；`collapsed`（父元素）/ `collapse_keep`（子元素自己标"收起时留我"）不是 UIBase 读的，是**收起/展开交互**（`UIInteract.fold`）读的，见"长内容与收回 / 展开"一节。**配置子元素与运行时加的子元素共用这条规则**（`_build_children` 与 `add_child_element` 一致）：配了 `free` 就进叠加层任意摆，没配才进内容盒（容器类 = 竖排）。
   - **`size` = [宽, 高] 像素**（写 0 的那一维随内容走）。**要"按屏幕比例"就在预设里自己算成像素**（`UISys.screen_size() × 比例`，如 `UIPreset_View._panel_size()`）——框架不再提供 `size_ratio` 这种配置项：尺寸的"来路"由用它的那一处自己决定，尺寸定死之后交给"改尺寸 / 等比缩放"手柄改。
   - `font_size`（字号）/ `font_color`（字色）与 `background`（背景图路径）是**公共属性**（都在 `UIBase._apply_config` 里读，不是某个元素独有）：
-    - `font_size` / `font_color` 作用在**配它的那个控件**上——主题重写不向下传，所以要小字/深色字就配在真正显示文本的元素上。**不配字色就用全局默认深色**（`SysCfg.ui_font_color_default`）：面板默认底是**浅色**图（见下 `background`），引擎默认那接近白的字画在白底上等于看不见，所以默认深色。要"深底浅字"就调那个全局值、或给这一处显式配 `font_color`。
-    - `background`（九宫格底图）由 `UIBase._apply_background` 统一实现：找本元素控件的 stylebox 槽套上去（槽名由 `_background_slot` 按 `panel → normal → background` 取第一个存在的）。**`UI_Panel` 没写 `background` 就用全局默认底图**（`SysCfg.ui_background` + `ui_background_slice`：全项目窗口长一个样；想换底图改这两个全局值，某个面板不要底显式写 `"background": ""`）。**所有面板都套默认底**（顶层窗口、嵌套的网格格 / 子面板都算"UI"），**圆角边距（slice）照留**（用户要求：圆角半框要留）。代价：底图的圆角边距（默认 8px 一圈）占掉内容宽度，**每嵌套一层面板都要从可用宽里再扣一圈**——嵌套的格子要把内容按"格宽 − 各层圆角边距 − margin"收窄（角色看板用 `CELL_CHARS` 反推；实测不收窄时内容 min 超过格宽，文字溢出右邻格）。**某个窗口想用别的底图就显式写它**（角色看板就是：用户画的竹框 `UI_Bamboo_Empty.png`——空框那版，`background` + `background_slice: 16` + `background_stretch: "tile"`，见 `UIPreset_View` 的三个常量；换了底图那圈边距也变，格子里的字数上限要跟着重算）。**采样模式：图 = 最近邻（全局一处），字 = 线性（只在建文字控件处）**。本项目是像素游戏，**图**放大要的是锐利而非平滑 ⇒ 走 `project.godot` 的 `rendering/textures/canvas_textures/default_texture_filter = 0`（0 = Nearest）：**一处生效、全项目所有图**（UI 底图 / 图标 / 关闭按钮、角色图、地图瓦片、特效……），**以后引入任何图都不用再改任何地方**。**字**相反：字体是 **MSDF 距离场**（`Material/Fonts/*.ttf.import` 里 `multichannel_signed_distance_field=true`，全项目只有这一个字体文件 ⇒ 换字体把那个 ttf 的导入同样打开即可），距离场靠**插值**求字边 ⇒ 文字控件必须显式设 `CanvasItem.TEXTURE_FILTER_LINEAR`，否则最近邻会让字发毛（实测：全局改最近邻后字明显变糙，图变锐）。设的地方**只有两处**（全项目产生文字控件的地方就这两个）：`UI_Label._create_control`（RichTextLabel）、`UI_Input._create_control`（LineEdit / TextEdit）；**将来新写"带文字的控件"就照这两处补一行**。图元素不设（`UI_Image` 等什么都不写）⇒ 跟全局最近邻走。**实测各元素对应哪个槽**：
+    - `font_size` / `font_color` 作用在**配它的那个控件**上——主题重写不向下传，所以要小字/深色字就配在真正显示文本的元素上。**不配字色就用全局默认深色**（`QName.ui_font_color_default`，那一族 UI 配色都在 `QName`）：面板默认底是**浅色**图（见下 `background`），引擎默认那接近白的字画在白底上等于看不见，所以默认深色。要"深底浅字"就调那个全局值、或给这一处显式配 `font_color`。
+    - `background`（九宫格底图）由 `UIBase._apply_background` 统一实现：找本元素控件的 stylebox 槽套上去（槽名由 `_background_slot` 按 `panel → normal → background` 取第一个存在的）。**`UI_Panel` 没写 `background` 就用全局默认底图**（`SysCfg.ui_background` + `ui_background_slice`：全项目窗口长一个样；想换底图改这两个全局值，某个面板不要底显式写 `"background": ""`）。**所有面板都套默认底**（顶层窗口、嵌套的网格格 / 子面板都算"UI"），**圆角边距（slice）照留**（用户要求：圆角半框要留）。代价：底图的圆角边距（默认 8px 一圈）占掉内容宽度，**每嵌套一层面板都要从可用宽里再扣一圈**——嵌套的格子要把内容按"格宽 − 各层圆角边距 − margin"收窄（角色看板用 `CELL_CHARS` 反推；实测不收窄时内容 min 超过格宽，文字溢出右邻格）。**某个窗口想用别的底图就显式写它**（角色看板就是：用户画的竹框 `UI_Bamboo_Empty.png`——空框那版，用 `UIPreset_Basic.bg(图路径)` 一次给齐三键：`background` + `background_slice` + `background_stretch`。**三键都是"图 + 边距 + 中段填充"这一个组合，所以收在那个构造器里**，不写边距 / 填充就是竹图那套规格（`SysCfg.ui_bamboo_slice/stretch`：四角 16 + 平铺）；换了底图那圈边距也变，格子里的字数上限要跟着重算）。**采样模式：图 = 最近邻（全局一处），字 = 线性（只在建文字控件处）**。本项目是像素游戏，**图**放大要的是锐利而非平滑 ⇒ 走 `project.godot` 的 `rendering/textures/canvas_textures/default_texture_filter = 0`（0 = Nearest）：**一处生效、全项目所有图**（UI 底图 / 图标 / 关闭按钮、角色图、地图瓦片、特效……），**以后引入任何图都不用再改任何地方**。**字**相反：字体是 **MSDF 距离场**（`Material/Fonts/*.ttf.import` 里 `multichannel_signed_distance_field=true`，全项目只有这一个字体文件 ⇒ 换字体把那个 ttf 的导入同样打开即可），距离场靠**插值**求字边 ⇒ 文字控件必须显式设 `CanvasItem.TEXTURE_FILTER_LINEAR`，否则最近邻会让字发毛（实测：全局改最近邻后字明显变糙，图变锐）。设的地方**只有两处**（全项目产生文字控件的地方就这两个）：`UI_Label._create_control`（RichTextLabel）、`UI_Input._create_control`（LineEdit / TextEdit）；**将来新写"带文字的控件"就照这两处补一行**。图元素不设（`UI_Image` 等什么都不写）⇒ 跟全局最近邻走。**实测各元素对应哪个槽**：
 
       | 元素 | 内部控件 | 可用的槽 |
       |---|---|---|
@@ -179,7 +179,7 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - **`_as_ui(target, cmd_name)`**：只做校验、不再做"名字→实例"归一化（该路径已由指令系统承担）。target 为空、或目标尚未 `build()`（`control == null`）时 **`push_warning` 指明是哪个指令**，而不是静默 return——避免配置/组装写错却无提示。
 - **占位符解析（`@self` / `@host` / `@event`）**：由**指令系统**在派发前解析——**只认三个词**（实现见 `CommandParser`）：
   - `self` → 自身（`@注册名`）：链尾接着写取值链，交给指令系统按表达式解析——`@self.parent`→父 UI（挂载对象）、`self.config.content`→自身显示内容。
-  - `host` → **本条链的管理对象** → `@注册名`（解析见 `UIBase._find_host`）：从自己往上，**最近一个在 config 里写了 `host` 的元素**说了算（**注册名**）；谁都没写就回退到**最外层 UI**（窗口本身）。**"管理对象"的唯一写法**：菜单项 / 深层子元素不必再数 `@self.parent` 级数——中间套多少层（比如给菜单项再加一个可折叠分组）都指向同一个对象；而且管理对象**可以是任意一层 UI**（不一定是顶层）：开的时候给（`UIInteract.open(..., host=@self)`，或任何算得出实例的取值链），或运行中改（`Utils.write("<某个 UI 的路径>.config.host", "UI/MiniHUD/Menu")`——写成谁就以谁为界，它下面的整棵子树都跟着）。**存的是注册名**（字符串：可读、能存盘、跨运行也对得上，见 RegSys）：config 是数据（会被深拷贝、可能写盘成 json），实例存不进去；取不到时当"没声明"处理并提醒一次。
+  - `host` → **本条链的管理对象** → `@注册名`（解析见 `UIBase._find_host`）：从自己往上，**最近一个在 config 里写了 `host` 的元素**说了算（**注册名**）；谁都没写就回退到**最外层 UI**（窗口本身）。**"管理对象"的唯一写法**：菜单项 / 深层子元素不必再数 `@self.parent` 级数——中间套多少层（比如给菜单项再加一个可折叠分组）都指向同一个对象；而且管理对象**可以是任意一层 UI**（不一定是顶层）：开的时候给（`UIInteract.open(..., host=@self)`，或任何算得出实例的取值链），或运行中改（`Utils.write("<某个 UI 的路径>.config.host", "UI/RoleData/Menu")`——写成谁就以谁为界，它下面的整棵子树都跟着）。**存的是注册名**（字符串：可读、能存盘、跨运行也对得上，见 RegSys）：config 是数据（会被深拷贝、可能写盘成 json），实例存不进去；取不到时当"没声明"处理并提醒一次。
   - `event` → 触发事件名（**自带引号**，因为事件名里常有空格）。
   三个词在**路径字符串里也一样换**（`Utils.write("@self.config.content", 值)`、`Utils.write("@host.config.content_cmd", 值)`）。**紧跟 `=` 的词不换**：那是 `名字=值` 里的**参数名**——`UIInteract.open(…, host=@self)` 的 `host` 是"要传给哪个参数"，不是占位符（换掉的话指令系统按名字匹配不到，那条参数会被当"命名参数后面的位置参数"丢掉；实测踩过：菜单的 host 一直是 null，行为靠"回退最外层窗口"才看着对）。**没有 `$parent` / `$text` 这类专用占位符**（能从这三个词取到的就不另立语法；取不到时表达式给 null，由目标指令自己警告）。它是 `on_event` 的私有助手，放在 `UIBase` 里（没有第二个使用者）。
 **指令语法：一行 = 一个表达式**（和写函数调用一样，参数一律包在 `()` 里）：
@@ -191,11 +191,11 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 | 指令 | 作用 | 典型配置 |
 |---|---|---|
 | `UIInteract.close @self.parent` | 关闭（隐藏）目标 UI（发 `Msg.send_ui_close` + hide） | 关闭"按钮"的 press |
-| `UIInteract.open([挂载点], 预设名, [锚点], close_on_blur=?, close_on_move=?, host=?)` | 开启/重开一个 UI（显示 + 按 `open_at` 摆位；不重建控件）。**锚点同时是挂载点**（子菜单挂到触发它的菜单项下）；挂载点与锚点都不给 = 独立 UI（`UIInteract.open(preset_name="MiniHUD")`）。`close_on_move=true` = 指针挪开就收（hover 展开的子菜单）、`close_on_blur=true` = 有按键派发时不在它上面就关（右键菜单）——**要哪种就在开的这一句写出来**，预设里不声明它（"在哪开、为什么开"只有这一句知道）。`host` = 这次开的 UI **要管理的对象**（见 `host` 占位符那行）：不给就沿链回退；**它不是挂载点**，挂哪/摆哪仍由前三个参数 + `open_at` 决定。复用路径也会更新这些指向 | 面板右键开菜单：`UIInteract.open(@self, "Menu", @self, close_on_blur=true)`；改管某个子 UI：`open(@self, "Menu", @self, host=UISys.get_ui("UI/MiniHUD/Info"))` |
-| `UIInteract.drag(@host, @event)` | **按住拖动**（登记入口）：把"每帧拖 host（那个窗口）"挂到这个按住状态上，松手自动停 | MiniHUD 标题栏、整块键盘面板 |
+| `UIInteract.open([挂载点], 预设名, [锚点], close_on_blur=?, close_on_move=?, host=?)` | 开启/重开一个 UI（显示 + 按 `open_at` 摆位；不重建控件）。**锚点同时是挂载点**（子菜单挂到触发它的菜单项下）；挂载点与锚点都不给 = 独立 UI（`UIInteract.open(preset_name="RoleData")`）。`close_on_move=true` = 指针挪开就收（hover 展开的子菜单）、`close_on_blur=true` = 有按键派发时不在它上面就关（右键菜单）——**要哪种就在开的这一句写出来**，预设里不声明它（"在哪开、为什么开"只有这一句知道）。`host` = 这次开的 UI **要管理的对象**（见 `host` 占位符那行）：不给就沿链回退；**它不是挂载点**，挂哪/摆哪仍由前三个参数 + `open_at` 决定。复用路径也会更新这些指向 | 面板右键开菜单：`UIInteract.open(@self, "Menu", @self, close_on_blur=true)`；改管某个子 UI：`open(@self, "Menu", @self, host=UISys.get_ui("UI/RoleData/Info"))` |
+| `UIInteract.drag(@host, @event)` | **按住拖动**（登记入口）：把"每帧拖 host（那个窗口）"挂到这个按住状态上，松手自动停 | RoleData 标题栏、整块键盘面板 |
 | `UIInteract.rescale(@host, @event)` | **等比缩放**（登记入口）：每帧 `scale *= |指针 - 面板左上角| / |上帧指针 - 面板左上角|`（增量式，以左上角为中心，上下限取 `SysCfg.resize_min_scale / resize_max_scale`） | 缩放手柄 `ResizeButton` |
 | `UIInteract.resize(@host, @event)` | **拖右下角改尺寸**（登记入口）：每帧把指针位移当宽高增量加到 `config["size"]`（下限 `SysCfg.resize_min_size`），并把这块切成 `fit_content = false` ⇒ 里面的文本照新宽度折行（"拖大看得更多"）。与 `rescale` 的区别：这个改宽高、那个整块按比例放大（字也变大） | 改尺寸手柄 `SizeGrip` |
-| `host` | 占位符，由**指令系统**换成**本条链的管理对象**的 `@注册名`："最近一个在 config 里写了 `host`（**注册名**）的元素"说了算，谁都没写就回退到**最外层 UI**（窗口）⇒ 管理对象可以是**任意一层 UI**（不必顶层），指令里也不必数 `@self.parent` 级数；路径字符串里也能用（`"@host.config.content_cmd"`）。写法：`UIInteract.open(..., host=@self)`（开的时候给）或 `Utils.write("<某个UI>.config.host", "UI/MiniHUD/Menu")`（运行中改，以声明处为界），也可以在UI 编辑器里直接把那一行改成 `MiniHUD/Menu`。**两种都用不了**（UI 已释放 / 名字没登记 / 写的不是个名字）⇒ 当没声明处理 + 提醒一次 | `UIInteract.close(@host)`、`Utils.copy(@host.config.reg_name)` |
+| `host` | 占位符，由**指令系统**换成**本条链的管理对象**的 `@注册名`："最近一个在 config 里写了 `host`（**注册名**）的元素"说了算，谁都没写就回退到**最外层 UI**（窗口）⇒ 管理对象可以是**任意一层 UI**（不必顶层），指令里也不必数 `@self.parent` 级数；路径字符串里也能用（`"@host.config.content_cmd"`）。写法：`UIInteract.open(..., host=@self)`（开的时候给）或 `Utils.write("<某个UI>.config.host", "UI/RoleData/Menu")`（运行中改，以声明处为界），也可以在UI 编辑器里直接把那一行改成 `RoleData/Menu`。**两种都用不了**（UI 已释放 / 名字没登记 / 写的不是个名字）⇒ 当没声明处理 + 提醒一次 | `UIInteract.close(@host)`、`Utils.copy(@host.config.reg_name)` |
 | `event` | 占位符，由**指令系统**换成**带引号的触发事件名**（= 状态名 = Key 名），所以配置不必再抄一遍状态名 | 上面两条都在用 |
 
 > 按住类交互在代码里成对写：`drag`/`rescale`/`resize` 是**登记入口**（配置里写它们），
@@ -268,43 +268,32 @@ static func create_element(element_name, ui_name, config := {}) -> UIBase  # 类
 - 用 `control.is_visible_in_tree()`：父 UI 关闭(hide)后子元素不再可命中。
 - 命中矩形 `control.get_global_rect()` **含 `scale`**（实测：面板 `scale = 1.1` 时矩形宽高同步 ×1.1）⇒ 用 `UIInteract.resize` 缩放后，指针命中区自动跟着走，这里不用改。
 
-## Config/UI/UIPreset_Basic.gd（extends ConfigBase）
+## Config/UI/UIPreset_Basic.gd（extends ConfigBase）—— 通用件都在这儿
 ```gdscript
 var values: Array[Array] = [
-    ["MiniHUD", "UI_Panel", {
-        "position": [30, 30], "size": [320, 220],
-        "children": [
-            ["Title", "UI_Label", {
-                "content": "MiniHUD（按住拖动）",
-                "events": [["Pointer 1 Hold", "UIInteract.drag @self.parent event"]],
-            }],
-            # "按钮" = 文本元素 + "Pointer 1 Hold" 指令，无需 Button 子类
-            ["Close", "UI_Label", {
-                "content": "[关闭]",
-                "events": [["Pointer 1 Hold", "UIInteract.close @self.parent"]],
-            }],
-            ["Info", "UI_Panel", {
-                "size": [280, 120],                     # 定死的可视区：内容多了在框内滚
-                "children": [UIPreset_Basic.text_item("初始内容")],
-            }],
-            # ["Icon", "UI_Image", { "content": "res://icon.svg", "size": [32, 32] }],
-        ],
-    }],
+    # 说明浮窗：一块面板 + 一项正文子元素（内容由开它的那一句带进来，见 tip_cfg）
+    ["Tip", "UI_Panel", tip_cfg("（说明）")],
+    # "带手柄的窗口"不是一类预设：就是普通窗口 + 把这三个按钮预设开出来（open / close）
+    ["CloseButton", "UI_Image", close_cfg()],
+    ["ResizeButton", "UI_Image", handle_cfg(RESCALE_ICON, QName.UI_event_pointer1_rescale_host, "等比缩放")],
+    ["SizeGrip", "UI_Image", handle_cfg(RESIZE_ICON, QName.UI_event_pointer1_resize_host, "改尺寸")],
 ]
 ```
-- 组装读法：根 `UI_Panel` 含三个子元素——标题栏按住拖动父 UI、文本"按钮"关闭父 UI、一块会滚的文本（面板 + 正文子元素）展示内容；改展示内容只需写 `get_ui("UI/MiniHUD/Info").config["content"]` 再 **`refresh_tree()`**（外壳改了，读它的正文子元素要一起刷；见 Test.ui_test），或发 `Utils.write …\vUISys.refresh_all()` 指令。
+- 组装读法：**预设也是普通 UI** ⇒ 没有"某类窗口"的写法——窗口 = `UI_Panel` 配置，角上的按钮 = 能开能关的普通预设（`UIInteract.open / close`），
+  "会滚的文本" = 面板 + `text_item()` 那项正文子元素。改展示内容写的是**外壳**的 `config["content"]`，
+  之后要刷**整棵**（`refresh_tree()`）——正文是子元素，只刷外壳它不会跟着变；或发 `Utils.write …\vUISys.refresh_all()` 指令。
 
 ## 右键菜单（Config/UI/UIPreset_Menu.gd 的配置 + 通用 UI 机制）
 - **菜单没有专属类**：就是普通 `UI_Panel` + 三条配置（`open_at` / `close_on_blur` / `free`）——开启与失焦关闭都读配置统一处理（`UIInteract_OpenClose`：`_place` 管"开在哪"、`_blur_uis` 候选 + `close_blur_ui` 管"失焦关闭"），所以"换一套配置"就等于换一种菜单。菜单项就是它 `config["children"]` 里的普通子 UI，行为由子 UI 的事件绑定给出。
 - **开启 = 开一个 UI（唯一入口 `UIInteract_OpenClose.open`，指令形式 `UIInteract.open`）**：整个开启逻辑（复用查找 `_child_ui` → 现建 `_build_open` → 摆位 `_place`）都在这个文件里，`UISys` 只提供登记表与登记名规则。**挂哪由 anchor/host 决定**（见上面的挂载规则），摆在哪由**被开启 UI 自己配置里的 `open_at`** 声明：
-  - `host` 为空 → 独立 UI 挂 UI 根，指令写成 `UIInteract.open(preset_name="MiniHUD")`（命名参数跳过 target）。
+  - `host` 为空 → 独立 UI 挂 UI 根，指令写成 `UIInteract.open(preset_name="RoleData")`（命名参数跳过 target）。
   - 有 `anchor`（多级菜单：触发它的那个菜单项）→ **挂在 anchor 下**，子菜单成为该菜单项的后代；只给 `host` → 挂在 host 下。
   - `Enums.OpenAt.CONFIG`（不写 `open_at` 时的默认）：摆回配置里的 `position`；`POINTER`：开在指针处（右键菜单——**仍然要传 anchor**，因为它决定挂在谁下面）；`ANCHOR_TOP_RIGHT`：开在 `anchor` 的右上角顶点（多级菜单把触发它的那个菜单项传进来）；`ANCHOR_TOP_RIGHT_IN` / `ANCHOR_BOTTOM_RIGHT_IN`：开在 `anchor` **内部**的右上角 / 右下角（按自己尺寸内缩，占窗口内容的地方）；`ANCHOR_RIGHT_OUT`：**外置按钮列**——整列贴在 `anchor` **右侧外面**（列左沿 = 宿主右边缘、列上沿 = 宿主上边缘），往下一个个排；`ANCHOR_NEAREST`：贴 `anchor` 顶点、**挑离指针最近的那个角**（悬停说明浮窗用它，见下）；**悬停还"停住才弹"**——那条开窗指令被 `TimeSys.after` 包了一层（**全项目的说明浮窗只从 `UIPreset_Basic.tip_open_cmd` 来**：`tip_events` 给整块元素、`tip_hover_bind` 给富文本链接，`TOOLTIP_DELAY` 控等待、**取消条件 = `QName.pointer_move` 状态**，见 `Script/Time/Time.md` 的"延时指令"）；`CENTER`：开在**屏幕正中**（按 `UISys.screen_size()` 和自己的尺寸算，"占屏幕一块"的窗口——如说自己算成 3/4 屏的角色数据看板——用它）。**关闭按钮与两个手柄用的就是 `ANCHOR_RIGHT_OUT`**（`UIPreset_Basic`）：按钮摆到窗口**外面**，不占窗口内容的地方，窗口再小也摆得下；**画在窗口外照样能点**（命中判定不做祖先矩形剪枝，只认 `clip_contents`）。**同一处的多个图标自动排成一排 / 一列**（`UI_Panel._corner_box`，三种：内部右上、内部右下、右侧外面一列）：先加的贴着角（列里则是排在最上/最左），后加的往外依次排；排 / 列**往面板里面长**（上角那行向下、下角那行向上、外置列往右往下，`grow_vertical` / `grow_horizontal` 按位置给）——不然下角那行会整排挂到窗口外面（挂出的量 = 图标高，实测）。**所有摆位都带"自适应避让"**（`UIInteract_OpenClose._fit_pos`）：每个策略给一串**候选位置**（按喜好排序），**第一个能完整落在屏幕里的**就用它；全被挡（浮窗比屏幕还大之类）就选"与屏幕相交面积最大"的那个 = **挡得最少**。于是两种常见尴尬自动消失：**指针类**（`POINTER`，右键菜单）= 右下 → 左下 → 右上 → 左上（指针已贴着屏幕右下角时，菜单自动翻到左上）；**贴角类**（参照物 = 锚点元素）= 本角 → 左右翻 → 上下翻（子菜单贴着菜单项右侧、而菜单已在屏幕右边缘时，自动翻到菜单项左边）。**候选顺序写在 `Enums.OPEN_ORDER_POINTER / OPEN_ORDER_ANCHOR`**（角名一律英文、与 `OpenAt` 叫法一致：`bottom_right` / `bottom_left` / `top_right` / `top_left`），被开 UI 自己的 config 可以改两样：**`open_order`**（一串角名，可只写前几个，如 `["top_left"]`）= 换"先试哪个角"；**"离指针最近优先"有两种写法**：`open_at: ANCHOR_NEAREST`（== 贴锚点顶点 + 挑"离指针最近的那个角"，**提示浮窗用的就是它**；推荐——一个"开在哪"只写一处），或在别的策略上再补一条 **`nearest: true`**（角名顺序只当平手时用）。于是提示浮窗**贴着被说明的东西、又挑离鼠标最近的那个角**（既看得见，又**不压住指针**——压住指针那条路试过，指针一落进浮窗，事件从浮窗冒泡上来、`meta_hover` 变 null，会被当成"离开链接"当场收掉，见 `UIInteract_Meta` 文件头那条 ⚠️）。**尺寸在打开那一帧只能估**——折行文字的高要等一次排版（`RichTextLabel` 的折行高是异步的）：`_want_size` 取控件已排过的那版尺寸，`_schedule_replace` 再在**下一帧**按真实尺寸校一次（只一次、只挪一点，肉眼几乎看不出）。**不需要"开出来连挪好几帧"**：候选求交只是几次矩形运算，一帧内就算完。
   - 位置换算（屏幕坐标 → 挂载点坐标系的 `position`）在 `UIBase.show_at`：**别用 `set_global_position`**（按当前全局变换求逆，重复摆会跟旧 position 复合、越摆越偏），**也别设 `Control.top_level`**（会失去父级可见性继承，宿主关掉后它还留在屏幕上、还能被命中）。
-- **菜单链是一棵子树**：`Menu` 挂在宿主下、子菜单挂在"触发它的菜单项"下（`MiniHUD → Menu → Edit → MenuEdit`）。菜单项的功能都作用在宿主上（"关闭"关宿主、"添加关闭按钮"给宿主加 X、"启用拖拽"拖宿主），菜单只是快捷方式——像右键窗口标题栏点"关闭"，关掉的是窗口。宿主一 `hide()`，整条链随之不可见、也不再被指针命中（可见性照常继承）。
+- **菜单链是一棵子树**：`Menu` 挂在宿主下、子菜单挂在"触发它的菜单项"下（`RoleData → Menu → Edit → MenuEdit`）。菜单项的功能都作用在宿主上（"关闭"关宿主、"添加关闭按钮"给宿主加 X、"启用拖拽"拖宿主），菜单只是快捷方式——像右键窗口标题栏点"关闭"，关掉的是窗口。宿主一 `hide()`，整条链随之不可见、也不再被指针命中（可见性照常继承）。
 - **常态右键菜单**（`UIPreset_Menu.DesktopMenu`）：点在**空地上**（指针不在任何 UI 上）右键开的那一扇——**独立 UI**（无宿主、无锚点）、开在指针处、点别处关。**开菜单的条件用状态合成**：SYS 角色上 `QName.desktop_menu` = "`QName.pointer2_hold` 满足 ∧ `QName.pointer_on_ui` **不**满足"两个依赖（后者是 hover 变化时由 PointerDetect 手动开/关的保持型状态，同 `QName.editing` 那套），满足时一条快捷指令开出菜单，并顺手把**指针下那个角色**（`PointerDetect.hover_char`）存进菜单的 `content` ⇒ 第一项"打开角色窗口"看它（没抓到角色写成"（当前无角色）"占位、点了不做事），第二项固定看 SYS 角色（见 `UIPreset_Menu.char_option_text / open_char_window`）。
   - **菜单项里管理宿主一律写 `host`**（不要数 `@self.parent` 的级数）：链里层级深浅不一（`Menu` 的项 vs `MenuEdit` 的项差着好几层），但 `host` 无论深浅都指向同一个对象；给菜单项再套一层可折叠分组也不会指歪。`self` 留给"我自己的挂载点/锚点"（`UIInteract.open(@self, "MenuEdit", @self)` 用它）。
-  - **管理对象不一定是"最顶层那个窗口"**：只认"最近一处声明"——`UIInteract.open(..., host=@self)` 或 `Utils.write("<某UI>.config.host", "UI/MiniHUD/Menu")` 写在谁身上，就以谁为界（它下面的整棵子树都跟它，更近的声明还能再覆盖，所以可以给不同子菜单挂不同的管理对象）。没写 `host` 的链才回退到最外层窗口。**写的是注册名**（字符串：可读、能进 json / 能深拷贝，见 RegSys），所以"哪一层管谁"是可以存盘的配置。
+  - **管理对象不一定是"最顶层那个窗口"**：只认"最近一处声明"——`UIInteract.open(..., host=@self)` 或 `Utils.write("<某UI>.config.host", "UI/RoleData/Menu")` 写在谁身上，就以谁为界（它下面的整棵子树都跟它，更近的声明还能再覆盖，所以可以给不同子菜单挂不同的管理对象）。没写 `host` 的链才回退到最外层窗口。**写的是注册名**（字符串：可读、能进 json / 能深拷贝，见 RegSys），所以"哪一层管谁"是可以存盘的配置。
   - - 菜单编辑 ▸ 的"内容对象 ▸"**不写专门面板**：它就是通用 `Editor` + `content_cmd="@host.config.content_cmd"`（编辑单个字符串值 ⇒ 自适应出一个文本框、回车写回并刷宿主）。"对象路径"就是 `content_cmd` 本身，显示 / 编辑都按它取，没有"拿名字再查一次"那层转手。
 - **失焦判定也因此变简单**：`UIInteract_OpenClose.close_blur_ui` 判"指针是否在我要的链上"，鼠标在子菜单上时沿 parent 链能走回父菜单，所以父菜单不会被误关。
 - **触发**：宿主配置里写 `"events": [[QName.pointer2_hold, 'UIInteract.open(@self, "Menu", @self, close_on_blur=true)']]`（= `QName.UI_event_pointer2_menu`）；状态层只需 `Pointer 2 Hold → PointerDetect.key "Pointer 2 Hold"` 把事件派发给 hover 的 UI，**不需要系统级快捷**。
@@ -361,14 +350,14 @@ var values: Array[Array] = [
   滚动条**不算 UI 命中**（`PointerDetect` 里那条规则）：所以面板同时配了"按住可拖"时，
   拖滚动条不会连带拖面板（拖滚动条归引擎自己处理，本项目不消费鼠标事件）。
 - **注意**：**可折叠标题要标 `collapse_keep: true`**（`title_item` 已经带了），否则收起来就再也没有东西能点开它；收起期间**运行时新加的子元素**不会自动跟着藏（加完再调一次 `fold`）。
-- 例子见 `Config/UI/UIPreset_Fold.gd`（`FoldDemo`：整块可收 + 三段各自可收，`Test.ui_test` 里默认开出来）。
+- 用法见 `UIInteract_Fold.title_item` / `section_item`（一览与编辑器都用它；`collapse_keep` 已经带上了）。
 
 ## UI 编辑器（元素 Script/UI/UI/UI_Editor.gd + 外壳 Config/UI/UIPreset_Editor.gd）
 
 - **要解决的问题**：一个 UI 的"所有内容"（config 每一项、它的子UI、子UI的子UI…）平时只存在于配置里，
   想现场看看 / 改改只能翻代码。UI 编辑器把这棵树**现场**摆出来，改完立刻生效（不用改配置文件、不用重开 UI）。
 - **它就是"编辑器"**：`UI_Editor` 是一个**普通元素**（`extends UI_Panel`），构造时按配置铺出来——
-  - `source`：要编辑的那本**字典**在哪（指令取值式路径，如 `"@UI/MiniHUD/Info.config"`；不写 = 用 host 的 config）；
+  - `source`：要编辑的那本**字典**在哪（指令取值式路径，如 `"@UI/RoleData/Info.config"`；不写 = 用 host 的 config）；
   - `special`：**特别处理的键名**（`{"children": "ui"}` ⇒ 这个键按"子UI"处理）；
   - `kinds`：**某种值用哪个元素渲染**（`{"text": ["UI_Input", {"multiline": true}]}`，默认见 `UI_Editor.DEFAULT_KINDS`）
     ——这是扩展点：想做"数值型 / 文本型 / 列表型编辑器"就是写个新元素再在这里登记一条。
@@ -401,14 +390,14 @@ var values: Array[Array] = [
   （每行的写回命令见 `UI_Editor`），层级再深也不必逐层传参——
   这是 `host` 占位符（"最近声明优先"）最典型的用法：**一段 = 一个"管理对象"的作用域**。
 - **值的解析**：文本 → 值走指令解析器那套（`CommandParser.parse_value`：数字 / `true` / `"字符串"` / `[数组]`）；
-  **算不出值就按原样字符串**（`res://icon.svg` 这种路径、`MiniHUD/Menu` 这种注册名都不必加引号）；
+  **算不出值就按原样字符串**（`res://icon.svg` 这种路径、`RoleData/Menu` 这种注册名都不必加引号）；
   空文本 = `null`（清掉这一项）。
 - **改完怎么生效**：`reapply()`（`size` / `font_*` / `background` 这些"只有应用时才生效"的）→ `refresh()`
   （content / visible）→ `_fit_size()`（尺寸可能变了）。都不碰 position，除非改的正好是 `position`。
 - **不省略任何子UI**：列的就是"这个 UI 实际有的子元素"，一个不漏——多出来的段本来就是折叠的，不占地方
   （想只看自己的值就把不看的段、连顶层那个 Config 段一起收起来）。**"看不见的菜单"列不出来不是省略**：
   没开过的菜单只是个预设、还没有实例，自然也还不是子元素（`open` 过才会出现在 `children` 里）。
-- **配置值就用注册名**：`host` 这类键填的就是 `MiniHUD/Menu` 这种名字（`_find_host` 与 `@注册名` 都认），
+- **配置值就用注册名**：`host` 这类键填的就是 `RoleData/Menu` 这种名字（`_find_host` 与 `@注册名` 都认），
   写进去就是它——不用对着数字猜"这是谁"，也不怕重开一次就对不上。
 - **长度问题两手一起上**：容器 `scroll: [340, 460]`（`UI_Panel` 的滚动，内容再多也只在框内滚）+
   每行的值用**多行输入框**（`UI_Input` 的 `multiline`：自动换行、高度按折行数自适应、`max_lines` = 最多显示几行）。
@@ -423,12 +412,11 @@ var values: Array[Array] = [
 - **名字怎么来**：`UIBase._unique_child_name` —— 组装子元素时（配置 `children` 与运行时 `add_child_element` 两条路）都过一遍：
   **同一挂载点下重名就加 `_2`、`_3`…，没重名保持原样**（所以 `Title` 还是 `Title`，不会变成 `Title_1`）。
   判重看"本元素已有的子元素"，不查登记表（建树时父元素自己还没登记）。理由是登记名 = `挂载点登记名/名字` ⇒ 同名就是同一个登记名 ⇒ 互相覆盖。
-- **流程**：右键目标 → "复制名称"（`Utils.copy(@host.config.reg_name)`，复制的是**登记名**，如 `UI/TestShow`、`UI/MiniHUD/Title`，带后缀的真名）
+- **流程**：右键目标 → "复制名称"（`Utils.copy(@host.config.reg_name)`，复制的是**登记名**，如 `UI/RoleData/Title`，带后缀的真名）
   → 右键要收信息的 UI → 用编辑器把它那一行改成那条路径（写进 `content_cmd`）→ 之后发信息就走这条路径。
 - **对象路径直接写在 `content_cmd` 上**（`"host.config"` 这种相对写法也行）：不再有"沿 parent 找 bind 名"这一层转手。
-- 例子见 `Config/UI/UIPreset_Test.gd`（`TestShow` 显示 / `TestInput` 输入，J / K 键开关；
-  另有 `SizeTest`：**以面板为准**的小窗 + 右下角"改尺寸 / 等比缩放"两个手柄，用来测 `UIInteract_Resize`
-  与同角自动排位——由 `Test.ui_test` 连同两个手柄一起开出来）。
+- 例子：`UIPreset_MapCell` 里那几个输入框就是这条路（`content_cmd` 写相对路径 `@self.parent.config.x`，
+  回车提交时 `Utils.write` 写回去）；"复制名称 → 绑定 ▸"则是**跨 UI** 那种写法（写绝对登记名）。
 
 ## 键盘快捷键界面（Config/UI/UIPreset_Keyboard.gd）
 
@@ -438,10 +426,10 @@ var values: Array[Array] = [
   - 左右修饰键在 Godot 里 keycode 相同（Shift/Ctrl/Alt 各一对），靠 `InputEventKey.location` 区分 → 表里多一列位置，**元素名也随之带 `_L`/`_R`**（不带的话两个键会注册到同一个名字下互相覆盖）。
   - 元素名由键码字符串生成：`Escape→Key_Escape`、`Kp 8→Key_Kp8`、`Slash→Key_Slash`、`Shift+LEFT→Key_Shift_L`（生成时做重名检查并警告）。
 - 每个键 = 一个 `free` 的 `UI_Panel`（绝对坐标定位，底图 `KEY_BG`，配置里带 `key_code` / `key_location`）+ 两个 `UI_Label`：`Name` 键名（Esc / Q …）、`Desc` 当前绑定的操作。**字号与字色都配在这两个文本上**（`font_size` / `font_color`）——不配字色就是主题默认的近白色，画在浅色键底上会看不见。
-- **整块面板可拖动**：按住 → `UIInteract.drag self event` 登记 → 每帧 `dragging`（子元素没配这个事件时会冒泡到这里，与 MiniHUD 标题栏同一套）。
+- **整块面板可拖动**：按住 → `UIInteract.drag self event` 登记 → 每帧 `dragging`（子元素没配这个事件时会冒泡到这里，与 RoleData 标题栏同一套）。
 - **底图**走 `UI_Panel.background`（九宫格），面板与键共用 `Material/Texture/UI/RoundedIcon_32.png`；图片缺失只警告一次、改用默认面板样式，不影响运行。
 - **以后给键绑操作**：改它的描述文本即可，登记名 = `Keyboard/键名/Desc`（键名由键码生成，如 `Keyboard/Key_Q/Desc`、`Keyboard/Key_Kp8/Desc`、`Keyboard/Key_Shift_L/Desc`）。
-- **开启**：独立 UI，`UIInteract.open(preset_name="Keyboard")`；右上角的 "X" 就是普通预设 `CloseButton`（`UIInteract.open(键盘, "CloseButton", 键盘)`）——见 `Test.ui_test`。
+- **开启**：独立 UI，`UIInteract.open(preset_name="Keyboard")`；右上角的 "X" 就是普通预设 `CloseButton`（`UIInteract.open(键盘, "CloseButton", 键盘)`，见 `UIPreset_Basic`）。
 
 ## 消息（MessageHub.gd）
 - `send_ui_create/remove(ui)` 与 `listen_ui_create/remove`。

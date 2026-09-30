@@ -271,6 +271,16 @@ static func _row_height(ctrl: Control) -> float:
 		+ float(ctrl.get_theme_constant("line_spacing"))
 
 
+## 一个 stylebox 的**有效内容边距**（padding，像素）：`content_margin` **没显式设过时是 -1**
+## （`StyleBoxTexture` 尤其常见——它真正生效的是 `texture_margin`，也就是九宫格边距），这时要退回 `get_margin()`。
+## **凡是要拿边距去算尺寸的地方都读它**：直接读 `content_margin` 会拿到 -1、把 padding 当成负数漏掉
+## （实测：输入框 / 文本铺了九宫格底之后，多行框高度少算了上下两圈边距 ⇒ 两行字被裁）。
+## 被谁用：UI_Input._text_height、UI_Label._plain_width / _content_size。
+static func _style_pad(sb: StyleBox, side: Side) -> float:
+	var v: float = sb.get_content_margin(side)
+	return v if v >= 0.0 else sb.get_margin(side)
+
+
 ## 虚接口：子类生成自身外观控件。
 ## 被谁用：build()。实现者：UI_Panel / UI_Label / UI_Image / UI_Input。
 func _create_control() -> Control:
@@ -603,7 +613,7 @@ func _apply_config() -> void:
 ## ---- UI 文字配色（一览 / 编辑器那几屏共用；一处定义，别在各屏各写一遍字面值）----
 ## **这一族都是按"浅色面板底"挑的深色**（面板底是浅色图，见 `SysCfg.ui_background`）：
 ## 原来给暗底挑的是浅色，换浅底后统一压暗了一档（否则白底上发虚看不清）。再调色就改这里。
-## 正文（默认）字色**不在这里**：它由 `SysCfg.ui_font_color_default` 给（见 reapply）——那是全局默认；
+## 正文（默认）字色**不在这里**：它由 `QName.ui_font_color_default` 给（见 reapply）——那是全局默认；
 ## 这里只是"某个语义该用什么色"的少数几处。
 ## 被谁用：UI_View 与它下面那几个一览（UI_Status / UI_Skill / UI_Interaction / UI_Shortcut / UI_Attr /
 ## UI_Archetype），以及 UI_Editor（参数 / 历史那些次要行）。
@@ -643,12 +653,34 @@ func reapply() -> void:
 	# 字号与字体是一个入口：想换字体改 `SysCfg.ui_font_file`，别在各个配置里各写各的。
 	if UISys.ui_font != null:
 		control.add_theme_font_override("font", UISys.ui_font)
-	# **字色也是这一处**：没配 `font_color` 就用全局默认（`SysCfg.ui_font_color_default`，深色）——
+	# **字色也是这一处**：没配 `font_color` 就用全局默认（`QName.ui_font_color_default`，深色）——
 	# 面板底是浅色图（见 SysCfg.ui_background），引擎默认那接近白的字画在白底上等于看不见。
 	# 要深底浅字：改那个全局值，或给这一处显式配 `font_color`。
 	control.add_theme_color_override("font_color",
-		config.get("font_color", SysCfg.ui_font_color_default))
+		config.get("font_color", QName.ui_font_color_default))
+	_apply_caret()
 	_apply_background(str(config.get("background", "")))
+
+
+## 输入框的"**光标 / 当前行 / 选中**"那几色（同 `font_color` 一个道理：引擎默认那几项都是给
+## **深色**主题挑的，铺在浅色底上要么看不见、要么一道灰黑杠）。值都在 `QName` 的那一段"UI 配色"。
+## **光标不是图**：`caret_color` + 常量 `caret_width` 就是一根竖条，引擎没有"光标图"这个槽。
+## 只有 `LineEdit` / `TextEdit` 有这几项（`Panel` 之类没有）⇒ **先问一句再设**，别的元素不受影响。
+## 被谁用：reapply（所以元素自己的 `caret_color` / `caret_width` 能配；不配就用全局默认）。
+func _apply_caret() -> void:
+	if control == null or not control.has_theme_color("caret_color"):
+		return
+	control.add_theme_color_override("caret_color",
+		config.get("caret_color", QName.ui_caret_color))
+	control.add_theme_constant_override("caret_width",
+		int(config.get("caret_width", QName.ui_caret_width)))
+	if control.has_theme_color("current_line_color"):                 # 多行框才有"当前行"
+		control.add_theme_color_override("current_line_color", QName.ui_input_line_color)
+	control.add_theme_color_override("selection_color", QName.ui_selection_color)
+	# 选中文字的前景色：LineEdit 默认是**白**（配中灰底），浅底上一样读不出来 ⇒ 也压成深色。
+	# TextEdit 那份默认是全透明（= "沿用 font_color"，本来就是对的），覆盖成深色不影响。
+	control.add_theme_color_override("font_selected_color",
+		config.get("font_color", QName.ui_font_color_default))
 
 
 ## 虚接口 + 通用实现：给本元素铺一张背景图（config["background"] = 纹理路径）。
@@ -680,11 +712,23 @@ func _background_slot() -> String:
 	return ""
 
 
+## 本元素"没配 `background_slice` / `background_stretch` 时"用的九宫格边距与填充方式：
+## 默认就是全局那张底图（`SysCfg.ui_background_slice` / 拉伸）；**换成别的图**（圆角 / 图案不同）的元素
+## 覆写它，好让"没写这两个键"时也按那张图的规格切（如 UI_Input 的竖版卷轴：16 + 平铺）。
+## 被谁用：_make_background。覆写者：UI_Input。
+func _default_background_slice() -> int:
+	return SysCfg.ui_background_slice
+
+
+func _default_background_stretch() -> String:
+	return "stretch"
+
+
 ## 造一张九宫格背景样式（供 config["background"] 用）；路径为空/图片不存在/加载失败返回 null。
-## 九宫格的边距取 config["background_slice"]（**每张图各自指定**，不写 = 全局默认
-## `SysCfg.ui_background_slice`：默认那张就是按它量的；要"整张拉伸"显式写 0）：
+## 九宫格的边距取 config["background_slice"]（**每张图各自指定**，不写 = 本元素的默认
+## `_default_background_slice()`——默认就是全局那张的 `SysCfg.ui_background_slice`；要"整张拉伸"显式写 0）：
 ## 每张图的圆角半径不一样（Unity 那边每张 sprite 也自带自己的九宫格参数），所以要能逐个指定。
-## **边与中央怎么填**取 config["background_stretch"]（不写 = `"stretch"` 拉伸）：
+## **边与中央怎么填**取 config["background_stretch"]（不写 = 本元素的默认 `_default_background_stretch()`）：
 ##   · `"stretch"`（默认）——中间那段按面板大小等比铺开。图里中间是纯色（如默认那张圆角方块）时看不出
 ##     差别，最省事；
 ##   · `"tile"` —— **平铺**：中间的整段原样重复。图案有细节时必须用它：拉伸会把"2px 的竹节"按面板宽
@@ -702,8 +746,9 @@ func _make_background(path: String) -> StyleBoxTexture:
 		return null
 	var style: StyleBoxTexture = StyleBoxTexture.new()
 	style.texture = tex
-	style.set_texture_margin_all(int(config.get("background_slice", SysCfg.ui_background_slice)))  # 圆角不被拉伸
-	match str(config.get("background_stretch", "stretch")):
+	# 边距 / 填充方式：config 优先；没配就用本元素的默认（子类可覆写成自己那张图的规格，见 _default_background_slice）
+	style.set_texture_margin_all(int(config.get("background_slice", _default_background_slice())))  # 圆角不被拉伸
+	match str(config.get("background_stretch", _default_background_stretch())):
 		"tile":
 			style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 			style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
@@ -801,7 +846,7 @@ func _find_host() -> UIBase:
 
 
 ## 解析一处 `config["host"]` 声明，返回它指的那个 UI；没声明 / 用不了给 null。
-## **写的就是注册名**（如 `"UI/MiniHUD/Menu"`，见 RegSys）——ID 是运行期的东西（每次运行都变），
+## **写的就是注册名**（如 `"UI/RoleData/Menu"`，见 RegSys）——ID 是运行期的东西（每次运行都变），
 ## 配置里不再出现它（要指哪个 UI 就写名字，读起来也认得）。
 ## 用不了（名字没登记 / 那个 UI 已经不在了）⇒ null 并经 _warn_host_once 提醒一次。
 ## 被谁用：_find_host。
@@ -824,7 +869,7 @@ static func _warn_host_once(raw: String) -> void:
 	if _warned_hosts.has(raw):
 		return
 	_warned_hosts[raw] = true
-	push_warning("UIBase: config[\"host\"] = %s 用不了（这里写**注册名**，如 `MiniHUD/Menu`。也可能是那个 UI 已经不在了）—— 当没声明处理" % raw)
+	push_warning("UIBase: config[\"host\"] = %s 用不了（这里写**注册名**，如 `RoleData/Menu`。也可能是那个 UI 已经不在了）—— 当没声明处理" % raw)
 
 
 ## 说明：以前这里有一整套"把 `self` / `host` / `event` 三个词扫出来换成 `@注册名`"的助手

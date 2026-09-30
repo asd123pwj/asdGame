@@ -24,6 +24,8 @@ extends ConfigBase
   · **窗口的底图是竹框**（`WINDOW_BACKGROUND`，用户画的 64×64、四角 16×16 ⇒ `background_slice: 16` +
     `background_stretch: "tile"`）：不写 `background` 就用全局默认那张圆角方块，这里显式点成竹框
     ——"一个窗口长什么样"只属于这个预设；**换底图那圈边距也变，`CELL_CHARS` 要跟着重算**；
+  · **每一格（6 个一览）的底图是卷轴**（`CELL_BACKGROUND`，64×64、四角 16×16 ⇒ slice 16 + 平铺，
+    与看板竹框同一套规格）：不写会落到全局默认那张圆角方块 ⇒ 显式点成卷轴——"一栏长什么样"属于这些一览；
   · **每格写一个 `max_chars`**（`CELL_CHARS`）= "一栏文字最多多宽"：格子比原来那 6 个独立窗口**窄**
     （3/4 屏 ÷ 3 列 ≈ 470px），还按全局默认的 48 个字符（≈480px）走，长行右边会被裁掉一块
     ——所以要按格子宽反推一个值（怎么来的见 `CELL_CHARS`）；
@@ -79,12 +81,16 @@ const RATIO := Vector2(0.75, 0.75)
 ## （`SysCfg.ui_background`），这里显式换成竹框——"角色窗口长这样"只属于本预设。
 ## 用 `UI_Bamboo_Empty.png`（**空框**；与 `UI_Bamboo_Panel.png` 同一张画）：窗口的底只要"一个空框"，
 ## 不必为大窗口再画一张大的——九宫格平铺本来就够，图越小越省。
+## **边距 / 中段填充不在这写**：走 `UIPreset_Basic.bg()` 的默认值（竹图那套：四角 16 + 平铺。
+## 这批图都是 64×64、四角 16，中段带竹节 ⇒ 只能平铺，拉伸会按面板尺寸拉成宽暗带）。
 const WINDOW_BACKGROUND := "res://Material/Texture/UI/UI_Bamboo_Empty.png"
-## 竹框的**四角各 16×16**（用户给的规格）⇒ 九宫格边距 16（不写会按全局默认的 8 切，角会被切坏）。
-const WINDOW_BACKGROUND_SLICE := 16
-## **必须平铺，不能拉伸**（见 UIBase._make_background）：这张图的边框中间段里有 2px 的竹节，
-## 拉伸会把它按面板宽（约 1440px）等比放大成一条很宽的暗带；平铺则整段原样重复、竹节间距均匀。
-const WINDOW_BACKGROUND_STRETCH := "tile"
+
+## **每一格（6 个一览）自己的底图**（卷轴，64×64）：不写 `background` 会用全局默认那张圆角方块
+## （`SysCfg.ui_background`），这里显式换成卷轴——"一栏长什么样"属于这些一览（区别于看板窗口的竹框）。
+## 规格同上（`UIPreset_Basic.bg()` 的默认：四角 16 + 平铺）。注意 `UIBase._make_background` 的四边边距是
+## **同一个数**（`set_texture_margin_all`）：上下端帽与左右细边都按 16 切——与 `CELL_CHARS` 里
+## "格子底图圆角边距 16"那条对得上（那条本就是按 16 推的）。
+const CELL_BACKGROUND := "res://Material/Texture/UI/UI_Bamboo_ScrollPanel.png"
 
 
 ## 看板尺寸 = 屏幕 × RATIO（像素）。
@@ -106,13 +112,13 @@ static func _values() -> Array[Array]:
 		# `grid` = 矩阵里的编号（占哪一格）；`char` = 默认看谁；`max_chars` = 这一格"一栏"多宽（见 CELL_CHARS）
 		# `margin` = 4：格内元素离底图边 4px（共 8px 边距）；底图圆角边距（slice 16px）照留，
 		# 内容宽度靠 CELL_CHARS 收窄装进"格宽 - 16 - 8"（见 UI_Panel._apply_background）
-		kids.append([cls.substr(3), cls, {"char": cell[1], "grid": i + 1, "max_chars": CELL_CHARS, "margin": 4}])
-	return [["RoleData", "UI_Panel", {
+		# 底图（卷轴，见 CELL_BACKGROUND）走通用三键构造器：不写会落到全局默认那张圆角方块。
+		var cfg: Dictionary = {"char": cell[1], "grid": i + 1, "max_chars": CELL_CHARS, "margin": 4}
+		cfg.merge(UIPreset_Basic.bg(CELL_BACKGROUND))
+		kids.append([cls.substr(3), cls, cfg])
+	var panel: Dictionary = {
 		"size": _panel_size(),                        # 尺寸 = 屏幕 × 3/4（在本预设里算，见 _panel_size）
 		"open_at": Enums.OpenAt.CENTER,               # 开在屏幕正中
-		"background": WINDOW_BACKGROUND,              # 本窗口的底 = 竹框（不是全局默认那张圆角方块）
-		"background_slice": WINDOW_BACKGROUND_SLICE,  # 四角各 16×16
-		"background_stretch": WINDOW_BACKGROUND_STRETCH,  # 平铺（拉伸会把竹节拉成宽暗带）
 		"gap": GAP,
 		"matrix": MATRIX,
 		"events": [QName.UI_event_pointer2_menu],     # 右键 → 管理菜单（里面有"关闭"）
@@ -122,7 +128,10 @@ static func _values() -> Array[Array]:
 			UIInteract_Fold.title_item("角色数据", false, SysCfg.ui_view_chars),
 			UIPreset_Basic.close_item(),
 		] + kids,
-	}]]
+	}
+	# 本窗口的底 = 竹框（不是全局默认那张圆角方块）；三键（图 + 边距 + 平铺）走通用构造器。
+	panel.merge(UIPreset_Basic.bg(WINDOW_BACKGROUND))
+	return [["RoleData", "UI_Panel", panel]]
 
 
 var values: Array[Array] = _values()

@@ -98,10 +98,15 @@ static func _process(_delta: float) -> void:
 ## **键盘状态（如回车提交）要传 false**：那条规则本来就是给"点击"的，回车不该顺手结束编辑；
 ## 更要紧的是它会**提前清掉"正在编辑的是谁"**，让"提交派给输入框"那条派发找不到目标（实测踩过）。
 static func key(status_name: String, end_edit: bool = true) -> void:
-	# "点了别处就退出编辑"：任何一次点击派发都先当作"离开输入框"——
-	# 点到别处自然退出（不会卡在编辑模式）；点回输入框的话，下面那次派发会再进编辑
-	# （输入框配置里那条 `mouseLeft → UIInteract.begin_edit`），所以这里不用先判断点的是谁。
-	if end_edit and InputSys.edit_ui != null:
+	# "点了别处就退出编辑" —— **两件事都要看**，少一个就出错：
+	#   · **只在"刚按下"那一下判**（`InputSys.take_mouse_pressed`）：HOLD 类事件按住期间**每帧都派发**
+	#     到这儿，每次来都先收一遍编辑的话，编辑就永远停在"刚进来"那个瞬间——输入框那句"进来就全选"
+	#     （`UIInteract_Edit.begin_edit` 里的 `select_all`）于是**每帧执行一次**，
+	#     用户按住拖动选字时，拖出来的选区每帧都被清成"全选"（实测：拖选永远失败）。
+	#   · **还要看"点的是谁"**：点回正在编辑的那个框不算"离开"（同上，否则一样是每帧重进一次）。
+	#     拖动选字时指针常常划出框外，但那时"刚按下"那一发早被取走了 ⇒ 不会被误判成"点了别处"。
+	if end_edit and InputSys.take_mouse_pressed() \
+			and InputSys.edit_ui != null and hover_ui != InputSys.edit_ui:
 		InputSys.end_edit()
 	if hover_ui != null:
 		hover_ui.on_event(status_name)

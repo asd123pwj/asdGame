@@ -36,9 +36,10 @@ extends UIInteractBase
 ## 链接之外悬停一定是 null ⇒ 点空白文本不会把上一次的交互"粘"上来（实测踩过）。
 ## 事件机制与"点击折叠 / 关闭"完全同一套：配置 events → PointerDetect 派发 → 指令。
 
-## 每个元素"上一次开窗指令开出来的那些浮窗"（`UI_Label` → `Array[UIBase]`），见文件头的收放规矩。
-## 元素被销毁时这条记录会留着，但收窗是**幂等**的（收起一个已经隐藏的窗 = 什么都不做），不会出错。
-static var _open_tips: Dictionary = {}
+## 每个元素"上一次悬停到的那段链接的 meta"（`UI_Label` → meta 串 / null）：meta_event 靠它认"换链接了"，
+## 换了就先收掉上一扇（"同时只留一扇"，见文件头）。**不在元素上另记"开出过哪几扇窗"**——那些窗就是
+## 挂在 label 下面的子 UI，收的时候直接看 `label.children` 即可（见 _close_tips）。
+static var _hover_meta: Dictionary = {}
 
 
 ## 把"事件 + 指令"那一对（`QName.UI_event_*` 那种）拼成 meta 的形状：`事件名:指令`。
@@ -64,21 +65,21 @@ static func meta_event(rtl: UIBase) -> void:
 		if not _hover_in_tips(label):
 			_close_tips(label)               # 指针进了自己那扇浮窗 ⇒ 不算离开（见文件头）
 		return
+	# 指针在浮窗自己身上（浮窗是子窗）：不算离开链接，这一帧什么都不做——**点击也是点在窗上**。
+	if _hover_in_tips(label):
+		return
 	var meta: Variant = label.meta_hover      # 当前悬停的那段链接（不在链接上 = null）
+	# **换了链接（含离开链接 ⇒ null）⇒ 先把本元素上一扇浮窗收掉**：这就是"一个元素同时只留一扇"。
+	# 判据是"悬停的那段 meta 变了"——同一段链接上指针挪动不算变（不然浮窗会被自己收掉，实测踩过）。
+	if meta != _hover_meta.get(label):
+		_hover_meta[label] = meta
+		_close_tips(label)
 	if not (meta is String):
-		if _hover_in_tips(label):
-			return                            # 指针在自己那扇浮窗上（见下）⇒ 这一帧不动它
-		_close_tips(label)                    # 不在链接上（这行的空白处）⇒ 本元素的浮窗收掉
 		return
 	var cmd: String = _pick(meta as String, event_name)
 	if cmd == "":
-		if _hover_in_tips(label):
-			return                            # 同上：指针在浮窗上，别收
-		_close_tips(label)                    # 这段字不归本事件管 ⇒ 同样收
-		return
-	if _hover_in_tips(label):
-		return                                # 指针在浮窗上：这一帧什么都不做（点击也是点在窗上）
-	_apply(label, Msg.send_cmd(cmd))
+		return                                # 这段字不归本事件管，这次不执行
+	Msg.send_cmd(cmd)
 
 
 ## 从 meta 里挑出"这次该执行的那条指令"：**前缀就是事件名**，对不上 = 空串 = 这次不执行。
@@ -98,51 +99,26 @@ static func _pick(meta: String, event_name: String) -> String:
 	return ""
 
 
-## 收下这次指令的结果，据此维护"本元素开着哪几扇浮窗"：
-##   · 真的开出了窗 ⇒ 把上一次那批里**这次没开到的**收掉，然后记下这一批；
-##   · 一扇也没开出（如那条指令是 close / 不是开窗的）⇒ 本元素的浮窗全收。
-## 同一批里已经有的（同一个预设复用回来的情况）不动它——那是同一扇窗，正被刷新。
-## **返回值要挖着找**：`Msg.send_cmd` 回的是"每条子指令的结果"，而一条指令里还可能用 `\v` 接多条
-## ⇒ 结果是**嵌着的数组**（`send_cmd00` 那个 `[0][0]` 就是这个形状），所以这里递归收集 UIBase。
-static func _apply(label: UI_Label, results: Array) -> void:
-	var opened: Array = _find_uis(results)
-	if opened.is_empty():
-		_close_tips(label)
-		return
-	for prev in (_open_tips.get(label, []) as Array):
-		if not opened.has(prev) and prev.control != null:
-			UIInteract_OpenClose.close(prev)
-	_open_tips[label] = opened
-
-
-## 把这个元素开着的浮窗全收掉并清记录。
+## 收掉本元素开出来的浮窗。**浮窗就是挂在 label 下面的子 UI**（`UIInteract.open` 的挂载点就是 @self，
+## 见 UIPreset_Basic.tip_open_cmd）——所以"我开过哪几扇"不必另记一份表，看 `label.children` 即可：
+## 一份数据一处真相，也躲开了"延时开窗时拿不到返回值"那个坑。收是**幂等**的（收一个已隐藏的窗 = 什么都不做）。
+## 被谁用：meta_event（换链接 / 移出元素那几处）。
 static func _close_tips(label: UI_Label) -> void:
-	for ui in (_open_tips.get(label, []) as Array):
+	for ui in label.children.duplicate():
 		if ui.control != null:
 			UIInteract_OpenClose.close(ui)
-	_open_tips.erase(label)
 
 
-## 指针是不是落在**本元素开的那几扇浮窗**上（含窗里的子元素）：
+## 指针是不是落在**本元素开的那几扇浮窗**上（含窗里的子元素）= 落在 label 某个子 UI 的子树里：
 ## 判据就是基类那条"指针在不在我这棵子树上"（`UIInteractBase._in_subtree`，与子菜单用的是同一条）。
 ## 为什么要这一条：浮窗虽是"子窗"，可它是**独立的一扇 UI**——指针从字上移到窗上，hover 就换人了，
 ## 元素会收到 `Pointer Exit`；不判这一下的话，刚想把说明凑近看，窗就自己关了（实测踩过）。
-## 被谁用：meta_event（`Pointer Exit` 那一路）。
+## 被谁用：meta_event（`Pointer Exit` 与悬停那几路）。
 static func _hover_in_tips(label: UI_Label) -> bool:
-	for ui in (_open_tips.get(label, []) as Array):
+	for ui in label.children:
 		if _in_subtree(ui, PointerDetect.hover_ui):
 			return true
 	return false
-
-
-## 在"指令结果"里把开出来的 UI 全找出来（结果可能是嵌着的数组，见 _apply 的说明）。
-static func _find_uis(results: Array, out_: Array = []) -> Array:
-	for r in results:
-		if r is UIBase:
-			out_.append(r as UIBase)
-		elif r is Array:
-			_find_uis(r, out_)
-	return out_
 
 
 ## 元素本体（必须是 UI_Label —— 内核才是 RichTextLabel，才有 `[url]` 链接）；不是就给 null。

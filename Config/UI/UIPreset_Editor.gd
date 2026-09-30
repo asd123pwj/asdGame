@@ -4,7 +4,7 @@ extends ConfigBase
 """ ---------- UI 编辑器（外壳） ----------
 一个"能编辑某个 UI 全部内容"的菜单。**这里只有外壳**：
 
-  高级管理：MiniHUD          ← Head：开的时候由编辑器元素写"正在编辑谁"
+  高级管理：RoleData          ← Head：开的时候由编辑器元素写"正在编辑谁"
   ✕  [重建：重读子UI]    ← 两条普通事件指令
   Body(UI_Editor)            ← **内容是一个字典型编辑器元素**（Script/UI/UI/UI_Editor.gd）
     ▾ Config（5 项）            每项一行：小字键名 + 值输入框（回车提交）

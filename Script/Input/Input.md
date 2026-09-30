@@ -31,7 +31,7 @@
 - **回车提交这条链**（"`Input Submit` 到底是谁送给输入框的"）：回车 → 状态层 `QName.submit`
   （= 回车 ∧ 没按 Shift，见 `Archetype_System`）→ `SystemManager.when_submit` 把 `QName.input_submit`
   派给 `InputSys.edit_ui`（正在编辑的那个输入框）→ 元素配置里那条 `[QName.input_submit, …]` 干实事
-  （送到哪 + 清空 + 退编辑 + 刷，见 `UIPreset_Test`）。**输入层不参与这条链**，只负责如实转发按键。
+  （送到哪 + 清空 + 退编辑 + 刷，见 `UI_Input` 的文件头）。**输入层不参与这条链**，只负责如实转发按键。
   注意同一条状态上的快捷 `PointerDetect.key("Submit", false)` 要**不收编辑**（那个参数就是为它加的）：
   快捷可能先于监听跑，它一收编辑，这次派发就没了目标（实测踩过）。
   这次回车的**事件本身**由输入层吃掉（见上一条），所以多行框里不会留下换行。

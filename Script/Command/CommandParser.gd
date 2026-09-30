@@ -529,7 +529,7 @@ static func _compile_value(raw: String) -> Dictionary:
 		return { "lit": true, "array": items }
 	if s.begins_with("{") and s.ends_with("}"):
 		# **字典字面量**：`{"键": 值, …}`——键 / 值各自还能是字面量、数组、字典或取值式（递归编）。
-		# 于是"打开时传一份配置片段"能直接写出来：`config={"content_cmd": "@UI/MiniHUD/Info.config"}`。
+		# 于是"打开时传一份配置片段"能直接写出来：`config={"content_cmd": "@UI/RoleData/Info.config"}`。
 		var keys: Array = []
 		var vals: Array = []
 		for pair_raw: String in _split_top_level_args(s.substr(1, s.length() - 2)):
@@ -735,7 +735,7 @@ static var event_name: String = ""
 
 ## 解析 `@引用` 得到那个实例。引用三种，**一律是名字（或名字的替身）**：
 ##   `self` / `host`  —— 当前派发事件的元素 / 它的管理对象（见 event_ui、UIBase._find_host）；
-##   注册名           —— 其余一律按注册名查（`UI/MiniHUD/Info`、`Char/人类` 这种，见 RegSys）。
+##   注册名           —— 其余一律按注册名查（`UI/RoleData/Info`、`Char/人类` 这种，见 RegSys）。
 ## **不再认实例 ID**：ID 每次运行都变、写进配置就废了；要指哪个东西就给它起名字
 ## （UI 由 UISys 登记、角色由 Character._init 登记，都带自己的根前缀）。
 ## 被谁用：_run_expr（instance 分支）。
@@ -759,7 +759,7 @@ static func _chain_rest(inst_expr: String) -> String:
 	return inst_expr.substr(i)
 
 ## 取 "@引用.<...>" 里那段引用（第一个 `.` / `[` / `(` 之前的内容），返回 [ok, ref]。
-## **引用就是注册名**（如 `@UI/MiniHUD/Menu`，见 RegSys）——交给 _instance_of 去分辨：
+## **引用就是注册名**（如 `@UI/RoleData/Menu`，见 RegSys）——交给 _instance_of 去分辨：
 ## 名字里常有 `/`，所以这里只把 `.` `[` `(` 当结束符（见 _instance_of）。
 ## 不能用空串当"无效"哨兵（空串是合法的"没有"）⇒ 用 [ok, ref] 返回。
 ## 被谁用：_compile_expr（instance 分支）。

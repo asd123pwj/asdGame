@@ -27,6 +27,20 @@ static var edit_ui: UIBase = null
 ## 被谁用：_input（维护）、_process（逐帧发 HOLD）、鼠标移动判断"是否在拖拽中"。
 static var keys_holding: Array[Variant] = []
 
+## "**刚按下鼠标键**"的一发信号：按下时置 true，由 `PointerDetect.key` **取一次就清**。
+## 为什么需要它：HOLD 类事件按住期间**每帧都派发**（键名一样），所以"点了别处就退出编辑"
+## 这种只该在按下那一下做的事，分不出"刚按下"与"还在按"（见 PointerDetect.key 的说明）。
+## 用"取一次就清"的语义 ⇒ 哪怕派发晚了一帧也不会漏掉、也不会重复执行。
+static var _mouse_pressed: bool = false
+
+
+## 取走"刚按下鼠标键"这一发信号：**取过就没了**（一次按下只会被取到一次）。
+## 被谁用：PointerDetect.key。
+static func take_mouse_pressed() -> bool:
+    var v: bool = _mouse_pressed
+    _mouse_pressed = false
+    return v
+
 func _init() -> void:
     pass
 
@@ -52,6 +66,8 @@ static func _input(event: InputEvent):
         if editing and event.pressed and event.keycode in [KEY_ENTER, KEY_KP_ENTER] and _submit_now():
             Sys.sys.get_viewport().set_input_as_handled()
     elif event is InputEventMouseButton:
+        if event.pressed:
+            _mouse_pressed = true          # "刚按下"这一发（见 take_mouse_pressed）
         _send_key_status(event.button_index, event.pressed)
     elif event is InputEventMouseMotion:
         mouse_delta += event.position - mouse_position

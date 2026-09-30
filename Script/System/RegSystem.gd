@@ -3,7 +3,7 @@ extends BaseClass
 ## 注册名系统：**注册名 ↔ 实例** 的映射（"这东西叫什么"的统一出处）。
 ##
 ## 为什么要有它：
-##   · 配置与指令里要能"按名字指到某个东西"（`@UI/MiniHUD`、`config["host"] = "UI/MiniHUD/Menu"`）
+##   · 配置与指令里要能"按名字指到某个东西"（`@UI/RoleData`、`config["host"] = "UI/RoleData/Menu"`）
 ##     ⇒ **名字 → 实例**；
 ##   · 反过来也要能问"这东西叫什么"（显示给人看、拼层级名、构造 `@注册名`）⇒ **实例 → 名字**。
 ##   两张表一起维护，就不会出现"一边认得、一边认不得"。
@@ -32,7 +32,7 @@ static var _used_count: Dictionary = {}
 ## 想要那个名字就得接住返回值（`var reg_name := RegSys.register(self, 名字, true)`）。
 ## `dedup`（重名让路）：
 ##   · **false（默认）**：同名是**覆盖**（后来者占掉这个名字，并警告一声）。给"同一个东西改名再登记"
-##     与"同一个 UI 开两次要复用同一份"的场合（`UI/MiniHUD` 只能有一个，见 UISys）；
+##     与"同一个 UI 开两次要复用同一份"的场合（`UI/RoleData` 只能有一个，见 UISys）；
 ##   · **true**：同名**自动加后缀**（号从 _used_count 取，见 _claim）。给"同类东西可以有很多个"的
 ##     场合（角色就是：一堆 `Char/人类`），于是每个实例都有自己的名字。
 ## 被谁用：Character._init（dedup=true）、UISys._register_tree（默认）。

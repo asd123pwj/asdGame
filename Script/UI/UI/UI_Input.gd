@@ -151,10 +151,12 @@ func _content_size() -> Vector2:
 ## **必须加上下内边距**：字画在 stylebox 的内容区里（主题给 `normal` 的 content_margin），
 ## 不算进去 = 内容比框高几像素 ⇒ **滚动条自己冒出来**（"刚好两行却有条"就是这么来的——
 ## 以前这里是个拍脑袋的常量 4，比真实边距小）。
+## **边距要取"有效值"**（见 `_style_pad`）：`content_margin` 对九宫格底（StyleBoxTexture）是 -1，
+## 真正生效的是九宫格边距 —— 直接读 `content_margin` 会算出"负数边距"，两行字被裁。
 ## 被谁用：_content_size。
 static func _text_height(te: TextEdit, rows: int) -> float:
 	var sb: StyleBox = te.get_theme_stylebox("normal")
-	return float(maxi(rows, 1)) * _row_height(te) + sb.content_margin_top + sb.content_margin_bottom
+	return float(maxi(rows, 1)) * _row_height(te) + _style_pad(sb, SIDE_TOP) + _style_pad(sb, SIDE_BOTTOM)
 
 
 ## 收宽度上限（0 = 不限）。到顶之后怎么显示由控件自己决定：
@@ -165,3 +167,22 @@ func _cap_width(size_: Vector2) -> Vector2:
 	if cap > 0.0:
 		size_.x = cap
 	return size_
+
+
+## 输入框的默认底：**竖版竹卷轴**（`SysCfg.ui_input_background`）——不写 `background` 就用它
+## （同 UI_Panel 的规矩：显式写 `"background": ""` = 明确不要底，与"没写"区分）。
+## 被谁用：UIBase._apply_config。
+func _apply_background(path: String) -> void:
+	if path == "" and not config.has("background"):
+		path = SysCfg.ui_input_background
+	super._apply_background(path)
+
+
+## 竖版卷轴的九宫格规格：四角 16×16、中段平铺（与展示文本框那张同一套，见 SystemConfig.gd）。
+## 被谁用：UIBase._make_background（本元素没配 background_slice / background_stretch 时）。
+func _default_background_slice() -> int:
+	return SysCfg.ui_bamboo_slice
+
+
+func _default_background_stretch() -> String:
+	return SysCfg.ui_bamboo_stretch

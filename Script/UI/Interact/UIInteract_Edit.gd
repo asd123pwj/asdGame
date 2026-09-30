@@ -26,15 +26,19 @@ static func begin_edit(target: UIBase) -> void:
 		push_warning("UIInteract.begin_edit: 「%s」的控件不是输入框（%s），没法编辑"
 			% [ui.name, ui.control.get_class()])
 		return
+	# **已经在编辑这一个了 ⇒ 不再抢焦点**（这条指令挂在 HOLD 上：按住期间**每帧都会来一次**，
+	# 见文件头"用 HOLD 不用 PRESS"那条；每帧抢一次焦点会顺手重置光标闪烁 / IME 之类，没必要）。
+	var already: bool = InputSys.edit_ui == ui
 	# 置编辑目标 + 发"正在编辑"那条状态消息**在 InputSys 里成对做**（见 InputSys.begin_edit）：
 	# 于是"编辑中要不要屏蔽某个键 / 回车算不算提交"都能写成状态，输入层不必自己特判。
 	InputSys.begin_edit(ui)
+	if already:
+		return
 	ui.control.grab_focus()
-	# 进来就全选：直接打就是替换（单行 LineEdit / 多行 TextEdit 都有 select_all）
-	if ui.control is TextEdit:
-		(ui.control as TextEdit).select_all()
-	else:
-		(ui.control as LineEdit).select_all()
+	# **不要"进来就全选"**（以前这里按控件类型调 select_all）：这条指令是逐帧的，
+	# 全选只会在**第一帧**起作用——人按不出"只按一帧"，等于没有；而它每帧再执行一次的话，
+	# 用户按住拖动选字时选区每帧都被清成全选（"拖不动、只能全选"实测就是这么来的）。
+	# 要全选用系统那套：三击 / Ctrl+A（输入框自带，那几个键走"归输入框自己"那条路）。
 
 
 ## 让目标结束编辑：清掉 InputSys 的编辑状态并放掉控件焦点（"谁在编辑"是 InputSys 的状态）。

@@ -10,12 +10,12 @@ extends ConfigBase
 菜单项作用的都是**同一个宿主**（那个窗口），可它们在链里的层级深浅不一 ——
 所以**别数 `@self.parent` 的级数，用 `host`**：`host` = 沿 parent 爬到顶那个 UI（窗口本身），
 不论中间包多少层（比如给菜单项再套一个可折叠分组），都指向同一个对象，加减层级不用改指令：
-  MiniHUD
-   └─ Menu(菜单A)            ← 右键 MiniHUD 打开，挂在 MiniHUD 下
-      ├─ Close               → UIInteract.close(@host)                    (host = MiniHUD)
+  RoleData
+   └─ Menu(菜单A)            ← 右键 RoleData 打开，挂在 RoleData 下
+      ├─ Close               → UIInteract.close(@host)                    (host = RoleData)
       └─ Edit(菜单项)        → UIInteract.open(@self, "MenuEdit", @self)   (菜单B 挂在 Edit 下：self = 挂载点)
          └─ MenuEdit(菜单B)
-            ├─ CloseToggle(开关式按钮) → 点一下"做事 + 换一套配置"：先开/关 MiniHUD 的 "X" 按钮，
+            ├─ CloseToggle(开关式按钮) → 点一下"做事 + 换一套配置"：先开/关 RoleData 的 "X" 按钮，
             │                            再把 events↔events_2、content↔content_2 对调，于是下次点击走另一套
             │                            关闭按钮本身就是普通预设（CloseButton，见 UIPreset_Basic.gd），
             │                            所以"加/减"就是开/关它，没有专门函数：
@@ -35,8 +35,8 @@ extends ConfigBase
   MenuEdit    : 关闭按钮 / 缩放手柄 / 改尺寸手柄（三个**开关式按钮**：两套配置对调） / 启用拖拽 / 高级管理
   DesktopMenu : **常态右键菜单**——点在**空地上**右键开的那一扇（`open_at = POINTER`、独立 UI、开在指针处）。
                 第一项开"指针下那个角色"的看板（没抓到角色就写成"（当前无角色）"占位、点了不做事），
-                第二项固定开 **SYS 角色**的看板。由 SYS 角色上那条状态 + 一条快捷指令开出
-                （`QName.desktop_menu`，见 Archetype_System）。
+                第二项固定开 **SYS 角色**的看板，第三项开"此格瓦片查看"（`MapCell`，见 UIPreset_MapCell）。
+                由 SYS 角色上那条状态 + 一条快捷指令开出（`QName.desktop_menu`，见 Archetype_System）。
   （"内容对象 ▸"不占预设：开通用 Editor 编辑宿主的 content_cmd）
 （"UI 编辑器"= 外壳 Config/UI/UIPreset_Editor.gd + 内容元素 Script/UI/UI/UI_Editor.gd：
  打开就是一条通用 open，内容由元素按 source / special / kinds 自己铺，见 UI.md 的"UI 编辑器"一节。）
@@ -59,7 +59,7 @@ var values: Array[Array] = [
         "children": [
             # 关闭 = 关掉宿主 UI（不是关菜单）。
             # **这里保持文字项**：它是菜单里的一行（关的是宿主，不是这个弹窗）；窗口角上的那个图标式关闭
-            # 是 `UIPreset_Basic.close_item()`（一览 / 编辑器 / MiniHUD 用的就是它）。
+            # 是 `UIPreset_Basic.close_item()`（一览 / 编辑器 / RoleData 用的就是它）。
             ["Close", "UI_Label", {
                 "content": "关闭",
                 "events": [[QName.pointer1_hold, "UIInteract.close(@host)"]],
@@ -101,31 +101,11 @@ var values: Array[Array] = [
                 "events": [[QName.pointer_enter,
                     'UIInteract.open(@self, "Editor", @self, close_on_move=true, content_cmd="@host.config.content_cmd", open_at=%s)' % Enums.OpenAt.ANCHOR_TOP_RIGHT]],
             }],
-            # 关闭按钮：**开关式按钮**（普通 Label，不需要专门的开关元素）——同一个元素上写两套配置，
-            # 点一下"做事 + 换一套配置"；一条事件串可以写多条命令（\v 分隔，见 CmdSys.execute）。
-            # "加/减关闭按钮"就是开/关一个普通 UI 预设（CloseButton，见 UIPreset_Basic.gd），
-            # 所以这里没有任何专门函数：第一条命令就是普通的 open / close。
-            ["CloseToggle", "UI_Label", {
-                "content": "启用关闭按钮",
-                "content_2": "移除关闭按钮",
-                # 两样里**只有 content 要刷**（它是显示内容）；events 是派发时才读的裸数据，刷它没意义
-                # ——所以写成 refresh("content")，与"改了什么刷什么"对上（不传 key 是全刷）。
-                # 路径写成带引号的字符串：引号里的内容不再被当成取值式，路径原样传给函数。
-                # **指令串外层一律用单引号**（Godot 和 Python 一样两种引号都行）：
-                # 里面要写双引号（路径/字符串参数）时就不用转义成 `\"`，看起来就是指令本身的样子。
-                "events": [
-                    [QName.pointer1_hold, 'UIInteract.open(@host, "CloseButton", @host)'
-                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
-                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
-                        + '\v@self.refresh("content")'],       # 只刷 content（events 不显示，刷它没意义）
-                ],
-                "events_2": [
-                    [QName.pointer1_hold, 'UIInteract.close(@host, "CloseButton")'
-                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
-                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
-                        + '\v@self.refresh("content")'],       # 只刷 content（events 不显示，刷它没意义）
-                ],
-            }],
+            # 关闭按钮：**开关式按钮**——"加 / 减关闭按钮"就是开 / 关一个普通 UI 预设（CloseButton，
+            # 见 UIPreset_Basic.gd）；形状走通用模板（见 UIPreset_Basic.toggle_item）。
+            UIPreset_Basic.toggle_item("CloseToggle", "启用关闭按钮", "移除关闭按钮",
+                'UIInteract.open(@host, "CloseButton", @host)',
+                'UIInteract.close(@host, "CloseButton")'),
             # 给宿主 UI 加/减"按住拖动"：**不写专门函数，就是对调它的两套 events**
             # （和 CloseToggle 一个路子：同一个元素上写两套配置，点一下换一套）。
             # 所以宿主 UI 的预设里要同时给 events / events_2（一套含拖动绑定、一套不含）。
@@ -141,42 +121,16 @@ var values: Array[Array] = [
                     + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
                     + '\v@self.refresh("content")']],
             }],
-            # 两个手柄的开关（与 CloseToggle 同一个路子：开/关一个普通预设 + 两套配置对调）：
+            # 两个手柄的开关（同 CloseToggle：开 / 关一个普通预设，形状走通用模板）：
             #   · ResizeButton = 等比缩放手柄（说明文字"等比缩放"，见 UIPreset_Basic.handle_cfg）；
             #   · SizeGrip     = 改尺寸手柄（说明文字"改尺寸"）。
-            # 注意与 CloseToggle 同一个坑：窗口若**自带**某个手柄（元素名 = 预设名），开关复用的就是它。
-            ["RescaleToggle", "UI_Label", {
-                "content": "启用缩放手柄",
-                "content_2": "移除缩放手柄",
-                "events": [
-                    [QName.pointer1_hold, 'UIInteract.open(@host, "ResizeButton", @host)'
-                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
-                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
-                        + '\v@self.refresh("content")'],
-                ],
-                "events_2": [
-                    [QName.pointer1_hold, 'UIInteract.close(@host, "ResizeButton")'
-                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
-                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
-                        + '\v@self.refresh("content")'],
-                ],
-            }],
-            ["SizeGripToggle", "UI_Label", {
-                "content": "启用改尺寸手柄",
-                "content_2": "移除改尺寸手柄",
-                "events": [
-                    [QName.pointer1_hold, 'UIInteract.open(@host, "SizeGrip", @host)'
-                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
-                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
-                        + '\v@self.refresh("content")'],
-                ],
-                "events_2": [
-                    [QName.pointer1_hold, 'UIInteract.close(@host, "SizeGrip")'
-                        + '\vUtils.swap("@self.config.events", "@self.config.events_2")'
-                        + '\vUtils.swap("@self.config.content", "@self.config.content_2")'
-                        + '\v@self.refresh("content")'],
-                ],
-            }],
+            # 注意同一个坑：窗口若**自带**某个手柄（元素名 = 预设名），开关复用的就是它。
+            UIPreset_Basic.toggle_item("RescaleToggle", "启用缩放手柄", "移除缩放手柄",
+                'UIInteract.open(@host, "ResizeButton", @host)',
+                'UIInteract.close(@host, "ResizeButton")'),
+            UIPreset_Basic.toggle_item("SizeGripToggle", "启用改尺寸手柄", "移除改尺寸手柄",
+                'UIInteract.open(@host, "SizeGrip", @host)',
+                'UIInteract.close(@host, "SizeGrip")'),
             # UI 编辑器：开"能编辑这个 UI 全部内容"的菜单（config 每一项 + 子UI，递归；子UI默认收起）。
             # **就一条通用 open**：外壳与内容都在 UIPreset_Editor 里声明好了，元素在 build 时自己铺。
             # 见 Config/UI/UIPreset_Editor.gd、Script/UI/UI/UI_Editor.gd 与 UI.md 的"UI 编辑器"。
@@ -193,7 +147,8 @@ var values: Array[Array] = [
     # 两项都是"开角色数据看板"（`RoleData`），差的只是**看谁**：
     #   · OpenChar：看**指针下那个角色**——开菜单那句把 `content=PointerDetect.hover_char` 传了进来，
     #     文字与动作都由下面两个静态函数按它算（没角色 ⇒ 写"（当前无角色）"、点了不做事）；
-    #   · OpenSYS ：固定看 **SYS 角色**（系统角色：看板里"状态 / 快捷"那两格本来就是看它，见 UIPreset_View.CELLS）。
+    #   · OpenSYS ：固定看 **SYS 角色**（系统角色：看板里"状态 / 快捷"那两格本来就是看它，见 UIPreset_View.CELLS）；
+    #   · OpenCell：开"此格瓦片查看"（`MapCell`，见 UIPreset_MapCell）——看**指针停的那一格**各子层放了什么。
     ["DesktopMenu", "UI_Panel", {
         "size": [190, 0],
         "free": true,                              # 自由定位：挂到 UI 根（没有宿主）的叠加层
@@ -209,6 +164,13 @@ var values: Array[Array] = [
                 "content": "打开 SYS 角色的窗口",
                 "events": [[QName.pointer1_hold,
                     'UIInteract.open(preset_name="RoleData", content_cmd="%s")' % SYS_CHAR_PATH]],
+            }],
+            # 查看"点到的这一格"各子层放了哪些瓦片（窗口 + 实时监控 + 可改 X/Y/Layer，见 UIPreset_MapCell）。
+            # 把**指针那一格**写进窗口的 x / y：菜单就开在指针处，指针还停在那格上，所以正是"右键点的那一格"。
+            ["OpenCell", "UI_Label", {
+                "content": "查看此格瓦片",
+                "events": [[QName.pointer1_hold,
+                    'UIInteract.open(preset_name="MapCell", cell=PointerDetect.map_position)']],
             }],
         ],
     }],

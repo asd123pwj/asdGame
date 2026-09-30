@@ -152,6 +152,17 @@ static var ui_background_slots: Array[String] = ["panel", "normal", "background"
 static var ui_background := "res://Material/Texture/UI/RoundedIcon_32.png"
 static var ui_background_slice := 8
 
+# **展示文本框 / 输入框的默认底图**（用户画的竹卷轴，两张都是 64×64、四角各 16×16）：
+#   · 展示文本框（`UI_Label` 当"会滚的文本"用，见 UIPreset_Basic.text_item）= **横版**卷轴（两端竖卷轴）；
+#   · 输入框（`UI_Input`）= **竖版**卷轴（上下横卷轴）——`UI_Input._apply_background` 没写 `background` 就用它。
+# 九宫格边距 16（两图同规格），中段**平铺**（竹纹有细节，拉伸会走形，同角色看板那几张）。
+static var ui_text_background := "res://Material/Texture/UI/UI_Bamboo_Text_Horizontal.png"
+static var ui_input_background := "res://Material/Texture/UI/UI_Bamboo_Text_Vertical.png"
+# **这批竹制图的通用规格**（文本框 / 输入框 / 角色看板的窗口与格子都是 64×64、四角 16、中段平铺）：
+# 所以名字**不绑在"文本框"上**，`UIPreset_Basic.bg()` 也默认取这两个值（预设里只写图那一个键即可）。
+static var ui_bamboo_slice := 16
+static var ui_bamboo_stretch := "tile"
+
 # ---- 滚动条皮肤（竖条） ----
 # 滚动条是**引擎画的**（`ScrollContainer` 的内部子节点 VScrollBar）⇒ "换样式"就是给它的主题槽打覆盖，
 # 代码在 `UI_Panel._apply_scroll_skin`（全项目只那一处建滚动容器 ⇒ 改这里就够，一处生效）。
@@ -172,10 +183,10 @@ static var ui_scroll_stretch := "tile"
 static var ui_scroll_highlight_tint := Color(1.25, 1.25, 1.25)
 static var ui_scroll_pressed_tint := Color(0.8, 0.8, 0.85)
 
-# **默认字色**（没配 `font_color` 的元素就用它，见 UIBase.reapply / UI_Label.reapply）：
-# 默认底是**浅色**的（上面那张白底圆角图）⇒ 字必须深色，引擎默认那接近白的字画在白底上等于看不见。
-# 想把界面换回"深底浅字"就调这里（一处生效），或给需要的地方显式配 `font_color`。
-static var ui_font_color_default := Color(0.13, 0.13, 0.16)
+# **UI 的配色不在这里**（字色 / 光标 / 当前行 / 选中那几支）：它们在 `Config/QuickName.gd`（`QName`）——
+# 那是"**同一个值多处用、只留一处**"的全局表（原来只管名字，现在也放这类共享常量）。
+# 颜色恰恰最容易在多处各写一遍（`UI_View._row` 就曾写死过一份与默认字色完全一样的字面值，
+# 于是改默认字色改不到它）⇒ 统一放 `QName` 的那一段，见 `QName.ui_font_color_default`。
 
 # ---- UI 字体 ----
 # **全项目就这一个字体**：项目里的 ttf 文件（`Material/Fonts/` 下那三个就是同一族的三档字重）。

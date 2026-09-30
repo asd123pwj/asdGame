@@ -12,7 +12,7 @@ extends UIInteractBase
 
 ## 按住拖动 —— **登记入口**，配置里写 `UIInteract.drag @self.parent event`
 ## （`event` 由 指令系统（`@self`/`@host`/`@event`） 补成带引号的状态名，即"按住哪个状态时拖"）。
-## 被谁用：MiniHUD 标题栏、整块键盘面板（UIPreset_Keyboard）。
+## 被谁用：RoleData 标题栏、整块键盘面板（UIPreset_Keyboard）。
 static func drag(target: UIBase, status_name: String) -> void:
 	var ui := _as_ui(target, "drag")
 	if (ui == null) or (ui.control == null):

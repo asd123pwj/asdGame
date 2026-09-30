@@ -671,7 +671,7 @@ static func listen_shortcut_act(char_: Character, shortcut_name: String, callbac
 """
 """ ---------- Basic ---------- """
 static func _format_ui(ui: UIBase, action: String) -> String:
-    return format_ID(["UI", RegSys.name_of(ui), action])     # UI 节点也按注册名（`UI/MiniHUD`）
+    return format_ID(["UI", RegSys.name_of(ui), action])     # UI 节点也按注册名（`UI/RoleData`）
 
 static func _send_ui(ui: UIBase, action: String, message: Variant = null) -> Array:
     var node_ID: String = _format_ui(ui, action)
