@@ -29,8 +29,7 @@ static var down := "Down"
 static var shift := "Shift"
 static var submit := "Submit"
 static var submit_on_what_keys := "Submit on What Keys"
-static var key_j := "Key J"                     # 测试用：开关"显示"测试 UI
-static var key_k := "Key K"                     # 测试用：开关"输入"测试 UI
+static var key_f3 := "Key F3"                   # F3：开 / 关 FPS 显示（Config/UI/UIPreset_FPS.gd）
 
 # ---- UI 常态右键菜单（点在空地上右键开的那一扇，见 Archetype_System / UIPreset_Menu）----
 static var pointer_on_ui := "Pointer On UI"     # 保持型状态：**指针下有没有 UI**（hover 变化时由 PointerDetect

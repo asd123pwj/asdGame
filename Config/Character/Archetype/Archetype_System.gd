@@ -53,6 +53,8 @@ var values: Array[Dictionary] = [
             # 编辑模式：进 / 出输入框编辑时由 UIInteract_Edit 手动开 / 关（**保持型**外部检测，不会自己复位）。
             # 于是"编辑中要屏蔽谁 / 回车算不算提交 / 菜单快捷键要不要让路"都能写成状态。
             {"name": QName.editing, "with_detect_manual": true},
+            # F3：开 / 关 FPS 显示（Config/UI/UIPreset_FPS.gd）。
+            {"name": QName.key_f3, "keys": [[KEY_F3, Enums.KeyStatus.HOLD]],},
         
         ],
     },
@@ -62,6 +64,9 @@ var values: Array[Dictionary] = [
             # 每帧刷新指针目标（hover 变化时发 enter/exit），菜单 hover 展开依赖它：
             # 已挪进 InputSys._process（在派发按键之前，一帧只检测这一次），不再占一条 Tick 快捷
             # ["Pointer Refresh", QName.tick, "PointerDetect._process"],
+            # FPS 显示也走这条"逐帧状态 + 快捷"的路（Config/UI/UIPreset_FPS.gd）：
+            # 那条指令第一句就是"那扇 UI 没开就 return" ⇒ 没开时几乎零成本；开着也只在"取整变了"时才重排版。
+            [QName.tick, QName.tick, 'UIPreset_FPS.tick()'],
             # 统一入口 PointerDetect.key("状态名")：状态名 = 上面 statuses 的 name，也是 UI 侧 config["events"] 的事件名。
             # 指令串用 %s 模板拼（别用 + 拼引号，容易把两头的引号写丢）
             # 回车提交这一条**不收编辑**（第二个参数 false）："点别处退出编辑"是给点击的规则，
@@ -70,6 +75,9 @@ var values: Array[Dictionary] = [
             [QName.submit, QName.submit, 'PointerDetect.key("%s", false)' % QName.submit],
             [QName.pointer1_hold, QName.pointer1_hold, 'PointerDetect.key("%s")' % QName.pointer1_hold],
             [QName.pointer2_hold, QName.pointer2_hold, 'PointerDetect.key("%s")' % QName.pointer2_hold],
+            # F3 开 / 关 FPS 显示（Config/UI/UIPreset_FPS.gd）：`toggle` = "开着就关、关着就开"，
+            # 开 UI 只有 `UIInteract.open` 这一条路，toggle 只是替我们决定这次该 open 还是 close。
+            [QName.key_f3, QName.key_f3, 'UIInteract.toggle(preset_name="FPS")'],
             # 常态右键菜单（点在空地上右键）：状态一满足就开那一扇 —— **独立 UI**（没有宿主、没有锚点），
             # 开在预设声明的指针处、点别处关。`content` 传"开菜单那一刻指针下的角色"（没有就是 null）：
             # 菜单第一项用它决定"打开谁的角色窗口 / 当前无角色"（见 UIPreset_Menu.char_option_text）。
